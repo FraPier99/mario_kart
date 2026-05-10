@@ -1,0 +1,15 @@
+from pydantic import BaseModel, Field, StringConstraints
+from typing import Optional, Annotated
+
+NormalizeStr = Annotated[str, StringConstraints(strip_whitespace=True, to_lower=True)]
+
+
+class CreateCircuit(BaseModel):
+    name: NormalizeStr
+    description: NormalizeStr
+
+
+class CirucuitResponse(BaseModel):
+    id: int
+    name: NormalizeStr
+    descripition: NormalizeStr
