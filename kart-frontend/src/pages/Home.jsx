@@ -1,12 +1,14 @@
 import React,{useEffect} from "react";
-import Navbar from "../components/Navbar";
-
+import Navbar from "../components/layout/Navbar";
+import AppLayout from "@/components/layout/AppLayout";
+import Header from "@/components/layout/Header";
 const Home = () =>{
 
     return (
-        <><Navbar /><div>
-            <h1>Home</h1>
-        </div></>
+        <AppLayout>
+        <Header />
+            
+        </AppLayout>
     )
 }
  
