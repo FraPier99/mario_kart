@@ -4,9 +4,9 @@ import Navbar from "./Navbar";
 
 const AppLayout  =({children})=>{
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="min-h-screen flex flex-col ">
             <Navbar />
-            <main className="flex-grow">
+            <main className="grow">
                 {children}
             </main>
         </div>

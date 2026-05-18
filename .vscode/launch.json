@@ -1,0 +1,40 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Backend (FastAPI)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "main:app", // Modifica "main" se il tuo file di avvio si chiama in un altro modo (es. api:app)
+        "--reload"
+      ],
+      "cwd": "${workspaceFolder}/app", // Entra nella cartella del backend
+      "jinja": true,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Frontend (Vite)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "cwd": "${workspaceFolder}/kart-frontend", // Entra nella cartella del frontend
+      "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Avvia FastAPI + Vite",
+      "configurations": [
+        "Backend (FastAPI)",
+        "Frontend (Vite)"
+      ],
+      "stopAll": true
+    }
+  ]
+}
