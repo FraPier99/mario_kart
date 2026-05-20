@@ -1,19 +1,15 @@
-import React, { Children } from "react";
 import Navbar from "./Navbar";
 
 
 const AppLayout  =({children})=>{
     return (
-        <div className="min-h-screen flex flex-col ">
+        <div className="min-h-screen flex flex-col">
             <Navbar />
-            <main className="grow">
+            <main className="grow animate-fade-in">
                 {children}
             </main>
         </div>
-    
-
     )
-
 }
 
 export default AppLayout

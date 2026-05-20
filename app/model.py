@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Date, UniqueConstraint,CheckConstraint
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Date, UniqueConstraint,CheckConstraint
 from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
@@ -13,6 +13,7 @@ class Player(Base):
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
     nickname = Column(String, nullable=False,unique=True)
+    img_url = Column(Text, nullable=True)
 
 
     favorite_character_id = Column(Integer, ForeignKey('characters.id'), nullable=True)
@@ -20,6 +21,7 @@ class Player(Base):
     results = relationship('Result', back_populates='player')
     favorite_character = relationship('Character',back_populates='fans')
     wins = relationship('Tournament', back_populates='winner', foreign_keys='Tournament.winner_id')
+    tournament_links = relationship('TournamentPlayer', back_populates='player')
     __table_args__ = (
         UniqueConstraint('nickname', name='unique_player_nickname'),
     )
@@ -51,6 +53,7 @@ class Character(Base):
     id = Column(Integer, primary_key=True,autoincrement=True)
     name = Column(String, nullable=False)
     description = Column(String)
+    img_url = Column(Text, nullable=True)
 
     game_id = Column(Integer, ForeignKey('games.id'), nullable=False)
 
@@ -99,10 +102,24 @@ class Tournament(Base):
     game = relationship('Game', back_populates='tournaments')
     races = relationship('Race', back_populates='tournament')
     winner = relationship('Player', back_populates='wins',foreign_keys=[winner_id])
+    player_links = relationship('TournamentPlayer', back_populates='tournament')
     __table_args__ = (UniqueConstraint('name', 'date', name='unique_tournament_name_date'),)
 
 
 
+
+
+# -------------------
+# TOURNAMENT PLAYER (many-to-many)
+# -------------------
+class TournamentPlayer(Base):
+    __tablename__ = 'tournament_players'
+
+    tournament_id = Column(Integer, ForeignKey('tournaments.id'), primary_key=True)
+    player_id = Column(Integer, ForeignKey('players.id'), primary_key=True)
+
+    tournament = relationship('Tournament', back_populates='player_links')
+    player = relationship('Player', back_populates='tournament_links')
 
 
 # -------------------

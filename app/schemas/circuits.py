@@ -9,7 +9,7 @@ class CreateCircuit(BaseModel):
     description: NormalizeStr
 
 
-class CirucuitResponse(BaseModel):
+class CircuitResponse(BaseModel):
     id: int
     name: NormalizeStr
-    descripition: NormalizeStr
+    description: NormalizeStr

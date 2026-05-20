@@ -15,16 +15,11 @@ PUNTEGGI_CONFIG = {
 }
 
 
-def  setUpTournament(n_giocatori : int): 
-    
-    if n_giocatori not in GARE_CONFIG: 
+def setUpTournament(n_giocatori: int):
+    if n_giocatori not in GARE_CONFIG:
         raise ValueError(f"Numero di giocatori non supportato. Supportati: {list(GARE_CONFIG.keys())}")
-    
+
     return {
         'gare': GARE_CONFIG[n_giocatori],
-        'punteggi': PUNTEGGI_CONFIG[n_giocatori]
+        'punteggi': PUNTEGGI_CONFIG[n_giocatori],
     }
-
-
-
-print(PUNTEGGI_CONFIG[8][1-1])

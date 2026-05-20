@@ -9,6 +9,7 @@ class CreatePlayer(BaseModel):
     last_name  :  NormalizeStr
     nickname:   NormalizeStr = Field(...,min_length=3, max_length=20)
     favorite_character_id :   Optional[int] = None
+    img_url : Optional[str] = None
 
 class PlayerResponse(BaseModel): 
     id: int 
@@ -16,6 +17,7 @@ class PlayerResponse(BaseModel):
     last_name: NormalizeStr
     nickname:  NormalizeStr
     favorite_character_id : Optional[int] = None
+    img_url : Optional[str] = None
 
     #per far capire a pydantic che deve convertire l'istanza del modello SQLAlchemy in un dizionario
     model_config = {"from_attributes": True}
@@ -25,5 +27,6 @@ class UpdatePlayer(BaseModel):
     last_name: Optional[NormalizeStr] = None
     nickname: Optional[NormalizeStr] = None
     favorite_character_id: Optional[int] = None
+    img_url: Optional[str] = None
 
     model_config = {"from_attributes": True}

@@ -53,6 +53,10 @@ def get_player(db:Session,player_id:int):
       return player 
 
 
+def get_all_players(db: Session):
+      return db.query(Player).all()
+
+
 
       
 def update_player(db:Session,player_data: UpdatePlayer,player_id: int): 

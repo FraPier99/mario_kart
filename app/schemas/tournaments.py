@@ -12,6 +12,7 @@ class CreateTournament(BaseModel):
     date : date
     game_id : int 
     winner_id : Optional[int]  = None
+    participant_ids : list[int] = Field(default_factory=list, description="IDs dei giocatori partecipanti")
 
 class TournamentResponse(BaseModel): 
     id : int 
@@ -21,6 +22,7 @@ class TournamentResponse(BaseModel):
     date : date
     game_id : int 
     winner_id : Optional[int] = None 
+    participant_ids : list[int] = Field(default_factory=list)
 
     model_config = {'from_attributes':True}
 

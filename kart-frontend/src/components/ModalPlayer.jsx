@@ -1,81 +1,112 @@
-import React from "react";
+import { Crown } from 'lucide-react'
+import { buildAvatarPlaceholder } from '@/lib/placeholders'
+import { useAppData } from '@/context/AppDataContext'
 
+const ModalPlayer = ({ player, stats, onClose }) => {
+    const { charactersById, detailedTournaments } = useAppData()
 
+    if (!player) return null
 
-const ModalPlayer = ({player,onClose}) => {
-    if (!player) return null; // Se non c'è un giocatore, non mostrare nulla
+    const favoriteCharacter = charactersById.get(player.favorite_character_id) ?? null
+
+    const playerStats = stats ?? {
+        racesPlayed: 0,
+        tournamentWins: 0,
+        raceWins: 0,
+        podiums: 0,
+    }
+
+    const wonTournaments = detailedTournaments.filter((t) => t.winner_id === player.id)
 
     return (
-        
-        <div className="fixed inset-0  bg-opacity-50 flex items-center justify-center ">
-            <div className="bg-white rounded-lg p-6 w-104 relative border-4 border-emerald-500 shadow-lg 
-            animate-fadeIn">
-                <button onClick={onClose} className="text-2xl absolute top-2 right-2 text-red-500 hover:text-red-700">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="relative max-h-[85vh] w-104 animate-fadeIn overflow-y-auto rounded-lg border-4 border-emerald-500 bg-white dark:bg-card p-5 shadow-lg">
+                <button onClick={onClose} className="absolute right-2 top-2 z-10 text-2xl text-red-500 hover:text-red-700">
                     &times;
                 </button>
 
-                <div className="flex flex-col justify-center items-center "> 
+                <div className="flex flex-col items-center justify-center">
                     <div>
-                        {/* momentaneo placeholder */}
-                        <img src={'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimages.wallpapersden.com%2Fimage%2Fdownload%2Fanime-naruto-hd-2023-ai_bW5mbGmUmZqaraWkpJRmbmdlrWZlbWU.jpg&f=1&nofb=1&ipt=1ef441530fbb5c0cbadd4ef4ae28fd6199dfc207bb92dcb4afa14ccb939d2d48'} alt={`${player.first_name} ${player.last_name}`} className="w-24 h-24 rounded-full mb-4" />
+                        <img
+                            src={player.img_url || buildAvatarPlaceholder(player.nickname)}
+                            alt={`${player.first_name} ${player.last_name}`}
+                            className="mb-3 h-20 w-20 rounded-full object-cover object-center ring-4 ring-emerald-200"
+                        />
                     </div>
 
-                       
-        {/* Nickname: Corretto il bug di "rounded- full" e tolto l'effetto hover da bottone */}
-        <span className="bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider py-1 px-3.5 rounded-full shadow-sm mb-3 border border-emerald-400">
-            {player.nickname}
-        </span>
+                    <span className="mb-2 rounded-full border border-emerald-400 bg-emerald-500 px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm">
+                        {player.nickname}
+                    </span>
 
-        {/* Nome e Cognome: Font più solido e scuro (non grigio slavato) */}
-        <h3 className="text-slate-800 text-xl font-black uppercase tracking-tight mb-4">
-            {player.first_name} {player.last_name}
-        </h3>
+                    <h3 className="mb-3 text-lg font-black uppercase tracking-tight text-slate-800 dark:text-foreground">
+                        {player.first_name} {player.last_name}
+                    </h3>
 
+                    <div className="mb-2 flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card px-3 py-1.5">
+                        <img
+                            src={favoriteCharacter?.img_url || buildAvatarPlaceholder(favoriteCharacter?.name ?? 'character')}
+                            alt={favoriteCharacter ? favoriteCharacter.name : 'Nessun pg preferito'}
+                            className="h-10 w-10 rounded-full object-cover object-center"
+                        />
+                        <div className="text-left">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">PG preferito</p>
+                            <p className="text-xs font-bold text-slate-800 dark:text-foreground">
+                                {favoriteCharacter ? favoriteCharacter.name : 'Nessun pg preferito'}
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
-        <div className="w-full mt-6 bg-slate-50 rounded-2xl p-5 border border-slate-100">
-    {/* Titolo della sezione */}
-    <h3 className="text-center text-xs font-black uppercase tracking-widest text-slate-400 mb-4">
-        Statistiche Giocatore
-    </h3>
-    
-    {/* Griglia delle statistiche */}
-    <div className="grid grid-cols-2 gap-3 w-full">
-        
-        {/* Blocco: Gare Disputate */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200/60 shadow-sm flex flex-col items-center justify-center text-center">
-            <span className="text-2xl font-black text-slate-800">{player.races_participated || 1}</span>
-            <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider mt-1">Gare fatte</span>
-        </div>
+                <div className="mt-4 w-full rounded-2xl border border-slate-100 dark:border-border bg-slate-50 dark:bg-muted p-4">
+                    <h3 className="mb-3 text-center text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">
+                        Statistiche Giocatore
+                    </h3>
 
-        {/* Blocco: Tornei Vinti */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200/60 shadow-sm flex flex-col items-center justify-center text-center">
-            <span className="text-2xl font-black text-amber-500">{player.tournaments_won || 0}</span>
-            <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider mt-1">Tornei Vinti</span>
-        </div>
+                    <div className="grid w-full grid-cols-2 gap-2">
+                        <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200/60 dark:border-border/60 bg-white dark:bg-card p-3 text-center shadow-sm">
+                            <span className="text-xl font-black text-slate-800 dark:text-foreground">{playerStats.racesPlayed || 0}</span>
+                            <span className="mt-1 text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-muted-foreground">Gare fatte</span>
+                        </div>
 
-        {/* Blocco: Vittorie */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200/60 shadow-sm flex flex-col items-center justify-center text-center">
-            <span className="text-2xl font-black text-emerald-600">{player.wins || 0}</span>
-            <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider mt-1">Vittorie</span>
-        </div>
+                        <div className="flex flex-col items-center justify-center rounded-xl border border-amber-200/60 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950 p-3 text-center shadow-sm">
+                            <span className="text-xl font-black text-amber-500">{playerStats.tournamentWins || 0}</span>
+                            <span className="mt-1 text-[9px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">Tornei Vinti</span>
+                        </div>
 
-        {/* Blocco: Podi */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200/60 shadow-sm flex flex-col items-center justify-center text-center">
-            <span className="text-2xl font-black text-blue-600">{player.podiums || 0}</span>
-            <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider mt-1">Podi</span>
-        </div>
+                        <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200/60 dark:border-border/60 bg-white dark:bg-card p-3 text-center shadow-sm">
+                            <span className="text-xl font-black text-emerald-600">{playerStats.raceWins || 0}</span>
+                            <span className="mt-1 text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-muted-foreground">Vittorie</span>
+                        </div>
 
-    </div>
-</div>
-               
-                {/* Aggiungi altre informazioni del giocatore qui */}
+                        <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200/60 dark:border-border/60 bg-white dark:bg-card p-3 text-center shadow-sm">
+                            <span className="text-xl font-black text-blue-600">{playerStats.podiums || 0}</span>
+                            <span className="mt-1 text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-muted-foreground">Podi</span>
+                        </div>
+                    </div>
+
+                    {wonTournaments.length > 0 && (
+                        <div className="mt-3">
+                            <h4 className="mb-1.5 text-center text-[9px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-300">
+                                <Crown size={11} className="-mt-0.5 me-1 inline" />
+                                Tornei vinti
+                            </h4>
+                            <div className="space-y-1">
+                                {wonTournaments.map((t) => (
+                                    <div
+                                        key={t.id}
+                                        className="flex items-center justify-between rounded-xl bg-amber-100 dark:bg-amber-900/40 px-2.5 py-1.5 text-[11px] font-bold text-amber-900 dark:text-amber-100"
+                                    >
+                                        <span>{t.name}</span>
+                                        <span className="text-[9px] text-amber-600 dark:text-amber-400">{t.date}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
-       
-
     )
-
 }
 
 export default ModalPlayer

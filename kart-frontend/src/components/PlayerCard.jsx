@@ -1,51 +1,63 @@
-import React from "react";
+import { Crown } from 'lucide-react'
+import { buildAvatarPlaceholder } from '@/lib/placeholders'
 
-const PlayerCard = ({ player,handlePlayerClick }) => {
+const PlayerCard = ({ player, statsByPlayerId, handlePlayerClick }) => {
+    if (!player.length) {
+        return (
+            <div className="col-span-full rounded-3xl border border-dashed border-slate-200 dark:border-border bg-white dark:bg-card px-8 py-12 text-center text-slate-500 dark:text-muted-foreground">
+                Nessun giocatore presente nel database.
+            </div>
+        )
+    }
+
     return (
         <>
-            {player.map((p) => (
-                <div key={p.id} className="bg-white rounded-2xl border border-gray-100 shadow-md flex flex-col items-center overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-xl">
-    
-    {/* Contenitore Immagine: rimosso mb-4 e bordi esterni per incollarla al top */}
-    <div className="h-44 w-full overflow-hidden relative group">
-        <img
-            src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimages.wallpapersden.com%2Fimage%2Fdownload%2Fanime-naruto-hd-2023-ai_bW5mbGmUmZqaraWkpJRmbmdlrWZlbWU.jpg&f=1&nofb=1&ipt=1ef441530fbb5c0cbadd4ef4ae28fd6199dfc207bb92dcb4afa14ccb939d2d48"
-            alt={p.first_name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-        />
-        {/* Overlay leggero sfumato sull'immagine per dare profondità */}
-        <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent"></div>
-    </div>
-    
-    {/* Contenuto della Card con padding uniforme */}
-    <div className="p-5 flex flex-col items-center grow w-full text-center">
-        
-        {/* Nickname: Corretto il bug di "rounded- full" e tolto l'effetto hover da bottone */}
-        <span className="bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider py-1 px-3.5 rounded-full shadow-sm mb-3 border border-emerald-400">
-            {p.nickname}
-        </span>
+            {player.map((p, idx) => {
+                const playerStats = statsByPlayerId?.get(p.id)
+                const isWinner = (playerStats?.tournamentWins ?? 0) > 0
 
-        {/* Nome e Cognome: Font più solido e scuro (non grigio slavato) */}
-        <h3 className="text-slate-800 text-xl font-black uppercase tracking-tight mb-4">
-            {p.first_name} {p.last_name}
-        </h3>
-        
-        {/* Bottone: Corretta la sintassi "rounded-lg)", rimosso il conflitto bg-blue-600/hover:bg-blue-500 */}
-        <button onClick={() => handlePlayerClick(p)} className="w-2xs mt-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl shadow-sm transition-colors duration-200 cursor-pointer text-sm">
-            Visualizza Profilo
-        </button>
-    </div>
-                </div>
-            ))}
+                return (
+                    <div
+                        key={p.id}
+                        style={{ animationDelay: `${idx * 0.04}s` }}
+                        className={`animate-fade-in flex flex-col items-center overflow-hidden rounded-2xl border bg-white dark:bg-card shadow-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-xl ${
+                            isWinner ? 'border-amber-300 ring-2 ring-amber-400/40' : 'border-gray-100 dark:border-border'
+                        }`}
+                    >
+                        <div className="relative h-32 w-full bg-gradient-to-b from-slate-50 dark:from-muted to-slate-200 dark:to-muted pb-2">
+                            {isWinner && (
+                                <div className="absolute right-2 top-2 rounded-full bg-amber-400 p-1.5 shadow-lg">
+                                    <Crown size={16} className="text-amber-950" />
+                                </div>
+                            )}
+                            <img
+                                src={p.img_url || buildAvatarPlaceholder(p.nickname)}
+                                alt={p.first_name}
+                                className="h-full w-full rounded-2xl object-contain p-1"
+                            />
+                        </div>
+
+                        <div className="flex w-full grow flex-col items-center p-4 text-center">
+                            <span className="mb-2 rounded-full bg-emerald-500 px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+                                {p.nickname}
+                            </span>
+
+                            <h3 className="mb-3 text-base font-black uppercase tracking-tight text-slate-800 dark:text-foreground">
+                                {p.first_name} {p.last_name}
+                            </h3>
+
+                            <button
+                                onClick={() => handlePlayerClick(p)}
+                                className="mt-auto cursor-pointer rounded-xl bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700"
+                            >
+                                Visualizza Profilo
+                            </button>
+                        </div>
+                    </div>
+                )
+            })}
         </>
-
     )
-
-
-
-
-
-
-
 }
+
 export default PlayerCard
