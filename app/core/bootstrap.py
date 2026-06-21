@@ -727,7 +727,7 @@ def bootstrap_database():
     ensure_schedina_deluxe_vincitori_gironi_column()
     ensure_schedina_deluxe_classifiche_gironi_column()
     ensure_tournament_audit_columns()
-    seed_circuits()
+    # seed_circuits()
     seed_mk8d_data()
     backfill_circuit_image_urls()
     ensure_default_superadmin()
