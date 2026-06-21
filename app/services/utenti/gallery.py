@@ -1,0 +1,150 @@
+from datetime import datetime
+
+from sqlalchemy.orm import Session, joinedload
+
+from app.models import PhotoComment, Player, Tournament, TournamentPhoto, User
+from app.controllers.utenti.schemas.gallery import (
+    PhotoCommentCreate,
+    PhotoCommentUpdate,
+    TournamentPhotoCreate,
+)
+from app.services.utenti.notifications import create_mention_notifications
+
+
+def _serialize_photo(photo: TournamentPhoto) -> dict:
+    return {
+        "id": photo.id,
+        "tournament_id": photo.tournament_id,
+        "tournament_name": photo.tournament.name if photo.tournament else None,
+        "uploaded_by_user_id": photo.uploaded_by_user_id,
+        "uploaded_by_username": photo.uploaded_by.username
+        if photo.uploaded_by
+        else f"user-{photo.uploaded_by_user_id}",
+        "image_data": photo.image_data,
+        "caption": photo.caption,
+        "created_at": photo.created_at,
+        "comments": [
+            _serialize_comment(c)
+            for c in sorted(photo.comments, key=lambda c: c.created_at)
+        ],
+    }
+
+
+def _serialize_comment(comment: PhotoComment) -> dict:
+    player = comment.user.player if comment.user and comment.user.player else None
+    favorite_character = (
+        player.favorite_character if player and player.favorite_character_id else None
+    )
+    user_img_url = comment.user.img_url if comment.user else None
+    return {
+        "id": comment.id,
+        "photo_id": comment.photo_id,
+        "user_id": comment.user_id,
+        "username": comment.user.username
+        if comment.user
+        else f"user-{comment.user_id}",
+        "nickname": player.nickname if player else None,
+        "img_url": player.img_url if player else None,
+        "user_img_url": user_img_url,
+        "favorite_character_img_url": favorite_character.img_url
+        if favorite_character
+        else None,
+        "text": comment.text,
+        "created_at": comment.created_at,
+        "edited_by_username": comment.edited_by.username if comment.edited_by else None,
+        "edited_at": comment.edited_at,
+    }
+
+
+def get_photos(db: Session) -> list[dict]:
+    photos = (
+        db.query(TournamentPhoto)
+        .options(
+            joinedload(TournamentPhoto.uploaded_by),
+            joinedload(TournamentPhoto.comments)
+            .joinedload(PhotoComment.user)
+            .joinedload(User.player)
+            .joinedload(Player.favorite_character),
+            joinedload(TournamentPhoto.comments).joinedload(PhotoComment.edited_by),
+        )
+        .order_by(TournamentPhoto.created_at.desc())
+        .all()
+    )
+    return [_serialize_photo(p) for p in photos]
+
+
+def get_photo(db: Session, photo_id: int) -> dict | None:
+    photo = (
+        db.query(TournamentPhoto)
+        .options(
+            joinedload(TournamentPhoto.uploaded_by),
+            joinedload(TournamentPhoto.comments)
+            .joinedload(PhotoComment.user)
+            .joinedload(User.player)
+            .joinedload(Player.favorite_character),
+            joinedload(TournamentPhoto.comments).joinedload(PhotoComment.edited_by),
+        )
+        .filter(TournamentPhoto.id == photo_id)
+        .first()
+    )
+    return _serialize_photo(photo) if photo else None
+
+
+def create_photo(db: Session, user_id: int, payload: TournamentPhotoCreate) -> dict:
+    photo = TournamentPhoto(
+        tournament_id=payload.tournament_id,
+        uploaded_by_user_id=user_id,
+        image_data=payload.image_data,
+        caption=payload.caption,
+    )
+    db.add(photo)
+    db.commit()
+    db.refresh(photo)
+    return _serialize_photo(photo)
+
+
+def delete_photo(db: Session, photo_id: int) -> bool:
+    photo = db.query(TournamentPhoto).filter(TournamentPhoto.id == photo_id).first()
+    if not photo:
+        return False
+    db.delete(photo)
+    db.commit()
+    return True
+
+
+def add_comment(
+    db: Session, photo_id: int, user_id: int, payload: PhotoCommentCreate
+) -> dict | None:
+    if not db.query(TournamentPhoto).filter(TournamentPhoto.id == photo_id).first():
+        return None
+    text = payload.text.strip()
+    comment = PhotoComment(photo_id=photo_id, user_id=user_id, text=text)
+    db.add(comment)
+    db.flush()
+    create_mention_notifications(db, text, user_id, source_photo_id=photo_id)
+    db.commit()
+    db.refresh(comment)
+    return _serialize_comment(comment)
+
+
+def edit_comment(
+    db: Session, comment_id: int, editor_user_id: int, payload: PhotoCommentUpdate
+) -> dict | None:
+    comment = db.query(PhotoComment).filter(PhotoComment.id == comment_id).first()
+    if not comment:
+        return None
+    comment.text = payload.text.strip()
+    comment.edited_by_user_id = editor_user_id
+    comment.edited_at = datetime.utcnow()
+    db.commit()
+    db.refresh(comment)
+    return _serialize_comment(comment)
+
+
+def delete_comment(db: Session, comment_id: int) -> bool:
+    comment = db.query(PhotoComment).filter(PhotoComment.id == comment_id).first()
+    if not comment:
+        return False
+    db.delete(comment)
+    db.commit()
+    return True

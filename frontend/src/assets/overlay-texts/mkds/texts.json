@@ -1,0 +1,13 @@
+{
+    "thankyou": "Grazie a tutti i partecipanti per questo fantastico torneo! Ci vediamo al prossimo appuntamento.",
+    "countdown": {
+        "start": "Sveliamo la classifica...",
+        "transition": "E ora il podio...",
+        "championReveal": "E il nostro Campione è...",
+        "labels": {
+            "campione": "⭐ CAMPIONE! ⭐",
+            "winner": "CAMPIONE!"
+        }
+    },
+    "derapata": "{name} è giunto al termine"
+}

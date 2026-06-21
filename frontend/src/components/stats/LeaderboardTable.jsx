@@ -1,0 +1,227 @@
+import { buildAvatarPlaceholder } from '@/lib/placeholders'
+
+const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = null, theme = null, highlightPlayerId = null, isSuperadmin = false, onPlayerClick = null }) => {
+    if (!rows.length) {
+        return (
+            <div className="rounded-3xl border border-dashed border-slate-200 dark:border-border bg-white dark:bg-card p-6 text-sm text-slate-500 dark:text-muted-foreground">
+                Nessun dato disponibile per la classifica.
+            </div>
+        )
+    }
+
+    const resolveCharacter = (row) => {
+        if (!charactersById) return null
+        const charId = row.favoriteCharacterId || row.favorite_character_id || row.lastCharacterId
+        if (!charId) return null
+        return charactersById.get(charId) ?? null
+    }
+
+    const resolveUsedCharacters = (row) => {
+        if (!charactersById) return []
+        const usedIds = Array.isArray(row.usedCharacterIds) ? row.usedCharacterIds : []
+        if (!usedIds.length) {
+            const single = resolveCharacter(row)
+            return single ? [single] : []
+        }
+        return usedIds
+            .map((id) => charactersById.get(id) ?? null)
+            .filter(Boolean)
+    }
+
+    const charImage = (character) => {
+        if (character?.img_url) return character.img_url
+        return buildAvatarPlaceholder(character?.name ?? '')
+    }
+
+    const posTextColor = (index) => {
+        if (index <= 2 && theme?.tailwind?.text) return theme.tailwind.text
+        if (index === 0) return 'text-amber-600 dark:text-amber-400'
+        if (index === 1) return 'text-slate-400 dark:text-slate-500'
+        if (index === 2) return 'text-orange-500 dark:text-orange-400'
+        return 'text-slate-500 dark:text-muted-foreground'
+    }
+
+    const placementTextColor = (index) => {
+        if (index === 0) return 'text-emerald-600 dark:text-emerald-400'
+        if (index === 1) return 'text-emerald-500 dark:text-emerald-300'
+        if (index === 2) return 'text-emerald-400 dark:text-emerald-200'
+        return 'text-slate-700 dark:text-slate-300'
+    }
+
+    const podiumBg = (index) => {
+        if (index === 0) return 'bg-amber-50 dark:bg-amber-950/20'
+        if (index === 1) return 'bg-slate-50 dark:bg-slate-800/30'
+        if (index === 2) return 'bg-orange-50 dark:bg-orange-950/20'
+        return ''
+    }
+
+    const podiumBgMobile = (index) => {
+        if (index === 0) return 'border-l-4 border-amber-400 bg-amber-50/50 dark:bg-amber-950/20'
+        if (index === 1) return 'border-l-4 border-slate-300 bg-slate-50/50 dark:bg-slate-800/30'
+        if (index === 2) return 'border-l-4 border-orange-400 bg-orange-50/50 dark:bg-orange-950/20'
+        return ''
+    }
+
+    const PlayerCell = ({ row, charactersUsed, onPlayerClick }) => (
+        <div className="flex items-center gap-3">
+            <div className="shrink-0">
+                <img
+                    src={row.img_url || buildAvatarPlaceholder(row.nickname)}
+                    alt={row.nickname}
+                    className="h-12 w-12 rounded-full object-cover shrink-0"
+                />
+            </div>
+            <div className="min-w-0">
+                <button
+                    onClick={() => onPlayerClick?.(row)}
+                    className="text-left font-black text-slate-900 dark:text-foreground truncate capitalize hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer"
+                >
+                    {row.nickname}
+                </button>
+                <div className="text-xs text-slate-500 dark:text-muted-foreground truncate capitalize">
+                    {row.first_name} {row.last_name}
+                </div>
+                {charactersUsed.length > 0 && (
+                    <div className="mt-1 flex items-center gap-1.5 overflow-x-auto">
+                        {charactersUsed.slice(0, 6).map((character) => (
+                            <img
+                                key={character.id}
+                                src={charImage(character)}
+                                alt={character.name}
+                                title={character.name}
+                                className="h-6 w-6 rounded-full border border-white/70 dark:border-slate-700 object-cover shrink-0"
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+
+    return (
+        <div className="h-full overflow-hidden rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-lg shadow-slate-200/60 dark:shadow-black/20 flex flex-col">
+            <div className="divide-y divide-slate-100 dark:border-border md:hidden">
+                {rows.map((row, index) => {
+                    const charactersUsed = resolveUsedCharacters(row)
+                    const firstCharacter = charactersUsed[0] ?? null
+                    const firstCharacterName = firstCharacter?.name
+                    const isCurrentUser = !isSuperadmin && highlightPlayerId != null && row.playerId === highlightPlayerId
+
+                    return (
+                        <div key={row.playerId} className={`px-4 py-4 space-y-2 ${isCurrentUser ? `${theme?.tailwind?.bgSoft ?? 'bg-amber-500/10'} border-l-4 ${theme?.tailwind?.border ?? 'border-amber-500'}` : podiumBgMobile(index)}`}>
+                            <div className="flex items-center justify-between gap-2">
+                                <span className={`text-lg font-black ${posTextColor(index)}`}>{index + 1}</span>
+                                {showTournamentWins && (
+                                    <span className="rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-xs font-black text-amber-700 dark:text-amber-400">
+                                        {row.tournamentWins} vinti / {row.tournamentsPlayed} fatti
+                                    </span>
+                                )}
+                            </div>
+                            <PlayerCell row={row} charactersUsed={charactersUsed} onPlayerClick={onPlayerClick} />
+                            <div className="flex items-center gap-3 text-sm">
+                                {firstCharacterName ? (
+                                    <div className="flex items-center gap-1.5 text-slate-600 dark:text-muted-foreground">
+                                        <img src={charImage(firstCharacter)} alt={firstCharacterName} className="h-6 w-6 rounded-full object-cover shrink-0" />
+                                        <span className="text-xs font-medium">{firstCharacterName}</span>
+                                    </div>
+                                ) : (
+                                    <span className="text-xs text-slate-300 dark:text-muted-foreground">—</span>
+                                )}
+                                <div className="ml-auto flex flex-col items-end gap-0.5">
+                                    {showTournamentWins ? (
+                                        <>
+                                            <span className={`text-sm font-black ${placementTextColor(index)}`}>{row.placementIndex ?? 0}%</span>
+                                            <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">placement</span>
+                                            <span className="text-[10px] text-slate-400 dark:text-slate-500">{row.points} pt</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className={`text-sm font-black ${placementTextColor(index)}`}>{row.points} pt</span>
+                                            <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">punti</span>
+                                        </>
+                                    )}
+                                </div>
+                                <div className="flex flex-col items-end gap-0.5">
+                                    <span className="text-xs font-black text-emerald-700 dark:text-emerald-400">{row.raceWins} vittorie</span>
+                                    <div className="w-16 h-1 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+                                        <div className="h-full rounded-full bg-emerald-400" style={{ width: `${Math.min(row.winRate ?? 0, 100)}%` }} />
+                                    </div>
+                                    <span className="text-[10px] text-slate-400 dark:text-slate-500">{row.winRate}% WR</span>
+                                </div>
+                                <div className="flex flex-col items-end gap-0.5">
+                                    <span className="text-xs font-black text-blue-700 dark:text-blue-400">{row.podiums} podi</span>
+                                    <div className="w-16 h-1 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+                                        <div className="h-full rounded-full bg-blue-400" style={{ width: `${Math.min(row.podiumRate ?? 0, 100)}%` }} />
+                                    </div>
+                                    <span className="text-[10px] text-slate-400 dark:text-slate-500">{row.podiumRate}% gare</span>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                })}
+            </div>
+
+            <div className="hidden md:block flex-1 overflow-x-auto overflow-y-auto">
+                <table className="min-w-[600px] w-full text-left">
+                    <thead className="bg-slate-50 dark:bg-muted text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">
+                        <tr>
+                            <th className="px-5 py-4">Pos</th>
+                            <th className="px-5 py-4">Giocatore</th>
+                            <th className="px-5 py-4 text-emerald-600 dark:text-emerald-400">{showTournamentWins ? 'Placement' : 'Punti'}</th>
+                            {showTournamentWins && <th className="px-5 py-4">Tornei vinti</th>}
+                            <th className="px-5 py-4">Gare vinte</th>
+                            <th className="px-5 py-4">Podi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {rows.map((row, index) => {
+                            const charactersUsed = resolveUsedCharacters(row)
+                            const isCurrentUser = !isSuperadmin && highlightPlayerId != null && row.playerId === highlightPlayerId
+
+                            return (
+                                <tr key={row.playerId} className={`border-b border-slate-100/80 dark:border-slate-800/50 ${isCurrentUser ? `${theme?.tailwind?.bgSoft ?? 'bg-amber-500/10'} border-l-4 ${theme?.tailwind?.border ?? 'border-amber-500'}` : podiumBg(index)}`}>
+                                    <td className={`px-5 py-4 text-lg font-black align-middle ${posTextColor(index)}`}>{index + 1}</td>
+                                    <td className="px-5 py-4 align-middle w-[35%]">
+                                        <PlayerCell row={row} charactersUsed={charactersUsed} onPlayerClick={onPlayerClick} />
+                                    </td>
+                                    <td className="px-5 py-4 text-center align-middle">
+                                        {showTournamentWins ? (
+                                            <>
+                                                <span className={`text-lg font-black ${placementTextColor(index)}`}>{row.placementIndex ?? 0}%</span>
+                                                <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-tight">{row.points} pt</div>
+                                            </>
+                                        ) : (
+                                            <span className={`text-lg font-black ${placementTextColor(index)}`}>{row.points} pt</span>
+                                        )}
+                                    </td>
+                                    {showTournamentWins && (
+                                        <td className="px-5 py-4 text-center align-middle">
+                                            <span className="text-sm font-black text-amber-700 dark:text-amber-400">{row.tournamentWins}</span>
+                                            <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-tight">di {row.tournamentsPlayed}</div>
+                                        </td>
+                                    )}
+                                    <td className="px-5 py-4 text-center align-middle">
+                                        <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">{row.raceWins}</span>
+                                        <div className="mt-1 h-1 w-14 mx-auto rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+                                            <div className="h-full rounded-full bg-emerald-400 dark:bg-emerald-500 transition-all" style={{ width: `${Math.min(row.winRate ?? 0, 100)}%` }} />
+                                        </div>
+                                        <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-tight mt-0.5">{row.winRate}% WR</div>
+                                    </td>
+                                    <td className="px-5 py-4 text-center align-middle">
+                                        <span className="text-sm font-black text-blue-700 dark:text-blue-400">{row.podiums}</span>
+                                        <div className="mt-1 h-1 w-14 mx-auto rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+                                            <div className="h-full rounded-full bg-blue-400 dark:bg-blue-500 transition-all" style={{ width: `${Math.min(row.podiumRate ?? 0, 100)}%` }} />
+                                        </div>
+                                        <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-tight mt-0.5">{row.podiumRate}% gare</div>
+                                    </td>
+                                </tr>
+                            )
+                        })}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    )
+}
+
+export default LeaderboardTable

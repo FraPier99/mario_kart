@@ -1,5 +1,9 @@
-.env 
+.env
 node_modules/
 venv/
+.venv/
 dist/
 build/
+__pycache__/
+.ruff_cache/
+*.pyc

@@ -1,18 +1,18 @@
 {
   "version": "0.2.0",
   "configurations": [
+    
     {
-      "name": "Backend (FastAPI)",
+      "name": "Backend (FastAPI + Socket.IO)",
       "type": "debugpy",
       "request": "launch",
       "module": "uvicorn",
       "args": [
-        "main:app", // Modifica "main" se il tuo file di avvio si chiama in un altro modo (es. api:app)
-        "--reload"
+        "main:socket_app"
       ],
-      "cwd": "${workspaceFolder}/app", // Entra nella cartella del backend
-      "jinja": true,
-      "console": "integratedTerminal"
+      "cwd": "${workspaceFolder}/app",
+      "python": "${workspaceFolder}/venv/Scripts/python.exe",
+      "console": "externalTerminal"
     },
     {
       "name": "Frontend (Vite)",
@@ -23,7 +23,7 @@
         "run",
         "dev"
       ],
-      "cwd": "${workspaceFolder}/kart-frontend", // Entra nella cartella del frontend
+      "cwd": "${workspaceFolder}/frontend", // Entra nella cartella del frontend
       "console": "integratedTerminal"
     }
   ],
@@ -31,7 +31,7 @@
     {
       "name": "Avvia FastAPI + Vite",
       "configurations": [
-        "Backend (FastAPI)",
+        "Backend (FastAPI + Socket.IO)",
         "Frontend (Vite)"
       ],
       "stopAll": true

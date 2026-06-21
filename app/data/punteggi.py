@@ -1,12 +1,4 @@
-GARE_CONFIG = {
-    4: 16,
-    5: 20,
-    6: 24,
-    7: 28,
-    8: 32,
-}
-
-PUNTEGGI_CONFIG = {
+PUNTEGGI_STATIC = {
     4: [5, 3, 2, 1],
     5: [6, 4, 3, 2, 1],
     6: [7, 5, 4, 3, 2, 1],
@@ -15,11 +7,30 @@ PUNTEGGI_CONFIG = {
 }
 
 
+def _compute_punteggi(n: int) -> list[int]:
+    if n in PUNTEGGI_STATIC:
+        return PUNTEGGI_STATIC[n]
+    if n < 4:
+        return list(range(n + 1, 0, -1))[:n]
+    first = n + 1
+    rest = list(range(n - 1, 0, -1))
+    return [first] + rest
+
+
+def _compute_gare(n: int) -> int:
+    return n * 4
+
+
+PUNTEGGI_CONFIG = {n: _compute_punteggi(n) for n in range(2, 13)}
+
+
 def setUpTournament(n_giocatori: int):
-    if n_giocatori not in GARE_CONFIG:
-        raise ValueError(f"Numero di giocatori non supportato. Supportati: {list(GARE_CONFIG.keys())}")
+    if n_giocatori < 2:
+        raise ValueError(
+            f"Numero di giocatori non supportato ({n_giocatori}). Minimo 2."
+        )
 
     return {
-        'gare': GARE_CONFIG[n_giocatori],
-        'punteggi': PUNTEGGI_CONFIG[n_giocatori],
+        "gare": _compute_gare(n_giocatori),
+        "punteggi": _compute_punteggi(n_giocatori),
     }
