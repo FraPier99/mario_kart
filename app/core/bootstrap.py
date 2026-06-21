@@ -50,27 +50,27 @@ def ensure_user_virtual_coins_column():
             )
 
 
-def seed_circuits():
-    with engine.begin() as connection:
-        result = connection.execute(
-            text("SELECT COUNT(*) FROM circuits WHERE game_id = 1")
-        )
-        count = result.scalar()
+# def seed_circuits():
+#     with engine.begin() as connection:
+#         result = connection.execute(
+#             text("SELECT COUNT(*) FROM circuits WHERE game_id = 1")
+#         )
+#         count = result.scalar()
 
-        if count == 0:
-            for circuit in SEED_CIRCUITS:
-                connection.execute(
-                    text(
-                        "INSERT INTO circuits (name, description, game_id, image_url) VALUES (:name, :description, :game_id, :image_url)"
-                        " ON CONFLICT (name, game_id) DO NOTHING"
-                    ),
-                    {
-                        "name": circuit["name"],
-                        "description": circuit["description"],
-                        "game_id": circuit["game_id"],
-                        "image_url": circuit.get("image_url"),
-                    },
-                )
+#         if count == 0:
+#             for circuit in SEED_CIRCUITS:
+#                 connection.execute(
+#                     text(
+#                         "INSERT INTO circuits (name, description, game_id, image_url) VALUES (:name, :description, :game_id, :image_url)"
+#                         " ON CONFLICT (name, game_id) DO NOTHING"
+#                     ),
+#                     {
+#                         "name": circuit["name"],
+#                         "description": circuit["description"],
+#                         "game_id": circuit["game_id"],
+#                         "image_url": circuit.get("image_url"),
+#                     },
+#                 )
 
 
 def seed_mk8d_data():
