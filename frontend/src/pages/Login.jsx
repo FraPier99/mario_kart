@@ -57,7 +57,9 @@ const Login = () => {
                             Nessuna registrazione pubblica. Le credenziali vengono assegnate manualmente e il ruolo decide cosa puoi fare nel sistema.
                         </p>
                         <div className="mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-sm text-emerald-100">
-                            Primo accesso superadmin: username <span className="font-black text-white">superadmin</span> e password <span className="font-black text-white">superadmin123</span>.
+                            <p className="font-black text-white mb-1">🏁 Benvenuto nella Lega Kart!</p>
+                            <p className="leading-relaxed">Qui si organizzano tornei, si compilano schedine, si sbloccano power-up e si discute in galleria. <span className="font-black text-white">Trofeo, statistiche e gloria ti aspettano.</span></p>
+                            <p className="mt-2 text-emerald-300/70 text-[10px]">🍄 Il potere del Super Mushroom è nelle tue mani.</p>
                         </div>
                         {user && (
                             <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-slate-300">
@@ -121,9 +123,7 @@ const Login = () => {
                             </div>
                         )}
 
-                        <p className="mt-4 text-xs leading-5 text-slate-400">
-                            Superadmin, admin e user hanno dashboard e permessi diversi. Se l'account è un user, vedrai solo la tua area privata.
-                        </p>
+
                     </form>
                 </div>
             </div>

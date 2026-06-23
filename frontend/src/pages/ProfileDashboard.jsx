@@ -253,12 +253,22 @@ const SchedinaBadge = () => {
 
 const Dashboard = () => {
     const { user, isAdmin, isSuperadmin, refreshMe, logout, isAuthenticated } = useAuth()
-    const { charactersById, statsByPlayerId, refresh, getTournamentById } = useAppData()
+    const { charactersById, statsByPlayerId, refresh, getTournamentById, games, getLeaderboardByGame } = useAppData()
     const characters = useMemo(() => [...charactersById.values()], [charactersById])
     const player = user?.player ?? null
     const playerStats = player ? (statsByPlayerId.get(player.id) ?? null) : null
     const favoriteCharacter = player?.favorite_character_id ? charactersById.get(player.favorite_character_id) : null
     const isChampion = (playerStats?.tournamentWins ?? 0) > 0
+    const [selectedGameId, setSelectedGameId] = useState('')
+    const gameStats = useMemo(() => {
+        if (!selectedGameId || !player) return null
+        const leaderboard = getLeaderboardByGame(selectedGameId)
+        const entry = leaderboard.find((entry) => entry.playerId === player.id) ?? null
+        if (!entry) return null
+        const rank = leaderboard.indexOf(entry) + 1
+        return { ...entry, rank, totalPlayers: leaderboard.length }
+    }, [selectedGameId, player, getLeaderboardByGame])
+
     const goldBorder = (isChampion || isSuperadmin)
         ? 'border-amber-400/50 dark:border-amber-500/30 shadow-amber-300/20 dark:shadow-amber-950/40 ring-1 ring-amber-400/30 dark:ring-amber-500/20'
         : 'border-slate-200 dark:border-border'
@@ -268,7 +278,7 @@ const Dashboard = () => {
 
     const [profileTab, setProfileTab] = useState('profilo')
     const [saving, setSaving] = useState(false)
-    const [form, setForm] = useState({ first_name: '', last_name: '', nickname: '', favorite_character_id: '', img_url: '' })
+    const [form, setForm] = useState({ first_name: '', last_name: '', nickname: '', favorite_character_id: '', img_url: '', bio: '' })
     const [imageFileName, setImageFileName] = useState('')
     const [inventory, setInventory] = useState([])
     const [inventoryLoading, setInventoryLoading] = useState(false)
@@ -285,6 +295,7 @@ const Dashboard = () => {
             nickname: player?.nickname ?? user?.username ?? '',
             favorite_character_id: player?.favorite_character_id ? String(player.favorite_character_id) : '',
             img_url: player?.img_url ?? '',
+            bio: player?.bio ?? '',
         })
         setImageFileName('')
         if (player && !isSuperadmin) setProfileTab('panoramica')
@@ -333,6 +344,7 @@ const Dashboard = () => {
                 nickname: form.nickname.trim(),
                 favorite_character_id: form.favorite_character_id ? Number(form.favorite_character_id) : null,
                 img_url: form.img_url.trim() || null,
+                bio: form.bio.trim() || null,
             })
             toast.success('Profilo aggiornato')
             await refresh()
@@ -541,27 +553,11 @@ const Dashboard = () => {
                             ))}
                         </div>
 
-                        {/* Win / Podium rate bars */}
-                        {(playerStats?.racesPlayed ?? 0) > 0 && (
+                        {/* Bio */}
+                        {player?.bio && (
                             <div className="rounded-[2rem] border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm">
-                                <p className="mb-4 text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Performance</p>
-                                <div className="space-y-4">
-                                    {[
-                                        { label: 'Win Rate', value: playerStats?.winRate ?? 0, color: 'bg-emerald-400' },
-                                        { label: 'Podium Rate', value: playerStats?.podiumRate ?? 0, color: 'bg-blue-400' },
-                                        { label: 'Efficienza Media', value: playerStats?.avgEfficiency ?? 0, color: 'bg-violet-400' },
-                                    ].map(({ label, value, color }) => (
-                                        <div key={label}>
-                                            <div className="flex items-center justify-between mb-1.5">
-                                                <span className="text-xs font-black text-slate-600 dark:text-foreground">{label}</span>
-                                                <span className="text-xs font-black text-slate-400">{value}%</span>
-                                            </div>
-                                            <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
-                                                <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${Math.min(value, 100)}%` }} />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                                <p className="mb-3 text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Bio</p>
+                                <p className="text-sm text-slate-700 dark:text-foreground leading-relaxed whitespace-pre-wrap">{player.bio}</p>
                             </div>
                         )}
 
@@ -657,6 +653,16 @@ const Dashboard = () => {
                                         </div>
                                     )}
                                 </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="space-y-1.5">
+                                    <span className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Bio</span>
+                                    <textarea name="bio" value={form.bio} onChange={handleFormChange} rows={3} maxLength={500}
+                                        placeholder="Parla di te, del tuo rapporto con Mario Kart..."
+                                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-emerald-500 resize-none dark:border-border dark:bg-muted dark:text-foreground" />
+                                    <p className="text-[10px] text-slate-400 dark:text-muted-foreground">{form.bio.length}/500 caratteri</p>
+                                </label>
                             </div>
 
                             <div className="space-y-2">
@@ -761,28 +767,52 @@ const Dashboard = () => {
                             ))}
                         </div>
 
-                        {(playerStats?.racesPlayed ?? 0) > 0 && (
-                            <div className="rounded-[2rem] border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm">
-                                <p className="mb-4 text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Performance</p>
-                                <div className="space-y-4">
-                                    {[
-                                        { label: 'Win Rate', value: playerStats?.winRate ?? 0, color: 'bg-emerald-400' },
-                                        { label: 'Podium Rate', value: playerStats?.podiumRate ?? 0, color: 'bg-blue-400' },
-                                        { label: 'Efficienza Media', value: playerStats?.avgEfficiency ?? 0, color: 'bg-violet-400' },
-                                    ].map(({ label, value, color }) => (
-                                        <div key={label}>
-                                            <div className="flex items-center justify-between mb-1.5">
-                                                <span className="text-xs font-black text-slate-600 dark:text-foreground">{label}</span>
-                                                <span className="text-xs font-black text-slate-400">{value}%</span>
-                                            </div>
-                                            <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
-                                                <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${Math.min(value, 100)}%` }} />
-                                            </div>
-                                        </div>
+                        {/* Statistiche per gioco */}
+                        <div className="rounded-[2rem] border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm">
+                            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                                <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Statistiche per gioco</p>
+                                <select value={selectedGameId} onChange={e => setSelectedGameId(e.target.value)}
+                                    className="rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-foreground outline-none focus:border-emerald-400">
+                                    <option value="">Seleziona un gioco</option>
+                                    {games.map((g) => (
+                                        <option key={g.id} value={g.id}>{g.name}</option>
                                     ))}
-                                </div>
+                                </select>
                             </div>
-                        )}
+                            {gameStats ? (
+                                <div className="space-y-4">
+                                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                                        {[
+                                            { label: 'Posizione', value: `#${gameStats.rank}`, sub: `di ${gameStats.totalPlayers}`, iconCls: gameStats.rank === 1 ? 'bg-amber-400/25 text-amber-600' : 'bg-slate-500/10 text-slate-600', Icon: Trophy },
+                                            { label: 'Tornei vinti', value: gameStats.tournamentWins, sub: `di ${gameStats.tournamentsPlayed} giocati`, iconCls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400', Icon: Crown },
+                                            { label: 'Podi totali', value: gameStats.podiums, sub: `Podium Rate ${gameStats.podiumRate}%`, iconCls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', Icon: Star },
+                                            { label: 'Vittorie gara', value: gameStats.raceWins, sub: `Win Rate ${gameStats.winRate}%`, iconCls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', Icon: Flag },
+                                        ].map(({ label, value, sub, iconCls, Icon }) => (
+                                            <div key={label} className="flex items-start gap-3 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-4 shadow-sm">
+                                                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconCls}`}>
+                                                    <Icon size={16} />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">{label}</p>
+                                                    <p className="mt-1 text-2xl font-black leading-none text-slate-900 dark:text-foreground">{value}</p>
+                                                    <p className="mt-1 text-[10px] leading-snug text-slate-500 dark:text-muted-foreground">{sub}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 text-[10px] text-slate-500 dark:text-muted-foreground">
+                                        <span className="rounded-lg bg-slate-100 dark:bg-muted px-2.5 py-1">Punti totali: {gameStats.points}</span>
+                                        <span className="rounded-lg bg-slate-100 dark:bg-muted px-2.5 py-1">Gare giocate: {gameStats.racesPlayed}</span>
+                                        <span className="rounded-lg bg-slate-100 dark:bg-muted px-2.5 py-1">Placement Index: {gameStats.placementIndex?.toFixed(2) ?? '—'}</span>
+                                        <span className="rounded-lg bg-slate-100 dark:bg-muted px-2.5 py-1">Efficienza: {gameStats.avgEfficiency}%</span>
+                                    </div>
+                                </div>
+                            ) : selectedGameId ? (
+                                <p className="text-xs text-slate-400">Nessuna statistica per questo gioco.</p>
+                            ) : (
+                                <p className="text-xs text-slate-400">Seleziona un gioco per vedere le statistiche.</p>
+                            )}
+                        </div>
 
                         {!playerStats && (
                             <div className="rounded-2xl border border-dashed border-slate-200 dark:border-border p-5 text-center text-sm text-slate-500 dark:text-muted-foreground">

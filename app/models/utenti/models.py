@@ -10,6 +10,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from datetime import datetime
+from app.core.timezone import now_rome
 
 from app.models.base import Base
 
@@ -27,6 +28,7 @@ class Player(Base):
     img_url = Column(Text, nullable=True)
     champion_photo = Column(Text, nullable=True)
 
+    bio = Column(Text, nullable=True)
     favorite_character_id = Column(Integer, ForeignKey("characters.id"), nullable=True)
 
     results = relationship("Result", back_populates="player")
@@ -98,7 +100,7 @@ class TournamentPhoto(Base):
     uploaded_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     image_data = Column(Text, nullable=False)
     caption = Column(String, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=now_rome)
 
     tournament = relationship("Tournament")
     uploaded_by = relationship("User", foreign_keys=[uploaded_by_user_id])
@@ -114,13 +116,15 @@ class PhotoComment(Base):
     photo_id = Column(Integer, ForeignKey("tournament_photos.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     text = Column(Text, nullable=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    parent_id = Column(Integer, ForeignKey("photo_comments.id"), nullable=True)
+    created_at = Column(DateTime, nullable=False, default=now_rome)
     edited_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     edited_at = Column(DateTime, nullable=True)
 
     photo = relationship("TournamentPhoto", back_populates="comments")
     user = relationship("User", foreign_keys=[user_id])
     edited_by = relationship("User", foreign_keys=[edited_by_user_id])
+    parent = relationship("PhotoComment", remote_side=[id], backref="replies")
 
 
 # -------------------
@@ -134,7 +138,7 @@ class Notification(Base):
     type = Column(String, nullable=False, default="mention")
     content = Column(Text, nullable=False)
     is_read = Column(Boolean, nullable=False, default=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=now_rome)
     source_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     source_photo_id = Column(Integer, ForeignKey("tournament_photos.id"), nullable=True)
     source_tournament_id = Column(Integer, ForeignKey("tournaments.id"), nullable=True)
@@ -152,7 +156,7 @@ class Challenge(Base):
     receiver_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     message = Column(Text, nullable=False)
     status = Column(String, nullable=False, default="pending")
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=now_rome)
     responded_at = Column(DateTime, nullable=True)
 
     sender = relationship(
@@ -175,7 +179,7 @@ class AuditLog(Base):
     target_type = Column(String, nullable=True)
     target_id = Column(Integer, nullable=True)
     description = Column(Text, nullable=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=now_rome)
 
     actor = relationship("User", foreign_keys=[actor_user_id])
 
@@ -189,7 +193,7 @@ class TempPassword(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     temp_password = Column(String, nullable=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=now_rome)
     expires_at = Column(DateTime, nullable=False)
 
     user = relationship("User", foreign_keys=[user_id])

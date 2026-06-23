@@ -209,8 +209,8 @@ export default function PowerCard({
                 <p className="text-[9px] font-black uppercase tracking-[0.3em] mb-1 text-slate-400">Effetto</p>
                 <p className="text-[11px] leading-relaxed text-slate-300">
                   {isMaster
-                    ? "Annulla un ritiro, un'ammonizione o ripristina un risultato sfavorevole subito durante un torneo."
-                    : 'Penalizza un avversario di una posizione in classifica oppure gli impone uno svantaggio nella prossima gara.'}
+                    ? 'Scegli tra: annulla la pista di un avversario e imponi la tua, obbliga un player a usare un personaggio specifico, o aggiungi una gara extra a fine torneo.'
+                    : 'Scegli tra: impone agli avversari di fermarsi un giro, impone agli avversari di fermarsi X secondi, o impedisce a un avversario di usare item per 30s.'}
                 </p>
               </div>
             </div>
@@ -392,9 +392,9 @@ export default function PowerCard({
             </div>
             <p className="text-xs text-slate-200 leading-relaxed">
               {isMaster ? (
-                <><span className="text-amber-300 font-black">Annulla</span> un ritiro, un'ammonizione o qualsiasi penalizzazione subita durante un torneo.</>
+                <><span className="text-amber-300 font-black">Scegli tra 3 effetti</span>: annulla la pista di un avversario e imponi la tua, obbliga un player a usare un personaggio specifico, o aggiungi una gara extra a fine torneo.</>
               ) : (
-                <><span className="text-cyan-300 font-black">Penalizza un avversario</span>: −1 posizione, partenza arretrata o giro extra.</>
+                <><span className="text-cyan-300 font-black">Scegli tra 3 effetti</span>: ferma gli avversari per un giro, fermali per X secondi, o impedisci item per 30s.</>
               )}
             </p>
           </div>

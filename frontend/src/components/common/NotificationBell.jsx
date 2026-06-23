@@ -10,6 +10,7 @@ const TYPE_CONFIG = {
   new_tournament:    { icon: Trophy,         color: 'text-violet-400',  bg: 'bg-violet-500/15',  label: 'Nuovo torneo' },
   gallery_mention:   { icon: MessageCircle,  color: 'text-blue-400',    bg: 'bg-blue-500/15',    label: 'Menzione in galleria' },
   mention:           { icon: MessageCircle,  color: 'text-blue-400',    bg: 'bg-blue-500/15',    label: 'Menzione' },
+  comment_reply:     { icon: MessageCircle,  color: 'text-emerald-400', bg: 'bg-emerald-500/15', label: 'Risposta in galleria' },
   card_granted:      { icon: Zap,            color: 'text-amber-400',   bg: 'bg-amber-500/15',   label: 'Carta ricevuta' },
 }
 const DEFAULT_CFG = { icon: Bell, color: 'text-slate-400', bg: 'bg-slate-500/15', label: 'Notifica' }
@@ -22,7 +23,8 @@ const resolveNotifLink = (notif) => {
     case 'schedina_winner':  return ref ? `/schedina/${ref}` : '/history'
     case 'schedina_pending': return ref ? `/schedina/${ref}/compila` : '/schedina'
     case 'new_tournament':   return ref ? `/tournaments/${ref}` : '/history'
-    case 'gallery_mention':  return '/gallery'
+    case 'gallery_mention':
+    case 'comment_reply':    return '/gallery'
     case 'card_granted':     return '/dashboard'
     default:                 return ref ? `/tournaments/${ref}` : '/dashboard'
   }
@@ -39,6 +41,7 @@ const resolveNotifContext = (notif) => {
     case 'schedina_pending':
       return tName ? `Da compilare · ${tName}` : (tId ? `Torneo #${tId}` : 'Compila ora →')
     case 'gallery_mention':
+    case 'comment_reply':
       return 'Vai alla galleria →'
     default:
       return tName ?? (tId ? `Torneo #${tId}` : null)

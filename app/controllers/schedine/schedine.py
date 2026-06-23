@@ -38,6 +38,7 @@ from app.controllers.schedine.schemas.schedine import (
     SchedinaTournamentOverviewResponse,
 )
 from datetime import datetime
+from app.core.timezone import now_rome
 
 
 router = APIRouter(prefix="/schedine", tags=["Schedine"])
@@ -117,7 +118,9 @@ def get_pending_notifications(
     pending = []
     for t in candidates:
         schedina_model = (
-            SchedinaTorneoGroupStage if t.tournament_format == "group_stage" else SchedinaTorneo
+            SchedinaTorneoGroupStage
+            if t.tournament_format == "group_stage"
+            else SchedinaTorneo
         )
         has_schedina = (
             db.query(schedina_model)
@@ -221,7 +224,7 @@ def get_tournament_schedine_detail_endpoint(
 
     is_privileged = current_user.role in {"admin", "superadmin"}
     deadline_passed = bool(
-        tournament.deadline_lock and datetime.utcnow() >= tournament.deadline_lock
+        tournament.deadline_lock and now_rome() >= tournament.deadline_lock
     )
     include_details = (
         tournament.status in {"da_svolgere", "in_corso", "concluso"}
@@ -240,7 +243,9 @@ def get_tournament_schedine_detail_endpoint(
     # quindi qui risultava sempre "non compilata" anche dopo l'invio.
     if tournament.tournament_format == "group_stage":
         user_has_predicted = bool(
-            get_schedine_deluxe(db, user_id=current_user.id, tournament_id=tournament_id)
+            get_schedine_deluxe(
+                db, user_id=current_user.id, tournament_id=tournament_id
+            )
         )
     else:
         user_has_predicted = bool(

@@ -1,6 +1,7 @@
 import secrets
 import string
 from datetime import datetime, timedelta
+from app.core.timezone import now_rome
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -59,7 +60,7 @@ class ResetPasswordResponse(BaseModel):
 
 
 def store_temp_password(db: Session, user_id: int, temp_pw: str):
-    now = datetime.utcnow()
+    now = now_rome()
     tp = TempPassword(
         user_id=user_id,
         temp_password=temp_pw,
@@ -116,7 +117,7 @@ def get_user_temp_passwords(
     db: Session = Depends(get_db),
     current_user=Depends(require_roles("superadmin")),
 ):
-    now = datetime.utcnow()
+    now = now_rome()
     entries = (
         db.query(TempPassword)
         .filter(TempPassword.user_id == user_id, TempPassword.expires_at > now)

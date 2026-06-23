@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, case
 from app.data.punteggi import setUpTournament
 from datetime import datetime, timedelta
+from app.core.timezone import now_rome, rome_deadline_lock
 
 
 def _get_superadmin_player_ids(db: Session) -> set[int]:
@@ -88,11 +89,8 @@ def compute_semifinal_layout(n_qualified: int) -> list[int]:
 
 
 def _compute_deadline_lock(tournament_date):
-    """Calcola deadline: 23:59 del giorno prima dell'evento"""
-    if tournament_date is None:
-        return None
-    event_start = datetime.combine(tournament_date, datetime.min.time())
-    return event_start - timedelta(minutes=1)
+    """Calcola deadline: 23:59 del giorno prima dell'evento in ora italiana."""
+    return rome_deadline_lock(tournament_date)
 
 
 def _normalize_tournament_status(tournament):
@@ -117,7 +115,7 @@ def _touch_phase_change(
     """Aggiorna i campi di audit 'ultimo avanzamento fase' e registra un AuditLog."""
     from app.services.utenti.audit_log import log_action
 
-    tournament.last_phase_change_at = datetime.utcnow()
+    tournament.last_phase_change_at = now_rome()
     tournament.last_phase_change_by_id = actor_user_id
     db.commit()
     log_action(
@@ -231,7 +229,7 @@ def create_tournament(
         data["status"] = "concluso"
 
     data["deadline_lock"] = _compute_deadline_lock(tmentData.date)
-    data["created_at"] = datetime.utcnow()
+    data["created_at"] = now_rome()
     data["created_by_id"] = created_by_id
 
     new_tournament = Tournament(**data)
@@ -388,7 +386,7 @@ def set_player_withdrawal(
         raise ValueError("Il giocatore non è un partecipante di questo torneo")
 
     link.withdrawn = withdrawn
-    link.withdrawn_at = datetime.utcnow() if withdrawn else None
+    link.withdrawn_at = now_rome() if withdrawn else None
 
     db.commit()
     db.refresh(tournament)
@@ -573,7 +571,7 @@ def set_tournament_playoff_winner(
         player_one_id=playoffData.player_one_id,
         player_two_id=playoffData.player_two_id,
         winner_id=playoffData.winner_id,
-        created_at=datetime.utcnow().date(),
+        created_at=now_rome().date(),
     )
     db.add(history)
 

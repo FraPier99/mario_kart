@@ -19,6 +19,7 @@ class AuthPlayerSummary(BaseModel):
     nickname: str
     favorite_character_id: Optional[int] = None
     img_url: Optional[str] = None
+    bio: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
@@ -68,6 +69,7 @@ class UpdateMyProfile(BaseModel):
     nickname: Optional[NormalizeStr] = None
     favorite_character_id: Optional[int] = None
     img_url: Optional[str] = None
+    bio: Optional[str] = None
 
 
 class ChangePasswordRequest(BaseModel):

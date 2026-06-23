@@ -1,4 +1,5 @@
 from datetime import datetime
+from app.core.timezone import now_rome
 
 from sqlalchemy.orm import Session, joinedload
 
@@ -8,7 +9,10 @@ from app.controllers.utenti.schemas.gallery import (
     PhotoCommentUpdate,
     TournamentPhotoCreate,
 )
-from app.services.utenti.notifications import create_mention_notifications
+from app.services.utenti.notifications import (
+    create_mention_notifications,
+    create_reply_notification,
+)
 
 
 def _serialize_photo(photo: TournamentPhoto) -> dict:
@@ -50,6 +54,7 @@ def _serialize_comment(comment: PhotoComment) -> dict:
         if favorite_character
         else None,
         "text": comment.text,
+        "parent_id": comment.parent_id,
         "created_at": comment.created_at,
         "edited_by_username": comment.edited_by.username if comment.edited_by else None,
         "edited_at": comment.edited_at,
@@ -118,10 +123,15 @@ def add_comment(
     if not db.query(TournamentPhoto).filter(TournamentPhoto.id == photo_id).first():
         return None
     text = payload.text.strip()
-    comment = PhotoComment(photo_id=photo_id, user_id=user_id, text=text)
+    parent_id = payload.parent_id
+    comment = PhotoComment(
+        photo_id=photo_id, user_id=user_id, text=text, parent_id=parent_id
+    )
     db.add(comment)
     db.flush()
     create_mention_notifications(db, text, user_id, source_photo_id=photo_id)
+    if parent_id is not None:
+        create_reply_notification(db, comment, user_id)
     db.commit()
     db.refresh(comment)
     return _serialize_comment(comment)
@@ -135,7 +145,7 @@ def edit_comment(
         return None
     comment.text = payload.text.strip()
     comment.edited_by_user_id = editor_user_id
-    comment.edited_at = datetime.utcnow()
+    comment.edited_at = now_rome()
     db.commit()
     db.refresh(comment)
     return _serialize_comment(comment)

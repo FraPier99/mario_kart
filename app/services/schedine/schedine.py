@@ -1,4 +1,5 @@
 from datetime import datetime
+from app.core.timezone import now_rome
 
 from sqlalchemy import and_, case, func, or_
 from sqlalchemy.orm import Session
@@ -643,7 +644,7 @@ def redeem_tournament_power(db: Session, prize_id: int, user_id: int):
     if prize.redeemed_at is not None:
         return prize
 
-    prize.redeemed_at = datetime.utcnow()
+    prize.redeemed_at = now_rome()
     db.flush()
     return prize
 
@@ -710,7 +711,7 @@ def settle_tournament_schedine(db: Session, tournament_id: int):
         schedina.actual_winner_points = actual["winner_points"]
         schedina.tie_breaker_distance = item["tie_breaker_distance"]
         schedina.status = "settled"
-        schedina.settled_at = datetime.utcnow()
+        schedina.settled_at = now_rome()
     winner_schedina = winner_row["schedina"]
 
     winner_user = db.query(User).filter(User.id == winner_schedina.user_id).first()

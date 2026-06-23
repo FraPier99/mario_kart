@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from sqlalchemy.orm import Session
 
-from app.models import Notification, Player, User
+from app.models import Notification, PhotoComment, Player, User
 
 
 def _parse_mentions(text: str) -> list[str]:
@@ -45,6 +45,39 @@ def create_mention_notifications(
         )
         db.add(notif)
 
+    db.flush()
+
+
+def create_reply_notification(
+    db: Session,
+    comment: PhotoComment,
+    source_user_id: int,
+):
+    """Create a notification for the parent comment author when someone replies,
+    unless the reply already contains an @mention of the parent author."""
+    if not comment.parent_id:
+        return
+    parent = db.query(PhotoComment).filter(PhotoComment.id == comment.parent_id).first()
+    if not parent or parent.user_id == source_user_id:
+        return
+
+    # Don't double-notify if the reply already @mentions the parent author
+    parent_player = parent.user.player if parent.user else None
+    parent_nickname = parent_player.nickname if parent_player else None
+    if parent_nickname and f"@{parent_nickname.lower()}" in comment.text.lower():
+        return
+
+    source_user = db.query(User).filter(User.id == source_user_id).first()
+    source_name = source_user.username if source_user else f"user-{source_user_id}"
+
+    notif = Notification(
+        user_id=parent.user_id,
+        type="comment_reply",
+        content=f"@{source_name} ti ha risposto in un commento.",
+        source_user_id=source_user_id,
+        source_photo_id=comment.photo_id,
+    )
+    db.add(notif)
     db.flush()
 
 
@@ -195,9 +228,9 @@ def delete_notification(db: Session, notification_id: int, user_id: int) -> bool
 
 def _serialize(n: Notification) -> dict:
     link = None
-    if n.type in ("mention", "gallery_mention") and n.source_photo_id:
+    if n.type in ("mention", "gallery_mention", "comment_reply") and n.source_photo_id:
         link = f"/gallery?photo={n.source_photo_id}"
-    elif n.type == "gallery_mention":
+    elif n.type in ("gallery_mention", "comment_reply"):
         link = "/gallery"
     elif n.source_tournament_id:
         if n.type == "schedina_winner":

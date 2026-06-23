@@ -127,6 +127,7 @@ const CommunityUserPage = () => {
                             </p>
                             <h1 className="mt-1 text-2xl font-black text-slate-900 dark:text-foreground">{player?.nickname ?? communityUser.username}</h1>
                             {player && <p className="text-sm text-slate-500 dark:text-muted-foreground">{player.first_name} {player.last_name}</p>}
+                            {player?.bio && <p className="mt-2 max-w-md text-xs text-slate-500 dark:text-muted-foreground leading-relaxed whitespace-pre-wrap">{player.bio}</p>}
                         </div>
                         {favoriteCharacter && (
                             <div className="flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-2">
@@ -138,18 +139,25 @@ const CommunityUserPage = () => {
                     </div>
                 </div>
 
-                {/* Superadmin sees dismissive message */}
+                {/* Superadmin sees fun game-master banner */}
                 {viewedUserIsSuperadmin ? (
-                    <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-8 text-center shadow-xl">
-                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-muted">
-                            <Shield size={28} className="text-slate-400" />
+                    <div className="rounded-[2rem] border-2 border-amber-200 dark:border-amber-500/30 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/5 p-8 text-center shadow-xl">
+                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-400/30">
+                            <Shield size={28} className="text-white" />
                         </div>
                         <h2 className="mt-4 text-2xl font-black text-slate-900 dark:text-foreground">
-                            Ehy, tu non giochi!
+                            🏆 Game Master
                         </h2>
-                        <p className="mt-2 text-sm text-slate-500 dark:text-muted-foreground">
-                            Non ti serve 'sta roba, lascia perdere le statistiche e pensa ad organizzare il prossimo torneo!
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 italic">
+                            "Chi è primo nella classifica non conta. Quello che conta è avere il miglior item al momento giusto."
                         </p>
+                        <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">
+                            Tu organizzi, loro corrono. La vera vittoria è vedere il tabellone funzionare. 👑
+                        </p>
+                        <div className="mt-4 flex items-center justify-center gap-2">
+                            <span className="rounded-full bg-amber-100 dark:bg-amber-500/20 px-3 py-1 text-[10px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-wider">SuperAdmin</span>
+                            <span className="rounded-full bg-emerald-100 dark:bg-emerald-500/20 px-3 py-1 text-[10px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">Game Master</span>
+                        </div>
                     </div>
                 ) : (
                     <div className="rounded-[2rem] border border-slate-200 dark:border-border bg-white dark:bg-card p-6 shadow-xl">

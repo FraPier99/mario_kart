@@ -14,6 +14,7 @@ Regolamento (REGOLAMENTO.md):
 """
 
 from datetime import datetime
+from app.core.timezone import now_rome
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -501,7 +502,7 @@ def settle_deluxe_schedine(db: Session, tournament_id: int) -> dict:
 
         s.total_points = score
         s.status = "settled"
-        s.settled_at = datetime.utcnow()
+        s.settled_at = now_rome()
 
         user = db.query(User).filter(User.id == s.user_id).first()
         player = (

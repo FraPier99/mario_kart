@@ -225,7 +225,9 @@ def update_my_profile(
             raw_nickname = profile_data.nickname or current_user.username
             nickname = sanitize_nickname(raw_nickname)
             if not nickname:
-                raise ValueError("Il nickname deve contenere almeno un carattere alfanumerico")
+                raise ValueError(
+                    "Il nickname deve contenere almeno un carattere alfanumerico"
+                )
             if db.query(Player).filter(Player.nickname == nickname).first():
                 raise ValueError(f"Il nickname '{nickname}' è già in uso")
 
@@ -249,6 +251,7 @@ def update_my_profile(
             nickname=profile_data.nickname,
             favorite_character_id=profile_data.favorite_character_id,
             img_url=profile_data.img_url,
+            bio=profile_data.bio,
         )
         player = update_player(db, update_payload, current_user.player_id)
         if not player:

@@ -191,6 +191,9 @@ const Cards = () => {
                                 </div>
                             ) : null
                         })()}
+                        <Link to="/dashboard" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-700 transition hover:border-slate-300 dark:border-border dark:bg-card dark:text-foreground">
+                            Il mio profilo
+                        </Link>
                         <Link to="/history" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-700 transition hover:border-slate-300 dark:border-border dark:bg-card dark:text-foreground">
                             Storico tornei
                         </Link>
@@ -210,6 +213,9 @@ const Cards = () => {
                         <PowerCard type="guscio" mode="flip" flipped={flippedCard === 'guscio'} onFlip={() => setFlippedCard(flippedCard === 'guscio' ? null : 'guscio')} />
                     </div>
                     <p className="mt-5 text-center text-[10px] text-slate-400 dark:text-slate-500">Le carte vengono attivate dall'organizzatore nella pagina di gestione del torneo. Una volta consumate non sono più recuperabili.</p>
+                    <div className="mt-4 rounded-2xl border border-dashed border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 px-5 py-3 text-center">
+                        <p className="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">⚙️ Effetti in fase di definizione — potrebbero subire modifiche</p>
+                    </div>
                 </div>
 
                 {/* Inventario globale — raggruppato per gioco, poi per tipologia di carta */}

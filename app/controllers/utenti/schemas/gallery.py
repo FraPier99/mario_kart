@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 class PhotoCommentCreate(BaseModel):
     text: str = Field(..., min_length=1, max_length=500)
+    parent_id: Optional[int] = None
 
 
 class PhotoCommentUpdate(BaseModel):
@@ -21,6 +22,7 @@ class PhotoCommentResponse(BaseModel):
     user_img_url: Optional[str] = None
     favorite_character_img_url: Optional[str] = None
     text: str
+    parent_id: Optional[int] = None
     created_at: datetime
     edited_by_username: Optional[str] = None
     edited_at: Optional[datetime] = None

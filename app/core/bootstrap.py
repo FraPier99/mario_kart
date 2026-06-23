@@ -346,6 +346,12 @@ def ensure_photo_comment_edit_columns():
             connection.execute(
                 text("ALTER TABLE photo_comments ADD COLUMN edited_at TIMESTAMP")
             )
+        if "parent_id" not in comment_columns:
+            connection.execute(
+                text(
+                    "ALTER TABLE photo_comments ADD COLUMN parent_id INTEGER REFERENCES photo_comments(id)"
+                )
+            )
 
 
 def ensure_notifications_table():
@@ -430,6 +436,14 @@ def ensure_player_champion_photo_column():
             connection.execute(
                 text("ALTER TABLE players ADD COLUMN champion_photo TEXT")
             )
+
+
+def ensure_player_bio_column():
+    inspector = inspect(engine)
+    player_columns = {col["name"] for col in inspector.get_columns("players")}
+    if "bio" not in player_columns:
+        with engine.begin() as connection:
+            connection.execute(text("ALTER TABLE players ADD COLUMN bio TEXT"))
 
 
 def ensure_temp_passwords_table():
@@ -705,6 +719,7 @@ def bootstrap_database():
     ensure_user_must_change_password_column()
     ensure_user_img_url_column()
     ensure_player_champion_photo_column()
+    ensure_player_bio_column()
     ensure_temp_passwords_table()
     ensure_tournament_status_column()
     ensure_tournament_deadline_lock_column()

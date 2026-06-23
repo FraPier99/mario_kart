@@ -13,6 +13,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from datetime import datetime
+from app.core.timezone import now_rome
 
 from app.models.base import Base
 
@@ -111,7 +112,7 @@ class Tournament(Base):
     consolation_winner_id = Column(Integer, ForeignKey("players.id"), nullable=True)
 
     # Audit: creazione e ultimo avanzamento di fase del torneo.
-    created_at = Column(DateTime, nullable=True, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=True, default=now_rome)
     created_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     last_phase_change_at = Column(DateTime, nullable=True)
     last_phase_change_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
@@ -252,7 +253,7 @@ class Prediction(Base):
     coins_wagered = Column(Integer, nullable=False, default=10)
     status = Column(String, nullable=False, default="open")
     actual_winner_id = Column(Integer, ForeignKey("players.id"), nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=now_rome)
     settled_at = Column(DateTime, nullable=True)
 
     user = relationship("User", back_populates="predictions")

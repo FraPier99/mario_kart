@@ -59,6 +59,11 @@ export default function Gallery() {
     const [savingEdit, setSavingEdit] = useState(false)
     const [showEmojiPicker, setShowEmojiPicker] = useState(false)
     const [mentionSuggestions, setMentionSuggestions] = useState([])
+    const [replyingToComment, setReplyingToComment] = useState(null)
+    const [visibleCommentCount, setVisibleCommentCount] = useState(10)
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    useEffect(() => { setVisibleCommentCount(10) }, [activeIdx])
 
     // Upload form state
     const [uploadOpen, setUploadOpen] = useState(false)
@@ -165,12 +170,13 @@ export default function Gallery() {
         commentInputRef.current?.focus()
     }
 
-    const handleAddComment = async (photoId) => {
+    const handleAddComment = async (photoId, parentId) => {
         if (!commentText.trim()) return
         setSubmittingComment(true)
         try {
-            await galleryApi.addComment(photoId, commentText.trim())
+            await galleryApi.addComment(photoId, commentText.trim(), parentId)
             setCommentText('')
+            setReplyingToComment(null)
             await loadPhotos()
         } catch (err) {
             toast.error('Errore commento', { description: getApiErrorMessage(err) })
@@ -388,7 +394,8 @@ export default function Gallery() {
                                             <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">Nessun commento ancora.</p>
                                         </div>
                                     ) : (
-                                        (activePhoto.comments ?? []).map((c) => {
+                                        <>
+                                        {(activePhoto.comments ?? []).slice(0, visibleCommentCount).map((c) => {
                                             const isMe = c.user_id === user?.id
                                             const isEditing = editingCommentId === c.id
                                             return (
@@ -431,12 +438,12 @@ export default function Gallery() {
 
                                                     {isEditing ? (
                                                         <div className="mt-1.5 flex gap-1.5">
-                                                            <input
-                                                                type="text"
+                                                            <textarea
                                                                 value={editCommentText}
                                                                 onChange={(e) => setEditCommentText(e.target.value)}
-                                                                onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(c.id); if (e.key === 'Escape') setEditingCommentId(null) }}
-                                                                className="flex-1 rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-slate-700 px-2 py-1 text-xs text-slate-900 dark:text-foreground outline-none focus:border-blue-400"
+                                                                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveEdit(c.id) }; if (e.key === 'Escape') setEditingCommentId(null) }}
+                                                                className="flex-1 rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-slate-700 px-2 py-1.5 text-xs text-slate-900 dark:text-foreground outline-none focus:border-blue-400 resize-none"
+                                                                rows={3}
                                                                 autoFocus
                                                             />
                                                             <button type="button" onClick={() => handleSaveEdit(c.id)} disabled={savingEdit}
@@ -449,7 +456,14 @@ export default function Gallery() {
                                                             </button>
                                                         </div>
                                                     ) : (
-                                                        <p className="mt-1 text-sm text-slate-700 dark:text-foreground">{renderMentions(c.text)}</p>
+                                                        <div>
+                                                            {c.parent_id && (() => {
+                                                                const parentComment = (activePhoto.comments ?? []).find(pc => pc.id === c.parent_id)
+                                                                const parentName = parentComment ? (parentComment.nickname ?? parentComment.username) : 'commento eliminato'
+                                                                return <p className="text-[9px] text-slate-400 dark:text-slate-500 italic mb-0.5">rispondendo a @{parentName}</p>
+                                                            })()}
+                                                            <p className="mt-1 text-sm text-slate-700 dark:text-foreground">{renderMentions(c.text)}</p>
+                                                        </div>
                                                     )}
 
                                                     <div className="mt-1 flex items-center gap-2 text-[9px] text-slate-400">
@@ -457,10 +471,29 @@ export default function Gallery() {
                                                         {c.edited_by_username && c.edited_at && (
                                                             <span className="italic">· Edit by {c.edited_by_username} at {formatDateTime(c.edited_at)}</span>
                                                         )}
+                                                        {user && (
+                                                            <button type="button" onClick={() => { setReplyingToComment(replyingToComment?.id === c.id ? null : c); commentInputRef.current?.focus() }}
+                                                                className="ml-1 flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition">
+                                                                <MessageCircle size={9} /> Rispondi
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
                                             )
-                                        })
+                                        })}
+                                        {(activePhoto.comments ?? []).length > visibleCommentCount && (
+                                            <button type="button" onClick={() => setVisibleCommentCount(v => v + 10)}
+                                                className="w-full rounded-xl border border-dashed border-slate-200 dark:border-border py-2 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-emerald-600 hover:border-emerald-300 transition">
+                                                Carica più commenti (+{(activePhoto.comments ?? []).length - visibleCommentCount})
+                                            </button>
+                                        )}
+                                        {visibleCommentCount > 10 && (activePhoto.comments ?? []).length <= visibleCommentCount && (
+                                            <button type="button" onClick={() => setVisibleCommentCount(10)}
+                                                className="w-full rounded-xl border border-dashed border-slate-200 dark:border-border py-2 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-slate-600 transition">
+                                                Mostra meno
+                                            </button>
+                                        )}
+                                        </>
                                     )}
                                 </div>
 
@@ -479,7 +512,7 @@ export default function Gallery() {
                                             </div>
                                         )}
                                         {/* Emoji picker */}
-                                        {showEmojiPicker && (
+                                                {showEmojiPicker && (
                                             <div className="grid grid-cols-10 gap-1 rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card p-2 shadow-lg">
                                                 {QUICK_EMOJIS.map((e) => (
                                                     <button key={e} type="button" onClick={() => insertEmoji(e)}
@@ -487,6 +520,16 @@ export default function Gallery() {
                                                         {e}
                                                     </button>
                                                 ))}
+                                            </div>
+                                        )}
+                                        {replyingToComment && (
+                                            <div className="flex items-center gap-2 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 px-3 py-1.5 text-[10px] text-emerald-700 dark:text-emerald-300">
+                                                <MessageCircle size={10} />
+                                                <span className="font-black">Rispondi a {replyingToComment.nickname ?? replyingToComment.username}</span>
+                                                <button type="button" onClick={() => setReplyingToComment(null)}
+                                                    className="ml-auto flex h-4 w-4 items-center justify-center rounded-full text-emerald-400 hover:text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition">
+                                                    <X size={9} />
+                                                </button>
                                             </div>
                                         )}
                                         <div className="flex gap-2">
@@ -498,17 +541,17 @@ export default function Gallery() {
                                                 ref={commentInputRef}
                                                 type="text"
                                                 maxLength={500}
-                                                placeholder="Scrivi un commento… usa @nickname per menzionare"
+                                                placeholder={replyingToComment ? "Scrivi una risposta…" : "Scrivi un commento… usa @nickname per menzionare"}
                                                 value={commentText}
                                                 onChange={(e) => handleCommentInput(e.target.value)}
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter' && !e.shiftKey && mentionSuggestions.length === 0) {
-                                                        e.preventDefault(); handleAddComment(activePhoto.id)
+                                                        e.preventDefault(); handleAddComment(activePhoto.id, replyingToComment?.id)
                                                     }
                                                 }}
                                                 className="flex-1 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2 text-sm text-slate-900 dark:text-foreground outline-none focus:border-emerald-400"
                                             />
-                                            <button type="button" onClick={() => handleAddComment(activePhoto.id)} disabled={submittingComment || !commentText.trim()}
+                                            <button type="button" onClick={() => handleAddComment(activePhoto.id, replyingToComment?.id)} disabled={submittingComment || !commentText.trim()}
                                                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white transition hover:bg-emerald-500 disabled:opacity-50">
                                                 <Send size={14} />
                                             </button>

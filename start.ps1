@@ -2,6 +2,7 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  PROGETTO KART - Avvio ambiente" -ForegroundColor Cyan
 Write-Host "========================================`n" -ForegroundColor Cyan
 
+
 Write-Host "[1/2] Avvio backend (FastAPI + Socket.IO)..." -ForegroundColor Green
 Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\venv\Scripts\Activate.ps1; uvicorn app.main:socket_app --reload --port 8000"
 

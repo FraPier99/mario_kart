@@ -1,4 +1,5 @@
 from datetime import datetime
+from app.core.timezone import now_rome
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -376,7 +377,7 @@ def admin_use_inventory_item(
     _check_player_card_limit(db, user.id, body.tournament_id, body.race_id)
     _check_not_duello_race(db, body.race_id)
     item.is_consumed = True
-    item.consumed_at = datetime.utcnow()
+    item.consumed_at = now_rome()
     if body.race_id is not None:
         item.consumed_in_race_id = body.race_id
         race = db.query(Race).filter(Race.id == body.race_id).first()

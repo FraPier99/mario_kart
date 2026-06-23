@@ -10,6 +10,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from datetime import datetime
+from app.core.timezone import now_rome
 
 from app.models.base import Base
 
@@ -34,7 +35,7 @@ class UserInventory(Base):
     consumed_in_phase = Column(String, nullable=True)
     consumed_in_group_name = Column(String, nullable=True)
     consumed_effect = Column(String, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=now_rome)
     consumed_at = Column(DateTime, nullable=True)
 
     game_id = Column(Integer, ForeignKey("games.id"), nullable=True)

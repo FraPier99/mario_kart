@@ -1,4 +1,5 @@
 from datetime import datetime
+from app.core.timezone import now_rome
 
 from sqlalchemy.orm import Session, joinedload
 
@@ -83,7 +84,7 @@ def consume_inventory_item(
         return item
 
     item.is_consumed = True
-    item.consumed_at = datetime.utcnow()
+    item.consumed_at = now_rome()
     item.consumed_in_race_id = race_id
     item.consumed_effect = effect
     if phase:
