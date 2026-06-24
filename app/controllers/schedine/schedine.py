@@ -223,8 +223,15 @@ def get_tournament_schedine_detail_endpoint(
         raise HTTPException(status_code=404, detail="Tournament not found")
 
     is_privileged = current_user.role in {"admin", "superadmin"}
+    # tournament.deadline_lock viene letto dal DB come naive (colonna
+    # TIMESTAMP senza timezone), mentre now_rome() è sempre offset-aware:
+    # confrontarli direttamente fa esplodere con TypeError ("can't compare
+    # offset-naive and offset-aware datetimes") un 500 che, propagandosi
+    # senza passare dal CORSMiddleware, il browser segnala come errore CORS
+    # invece che come errore del server — mascherando completamente la causa.
     deadline_passed = bool(
-        tournament.deadline_lock and now_rome() >= tournament.deadline_lock
+        tournament.deadline_lock
+        and now_rome().replace(tzinfo=None) >= tournament.deadline_lock
     )
     include_details = (
         tournament.status in {"da_svolgere", "in_corso", "concluso"}
