@@ -148,8 +148,13 @@ export const preloadCharacterVoice = async (charDir) => {
                 if (audioBuffer.duration <= MAX_VOICE_DURATION) {
                     loadedBuffers.push(audioBuffer)
                 }
-            } catch {
-                // skip bad files
+            } catch (error) {
+                // Un file che non si decodifica per questo personaggio passa
+                // inosservato (skip silenzioso) finché non se ne accumulano
+                // troppi e la voce risulta muta senza nessun indizio in
+                // console: loggare qui rende diagnosticabile "perché questo
+                // personaggio non ha mai voce" la prossima volta.
+                console.warn(`[mkdsSounds] voce non decodificabile per "${charDir}"`, error)
             }
         }
 
@@ -223,7 +228,7 @@ export const playMkdsCharacterVoice = async (characterName, { loop = false, loop
                 timeoutId = null
             }
             if (currentSource) {
-                try { currentSource.stop() } catch {}
+                try { currentSource.stop() } catch { /* already stopped */ }
                 currentSource = null
             }
         }

@@ -62,8 +62,16 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
         return ''
     }
 
+    // L'intera cella giocatore è cliccabile (non solo il testo del nickname):
+    // un piccolo testo come unico target era troppo facile da mancare,
+    // specialmente su mobile — il problema persisteva anche dopo aver
+    // ingrandito leggermente il padding del solo nickname.
     const PlayerCell = ({ row, charactersUsed, onPlayerClick }) => (
-        <div className="flex items-center gap-3">
+        <button
+            type="button"
+            onClick={() => onPlayerClick?.(row)}
+            className="-m-2 flex items-center gap-3 rounded-2xl p-2 text-left transition-colors hover:bg-amber-50 dark:hover:bg-amber-500/10 cursor-pointer"
+        >
             <div className="shrink-0">
                 <img
                     src={row.img_url || buildAvatarPlaceholder(row.nickname)}
@@ -72,13 +80,9 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                 />
             </div>
             <div className="min-w-0">
-                <button
-                    type="button"
-                    onClick={() => onPlayerClick?.(row)}
-                    className="-m-1.5 block truncate p-1.5 text-left font-black text-slate-900 dark:text-foreground capitalize hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer"
-                >
+                <p className="truncate font-black text-slate-900 dark:text-foreground capitalize hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
                     {row.nickname}
-                </button>
+                </p>
                 <div className="text-xs text-slate-500 dark:text-muted-foreground truncate capitalize">
                     {row.first_name} {row.last_name}
                 </div>
@@ -96,7 +100,7 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                     </div>
                 )}
             </div>
-        </div>
+        </button>
     )
 
     return (

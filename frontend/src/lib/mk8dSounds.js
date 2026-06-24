@@ -161,8 +161,11 @@ export const preloadCharacterVoice = async (charName) => {
                 if (audioBuffer.duration <= MAX_VOICE_DURATION) {
                     loadedBuffers.push(audioBuffer)
                 }
-            } catch {
-                // skip bad files
+            } catch (error) {
+                // Vedi commento equivalente in mkdsSounds.js: senza questo log
+                // un file non decodificabile lascia un personaggio
+                // permanentemente muto senza nessun indizio in console.
+                console.warn(`[mk8dSounds] voce non decodificabile per "${dir}"`, error)
             }
         }
 

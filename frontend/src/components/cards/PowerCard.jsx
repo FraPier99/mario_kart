@@ -307,6 +307,14 @@ export default function PowerCard({
       style={{
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden',
+        // Su alcuni browser mobile backface-visibility:hidden da solo non
+        // basta a nascondere davvero la faccia (rimane visibile/sovrapposta
+        // al retro, soprattutto con animazioni continue come queste): opacity
+        // + pointer-events forzano la faccia "non attiva" a essere invisibile
+        // e non interattiva su qualsiasi browser, indipendentemente dal bug.
+        opacity: flipped ? 0 : 1,
+        pointerEvents: flipped ? 'none' : 'auto',
+        transition: 'opacity 0.2s linear',
         background: t.gradient,
         animation: `${t.glowAnim} ${isMaster ? '3s' : '3.2s'} ease-in-out infinite`,
         animationDelay: isMaster ? '0s' : '0.8s',
@@ -358,6 +366,9 @@ export default function PowerCard({
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden',
         transform: 'rotateY(180deg)',
+        opacity: flipped ? 1 : 0,
+        pointerEvents: flipped ? 'auto' : 'none',
+        transition: 'opacity 0.2s linear',
         background: t.gradientBack,
       }}
     >
@@ -445,7 +456,7 @@ export default function PowerCard({
       onPointerUp={handlePointerUp}
     >
       <div
-        className="relative h-80 w-full rounded-2xl transition-transform duration-500 ease-out transform-3d sm:h-96"
+        className="relative h-112 w-full rounded-2xl transition-transform duration-500 ease-out transform-3d"
         style={{ transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)', willChange: 'transform' }}
       >
         {frontFace}

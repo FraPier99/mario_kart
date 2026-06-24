@@ -958,10 +958,6 @@ const Schedina = () => {
                                                 <option key={g.id} value={g.id}>{g.name}</option>
                                             ))}
                                         </select>
-                                        <div className="flex items-center gap-2 rounded-2xl bg-slate-50 px-4 py-3 text-slate-700 dark:bg-muted dark:text-muted-foreground">
-                                            <Users size={16} />
-                                            <span className="text-xs font-black uppercase tracking-[0.3em]">Statistiche utenti</span>
-                                        </div>
                                     </div>
                                 </div>
                                 <div className="mt-5 overflow-hidden rounded-3xl border border-slate-200 dark:border-border">

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Flag, Lock, LogIn, User, AlertTriangle } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
+import MaintenanceBanner from '@/components/common/MaintenanceBanner'
 
 const Login = () => {
     const navigate = useNavigate()
@@ -45,7 +46,9 @@ const Login = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.18),transparent_35%),linear-gradient(180deg,#020617_0%,#0f172a_100%)] px-4 py-10 text-white">
+        <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.18),transparent_35%),linear-gradient(180deg,#020617_0%,#0f172a_100%)] text-white">
+            <MaintenanceBanner />
+            <div className="px-4 py-10">
             <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-6xl items-center justify-center">
                 <div className="grid w-full gap-6 lg:grid-cols-[0.9fr_1.1fr]">
                     <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
@@ -126,6 +129,7 @@ const Login = () => {
 
                     </form>
                 </div>
+            </div>
             </div>
         </div>
     )

@@ -5,6 +5,7 @@ import { useCelebration } from '@/context/CelebrationContext'
 import { useProfileTheme } from '@/hooks/useProfileTheme'
 import { useTheme } from '@/context/ThemeContext'
 import GlobalCelebrationOverlay from '@/components/common/GlobalCelebrationOverlay'
+import MaintenanceBanner from '@/components/common/MaintenanceBanner'
 
 
 const AppLayout  =({children})=>{
@@ -21,6 +22,7 @@ const AppLayout  =({children})=>{
         >
             <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'var(--mk-page-overlay)' }} />
             <div className="relative z-10 flex min-h-screen flex-col">
+                <MaintenanceBanner />
                 <Navbar />
                 <main className="grow animate-fade-in">
                     {children}
