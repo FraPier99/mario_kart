@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Clock, GripVertical, Info, Lock, Save, Send, Trophy, Zap, Swords } from 'lucide-react'
+import { Ban, Clock, GripVertical, Info, Lock, Save, Send, Trophy, Zap, Swords } from 'lucide-react'
 import { toast } from 'sonner'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, sortableKeyboardCoordinates, useSortable, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -11,7 +11,6 @@ import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { getProfileTheme } from '@/lib/profileTheme'
-import { getItemBackground } from '@/assets/images/mkds/items'
 import { schedineApi, getApiErrorMessage } from '@/services/apiClient'
 
 const PUNTI_PRONOSTICO = 3
@@ -48,8 +47,14 @@ const SortablePlayer = ({ player, index, total }) => {
         opacity: isDragging ? 0.7 : 1,
     }
 
+    // Guscio Blu va all'ultimo e, da 7 partecipanti in su, anche al penultimo
+    // (vedi _last_ids_from_final_order, schedine.py) — stesso simbolo "stop"
+    // (Ban) usato per la Carta Guscio Blu in PowerCard.jsx, riga evidenziata
+    // in blu per farle risaltare subito nella lista.
+    const isBlueShellRow = index === total - 1 || (total >= 7 && index === total - 2)
+
     return (
-        <div ref={setNodeRef} style={style} className={`flex items-center gap-3 rounded-2xl border bg-white px-4 py-3 shadow-sm transition dark:bg-card ${isDragging ? 'shadow-xl border-emerald-400 dark:border-emerald-500' : 'border-slate-200 dark:border-border'}`}>
+        <div ref={setNodeRef} style={style} className={`flex items-center gap-3 rounded-2xl border px-4 py-3 shadow-sm transition ${isDragging ? 'shadow-xl border-emerald-400 dark:border-emerald-500 bg-white dark:bg-card' : isBlueShellRow ? 'border-cyan-300 bg-cyan-50/60 dark:border-cyan-500/30 dark:bg-cyan-500/10' : 'border-slate-200 bg-white dark:border-border dark:bg-card'}`}>
             <div
                 {...attributes}
                 {...listeners}
@@ -58,14 +63,11 @@ const SortablePlayer = ({ player, index, total }) => {
             >
                 <GripVertical size={18} />
             </div>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-xs font-black text-slate-500 dark:bg-muted dark:text-slate-400">
+            <div className={`flex h-8 w-8 items-center justify-center rounded-xl text-xs font-black ${isBlueShellRow ? 'bg-cyan-100 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-300' : 'bg-slate-100 text-slate-500 dark:bg-muted dark:text-slate-400'}`}>
                 {index === 0 ? (
                     <Trophy size={14} className="text-amber-500" />
-                ) : index === total - 1 || (total >= 7 && index === total - 2) ? (
-                    // Guscio Blu va all'ultimo e, da 7 partecipanti in su, anche al
-                    // penultimo (vedi _last_ids_from_final_order, schedine.py) — lo
-                    // mostriamo su entrambe le posizioni quando rilevante.
-                    <div className="h-4 w-4" style={{ background: getItemBackground('spinyShell'), imageRendering: 'pixelated' }} title="Guscio Blu" />
+                ) : isBlueShellRow ? (
+                    <Ban size={14} title="Guscio Blu" />
                 ) : `#${index + 1}`}
             </div>
             <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -79,8 +81,8 @@ const SortablePlayer = ({ player, index, total }) => {
                 <span className="truncate text-sm font-bold text-slate-900 dark:text-foreground">{player.nickname}</span>
             </div>
             {index === 0 && <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">Vincitore</span>}
-            {index === total - 1 && <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-rose-700 dark:bg-rose-500/20 dark:text-rose-300">Ultimo</span>}
-            {total >= 7 && index === total - 2 && <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-rose-700 dark:bg-rose-500/20 dark:text-rose-300">Penultimo</span>}
+            {index === total - 1 && <span className="rounded-full bg-cyan-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300">Ultimo</span>}
+            {total >= 7 && index === total - 2 && <span className="rounded-full bg-cyan-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300">Penultimo</span>}
         </div>
     )
 }
