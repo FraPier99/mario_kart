@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import ScrollToTop from '../components/common/ScrollToTop'
 import Home from '../pages/Home'
+import Players from '../pages/Players'
 import History from '../pages/History'
 import Schedina from '../pages/Schedina'
 import SchedinaForm from '../pages/SchedinaForm'
@@ -51,6 +52,7 @@ const AppRouter = () =>{
                 <Route path='/login' element={<Login />} />
                 <Route element={<RequireAuth />}>
                     <Route path='/' element={<Home />} />
+                    <Route path='/players' element={<Players />} />
                     <Route path='/history' element={<History />} />
                     <Route path='/schedina/:tournamentId?' element={<Schedina />} />
                     <Route path='/schedina/:tournamentId/compila' element={<SchedinaForm />} />

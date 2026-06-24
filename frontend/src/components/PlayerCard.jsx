@@ -19,7 +19,6 @@ const PlayerCard = ({ players, statsByPlayerId, handlePlayerClick }) => {
                 return (
                     <div
                         key={p.id}
-                        data-player-card
                         style={{ animationDelay: `${idx * 0.04}s` }}
                         className={`animate-fade-in flex flex-col items-center overflow-hidden rounded-2xl border transition-all duration-300 hover:scale-[1.03] hover:shadow-xl ${
                             isWinner
@@ -50,7 +49,8 @@ const PlayerCard = ({ players, statsByPlayerId, handlePlayerClick }) => {
                             </h3>
 
                             <button
-                                onClick={(e) => handlePlayerClick(p, e)}
+                                type="button"
+                                onClick={() => handlePlayerClick(p)}
                                 className="mt-auto cursor-pointer rounded-xl bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700"
                             >
                                 Visualizza Profilo

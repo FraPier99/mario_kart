@@ -1,17 +1,30 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import PlayerCard from '@/components/PlayerCard'
-import ModalPlayer from '@/components/ModalPlayer'
 import { useAppData } from '@/context/AppDataContext'
 import ApiBanner from '@/components/common/ApiBanner'
+import { authApi } from '@/services/apiClient'
 
 const Players = () => {
     const { players, statsByPlayerId, loading, errorMessage, refresh } = useAppData()
-    const [selectedPlayer, setSelectedPlayer] = useState(null)
-    const [isModalOpen, setIsModalOpen] = useState(false)
+    const navigate = useNavigate()
     const [searchTerm, setSearchTerm] = useState('')
-    const [cardAnchorTop, setCardAnchorTop] = useState(null)
+    const [users, setUsers] = useState([])
+
+    // /auth/community/users (a differenza di /auth/users, riservato al
+    // superadmin) è raggiungibile da qualsiasi utente autenticato — serve
+    // solo a risalire da player_id a user.id per il link al profilo dedicato.
+    useEffect(() => {
+        authApi.listCommunityUsers().then((res) => setUsers(res.data ?? [])).catch(() => {})
+    }, [])
+
+    const userIdByPlayerId = useMemo(() => {
+        const map = new Map()
+        users.forEach((u) => { if (u.player_id) map.set(u.player_id, u.id) })
+        return map
+    }, [users])
 
     const filteredPlayers = useMemo(() => {
         if (!searchTerm.trim()) return players
@@ -23,16 +36,9 @@ const Players = () => {
         )
     }, [players, searchTerm])
 
-    const handlePlayerClick = (player, e) => {
-        const rect = e?.currentTarget?.closest('[data-player-card]')?.getBoundingClientRect()
-        if (rect) {
-            const maxTop = window.innerHeight * 0.3
-            setCardAnchorTop(Math.min(rect.top, maxTop))
-        } else {
-            setCardAnchorTop(null)
-        }
-        setSelectedPlayer(player)
-        setIsModalOpen(true)
+    const handlePlayerClick = (player) => {
+        const userId = userIdByPlayerId.get(player.id)
+        if (userId) navigate(`/community/user/${userId}`)
     }
 
     return (
@@ -88,10 +94,6 @@ const Players = () => {
                         <PlayerCard players={filteredPlayers} statsByPlayerId={statsByPlayerId} handlePlayerClick={handlePlayerClick} />
                     )}
                 </div>
-            )}
-
-            {isModalOpen && selectedPlayer && (
-                <ModalPlayer player={selectedPlayer} stats={statsByPlayerId.get(selectedPlayer.id)} anchorTop={cardAnchorTop} onClose={() => { setIsModalOpen(false); setCardAnchorTop(null) }} />
             )}
         </AppLayout>
     )

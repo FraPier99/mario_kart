@@ -32,6 +32,7 @@ export default function Navbar() {
         { name: 'Home',        path: '/',        icon: <Home size={15} /> },
         { name: 'Tornei',      path: '/history', icon: <Trophy size={15} /> },
         { name: 'Classifiche', path: '/stats',   icon: <BarChart3 size={15} /> },
+        { name: 'Giocatori',   path: '/players', icon: <Users size={15} /> },
         { name: 'Galleria',    path: '/gallery', icon: <Camera size={15} /> },
         { name: 'Hall of Fame', path: '/hall-of-fame', icon: <Crown size={15} /> },
     ]

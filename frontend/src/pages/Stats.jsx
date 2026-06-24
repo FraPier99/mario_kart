@@ -85,8 +85,14 @@ const Stats = () => {
     const [selectedGameId, setSelectedGameId] = useState('')
     const [users, setUsers] = useState([])
 
+    // listUsers() (/auth/users) è riservato al superadmin: un utente normale
+    // riceveva un 403 silenzioso (.catch vuoto), restava con users=[] per
+    // sempre e il click sul nickname in classifica non trovava mai lo user_id
+    // a cui navigare — sembrava "non fare nulla". listCommunityUsers()
+    // (/auth/community/users) è pubblico (solo autenticazione) e basta per
+    // questa mappatura playerId → user.id.
     useEffect(() => {
-        authApi.listUsers().then(res => setUsers(res.data ?? [])).catch(() => {})
+        authApi.listCommunityUsers().then(res => setUsers(res.data ?? [])).catch(() => {})
     }, [])
 
     const superadminPlayerIds = useMemo(() => {

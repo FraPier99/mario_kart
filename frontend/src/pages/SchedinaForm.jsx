@@ -20,6 +20,24 @@ const SCORING_RULES = [
     { label: `+${PUNTI_PRONOSTICO} pt`, desc: 'Duello testa a testa corretto' },
 ]
 
+// Stesso schema punti di app/data/punteggi.py (_compute_punteggi): serve solo
+// a stimare un tetto realistico per "Distanza 1°-2°" — il placeholder "Es.
+// 150" era un numero a caso, non coerente con nessun torneo reale (con punti
+// per gara fino a ~n+1 e un numero di gare pari a n*4, un distacco di 150 è
+// fuori scala per quasi ogni torneo).
+const PUNTEGGI_STATIC = { 4: [5, 3, 2, 1], 5: [6, 4, 3, 2, 1], 6: [7, 5, 4, 3, 2, 1], 7: [8, 6, 5, 4, 3, 2, 1], 8: [9, 7, 6, 5, 4, 3, 2, 1] }
+const computePunteggi = (n) => {
+    if (PUNTEGGI_STATIC[n]) return PUNTEGGI_STATIC[n]
+    if (n < 4) return Array.from({ length: n }, (_, i) => n + 1 - i)
+    return [n + 1, ...Array.from({ length: n - 1 }, (_, i) => n - 1 - i)]
+}
+const maxSpareggioGap = (nPlayers, nRaces) => {
+    if (!nPlayers || nPlayers < 2 || !nRaces) return 999
+    const punteggi = computePunteggi(nPlayers)
+    const perRaceGap = punteggi[0] - punteggi[punteggi.length - 1]
+    return perRaceGap * nRaces
+}
+
 const SortablePlayer = ({ player, index, total }) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: player.id })
     const style = {
@@ -101,6 +119,12 @@ const SchedinaForm = () => {
         if (!tournament?.participant_ids?.length) return players
         return players.filter((p) => tournament.participant_ids.includes(p.id))
     }, [players, tournament])
+
+    const spareggioMaxGap = useMemo(
+        () => maxSpareggioGap(participantPlayers.length, tournament?.n_races),
+        [participantPlayers.length, tournament?.n_races]
+    )
+    const spareggioPlaceholder = `Es. ${Math.max(5, Math.round(spareggioMaxGap * 0.15))}`
 
     const isParticipant = useMemo(() => {
         if (!tournament?.participant_ids?.length) return true
@@ -444,14 +468,16 @@ const SchedinaForm = () => {
                                     <input
                                         type="number"
                                         min="0"
+                                        max={spareggioMaxGap}
                                         value={form.spareggio_punti_vincitore}
                                         onChange={handleChange('spareggio_punti_vincitore')}
                                         required
-                                        placeholder="Es. 150"
+                                        placeholder={spareggioPlaceholder}
                                         className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-emerald-500 dark:border-border dark:bg-muted dark:text-foreground"
                                     />
                                     <span className="text-xs font-black text-slate-400">pt</span>
                                 </label>
+                                <p className="mt-1.5 text-[10px] text-slate-400 dark:text-slate-500">Massimo teorico per questo torneo: {spareggioMaxGap} pt.</p>
                             </div>
                         </div>
 
