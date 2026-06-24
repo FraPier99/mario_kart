@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Clock, GripVertical, Info, Lock, Save, Send, Trophy, Zap, Swords } from 'lucide-react'
 import { toast } from 'sonner'
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, sortableKeyboardCoordinates, useSortable, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import AppLayout from '@/components/layout/AppLayout'
@@ -31,7 +31,12 @@ const SortablePlayer = ({ player, index, total }) => {
 
     return (
         <div ref={setNodeRef} style={style} className={`flex items-center gap-3 rounded-2xl border bg-white px-4 py-3 shadow-sm transition dark:bg-card ${isDragging ? 'shadow-xl border-emerald-400 dark:border-emerald-500' : 'border-slate-200 dark:border-border'}`}>
-            <div {...attributes} {...listeners} className="flex cursor-grab items-center justify-center rounded-xl p-1.5 text-slate-400 hover:text-slate-600 active:cursor-grabbing dark:hover:text-slate-300">
+            <div
+                {...attributes}
+                {...listeners}
+                style={{ touchAction: 'none' }}
+                className="flex cursor-grab items-center justify-center rounded-xl p-1.5 text-slate-400 hover:text-slate-600 active:cursor-grabbing dark:hover:text-slate-300"
+            >
                 <GripVertical size={18} />
             </div>
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-xs font-black text-slate-500 dark:bg-muted dark:text-slate-400">
@@ -148,8 +153,14 @@ const SchedinaForm = () => {
         }
     }, [draftKey, items, form, alreadySubmitted])
 
+    // PointerSensor da solo è inconsistente sul touch: su iOS vinceva a volte
+    // lo scroll della pagina invece del drag, su Android non partiva quasi
+    // mai. TouchSensor con un piccolo delay (invece di una soglia di
+    // distanza) distingue un tap/scroll da un drag intenzionale sul touch,
+    // senza richiedere la stessa configurazione del mouse.
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+        useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     )
 

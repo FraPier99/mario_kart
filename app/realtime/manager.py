@@ -14,12 +14,15 @@ logger = logging.getLogger(__name__)
 
 _sio = socketio.AsyncServer(
     async_mode="asgi",
-    cors_allowed_origins=[
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173",
-    ],
+    # python-socketio non supporta una regex per gli origin (a differenza di
+    # CORSMiddleware in app/main.py): qui l'autenticazione vera è il JWT
+    # passato in auth.token (vedi connect() sotto), non un cookie, quindi non
+    # serve allow_credentials e "*" è sicuro. Prima era una lista fissa di
+    # soli localhost: in produzione (origin Vercel, dominio diverso a ogni
+    # deploy) ogni handshake socket.io veniva rifiutato dal CORS check
+    # interno di python-socketio — causa delle connessioni WebSocket fallite
+    # in console e delle notifiche/overlay "live" mai arrivati.
+    cors_allowed_origins="*",
 )
 
 # The main-thread event loop, populated at app startup so sync code can

@@ -16,20 +16,17 @@ export function SocketProvider({ children }) {
     const triggerRef = useRef(triggerCelebration)
     useEffect(() => { triggerRef.current = triggerCelebration }, [triggerCelebration])
 
+    // Fallback "missed celebration" polling: indipendente dalla connessione
+    // socket. In precedenza partiva solo dentro socket.on('connect', ...),
+    // quindi se il socket non si connetteva mai (es. CORS/proxy/server
+    // misconfigurato in produzione) l'utente non vedeva l'overlay nemmeno al
+    // login successivo — il fallback esisteva solo "sulla carta". Ora parte
+    // comunque al login, e funziona da solo anche con i socket completamente
+    // fuori uso.
     useEffect(() => {
         if (!isAuthenticated || !user) return undefined
 
-        const token = authStorage.getToken()
-        if (!token) return undefined
-
-        const socket = io(SOCKET_URL, {
-            auth: { token },
-            transports: ['websocket', 'polling'],
-            reconnection: true,
-            reconnectionAttempts: 10,
-            reconnectionDelay: 2000,
-        })
-
+        let active = true
         let pollInterval = null
 
         const triggerConcluded = async () => {
@@ -39,13 +36,11 @@ export function SocketProvider({ children }) {
                     .filter((t) => t.status === 'concluso' && t.winner_id)
                     .sort((a, b) => new Date(b.date ?? 0) - new Date(a.date ?? 0))
 
-                // Trova il più recente torneo non ancora visto
                 const latest = concluded[0]
                 if (!latest) return false
 
                 const seenKey = `kart_celebration_seen_${latest.id}_${user.id}`
                 if (localStorage.getItem(seenKey) === '1') {
-                    // Tutti i tornei conclusi sono già stati visti → ferma il polling
                     if (pollInterval) clearInterval(pollInterval)
                     return false
                 }
@@ -64,27 +59,44 @@ export function SocketProvider({ children }) {
                         }))
                     }
                 } catch { /* leaderboard not available */ }
-                triggerRef.current(leader, standings, { id: latest.id, name: latest.name })
+                if (active) triggerRef.current(leader, standings, { id: latest.id, name: latest.name })
                 return true
             } catch { /* no concluded tournaments */ }
             return false
         }
 
-        socket.on('connect', async () => {
-            setIsConnected(true)
-            const found = await triggerConcluded()
-            // Se c'è un torneo da mostrare, aspetta che l'utente lo chiuda
-            // prima di ricontrollare. Altrimenti controlla una volta in ritardo
-            // per sicurezza, poi ferma il polling.
-            const delay = found ? 30000 : 5000
+        triggerConcluded().then((found) => {
+            if (!active) return
+            const delay = found ? 30000 : 15000
             pollInterval = setInterval(async () => {
                 const done = await triggerConcluded()
-                if (done) return
+                if (done || !active) return
                 clearInterval(pollInterval)
                 pollInterval = null
             }, delay)
         })
 
+        return () => {
+            active = false
+            if (pollInterval) clearInterval(pollInterval)
+        }
+    }, [isAuthenticated, user])
+
+    useEffect(() => {
+        if (!isAuthenticated || !user) return undefined
+
+        const token = authStorage.getToken()
+        if (!token) return undefined
+
+        const socket = io(SOCKET_URL, {
+            auth: { token },
+            transports: ['websocket', 'polling'],
+            reconnection: true,
+            reconnectionAttempts: 10,
+            reconnectionDelay: 2000,
+        })
+
+        socket.on('connect', () => setIsConnected(true))
         socket.on('disconnect', () => setIsConnected(false))
         socket.on('connect_error', () => setIsConnected(false))
 
@@ -125,7 +137,6 @@ export function SocketProvider({ children }) {
         socketRef.current = socket
 
         return () => {
-            if (pollInterval) clearInterval(pollInterval)
             socket.close()
             socketRef.current = null
             setIsConnected(false)

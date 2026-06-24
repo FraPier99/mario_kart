@@ -3,6 +3,7 @@ from app.controllers.tornei.schemas.tournaments import (
     TournamentPlayoffRequest,
     UpdateTournament,
 )
+import logging
 import random
 
 from app.services.schedine.schedine import settle_tournament_schedine
@@ -12,6 +13,8 @@ from sqlalchemy import func, case
 from app.data.punteggi import setUpTournament
 from datetime import datetime, timedelta
 from app.core.timezone import now_rome, rome_deadline_lock
+
+logger = logging.getLogger(__name__)
 
 
 def _get_superadmin_player_ids(db: Session) -> set[int]:
@@ -451,7 +454,11 @@ def update_tournament(db: Session, tmentData: UpdateTournament, tournament_id: i
             try:
                 settle_deluxe_schedine(db, tournament_id)
             except ValueError:
-                pass
+                logger.exception(
+                    "settle_deluxe_schedine fallita per torneo %s (update_tournament): "
+                    "vincitore_schedina_id resta non impostato, nessuna Card Master assegnata.",
+                    tournament_id,
+                )
         else:
             settle_tournament_schedine(db, tournament_id)
 
@@ -583,7 +590,11 @@ def set_tournament_playoff_winner(
         try:
             settle_deluxe_schedine(db, tournament_id)
         except ValueError:
-            pass
+            logger.exception(
+                "settle_deluxe_schedine fallita per torneo %s (playoff): "
+                "vincitore_schedina_id resta non impostato, nessuna Card Master assegnata.",
+                tournament_id,
+            )
     else:
         settle_tournament_schedine(db, tournament_id)
     db.commit()
@@ -1876,7 +1887,11 @@ def maybe_finalize_group_stage_tournament(db: Session, tournament_id: int) -> No
     try:
         settle_deluxe_schedine(db, tournament_id)
     except ValueError:
-        pass
+        logger.exception(
+            "settle_deluxe_schedine fallita per torneo %s (maybe_finalize_group_stage_tournament): "
+            "vincitore_schedina_id resta non impostato, nessuna Card Master assegnata.",
+            tournament_id,
+        )
 
     db.commit()
     db.refresh(tournament)
