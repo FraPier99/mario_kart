@@ -11,6 +11,7 @@ import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { getProfileTheme } from '@/lib/profileTheme'
+import { getItemBackground } from '@/assets/images/mkds/items'
 import { schedineApi, getApiErrorMessage } from '@/services/apiClient'
 
 const PUNTI_PRONOSTICO = 3
@@ -58,7 +59,14 @@ const SortablePlayer = ({ player, index, total }) => {
                 <GripVertical size={18} />
             </div>
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-xs font-black text-slate-500 dark:bg-muted dark:text-slate-400">
-                {index === 0 ? <Trophy size={14} className="text-amber-500" /> : index === total - 1 ? <Lock size={14} className="text-rose-400" /> : `#${index + 1}`}
+                {index === 0 ? (
+                    <Trophy size={14} className="text-amber-500" />
+                ) : index === total - 1 || (total >= 7 && index === total - 2) ? (
+                    // Guscio Blu va all'ultimo e, da 7 partecipanti in su, anche al
+                    // penultimo (vedi _last_ids_from_final_order, schedine.py) — lo
+                    // mostriamo su entrambe le posizioni quando rilevante.
+                    <div className="h-4 w-4" style={{ background: getItemBackground('spinyShell'), imageRendering: 'pixelated' }} title="Guscio Blu" />
+                ) : `#${index + 1}`}
             </div>
             <div className="flex items-center gap-2 min-w-0 flex-1">
                 {player.img_url ? (
@@ -72,6 +80,7 @@ const SortablePlayer = ({ player, index, total }) => {
             </div>
             {index === 0 && <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">Vincitore</span>}
             {index === total - 1 && <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-rose-700 dark:bg-rose-500/20 dark:text-rose-300">Ultimo</span>}
+            {total >= 7 && index === total - 2 && <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-rose-700 dark:bg-rose-500/20 dark:text-rose-300">Penultimo</span>}
         </div>
     )
 }

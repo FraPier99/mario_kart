@@ -461,6 +461,14 @@ const Schedina = () => {
                         {(tournamentDetail?.schedine ?? []).length > 0 && (() => {
                             const schedine = tournamentDetail.schedine
                             const hasAnyDuel = schedine.some((e) => e.duello_scelta_id)
+                            // Numero di posizioni pronosticabili in questo torneo (= n.
+                            // partecipanti): con 2 giocatori non esiste un "3° posto", e
+                            // con 3 "Ultimo" coinciderebbe col 3° già mostrato — mostrare
+                            // colonne/pick per posizioni inesistenti o duplicate confondeva.
+                            const maxPos = Math.max(0, ...schedine.map((e) => (e.classifica_ordinata ?? []).length))
+                            const showSecond = maxPos >= 2
+                            const showThird = maxPos >= 3
+                            const showUltimoSeparate = maxPos > 3
 
                             return (
                                 <div className="mt-6 space-y-2">
@@ -502,10 +510,10 @@ const Schedina = () => {
                                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[10px]">
                                                         {[
                                                             { label: '1°', val: renderPick(entry.classifica_ordinata?.[0], null, getPositionCorrect(bd, 0)) },
-                                                            { label: '2°', val: renderPick(entry.classifica_ordinata?.[1], null, getPositionCorrect(bd, 1)) },
-                                                            { label: '3°', val: renderPick(entry.classifica_ordinata?.[2], null, getPositionCorrect(bd, 2)) },
-                                                            { label: 'Ultimo', val: renderPick(entry.classifica_ordinata?.[nPos - 1], null, getPositionCorrect(bd, nPos - 1)) },
-                                                        ].map(({ label, val }) => (
+                                                            showSecond && { label: '2°', val: renderPick(entry.classifica_ordinata?.[1], null, getPositionCorrect(bd, 1)) },
+                                                            showThird && { label: '3°', val: renderPick(entry.classifica_ordinata?.[2], null, getPositionCorrect(bd, 2)) },
+                                                            showUltimoSeparate && { label: 'Ultimo', val: renderPick(entry.classifica_ordinata?.[nPos - 1], null, getPositionCorrect(bd, nPos - 1)) },
+                                                        ].filter(Boolean).map(({ label, val }) => (
                                                             <div key={label} className="rounded-xl bg-slate-50 dark:bg-muted p-1.5">
                                                                 <p className="font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 text-[8px] mb-0.5">{label}</p>
                                                                 {val}
@@ -557,9 +565,9 @@ const Schedina = () => {
                                                         <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Pt</th>
                                                         <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Dist.</th>
                                                         <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">1°</th>
-                                                        <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">2°</th>
-                                                        <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">3°</th>
-                                                        <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Ultimo</th>
+                                                        {showSecond && <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">2°</th>}
+                                                        {showThird && <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">3°</th>}
+                                                        {showUltimoSeparate && <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Ultimo</th>}
                                                         <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Streak</th>
                                                         {hasAnyDuel && <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Duello</th>}
                                                     </tr>
@@ -572,7 +580,7 @@ const Schedina = () => {
                                                         const img = getPlayerImg(nick)
                                                         const bd = getBreakdown(entry)
                                                         const nPos = (entry.classifica_ordinata ?? []).length
-                                                        const colSpan = 6 + (hasAnyDuel ? 1 : 0)
+                                                        const colSpan = 6 + [showSecond, showThird, showUltimoSeparate, hasAnyDuel].filter(Boolean).length
                                                         return (
                                                             <>
                                                                 <tr key={entry.schedina_id}
@@ -603,9 +611,9 @@ const Schedina = () => {
                                                                     </td>
                                                                     <td className="px-3 py-3 text-sm text-slate-500 dark:text-muted-foreground">{entry.tie_breaker_distance ?? '—'}</td>
                                                                     <td className="px-3 py-3 max-w-28">{renderPick(entry.classifica_ordinata?.[0], null, getPositionCorrect(bd, 0))}</td>
-                                                                    <td className="px-3 py-3 max-w-28">{renderPick(entry.classifica_ordinata?.[1], null, getPositionCorrect(bd, 1))}</td>
-                                                                    <td className="px-3 py-3 max-w-28">{renderPick(entry.classifica_ordinata?.[2], null, getPositionCorrect(bd, 2))}</td>
-                                                                    <td className="px-3 py-3 max-w-28">{renderPick(entry.classifica_ordinata?.[nPos - 1], null, getPositionCorrect(bd, nPos - 1))}</td>
+                                                                    {showSecond && <td className="px-3 py-3 max-w-28">{renderPick(entry.classifica_ordinata?.[1], null, getPositionCorrect(bd, 1))}</td>}
+                                                                    {showThird && <td className="px-3 py-3 max-w-28">{renderPick(entry.classifica_ordinata?.[2], null, getPositionCorrect(bd, 2))}</td>}
+                                                                    {showUltimoSeparate && <td className="px-3 py-3 max-w-28">{renderPick(entry.classifica_ordinata?.[nPos - 1], null, getPositionCorrect(bd, nPos - 1))}</td>}
                                                                     <td className="px-3 py-3 max-w-28">{renderPick(entry.maggiore_streak_vittorie_id, entry.maggiore_streak_nickname, getCategoryCorrect(bd, 'streak'))}</td>
                                                                     {hasAnyDuel && <td className="px-3 py-3 max-w-28">{renderPick(entry.duello_scelta_id, entry.duello_scelta_nickname, getCategoryCorrect(bd, 'duello'))}</td>}
                                                                 </tr>
@@ -1124,13 +1132,16 @@ const Schedina = () => {
                                                     </div>
 
                                                     <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-                                                        {[
-                                                            { label: '1°', playerId: s.classifica_ordinata?.[0] },
-                                                            { label: '2°', playerId: s.classifica_ordinata?.[1] },
-                                                            { label: '3°', playerId: s.classifica_ordinata?.[2] },
-                                                            { label: 'Ultimo', playerId: s.classifica_ordinata?.[s.classifica_ordinata?.length - 1] },
-                                                            { label: 'Streak', playerId: s.maggiore_streak_vittorie_id, nickname: s.maggiore_streak_nickname },
-                                                        ].map(({ label, playerId, nickname }) => {
+                                                        {(() => {
+                                                            const sNPos = (s.classifica_ordinata ?? []).length
+                                                            return [
+                                                                { label: '1°', playerId: s.classifica_ordinata?.[0] },
+                                                                sNPos >= 2 && { label: '2°', playerId: s.classifica_ordinata?.[1] },
+                                                                sNPos >= 3 && { label: '3°', playerId: s.classifica_ordinata?.[2] },
+                                                                sNPos > 3 && { label: 'Ultimo', playerId: s.classifica_ordinata?.[sNPos - 1] },
+                                                                { label: 'Streak', playerId: s.maggiore_streak_vittorie_id, nickname: s.maggiore_streak_nickname },
+                                                            ].filter(Boolean)
+                                                        })().map(({ label, playerId, nickname }) => {
                                                             const nick = nickname ?? (playerId ? getPlayerNickname(playerId) : null)
                                                             const img = nick ? getPlayerImg(nick) : null
                                                             return (
