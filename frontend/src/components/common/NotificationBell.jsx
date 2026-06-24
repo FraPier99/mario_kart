@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { Bell, BellRing, PenLine, Trophy, Zap, MessageCircle, ArrowRight, X } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { notificationsApi, schedineApi } from '@/services/apiClient'
+import { useAppData } from '@/context/AppDataContext'
 
 const TYPE_CONFIG = {
   schedina_pending:  { icon: PenLine,       color: 'text-amber-400',   bg: 'bg-amber-500/15',   label: 'Schedina da compilare' },
@@ -30,26 +31,28 @@ const resolveNotifLink = (notif) => {
   }
 }
 
-const resolveNotifContext = (notif) => {
+const resolveNotifContext = (notif, getTournamentDisplayNumber) => {
   const tName = notif.tournament_name ?? notif.tournament ?? null
   const tId   = notif.ref_id ?? notif.tournament_id ?? null
+  const num   = tId ? getTournamentDisplayNumber(tId) : null
   switch (notif.type) {
     case 'tournament_ended':
-      return tName ?? (tId ? `Torneo #${tId}` : 'Vedi risultati →')
+      return tName ?? (num ? `Torneo #${num}` : 'Vedi risultati →')
     case 'schedina_winner':
-      return tName ? `Schedina · ${tName}` : (tId ? `Schedina · Torneo #${tId}` : 'Vedi torneo →')
+      return tName ? `Schedina · ${tName}` : (num ? `Schedina · Torneo #${num}` : 'Vedi torneo →')
     case 'schedina_pending':
-      return tName ? `Da compilare · ${tName}` : (tId ? `Torneo #${tId}` : 'Compila ora →')
+      return tName ? `Da compilare · ${tName}` : (num ? `Torneo #${num}` : 'Compila ora →')
     case 'gallery_mention':
     case 'comment_reply':
       return 'Vai alla galleria →'
     default:
-      return tName ?? (tId ? `Torneo #${tId}` : null)
+      return tName ?? (num ? `Torneo #${num}` : null)
   }
 }
 
 export default function NotificationBell() {
   const location = useLocation()
+  const { getTournamentDisplayNumber } = useAppData()
   const [open, setOpen] = useState(false)
   const [notifications, setNotifications] = useState([])
   const [pendingSchedine, setPendingSchedine] = useState([])
@@ -172,7 +175,7 @@ export default function NotificationBell() {
 
             {/* Schedine urgenti */}
             {pendingSchedine.map((s, i) => {
-              const tournName = s.tournament_name ?? s.name ?? `Torneo #${s.tournament_id}`
+              const tournName = s.tournament_name ?? s.name ?? `Torneo #${getTournamentDisplayNumber(s.tournament_id)}`
               const raceNum   = s.race_number ?? s.round ?? s.race_num ?? null
               const bodyText  = raceNum ? `${tournName} — Gara ${raceNum}` : tournName
               const schedLink = s.tournament_id ? (s.tournament_format === 'group_stage' ? `/schedina/${s.tournament_id}/group-stage` : `/schedina/${s.tournament_id}/compila`) : '/schedina'
@@ -203,7 +206,7 @@ export default function NotificationBell() {
               const cfg      = TYPE_CONFIG[notif.type] ?? DEFAULT_CFG
               const Icon     = cfg.icon
               const isUnread = !notif.is_read
-              const context  = resolveNotifContext(notif)
+              const context  = resolveNotifContext(notif, getTournamentDisplayNumber)
               const title    = notif.content || notif.title || notif.message || cfg.label
               const body     = notif.body || null
               return (

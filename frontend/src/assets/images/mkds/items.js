@@ -29,7 +29,10 @@ const getItemBackground = (itemKey) => {
   const offset = ITEM_OFFSETS[itemKey]
   if (offset === undefined) return null
   const xPos = offset * ITEM_PERCENT
-  return `${ITEMS_SPRITE} ${xPos}% 0% / ${TOTAL_ITEMS * 100}% 100%`
+  // url(...) è obbligatorio: una stringa nuda nella shorthand "background"
+  // non è un valore CSS valido per l'immagine, viene scartata in silenzio e
+  // il div risulta vuoto (nessun errore in console, nessun img rotta visibile).
+  return `url(${ITEMS_SPRITE}) ${xPos}% 0% / ${TOTAL_ITEMS * 100}% 100%`
 }
 
 export { ITEMS_SPRITE, ITEM_OFFSETS, getItemBackground }

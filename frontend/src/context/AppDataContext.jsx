@@ -406,6 +406,22 @@ export function AppDataProvider({ children }) {
         return new Map(tournaments.map((tournament) => [tournament.id, tournament]))
     }, [tournaments])
 
+    // Numero "torneo #N" mostrato agli utenti: l'id del DB ha dei buchi (es.
+    // 2, 16, 127 dopo che dei tornei intermedi sono stati eliminati) e non è
+    // un buon numero progressivo da mostrare. Qui si deriva un numero
+    // sequenziale 1,2,3... in base all'ordine di creazione (id crescente,
+    // dato che è auto-increment) — solo per la UI, le chiamate API
+    // continuano a usare l'id reale.
+    const tournamentDisplayNumberById = useMemo(() => {
+        const map = new Map()
+        ;[...tournaments].sort((a, b) => a.id - b.id).forEach((t, i) => map.set(t.id, i + 1))
+        return map
+    }, [tournaments])
+    const getTournamentDisplayNumber = useCallback(
+        (tournamentId) => tournamentDisplayNumberById.get(Number(tournamentId)) ?? tournamentId,
+        [tournamentDisplayNumberById]
+    )
+
     const racesById = useMemo(() => {
         return new Map(races.map((race) => [race.id, race]))
     }, [races])
@@ -524,6 +540,8 @@ export function AppDataProvider({ children }) {
         circuitsByGameId,
         charactersByGameId,
         tournamentsById,
+        tournamentDisplayNumberById,
+        getTournamentDisplayNumber,
         racesById,
         raceToTournamentId,
         detailedTournaments,

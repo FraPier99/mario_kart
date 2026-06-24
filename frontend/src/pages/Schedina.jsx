@@ -45,7 +45,7 @@ const Schedina = () => {
     const { tournamentId } = useParams()
     const location = useLocation()
     const fromAdmin = location.state?.fromAdmin === true
-    const { getTournamentById } = useAppData()
+    const { getTournamentById, getTournamentDisplayNumber } = useAppData()
     const { user, isAdmin, isSuperadmin } = useAuth()
     const isPrivileged = isAdmin || isSuperadmin
 
@@ -343,7 +343,7 @@ const Schedina = () => {
                                 <div className="min-w-0">
                                     <p className={`text-[10px] font-black uppercase tracking-[0.35em] ${theme.tailwind.text}`}>Esito Schedina</p>
                                     <h1 className="text-xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground truncate">
-                                        {tournamentDetail?.tournament_name ?? tournament?.name ?? `Torneo #${tournamentId}`}
+                                        {tournamentDetail?.tournament_name ?? tournament?.name ?? `Torneo #${getTournamentDisplayNumber(tournamentId)}`}
                                     </h1>
                                     <p className="text-xs text-slate-400 dark:text-muted-foreground">{formatDate(tournamentDetail?.tournament_date ?? tournament?.date)}</p>
                                 </div>
@@ -919,7 +919,7 @@ const Schedina = () => {
                                                                 </div>
                                                             )}
                                                             <div>
-                                                                <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Torneo #{winner.tournament_id}</p>
+                                                                <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Torneo #{getTournamentDisplayNumber(winner.tournament_id)}</p>
                                                                 <h3 className="text-base font-black uppercase tracking-tight text-slate-900 dark:text-foreground">{winner.tournament_name}</h3>
                                                                 <p className="text-xs text-slate-500 dark:text-muted-foreground">{formatDate(winner.tournament_date)} · {winner.nickname ?? winner.username}</p>
                                                             </div>
@@ -1061,7 +1061,7 @@ const Schedina = () => {
                                             <div key={entry.tournament_id} className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-xl dark:border-border dark:bg-card">
                                                 <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
                                                     <div>
-                                                        <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Torneo #{entry.tournament_id}</p>
+                                                        <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Torneo #{getTournamentDisplayNumber(entry.tournament_id)}</p>
                                                         <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-foreground">{entry.tournament_name}</h3>
                                                         <p className="text-xs text-slate-500 dark:text-muted-foreground">{formatDate(entry.tournament_date)} · {entry.n_compiled}/{entry.n_participants} compilate</p>
                                                     </div>
@@ -1114,9 +1114,9 @@ const Schedina = () => {
                                                 <div key={s.id} className={`rounded-[2rem] border bg-white p-5 shadow-xl dark:bg-card ${isWon ? 'border-amber-200 dark:border-amber-500/30' : 'border-slate-200 dark:border-border'}`}>
                                                     <div className="flex flex-wrap items-start justify-between gap-3">
                                                         <div>
-                                                            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Torneo #{s.tournament_id}</p>
+                                                            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Torneo #{getTournamentDisplayNumber(s.tournament_id)}</p>
                                                             <h3 className={`text-lg font-black uppercase tracking-tight ${isWon ? 'text-amber-700 dark:text-amber-300' : 'text-slate-900 dark:text-foreground'}`}>
-                                                                {t?.name ?? `Torneo #${s.tournament_id}`}
+                                                                {t?.name ?? `Torneo #${getTournamentDisplayNumber(s.tournament_id)}`}
                                                                 {isWon && <span className="ml-2 text-sm">🏆</span>}
                                                             </h3>
                                                             <p className="text-xs text-slate-500 dark:text-muted-foreground">{formatDate(t?.date ?? s.created_at)}</p>

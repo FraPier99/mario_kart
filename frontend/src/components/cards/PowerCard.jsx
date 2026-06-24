@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Shield, Ban } from 'lucide-react'
+import { useAppData } from '@/context/AppDataContext'
 
 const MASTER = {
   gradient: 'linear-gradient(160deg, #1c0a00 0%, #3b1500 30%, #1c0a00 60%, #2d1000 100%)',
@@ -75,6 +76,7 @@ export default function PowerCard({
   consumedTournamentName,
   customTitle,
 }) {
+  const { getTournamentDisplayNumber } = useAppData()
   const t = getTheme(type)
   const isMaster = type === 'master'
   const isShell = !isMaster
@@ -209,7 +211,7 @@ export default function PowerCard({
               {sourceTournamentId && (
                 <Link to={`/tournaments/${sourceTournamentId}`}
                   className="block text-[9px] text-slate-500 hover:text-slate-300 underline transition">
-                  {sourceTournamentName ? `Vinta in: ${sourceTournamentName}` : `Torneo #${sourceTournamentId}`}
+                  {sourceTournamentName ? `Vinta in: ${sourceTournamentName}` : `Torneo #${getTournamentDisplayNumber(sourceTournamentId)}`}
                 </Link>
               )}
             </div>

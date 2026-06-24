@@ -88,7 +88,7 @@ const SortablePlayer = ({ player, index, total }) => {
 const SchedinaForm = () => {
     const { tournamentId } = useParams()
     const navigate = useNavigate()
-    const { getTournamentById, players, refresh } = useAppData()
+    const { getTournamentById, getTournamentDisplayNumber, players, refresh } = useAppData()
     const { user, isSuperadmin } = useAuth()
     const { dark } = useTheme()
     const { charactersById } = useAppData()
@@ -342,7 +342,7 @@ const SchedinaForm = () => {
                 <div className="mb-6">
                     <p className={`text-xs font-black uppercase tracking-[0.35em] ${theme.tailwind.text}`}>Compila schedina</p>
                     <h1 className="mt-2 text-3xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground md:text-4xl">
-                        {tournament?.name ?? `Torneo #${tournamentId}`}
+                        {tournament?.name ?? `Torneo #${getTournamentDisplayNumber(tournamentId)}`}
                     </h1>
                     {tournament?.deadline_lock && !schedineLocked && (
                         <DeadlineCountdown deadline={tournament.deadline_lock} className="mt-3" hideWhenPassed />

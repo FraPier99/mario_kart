@@ -4,9 +4,11 @@ import { Crown, ChevronDown } from 'lucide-react'
 import RaceList from '../tournaments/RaceList'
 import LeaderboardTable from '../stats/LeaderboardTable'
 import { useAuth } from '@/context/AuthContext'
+import { useAppData } from '@/context/AppDataContext'
 
 const TournamentHistoryCard = ({ tournament, circuitsById, charactersById }) => {
     const { user, isAdmin, isSuperadmin } = useAuth()
+    const { getTournamentDisplayNumber } = useAppData()
     const isPrivileged = isAdmin || isSuperadmin
     const [expanded, setExpanded] = useState(false)
     const statusLabel = tournament.status === 'concluso'
@@ -24,7 +26,7 @@ const TournamentHistoryCard = ({ tournament, circuitsById, charactersById }) => 
                 onClick={() => setExpanded((v) => !v)}
             >
                 <div className="min-w-0 flex-1">
-                    <p className="text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">TORNEO #{tournament.id}</p>
+                    <p className="text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">TORNEO #{getTournamentDisplayNumber(tournament.id)}</p>
                     <h3 className="text-xl font-black text-slate-900 dark:text-foreground truncate">{tournament.name?.toUpperCase()}</h3>
                     <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-500 dark:text-muted-foreground uppercase">
                         <span>{tournament.date || 'DATA N/D'}</span>

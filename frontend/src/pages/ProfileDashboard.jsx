@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom'
 import { Check, ChevronDown, Image as ImageIcon, PenLine, Search, Upload, X, Clock, AlertTriangle, Zap, Shield, ArrowRight, Trophy, Flag, BarChart3, Star, Crown } from 'lucide-react'
 import PowerCard from '@/components/cards/PowerCard'
 import { toast } from 'sonner'
-import { playMkdsCharacterVoice } from '@/lib/mkdsSounds'
-import { playMk8dCharacterVoice } from '@/lib/mk8dSounds'
+import { playMkdsCharacterVoice, preloadMkdsCharacterVoiceByName } from '@/lib/mkdsSounds'
+import { playMk8dCharacterVoice, preloadCharacterVoice as preloadMk8dCharacterVoice } from '@/lib/mk8dSounds'
 import AppLayout from '@/components/layout/AppLayout'
 import ConfirmModal from '@/components/common/ConfirmModal'
 import { useAppData } from '@/context/AppDataContext'
@@ -34,6 +34,18 @@ const FavoriteCharacterPicker = ({ value, onChange, characters }) => {
         const needle = query.trim().toLowerCase()
         return characters.filter((character) => character.name?.toLowerCase().includes(needle))
     }, [characters, query])
+
+    // Precarica i versi di tutti i personaggi appena si apre il menu, invece
+    // di fare fetch+decode dell'audio solo al click: prima il primo verso di
+    // ogni personaggio partiva con un ritardo percepibile (a volte il menu
+    // si chiudeva prima ancora che il suono iniziasse).
+    useEffect(() => {
+        if (!open) return
+        characters.forEach((character) => {
+            if (character.game_id === 2) preloadMk8dCharacterVoice(character.name)
+            else preloadMkdsCharacterVoiceByName(character.name)
+        })
+    }, [open, characters])
 
     useEffect(() => {
         const handleOutsideClick = (event) => {

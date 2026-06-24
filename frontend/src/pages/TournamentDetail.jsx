@@ -163,7 +163,7 @@ const SpareggioEsitiList = ({ duelloGroups, playerMapById, circuitsById, charact
 const TournamentDetail = () => {
     const { tournamentId } = useParams()
     const navigate = useNavigate()
-    const { getTournamentById, players, games, refresh, loading, errorMessage, circuitsById, circuitsByGameId, charactersById, charactersByGameId, results, statsByPlayerId } = useAppData()
+    const { getTournamentById, getTournamentDisplayNumber, players, games, refresh, loading, errorMessage, circuitsById, circuitsByGameId, charactersById, charactersByGameId, results, statsByPlayerId } = useAppData()
     const { user, isAdmin, isSuperadmin } = useAuth()
     const { triggerCelebration } = useCelebration()
 
@@ -843,7 +843,7 @@ const TournamentDetail = () => {
                     <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-6 shadow-sm">
                         <div className="flex flex-wrap items-start justify-between gap-4">
                             <div>
-                                <p className="text-xs font-black uppercase tracking-[0.35em] text-emerald-600 dark:text-emerald-400">Torneo #{tournament.id}</p>
+                                <p className="text-xs font-black uppercase tracking-[0.35em] text-emerald-600 dark:text-emerald-400">Torneo #{getTournamentDisplayNumber(tournament.id)}</p>
                                 <h1 className="mt-1 text-3xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground">{tournament.name}</h1>
                                 <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-500 dark:text-muted-foreground">
                                     <span>{tournament.date}</span>

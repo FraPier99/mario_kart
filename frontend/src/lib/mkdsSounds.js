@@ -175,6 +175,17 @@ const resolveVoiceDir = (characterName) => {
     return null
 }
 
+// Preload by-name, da chiamare in anticipo (es. all'apertura di un selettore
+// personaggi) così playMkdsCharacterVoice trova già il buffer pronto invece
+// di dover fare fetch+decode al momento del click — è quel fetch+decode che
+// causava il ritardo percepito "scelgo il personaggio ma sento il verso solo
+// dopo aver chiuso il menu".
+export const preloadMkdsCharacterVoiceByName = (characterName) => {
+    const dir = resolveVoiceDir(characterName)
+    if (!dir) return
+    preloadCharacterVoice(dir)
+}
+
 export const playMkdsCharacterVoice = async (characterName, { loop = false, loopGapMs = 4000 } = {}) => {
     if (isCelebrationMuted()) return null
     unlockMkdsAudio()

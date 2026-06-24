@@ -24,7 +24,9 @@ const getMugshotBackground = (characterName) => {
   const offset = CHARACTER_OFFSETS[characterName]
   if (offset === undefined) return null
   const xPos = offset * FRAME_PERCENT
-  return `${MUGSHOTS_STRIP} ${xPos}% 0% / ${TOTAL_FRAMES * 100}% 100%`
+  // vedi nota in items.js getItemBackground: serve url(...), una stringa nuda
+  // non è un valore CSS valido per l'immagine e il div risulta vuoto.
+  return `url(${MUGSHOTS_STRIP}) ${xPos}% 0% / ${TOTAL_FRAMES * 100}% 100%`
 }
 
 export { MUGSHOTS_STRIP, CHARACTER_OFFSETS, getMugshotBackground }
