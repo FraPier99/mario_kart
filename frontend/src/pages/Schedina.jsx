@@ -859,8 +859,13 @@ const Schedina = () => {
                             <button type="button" onClick={() => window.location.reload()} className="rounded-2xl bg-slate-900 px-4 py-2 text-xs font-black uppercase tracking-widest text-white">Riprova</button>
                         ) : null} />
 
-                        {/* TAB BUTTONS */}
-                        <div className="inline-flex rounded-2xl bg-slate-100 dark:bg-muted p-1 mb-6 overflow-x-auto">
+                        {/* TAB BUTTONS — max-w-full è necessario perché overflow-x-auto
+                        funzioni davvero su un contenitore inline-flex: senza un
+                        vincolo di larghezza il div si allarga quanto serve per
+                        contenere tutte le tab (sforando la pagina) invece di
+                        scrollare al suo interno — stesso fix già usato per la
+                        tab bar dell'admin in TournamentDetail.jsx. */}
+                        <div className="inline-flex max-w-full rounded-2xl bg-slate-100 dark:bg-muted p-1 mb-6 overflow-x-auto">
                             {filteredTabs.map((tab) => (
                                 <button
                                     key={tab.key}

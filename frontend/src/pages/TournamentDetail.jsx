@@ -25,7 +25,6 @@ import GroupPlancia, { GroupCard } from '@/components/tournaments/GroupPlancia'
 import PhaseCircuitsCard from '@/components/tournaments/PhaseCircuitsCard'
 import OverallClassificaCard from '@/components/tournaments/OverallClassificaCard'
 import { findPlayerGroup, groupLabel, isPodiumDuelKey } from '@/lib/groupStage'
-import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import { getApiErrorMessage, tournamentsApi, inventoryApi, authApi, schedineApi, cardLog as cardLogUtil } from '@/services/apiClient'
 import { toast } from 'sonner'
 
@@ -906,14 +905,17 @@ const TournamentDetail = () => {
                         )}
                     </div>
 
-                    {/* Tabs */}
-                    <div className="flex gap-1 rounded-2xl bg-slate-100 dark:bg-muted p-1">
+                    {/* Tabs — overflow-x-auto invece di flex-1: con 4 tab (Riepilogo/
+                    Classifica/Gare/Carte) su schermi piccoli flex-1 le comprimeva
+                    finché l'ultima non veniva tagliata dal contenitore, qui invece
+                    restano alla larghezza naturale e la riga scorre orizzontalmente. */}
+                    <div className="flex gap-1 overflow-x-auto rounded-2xl bg-slate-100 dark:bg-muted p-1">
                         {USER_TABS.map(({ key, label, icon: Icon }) => (
                             <button
                                 key={key}
                                 type="button"
                                 onClick={() => setUserTab(key)}
-                                className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-widest transition-all flex-1 justify-center ${
+                                className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-widest transition-all justify-center ${
                                     userTab === key
                                         ? 'bg-white dark:bg-card text-slate-900 dark:text-foreground shadow-sm'
                                         : 'text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'
@@ -1458,7 +1460,7 @@ const TournamentDetail = () => {
                                 </div>
                             )}
                         </div>
-                        <div className="flex shrink-0 items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                             {isParticipantAdmin && (
                                 <button
                                     onClick={() => setAdminModeOn(false)}

@@ -73,8 +73,9 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
             </div>
             <div className="min-w-0">
                 <button
+                    type="button"
                     onClick={() => onPlayerClick?.(row)}
-                    className="text-left font-black text-slate-900 dark:text-foreground truncate capitalize hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer"
+                    className="-m-1.5 block truncate p-1.5 text-left font-black text-slate-900 dark:text-foreground capitalize hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer"
                 >
                     {row.nickname}
                 </button>

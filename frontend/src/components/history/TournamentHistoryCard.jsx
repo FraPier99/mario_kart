@@ -40,7 +40,7 @@ const TournamentHistoryCard = ({ tournament, circuitsById, charactersById }) => 
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex flex-wrap items-center gap-2">
                     <Link
                         to={`/tournaments/${tournament.id}/stats`}
                         onClick={(e) => e.stopPropagation()}

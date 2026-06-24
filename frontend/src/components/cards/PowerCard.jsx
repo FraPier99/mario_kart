@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Shield, Ban } from 'lucide-react'
 
@@ -78,6 +79,25 @@ export default function PowerCard({
   const isMaster = type === 'master'
   const isShell = !isMaster
   const IconComponent = isMaster ? Shield : Ban
+
+  // Su mobile la card "flip" occupa quasi tutto lo schermo: con un click
+  // diretto su tutta l'area, qualsiasi tentativo di scorrere la pagina
+  // partendo da sopra la card veniva interpretato come un tap e la
+  // ribaltava, rendendo impossibile scrollare oltre. Si traccia lo
+  // spostamento del puntatore tra down e up: solo un tap "fermo" (sotto
+  // soglia) gira la card, un drag/scroll viene ignorato.
+  const pointerStartRef = useRef(null)
+  const handlePointerDown = (event) => {
+    pointerStartRef.current = { x: event.clientX, y: event.clientY }
+  }
+  const handlePointerUp = (event) => {
+    const start = pointerStartRef.current
+    pointerStartRef.current = null
+    if (!start) return
+    const dx = Math.abs(event.clientX - start.x)
+    const dy = Math.abs(event.clientY - start.y)
+    if (dx < 10 && dy < 10) onFlip?.()
+  }
 
   if (mode === 'mini') {
     return (
@@ -420,11 +440,12 @@ export default function PowerCard({
 
   return (
     <div
-      className="group relative cursor-pointer perspective-[1000px]"
-      onClick={onFlip}
+      className="group relative cursor-pointer touch-pan-y perspective-[1000px]"
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
     >
       <div
-        className="relative h-96 w-full rounded-2xl transition-transform duration-500 ease-out transform-3d"
+        className="relative h-80 w-full rounded-2xl transition-transform duration-500 ease-out transform-3d sm:h-96"
         style={{ transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)', willChange: 'transform' }}
       >
         {frontFace}

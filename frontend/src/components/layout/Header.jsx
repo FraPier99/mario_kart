@@ -24,7 +24,7 @@ const Header = () => {
     const tournamentLink = latestTournament ? `/tournaments/${latestTournament.id}` : '/tournaments/new'
 
     return (
-        <header className="relative h-[60vh] min-h-112.5 w-full overflow-hidden bg-slate-950">
+        <header className="relative min-h-112.5 w-full overflow-hidden bg-slate-950 md:min-h-[60vh]">
             <img
                 src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwallpapercave.com%2Fwp%2Fwp15388117.jpg&f=1&nofb=1&ipt=288f0aff30d04642323f69162b760f41dace645e342a640fe03d39519ea7a980"
                 alt="Mario Kart"
@@ -33,7 +33,7 @@ const Header = () => {
 
             <div className="absolute inset-0 z-10" style={{ backgroundImage: `linear-gradient(90deg, rgba(0,0,0,0.82), rgba(0,0,0,0.36) 60%, transparent), ${theme.pageOverlay}` }} />
 
-            <div className="max-w-7xl relative z-20 h-full mx-auto px-6 flex flex-col items-start justify-center text-white">
+            <div className="max-w-7xl relative z-20 mx-auto px-6 py-10 flex flex-col items-start justify-center text-white md:h-full">
                 <span className="inline-flex items-center gap-1.5 text-white text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-sm shadow-md -skew-x-12" style={{ background: theme.accentStrong, boxShadow: `0 0 30px ${theme.accentGlow}` }}>
                     <span className="inline-flex skew-x-12">{isSuperadmin ? `⚡ ${user?.username} · Superadmin` : player ? `Benvenuto, ${player.nickname ?? user?.username}` : 'Benvenuto alla Lega Kart!'}</span>
                 </span>
