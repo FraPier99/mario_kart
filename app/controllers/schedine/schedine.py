@@ -89,12 +89,16 @@ def get_schedina_tournament_overview(
 def get_pending_notifications(
     current_user=Depends(get_current_user), db: Session = Depends(get_db)
 ):
+    # .scalar_subquery(), non .subquery(): è una sotto-query a singola
+    # colonna usata direttamente dentro .in_() — .subquery() produce un
+    # oggetto pensato per un FROM, SQLAlchemy lo accetta comunque ma con un
+    # SAWarning ("Coercing Subquery object into a select() for use in IN()").
     subquery_partecipanti = (
         db.query(TournamentPlayer.tournament_id)
         .join(Player, Player.id == TournamentPlayer.player_id)
         .join(User, User.player_id == Player.id)
         .filter(User.id == current_user.id)
-        .subquery()
+        .scalar_subquery()
     )
 
     candidates = (
