@@ -346,10 +346,15 @@ const TournamentDetail = () => {
     const [cardHistory, setCardHistory] = useState([])
     const [superadminPlayerIds, setSuperadminPlayerIds] = useState([])
 
-    // Carica superadmin player IDs per escluderli dalla lista partecipanti
+    // Carica superadmin player IDs per escluderli dalla lista partecipanti.
+    // listUsers() (/auth/users) è riservato al superadmin: per un admin
+    // normale falliva silenziosamente (403 ingoiato dal .catch). listCommunityUsers()
+    // (/auth/community/users) è pubblico e basta comunque, perché i
+    // superadmin non hanno mai un player_id (vengono esclusi da quell'endpoint
+    // per costruzione, quindi il filtro qui sotto resta corretto).
     useEffect(() => {
         if (!isAdmin && !isSuperadmin) return
-        authApi.listUsers().then((res) => {
+        authApi.listCommunityUsers().then((res) => {
             const superadminIds = (res.data ?? [])
                 .filter((u) => u.role === 'superadmin' && u.player_id != null)
                 .map((u) => u.player_id)

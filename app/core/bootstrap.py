@@ -352,6 +352,10 @@ def ensure_photo_comment_edit_columns():
                     "ALTER TABLE photo_comments ADD COLUMN parent_id INTEGER REFERENCES photo_comments(id)"
                 )
             )
+        if "image_data" not in comment_columns:
+            connection.execute(
+                text("ALTER TABLE photo_comments ADD COLUMN image_data TEXT")
+            )
 
 
 def ensure_notifications_table():

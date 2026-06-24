@@ -5,21 +5,6 @@ from sqlalchemy.exc import IntegrityError
 from app.data.punteggi import PUNTEGGI_CONFIG
 
 
-# group_name dei duelli di spareggio podio in tornei classic: "duello_podio_1_2"
-# e "duello_podio_3_4" per 1°/2° e 3°/4° posto, più "duello_podio_<N>_<M>"
-# generati dinamicamente per pareggi a posizioni più basse (vedi
-# app.services.tornei.tournaments.get_classic_podium_ties).
-_CLASSIC_PODIUM_DUEL_PREFIX = "duello_podio_"
-
-# group_name dei duelli di spareggio podio della Finale (Final 4) nei tornei
-# a gironi (vedi app.services.tornei.tournaments.FINALS_DUELLO_PODIO_1_2 / FINALS_DUELLO_PODIO_3_4).
-_FINALS_PODIUM_DUEL_GROUP_NAMES = {"finals_duello_podio_1_2", "finals_duello_podio_3_4"}
-
-
-def _maybe_finalize_after_duel(db: Session, race: Race) -> None:
-    """Disattivata: la finalizzazione avviene solo tramite 'Decreta Vincitore'."""
-
-
 def get_results(db: Session):
     return db.query(Result).all()
 
@@ -62,11 +47,6 @@ def create_result(db: Session, resultData: CreateResult):
     db.commit()
     db.refresh(new_result)
 
-    try:
-        _maybe_finalize_after_duel(db, race)
-    except Exception:
-        db.rollback()
-
     return new_result
 
 
@@ -108,11 +88,5 @@ def update_result(db: Session, resultData: UpdateResult, result_id: int):
 
     db.commit()
     db.refresh(result)
-
-    if "position" in update_data and race:
-        try:
-            _maybe_finalize_after_duel(db, race)
-        except Exception:
-            db.rollback()
 
     return result

@@ -172,7 +172,7 @@ export const galleryApi = {
     list: () => _get('/gallery'),
     upload: (payload) => _post('/gallery', payload),
     remove: (photoId) => _delete(`/gallery/${photoId}`),
-    addComment: (photoId, text, parentId) => _post(`/gallery/${photoId}/comments`, { text, parent_id: parentId }),
+    addComment: (photoId, text, parentId, imageData) => _post(`/gallery/${photoId}/comments`, { text, parent_id: parentId, image_data: imageData ?? null }),
     editComment: (commentId, text) => _patch(`/gallery/comments/${commentId}`, { text }),
     deleteComment: (commentId) => _delete(`/gallery/comments/${commentId}`),
 }

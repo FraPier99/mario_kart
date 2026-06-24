@@ -9,14 +9,21 @@ import { useAppData } from '@/context/AppDataContext'
 import { galleryApi, getApiErrorMessage } from '@/services/apiClient'
 
 const QUICK_EMOJIS = ['😂','❤️','🔥','👏','😍','🏆','⭐','🎮','🚀','💥','😎','🎉','💪','🥇','😱','🤣','👀','🎯','💀','🤩']
+const MAX_COMMENT_IMAGE_BYTES = 8 * 1024 * 1024
 
-/** Highlights @mentions in comment text with a coloured span */
+/** Highlights @mentions in comment text with a coloured span — @tutti (menziona
+ * tutti, vedi services/utenti/notifications.py) risalta in un colore diverso
+ * dalle menzioni a un singolo giocatore. */
 const renderMentions = (text) => {
     if (!text?.includes('@')) return text
     const parts = text.split(/(@[\w.-]+)/g)
     return parts.map((part, i) =>
         part.startsWith('@')
-            ? <span key={i} className="font-black text-emerald-600 dark:text-emerald-400">{part}</span>
+            ? (
+                <span key={i} className={`font-black ${part.toLowerCase() === '@tutti' ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                    {part}
+                </span>
+            )
             : part
     )
 }
@@ -45,7 +52,10 @@ const formatDateTime = (value) => {
 export default function Gallery() {
     const { user, isSuperadmin } = useAuth()
     const { tournaments, players } = useAppData()
-    const playerNicknames = useMemo(() => players.map((p) => p.nickname).filter(Boolean), [players])
+    // "tutti" è il tag speciale che notifica tutta la community (vedi
+    // create_mention_notifications, services/utenti/notifications.py) —
+    // compare nei suggerimenti di menzione insieme ai nickname reali.
+    const playerNicknames = useMemo(() => ['tutti', ...players.map((p) => p.nickname).filter(Boolean)], [players])
 
     const [photos, setPhotos] = useState([])
     const [loading, setLoading] = useState(true)
@@ -61,6 +71,9 @@ export default function Gallery() {
     const [mentionSuggestions, setMentionSuggestions] = useState([])
     const [replyingToComment, setReplyingToComment] = useState(null)
     const [visibleCommentCount, setVisibleCommentCount] = useState(10)
+    const [commentImageData, setCommentImageData] = useState('')
+    const [commentImageName, setCommentImageName] = useState('')
+    const commentImageInputRef = useRef(null)
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { setVisibleCommentCount(10) }, [activeIdx])
@@ -170,12 +183,31 @@ export default function Gallery() {
         commentInputRef.current?.focus()
     }
 
+    const handleCommentImageChange = async (e) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+        if (!file.type.startsWith('image/')) { toast.error('Carica un\'immagine o una gif valida'); return }
+        if (file.size > MAX_COMMENT_IMAGE_BYTES) { toast.error('File troppo grande', { description: 'Massimo 8MB.' }); return }
+        try {
+            const data = await readFileAsDataUrl(file)
+            setCommentImageData(data)
+            setCommentImageName(file.name)
+        } catch { toast.error('Impossibile leggere il file') }
+        finally { e.target.value = '' }
+    }
+
+    const clearCommentImage = () => {
+        setCommentImageData('')
+        setCommentImageName('')
+    }
+
     const handleAddComment = async (photoId, parentId) => {
-        if (!commentText.trim()) return
+        if (!commentText.trim() && !commentImageData) return
         setSubmittingComment(true)
         try {
-            await galleryApi.addComment(photoId, commentText.trim(), parentId)
+            await galleryApi.addComment(photoId, commentText.trim(), parentId, commentImageData || null)
             setCommentText('')
+            clearCommentImage()
             setReplyingToComment(null)
             await loadPhotos()
         } catch (err) {
@@ -462,7 +494,10 @@ export default function Gallery() {
                                                                 const parentName = parentComment ? (parentComment.nickname ?? parentComment.username) : 'commento eliminato'
                                                                 return <p className="text-[9px] text-slate-400 dark:text-slate-500 italic mb-0.5">rispondendo a @{parentName}</p>
                                                             })()}
-                                                            <p className="mt-1 text-sm text-slate-700 dark:text-foreground">{renderMentions(c.text)}</p>
+                                                            {c.text && <p className="mt-1 text-sm text-slate-700 dark:text-foreground">{renderMentions(c.text)}</p>}
+                                                            {c.image_data && (
+                                                                <img src={c.image_data} alt="Allegato commento" className="mt-2 max-h-48 max-w-50 rounded-xl border border-slate-200 dark:border-border object-cover" />
+                                                            )}
                                                         </div>
                                                     )}
 
@@ -505,7 +540,9 @@ export default function Gallery() {
                                             <div className="flex flex-wrap gap-1.5">
                                                 {mentionSuggestions.map((nick) => (
                                                     <button key={nick} type="button" onClick={() => insertMention(nick)}
-                                                        className="rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-black text-emerald-700 dark:text-emerald-300 transition hover:bg-emerald-100">
+                                                        className={nick === 'tutti'
+                                                            ? 'rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 px-2.5 py-0.5 text-[10px] font-black text-amber-700 dark:text-amber-300 transition hover:bg-amber-100'
+                                                            : 'rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-black text-emerald-700 dark:text-emerald-300 transition hover:bg-emerald-100'}>
                                                         @{nick}
                                                     </button>
                                                 ))}
@@ -532,10 +569,32 @@ export default function Gallery() {
                                                 </button>
                                             </div>
                                         )}
+                                        {commentImageData && (
+                                            <div className="flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-1.5">
+                                                <img src={commentImageData} alt={commentImageName} className="h-10 w-10 rounded-lg object-cover shrink-0" />
+                                                <span className="min-w-0 flex-1 truncate text-[10px] text-slate-500 dark:text-muted-foreground">{commentImageName}</span>
+                                                <button type="button" onClick={clearCommentImage}
+                                                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition">
+                                                    <X size={11} />
+                                                </button>
+                                            </div>
+                                        )}
                                         <div className="flex gap-2">
                                             <button type="button" onClick={() => setShowEmojiPicker((v) => !v)}
                                                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition ${showEmojiPicker ? 'border-amber-400 bg-amber-50 dark:bg-amber-500/10 text-amber-500' : 'border-slate-200 dark:border-border text-slate-400 hover:text-amber-500'}`}>
                                                 <Smile size={15} />
+                                            </button>
+                                            <input
+                                                ref={commentImageInputRef}
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleCommentImageChange}
+                                                className="hidden"
+                                            />
+                                            <button type="button" onClick={() => commentImageInputRef.current?.click()}
+                                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition ${commentImageData ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500' : 'border-slate-200 dark:border-border text-slate-400 hover:text-emerald-500'}`}
+                                                title="Allega immagine o gif">
+                                                <ImageIcon size={15} />
                                             </button>
                                             <input
                                                 ref={commentInputRef}
@@ -551,7 +610,7 @@ export default function Gallery() {
                                                 }}
                                                 className="flex-1 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2 text-sm text-slate-900 dark:text-foreground outline-none focus:border-emerald-400"
                                             />
-                                            <button type="button" onClick={() => handleAddComment(activePhoto.id, replyingToComment?.id)} disabled={submittingComment || !commentText.trim()}
+                                            <button type="button" onClick={() => handleAddComment(activePhoto.id, replyingToComment?.id)} disabled={submittingComment || (!commentText.trim() && !commentImageData)}
                                                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white transition hover:bg-emerald-500 disabled:opacity-50">
                                                 <Send size={14} />
                                             </button>

@@ -54,6 +54,7 @@ def _serialize_comment(comment: PhotoComment) -> dict:
         if favorite_character
         else None,
         "text": comment.text,
+        "image_data": comment.image_data,
         "parent_id": comment.parent_id,
         "created_at": comment.created_at,
         "edited_by_username": comment.edited_by.username if comment.edited_by else None,
@@ -123,9 +124,16 @@ def add_comment(
     if not db.query(TournamentPhoto).filter(TournamentPhoto.id == photo_id).first():
         return None
     text = payload.text.strip()
+    image_data = payload.image_data or None
+    if not text and not image_data:
+        raise ValueError("Il commento deve contenere del testo o un'immagine")
     parent_id = payload.parent_id
     comment = PhotoComment(
-        photo_id=photo_id, user_id=user_id, text=text, parent_id=parent_id
+        photo_id=photo_id,
+        user_id=user_id,
+        text=text,
+        image_data=image_data,
+        parent_id=parent_id,
     )
     db.add(comment)
     db.flush()

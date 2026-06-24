@@ -116,6 +116,7 @@ class PhotoComment(Base):
     photo_id = Column(Integer, ForeignKey("tournament_photos.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     text = Column(Text, nullable=False)
+    image_data = Column(Text, nullable=True)
     parent_id = Column(Integer, ForeignKey("photo_comments.id"), nullable=True)
     created_at = Column(DateTime, nullable=False, default=now_rome)
     edited_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)

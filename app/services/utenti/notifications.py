@@ -10,13 +10,18 @@ def _parse_mentions(text: str) -> list[str]:
     return re.findall(r"@([\w\-\.]+)", text)
 
 
+MENTION_ALL_TAG = "tutti"
+
+
 def create_mention_notifications(
     db: Session,
     text: str,
     source_user_id: int,
     source_photo_id: int | None = None,
 ):
-    """Parse text for @mentions and create a notification for each tagged user."""
+    """Parse text for @mentions and create a notification for each tagged user.
+    @tutti è un tag speciale: notifica tutti gli utenti attivi con un Player
+    collegato (l'intera community), invece di cercare un Player con quel nickname."""
     mentions = _parse_mentions(text)
     if not mentions:
         return
@@ -25,17 +30,13 @@ def create_mention_notifications(
     source_name = source_user.username if source_user else f"user-{source_user_id}"
 
     notified_ids: set[int] = set()
-    for nickname in mentions:
-        player = db.query(Player).filter(Player.nickname.ilike(nickname)).first()
-        if not player or not player.user_account:
-            continue
-        target_user = player.user_account
-        if target_user.id == source_user_id:
-            continue
-        if target_user.id in notified_ids:
-            continue
-        notified_ids.add(target_user.id)
 
+    def _notify(target_user):
+        if not target_user or target_user.id == source_user_id:
+            return
+        if target_user.id in notified_ids:
+            return
+        notified_ids.add(target_user.id)
         notif = Notification(
             user_id=target_user.id,
             type="mention",
@@ -44,6 +45,23 @@ def create_mention_notifications(
             source_photo_id=source_photo_id,
         )
         db.add(notif)
+
+    if any(nickname.lower() == MENTION_ALL_TAG for nickname in mentions):
+        everyone = (
+            db.query(User)
+            .filter(User.is_active.is_(True), User.player_id.isnot(None))
+            .all()
+        )
+        for target_user in everyone:
+            _notify(target_user)
+        db.flush()
+        return
+
+    for nickname in mentions:
+        player = db.query(Player).filter(Player.nickname.ilike(nickname)).first()
+        if not player or not player.user_account:
+            continue
+        _notify(player.user_account)
 
     db.flush()
 

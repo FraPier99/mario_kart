@@ -5,6 +5,9 @@ from app.models import Player
 from app.controllers.utenti.schemas.players import CreatePlayer, UpdatePlayer
 
 
+RESERVED_NICKNAMES = {"tutti"}  # @tutti è il tag speciale "menziona tutti" — vedi services/utenti/notifications.py
+
+
 def sanitize_nickname(value: str) -> str:
     """Nickname: solo lettere e numeri, sempre minuscolo (niente spazi o caratteri speciali)."""
     cleaned = (value or "").strip().lower()
@@ -21,6 +24,8 @@ def create_player(db: Session, players_data: CreatePlayer):
         sanitized = sanitize_nickname(payload["nickname"])
         if not sanitized:
             raise ValueError("Il nickname deve contenere almeno un carattere alfanumerico")
+        if sanitized in RESERVED_NICKNAMES:
+            raise ValueError(f"Il nickname '{sanitized}' è riservato")
         existing = db.query(Player).filter(Player.nickname == sanitized).first()
         if existing:
             raise ValueError(f"Il nickname '{sanitized}' è già in uso")
@@ -72,6 +77,8 @@ def update_player(db: Session, player_data: UpdatePlayer, player_id: int):
         sanitized = sanitize_nickname(update_data["nickname"])
         if not sanitized:
             raise ValueError("Il nickname deve contenere almeno un carattere alfanumerico")
+        if sanitized in RESERVED_NICKNAMES:
+            raise ValueError(f"Il nickname '{sanitized}' è riservato")
         existing = (
             db.query(Player)
             .filter(Player.nickname == sanitized, Player.id != player_id)

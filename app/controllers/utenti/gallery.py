@@ -54,7 +54,10 @@ def post_comment(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    result = add_comment(db, photo_id, current_user.id, payload)
+    try:
+        result = add_comment(db, photo_id, current_user.id, payload)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Photo not found")
     return result

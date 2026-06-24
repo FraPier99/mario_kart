@@ -3,8 +3,16 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
+# Cap generoso ma limitato sulla lunghezza della stringa base64 (~7.5MB di
+# binario reale, una gif/foto da telefono ci sta comodamente) — senza nessun
+# limite un commento potrebbe imbottire la tabella con allegati arbitrariamente
+# grandi, dato che (come le foto della galleria) sono salvati come Text in DB.
+MAX_COMMENT_IMAGE_LEN = 10_000_000
+
+
 class PhotoCommentCreate(BaseModel):
-    text: str = Field(..., min_length=1, max_length=500)
+    text: str = Field("", max_length=500)
+    image_data: Optional[str] = Field(None, max_length=MAX_COMMENT_IMAGE_LEN)
     parent_id: Optional[int] = None
 
 
@@ -22,6 +30,7 @@ class PhotoCommentResponse(BaseModel):
     user_img_url: Optional[str] = None
     favorite_character_img_url: Optional[str] = None
     text: str
+    image_data: Optional[str] = None
     parent_id: Optional[int] = None
     created_at: datetime
     edited_by_username: Optional[str] = None
