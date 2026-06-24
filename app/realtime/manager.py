@@ -88,8 +88,17 @@ async def connect(sid, environ, auth=None):
     # tournament the user hasn't acknowledged yet (handles reconnections
     # and first-login-after-winner scenarios).
     try:
+        from datetime import timedelta
+
         from app.core.db import SessionLocal
+        from app.core.timezone import now_rome
         from app.models import Notification, Tournament, Player
+
+        # Finestra di freschezza: senza, un torneo concluso settimane fa e mai
+        # "letto" (es. perché i socket non si connettevano per il bug CORS)
+        # farebbe ripartire la celebrazione a tempo indeterminato a ogni
+        # primo login successivo, anche molto dopo la conclusione reale.
+        CELEBRATION_MAX_AGE = timedelta(days=2)
 
         _db = SessionLocal()
         try:
@@ -104,24 +113,32 @@ async def connect(sid, environ, auth=None):
                 .first()
             )
             if notif:
-                t = (
-                    _db.query(Tournament)
-                    .filter(Tournament.id == notif.source_tournament_id)
-                    .first()
+                is_stale = (
+                    now_rome().replace(tzinfo=None) - notif.created_at
+                    > CELEBRATION_MAX_AGE
                 )
-                if t and t.winner_id:
-                    winner = _db.query(Player).filter(Player.id == t.winner_id).first()
-                    await _sio.emit(
-                        "tournament:winner",
-                        {
-                            "tournament_id": t.id,
-                            "tournament_name": t.name,
-                            "winner_id": t.winner_id,
-                            "winner_nickname": winner.nickname if winner else "—",
-                            "winner_img_url": winner.img_url if winner else None,
-                        },
-                        room=sid,
+                if is_stale:
+                    notif.is_read = True
+                    _db.commit()
+                else:
+                    t = (
+                        _db.query(Tournament)
+                        .filter(Tournament.id == notif.source_tournament_id)
+                        .first()
                     )
+                    if t and t.winner_id:
+                        winner = _db.query(Player).filter(Player.id == t.winner_id).first()
+                        await _sio.emit(
+                            "tournament:winner",
+                            {
+                                "tournament_id": t.id,
+                                "tournament_name": t.name,
+                                "winner_id": t.winner_id,
+                                "winner_nickname": winner.nickname if winner else "—",
+                                "winner_img_url": winner.img_url if winner else None,
+                            },
+                            room=sid,
+                        )
         finally:
             _db.close()
     except Exception:

@@ -8,6 +8,14 @@ const SocketContext = createContext(null)
 
 const SOCKET_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
 
+// Finestra di "freschezza" per il recupero di celebrazioni mancate: prima
+// che i socket funzionassero davvero (CORS), questo fallback non era mai
+// realmente partito, quindi al primo login dopo il fix riemergeva il
+// torneo concluso più vecchio non ancora "visto" — anche di settimane fa.
+// Oltre questa finestra si marca come vista senza mostrare l'overlay,
+// invece di festeggiare un torneo concluso da troppo tempo.
+const CELEBRATION_MAX_AGE_MS = 2 * 24 * 60 * 60 * 1000
+
 export function SocketProvider({ children }) {
     const { user, isAuthenticated } = useAuth()
     const { triggerCelebration } = useCelebration()
@@ -45,6 +53,12 @@ export function SocketProvider({ children }) {
                     return false
                 }
                 localStorage.setItem(seenKey, '1')
+
+                const concludedAt = new Date(latest.last_phase_change_at ?? latest.date ?? 0).getTime()
+                if (Date.now() - concludedAt > CELEBRATION_MAX_AGE_MS) {
+                    if (pollInterval) clearInterval(pollInterval)
+                    return false
+                }
 
                 let leader = { playerId: latest.winner_id, nickname: 'Campione' }
                 let standings = [leader]

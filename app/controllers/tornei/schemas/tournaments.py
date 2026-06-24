@@ -58,6 +58,7 @@ class TournamentResponse(BaseModel):
         None  # format-specific JSON (es. {"A":[...], "B":[...]})
     )
     consolation_winner_id: Optional[int] = None
+    last_phase_change_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
 
