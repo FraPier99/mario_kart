@@ -6,6 +6,7 @@ import AppRouter from './Router/AppRouter'
 import { AppDataProvider } from './context/AppDataContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { CelebrationProvider } from './context/CelebrationContext'
+import { NotificationsProvider } from './context/NotificationsContext'
 import { SocketProvider } from './context/SocketContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { UISoundProvider } from './context/UISoundContext'
@@ -126,6 +127,7 @@ function App() {
     <>
       <ThemeProvider>
         <AuthProvider>
+          <NotificationsProvider>
           <UISoundProvider>
           <CelebrationProvider>
             <SocketProvider>
@@ -135,6 +137,7 @@ function App() {
             </SocketProvider>
           </CelebrationProvider>
           </UISoundProvider>
+          </NotificationsProvider>
         </AuthProvider>
       </ThemeProvider>
       <Toaster position="top-right" richColors closeButton duration={2000} />

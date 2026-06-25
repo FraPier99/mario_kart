@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, joinedload
 
 
 from app.core.db import get_db
+from app.core.media import to_image_url
 from app.core.security import get_current_user, require_roles
 from app.services.cards.inventory import consume_inventory_item, get_inventory
 from app.models import Player, Race, Tournament, TournamentPlayer, User, UserInventory
@@ -174,7 +175,7 @@ def get_tournament_card_holders(
                 {
                     "player_id": player.id,
                     "player_nickname": player.nickname,
-                    "player_img_url": player.img_url,
+                    "player_img_url": to_image_url(f"/players/{player.id}/avatar", player.img_url),
                     "master_count": master_count,
                     "blue_shell_count": shell_count,
                 }
@@ -434,7 +435,10 @@ def get_public_inventory(
                 "game_id": item.game_id,
                 "granted_by_admin": item.granted_by_admin,
                 "user_nickname": player.nickname if player else None,
-                "user_img_url": player.img_url if player else None,
+                # Stesso fix di PlayerResponse/AuthPlayerSummary (app.core.media):
+                # senza, ogni riga di inventario incorpora l'avatar in base64
+                # crudo del titolare della carta.
+                "user_img_url": to_image_url(f"/players/{player.id}/avatar", player.img_url) if player else None,
             }
         )
     return result
@@ -485,7 +489,10 @@ def get_all_inventory(
                 if item.granted_by_user
                 else None,
                 "user_nickname": player.nickname if player else None,
-                "user_img_url": player.img_url if player else None,
+                # Stesso fix di PlayerResponse/AuthPlayerSummary (app.core.media):
+                # senza, ogni riga di inventario incorpora l'avatar in base64
+                # crudo del titolare della carta.
+                "user_img_url": to_image_url(f"/players/{player.id}/avatar", player.img_url) if player else None,
             }
         )
     return result

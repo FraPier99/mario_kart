@@ -4,6 +4,7 @@ from app.core.timezone import now_rome
 from sqlalchemy import and_, case, func, or_
 from sqlalchemy.orm import Session
 
+from app.core.media import to_image_url
 from app.services.cards.inventory import grant_card
 from app.models import (
     Player,
@@ -217,6 +218,7 @@ def get_public_schedina_overview(db: Session, game_id: int | None = None):
         db.query(
             User.id.label("user_id"),
             User.username.label("username"),
+            Player.id.label("player_id"),
             Player.nickname.label("nickname"),
             Player.img_url.label("img_url"),
         )
@@ -235,7 +237,7 @@ def get_public_schedina_overview(db: Session, game_id: int | None = None):
                 "user_id": row.user_id,
                 "username": row.username,
                 "nickname": row.nickname,
-                "img_url": row.img_url,
+                "img_url": to_image_url(f"/players/{row.player_id}/avatar", row.img_url) if row.player_id else None,
                 "schedine_compiled": compiled_row.get("schedine_compiled", 0),
                 "total_points": compiled_row.get("total_points", 0),
                 "schedine_won": prize_row.get("schedine_won", 0),

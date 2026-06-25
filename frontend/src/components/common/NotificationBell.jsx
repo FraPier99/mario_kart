@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Bell, BellRing, PenLine, Trophy, Zap, MessageCircle, ArrowRight, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { notificationsApi, schedineApi } from '@/services/apiClient'
+import { notificationsApi } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
+import { useNotifications } from '@/context/NotificationsContext'
 
 const TYPE_CONFIG = {
   schedina_pending:  { icon: PenLine,       color: 'text-amber-400',   bg: 'bg-amber-500/15',   label: 'Schedina da compilare' },
@@ -52,59 +53,13 @@ const resolveNotifContext = (notif, getTournamentDisplayNumber) => {
 
 export default function NotificationBell() {
   const { getTournamentDisplayNumber } = useAppData()
+  // Stato/fetch condivisi via NotificationsContext: questo componente viene
+  // montato due volte in Navbar.jsx (desktop + mobile, entrambe sempre nel
+  // DOM) — prima ciascuna istanza pollava per conto proprio, raddoppiando
+  // tutte le chiamate. Ora entrambe leggono/scrivono lo stesso stato.
+  const { notifications, setNotifications, pendingSchedine, setPendingSchedine, unreadCount, setUnreadCount, loading } = useNotifications()
   const [open, setOpen] = useState(false)
-  const [notifications, setNotifications] = useState([])
-  const [pendingSchedine, setPendingSchedine] = useState([])
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [loading, setLoading] = useState(false)
   const ref = useRef(null)
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      const [nr, sr] = await Promise.allSettled([
-        notificationsApi.list(),
-        schedineApi.pendingNotifications(),
-      ])
-      const notifData = nr.status === 'fulfilled' ? nr.value.data : null
-      const pending   = sr.status === 'fulfilled' ? (sr.value.data ?? []) : []
-
-      const rawNotifs = Array.isArray(notifData?.notifications)
-        ? notifData.notifications
-        : Array.isArray(notifData) ? notifData : []
-      // "schedina_pending" persistente duplica il promemoria live
-      // (pendingSchedine, sotto): quest'ultimo è sempre aggiornato e
-      // scompare da solo a schedina compilata, quindi è l'unica fonte da
-      // mostrare per questo tipo di promemoria.
-      const notifs = rawNotifs.filter((n) => n.type !== 'schedina_pending')
-      // Ricalcolato sui notifs filtrati: il conteggio del backend includerebbe
-      // anche le "schedina_pending" appena escluse, raddoppiando il badge
-      // insieme a pendingSchedine.
-      const unread = notifs.filter((n) => !n.is_read).length
-
-      setNotifications(notifs)
-      setPendingSchedine(Array.isArray(pending) ? pending : [])
-      setUnreadCount(unread + (Array.isArray(pending) ? pending.length : 0))
-    } catch { /* notifiche non disponibili */ }
-    finally { setLoading(false) }
-  }, [])
-
-  // Prima ricaricava a ogni cambio di pagina (location.pathname in
-  // dipendenza) — con una SPA navigata spesso erano due chiamate API in più
-  // ad ogni click sul menu, per un dato che non cambia così in fretta. Ora
-  // carica una volta al mount e poi periodicamente, più al ritorno sul tab.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { load() }, [load])
-
-  useEffect(() => {
-    const interval = setInterval(() => load(), 45000)
-    const onVisible = () => { if (document.visibilityState === 'visible') load() }
-    document.addEventListener('visibilitychange', onVisible)
-    return () => {
-      clearInterval(interval)
-      document.removeEventListener('visibilitychange', onVisible)
-    }
-  }, [load])
 
   useEffect(() => {
     if (!open) return

@@ -1,6 +1,8 @@
 from typing import Optional, Literal, Annotated
 
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints, model_validator
+
+from app.core.media import to_image_url
 
 
 NormalizeStr = Annotated[str, StringConstraints(strip_whitespace=True)]
@@ -22,6 +24,15 @@ class AuthPlayerSummary(BaseModel):
     bio: Optional[str] = None
 
     model_config = {"from_attributes": True}
+
+    @model_validator(mode="after")
+    def _localize_avatar(self):
+        # Stesso fix di PlayerResponse (app.controllers.utenti.schemas.players)
+        # — schema diverso, stesso bug: senza questo, /auth/users e
+        # /auth/community/users incorporano l'avatar in base64 crudo per
+        # ogni utente nella lista invece di un URL cacheabile.
+        self.img_url = to_image_url(f"/players/{self.id}/avatar", self.img_url)
+        return self
 
 
 class UserBase(BaseModel):

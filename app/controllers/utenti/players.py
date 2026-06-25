@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.core.media import decode_data_url
+from app.core.media import decode_data_url, to_image_url
 from app.core.security import require_roles
 from app.services.utenti.audit_log import log_action
 from app.services.utenti.players import (
@@ -159,5 +159,5 @@ def upload_champion_photo(
     )
     return {
         "message": "Foto campione caricata",
-        "champion_photo": player.champion_photo,
+        "champion_photo": to_image_url(f"/players/{player_id}/champion-photo-image", player.champion_photo),
     }

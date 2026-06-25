@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, case
 from app.data.punteggi import setUpTournament
 from datetime import datetime, timedelta
+from app.core.media import to_image_url
 from app.core.timezone import now_rome, rome_deadline_lock
 
 logger = logging.getLogger(__name__)
@@ -508,7 +509,7 @@ def update_tournament(db: Session, tmentData: UpdateTournament, tournament_id: i
             try:
                 from app.realtime.manager import broadcast_tournament_winner_sync
 
-                winner_img = winner.img_url if winner else None
+                winner_img = to_image_url(f"/players/{winner.id}/avatar", winner.img_url) if winner else None
                 broadcast_tournament_winner_sync(
                     db,
                     tournament_id,
