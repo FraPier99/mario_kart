@@ -21,7 +21,7 @@
  */
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { CheckCircle2, AlertCircle, Loader2, Lock, Save, Send, Trophy, Crown, Info, Swords, ListOrdered, Users } from 'lucide-react'
+import { CheckCircle2, AlertCircle, Loader2, Lock, Save, Send, Trophy, Crown, Info, Swords, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import AppLayout from '@/components/layout/AppLayout'
 import ApiBanner from '@/components/common/ApiBanner'
@@ -49,19 +49,26 @@ const PlayerAvatar = ({ player }) => (
           </div>
 )
 
-// ─── Sub-componente: PlayerSelectGrid (selezione multipla, ordine libero) ─────
-const PlayerSelectGrid = ({ players, selected, onToggle, maxSelect, label }) => (
+// ─── Sub-componente: RankingPicker (ordina i giocatori cliccandoli in sequenza) ─
+// maxRank: se impostato, una volta posizionati maxRank giocatori gli altri non
+// ancora scelti diventano disabilitati (es. Final 4 — si scelgono solo 4 su N).
+const RankingPicker = ({ players, ranking, onToggle, maxRank = null, instruction = 'Clicca i giocatori per ordinare la classifica: dal 1° all’ultimo' }) => {
+    const target = maxRank ?? players.length
+    return (
     <div className="space-y-2">
         <div className="flex items-center justify-between">
-            <p className="text-[9px] font-black uppercase tracking-[0.35em] text-slate-500 dark:text-muted-foreground">{label}</p>
-            <span className={`text-[9px] font-black ${selected.length === maxSelect ? 'text-emerald-500' : 'text-slate-400'}`}>
-                {selected.length}/{maxSelect} selezionati
+            <p className="text-[9px] font-black uppercase tracking-[0.35em] text-slate-500 dark:text-muted-foreground">
+                {instruction}
+            </p>
+            <span className={`text-[9px] font-black ${ranking.length === target ? 'text-emerald-500' : 'text-slate-400'}`}>
+                {ranking.length}/{target} posizionati
             </span>
         </div>
         <div className="grid gap-2 sm:grid-cols-2">
             {players.map((p) => {
-                const isSelected = selected.includes(p.id)
-                const isDisabled = !isSelected && selected.length >= maxSelect
+                const pos = ranking.indexOf(p.id)
+                const isPlaced = pos !== -1
+                const isDisabled = !isPlaced && maxRank != null && ranking.length >= maxRank
                 return (
                     <button
                         key={p.id}
@@ -69,49 +76,11 @@ const PlayerSelectGrid = ({ players, selected, onToggle, maxSelect, label }) => 
                         onClick={() => !isDisabled && onToggle(p.id)}
                         disabled={isDisabled}
                         className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition ${
-                            isSelected
-                                ? 'border-violet-400 bg-violet-50 dark:bg-violet-900/20 shadow-sm'
+                            isPlaced
+                                ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20 shadow-sm'
                                 : isDisabled
                                     ? 'border-slate-100 dark:border-border/50 bg-slate-50/60 dark:bg-card/50 opacity-50 cursor-not-allowed'
                                     : 'border-slate-200 dark:border-border bg-white dark:bg-card hover:border-slate-300 cursor-pointer'
-                        }`}
-                    >
-                        <PlayerAvatar player={p} />
-                        <span className={`flex-1 truncate text-sm font-black ${isSelected ? 'text-violet-800 dark:text-violet-200' : 'text-slate-700 dark:text-slate-300'}`}>
-                            {p.nickname}
-                        </span>
-                        {isSelected && <CheckCircle2 size={14} className="text-violet-500 shrink-0" />}
-                    </button>
-                )
-            })}
-        </div>
-    </div>
-)
-
-// ─── Sub-componente: RankingPicker (ordina i giocatori cliccandoli in sequenza) ─
-const RankingPicker = ({ players, ranking, onToggle, instruction = "Clicca i finalisti nell'ordine previsto (1° → ultimo)" }) => (
-    <div className="space-y-2">
-        <div className="flex items-center justify-between">
-            <p className="text-[9px] font-black uppercase tracking-[0.35em] text-slate-500 dark:text-muted-foreground">
-                {instruction}
-            </p>
-            <span className={`text-[9px] font-black ${ranking.length === players.length ? 'text-emerald-500' : 'text-slate-400'}`}>
-                {ranking.length}/{players.length} posizionati
-            </span>
-        </div>
-        <div className="grid gap-2 sm:grid-cols-2">
-            {players.map((p) => {
-                const pos = ranking.indexOf(p.id)
-                const isPlaced = pos !== -1
-                return (
-                    <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => onToggle(p.id)}
-                        className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition ${
-                            isPlaced
-                                ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20 shadow-sm'
-                                : 'border-slate-200 dark:border-border bg-white dark:bg-card hover:border-slate-300 cursor-pointer'
                         }`}
                     >
                         <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-black ${
@@ -128,7 +97,8 @@ const RankingPicker = ({ players, ranking, onToggle, instruction = "Clicca i fin
             })}
         </div>
     </div>
-)
+    )
+}
 
 // ─── Sub-componente: SinglePlayerSelect (es. Il Duello) ───────────────────────
 const SinglePlayerSelect = ({ players, selected, onSelect, label, description }) => (
@@ -183,9 +153,12 @@ const SchedinaGroupForm = () => {
         [tournament, playerMap]
     )
 
-    // Numero atteso di finalisti = top 2 per girone (vedi generate_group_stage_finals)
-    const nGironi = groups ? Object.keys(groups).length : 0
-    const nFinalisti = Math.max(2, nGironi * 2)
+    // La Finale è sempre una "Final 4" (FINAL_SLOTS=4, vedi
+    // generate_group_stage_finals): il pronostico dei finalisti è quindi
+    // ESATTAMENTE i 4 che raggiungono la Finale, ordinati per posizione —
+    // non i 2×gironi qualificati (che potevano superare 4 e non venivano mai
+    // tutti contati nel punteggio reale, che guarda solo group_name='top').
+    const nFinal = Math.min(4, allParticipants.length)
 
     const duelloA = tournament?.duello_player_a_id ? playerMap.get(tournament.duello_player_a_id) : null
     const duelloB = tournament?.duello_player_b_id ? playerMap.get(tournament.duello_player_b_id) : null
@@ -202,8 +175,12 @@ const SchedinaGroupForm = () => {
     ), [groups, playerMap])
 
     // ── Form state ──────────────────────────────────────────────────────────────
-    const [finalisti, setFinalisti] = useState([])      // [player_id, ...] (selezione libera, max nFinalisti)
-    const [classifica, setClassifica] = useState([])    // [player_id, ...] (ordine podio, sottoinsieme di finalisti)
+    // finalRanking = i 4 finalisti pronosticati, GIÀ in ordine di arrivo
+    // (1°→4°). Un'unica fonte per entrambi i campi backend: finalisti_ids e
+    // classifica_finale_ordinata sono lo stesso array (la selezione È
+    // l'ordine), invece delle due sezioni separate "scegli finalisti" +
+    // "ordinali" di prima.
+    const [finalRanking, setFinalRanking] = useState([])
     const [classificheGironi, setClassificheGironi] = useState({}) // {group_name: [player_id, ...]}
     const [duelloScelta, setDuelloScelta] = useState(null)
     const [spareggio, setSpareggio] = useState('')
@@ -211,8 +188,6 @@ const SchedinaGroupForm = () => {
     const [existing, setExisting]     = useState(null)
     const [loading, setLoading]       = useState(true)
     const [draftRestored, setDraftRestored] = useState(false)
-
-    const finalistiPlayers = useMemo(() => finalisti.map((id) => playerMap.get(id)).filter(Boolean), [finalisti, playerMap])
 
     // Chiusura a evento (allineata al backend, vedi services/schedine/schedine_deluxe.py):
     // resta apribile finché il torneo è "da_svolgere" E l'admin non ha chiuso
@@ -237,8 +212,9 @@ const SchedinaGroupForm = () => {
                 const found = data.find((s) => String(s.tournament_id) === String(tournamentId))
                 if (found) {
                     setExisting(found)
-                    setFinalisti(found.finalisti_ids ?? [])
-                    setClassifica(found.classifica_finale_ordinata ?? [])
+                    // classifica_finale_ordinata è già l'ordine dei finalisti;
+                    // fallback su finalisti_ids per eventuali schedine vecchie.
+                    setFinalRanking((found.classifica_finale_ordinata ?? found.finalisti_ids ?? []).slice(0, 4))
                     setClassificheGironi(found.classifiche_gironi ?? {})
                     setDuelloScelta(found.duello_pareggio ? 'pareggio' : (found.duello_scelta_id ?? null))
                     setSpareggio(String(found.spareggio_distanza ?? ''))
@@ -252,8 +228,7 @@ const SchedinaGroupForm = () => {
                     const draft = JSON.parse(raw)
                     const participantIds = new Set((tournament?.participant_ids ?? []))
                     const validIds = (ids) => Array.isArray(ids) && ids.every((id) => participantIds.has(id))
-                    if (validIds(draft.finalisti)) setFinalisti(draft.finalisti)
-                    if (validIds(draft.classifica)) setClassifica(draft.classifica)
+                    if (validIds(draft.finalRanking)) setFinalRanking(draft.finalRanking)
                     if (groups && draft.classificheGironi && typeof draft.classificheGironi === 'object') {
                         const validGironi = Object.entries(draft.classificheGironi).every(([girone, order]) => {
                             const gironeIds = groups[girone] ?? []
@@ -265,8 +240,7 @@ const SchedinaGroupForm = () => {
                     if (typeof draft.spareggio === 'string') setSpareggio(draft.spareggio)
                     // Mostra "bozza ripristinata" solo se la bozza contiene scelte
                     // effettive, non solo lo stato iniziale vuoto.
-                    const hasRealChoices = (draft.finalisti?.length ?? 0) > 0
-                        || (draft.classifica?.length ?? 0) > 0
+                    const hasRealChoices = (draft.finalRanking?.length ?? 0) > 0
                         || Object.keys(draft.classificheGironi ?? {}).length > 0
                         || draft.duelloScelta != null
                         || Boolean(draft.spareggio)
@@ -283,27 +257,24 @@ const SchedinaGroupForm = () => {
     // Autosalvataggio della bozza ad ogni modifica
     useEffect(() => {
         if (!draftKey || existing || loading) return
-        if (finalisti.length === 0 && classifica.length === 0 && Object.keys(classificheGironi).length === 0 && !duelloScelta && spareggio === '') return
+        if (finalRanking.length === 0 && Object.keys(classificheGironi).length === 0 && !duelloScelta && spareggio === '') return
         try {
-            localStorage.setItem(draftKey, JSON.stringify({ finalisti, classifica, classificheGironi, duelloScelta, spareggio }))
+            localStorage.setItem(draftKey, JSON.stringify({ finalRanking, classificheGironi, duelloScelta, spareggio }))
         } catch {
             // storage non disponibile o pieno: l'autosave è solo un comfort, non un requisito
         }
-    }, [draftKey, finalisti, classifica, classificheGironi, duelloScelta, spareggio, existing, loading])
+    }, [draftKey, finalRanking, classificheGironi, duelloScelta, spareggio, existing, loading])
 
     // ── Toggle helpers ──────────────────────────────────────────────────────────
-    const toggleFinalista = (id) => {
-        setFinalisti((prev) => {
-            if (prev.includes(id)) {
-                setClassifica((c) => c.filter((x) => x !== id))
-                return prev.filter((x) => x !== id)
-            }
+    // Click-in-sequenza: clicca un giocatore per aggiungerlo in coda alla
+    // classifica (assume la posizione successiva), riclicca un già scelto per
+    // toglierlo. Cappato a nFinal (4): oltre, gli altri restano disabilitati.
+    const toggleFinalRanking = (id) => {
+        setFinalRanking((prev) => {
+            if (prev.includes(id)) return prev.filter((x) => x !== id)
+            if (prev.length >= nFinal) return prev
             return [...prev, id]
         })
-    }
-
-    const toggleClassificaPos = (id) => {
-        setClassifica((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])
     }
 
     const toggleGironeRanking = (groupName, playerId) => {
@@ -319,15 +290,14 @@ const SchedinaGroupForm = () => {
     // ── Validazione live ────────────────────────────────────────────────────────
     const errors = useMemo(() => {
         const errs = []
-        if (finalisti.length !== nFinalisti) errs.push(`Seleziona esattamente ${nFinalisti} finalisti pronosticati`)
-        if (finalisti.length > 0 && classifica.length !== finalisti.length) errs.push('Ordina tutti i finalisti per costruire la classifica finale prevista')
+        if (finalRanking.length !== nFinal) errs.push(`Pronostica e ordina i ${nFinal} finalisti (Final 4)`)
         if (gironiEntries.some(([groupName, gironePlayers]) => (classificheGironi[groupName]?.length ?? 0) !== gironePlayers.length)) {
             errs.push('Ordina tutti i giocatori di ciascun girone per costruire la classifica prevista')
         }
         if (duelloPlayers.length === 2 && !duelloScelta) errs.push('Scegli il vincitore del Duello')
         if (spareggio === '' || Number(spareggio) < 0) errs.push('Inserisci un valore di spareggio valido (≥ 0)')
         return errs
-    }, [finalisti, classifica, classificheGironi, gironiEntries, duelloScelta, duelloPlayers, spareggio, nFinalisti])
+    }, [finalRanking, classificheGironi, gironiEntries, duelloScelta, duelloPlayers, spareggio, nFinal])
 
     const isValid = errors.length === 0
 
@@ -340,8 +310,10 @@ const SchedinaGroupForm = () => {
         try {
             await schedineDeluxeApi.create({
                 tournament_id:              Number(tournamentId),
-                finalisti_ids:              finalisti,
-                classifica_finale_ordinata: classifica,
+                // Stessa lista per entrambi: la selezione ordinata È sia
+                // l'insieme dei finalisti sia la classifica finale prevista.
+                finalisti_ids:              finalRanking,
+                classifica_finale_ordinata: finalRanking,
                 classifiche_gironi:         classificheGironi,
                 duello_scelta_id:           duelloScelta === 'pareggio' ? null : duelloScelta,
                 duello_pareggio:            duelloScelta === 'pareggio',
@@ -458,44 +430,13 @@ const SchedinaGroupForm = () => {
                 ) : (
                     <form onSubmit={handleSubmit} className="space-y-6">
 
-                        {/* Sezione 1: Finalisti */}
-                        <div className="rounded-3xl border border-violet-200 dark:border-violet-500/30 bg-white dark:bg-card p-5 shadow-sm space-y-4">
-                            <div className="flex items-center gap-2">
-                                <Trophy size={14} className="text-violet-500 shrink-0" />
-                                <div>
-                                    <p className="text-xs font-black uppercase tracking-[0.3em] text-violet-600 dark:text-violet-400">1 · Finalisti</p>
-                                    <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">Chi pensi che si qualificherà alla fase finale?</p>
-                                </div>
-                            </div>
-                            <PlayerSelectGrid
-                                players={allParticipants}
-                                selected={finalisti}
-                                onToggle={toggleFinalista}
-                                maxSelect={nFinalisti}
-                                label={`Seleziona ${nFinalisti} giocatori`}
-                            />
-                        </div>
-
-                        {/* Sezione 2: Classifica Finale */}
-                        {finalisti.length === nFinalisti && (
-                            <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-white dark:bg-card p-5 shadow-sm space-y-4">
-                                <div className="flex items-center gap-2">
-                                    <ListOrdered size={14} className="text-amber-500 shrink-0" />
-                                    <div>
-                                        <p className="text-xs font-black uppercase tracking-[0.3em] text-amber-600 dark:text-amber-400">2 · Classifica Finale</p>
-                                        <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">In che ordine arriveranno i finalisti? (riparte da zero, non conta i punti dei gironi)</p>
-                                    </div>
-                                </div>
-                                <RankingPicker players={finalistiPlayers} ranking={classifica} onToggle={toggleClassificaPos} />
-                            </div>
-                        )}
-
-                        {/* Sezione 3: Classifica Gironi */}
+                        {/* Sezione 1: Classifica Gironi (la fase 1, prima di tutto:
+                            non si può sapere chi va in finale senza prima i gironi) */}
                         <div className="rounded-3xl border border-sky-200 dark:border-sky-500/30 bg-white dark:bg-card p-5 shadow-sm space-y-4">
                             <div className="flex items-center gap-2">
                                 <Users size={14} className="text-sky-500 shrink-0" />
                                 <div>
-                                    <p className="text-xs font-black uppercase tracking-[0.3em] text-sky-600 dark:text-sky-400">3 · Classifica Gironi</p>
+                                    <p className="text-xs font-black uppercase tracking-[0.3em] text-sky-600 dark:text-sky-400">1 · Classifica Gironi</p>
                                     <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">Per ciascun girone della fase 1, in che ordine arriveranno i giocatori?</p>
                                 </div>
                             </div>
@@ -506,19 +447,41 @@ const SchedinaGroupForm = () => {
                                         players={gironePlayers}
                                         ranking={classificheGironi[groupName] ?? []}
                                         onToggle={(id) => toggleGironeRanking(groupName, id)}
-                                        instruction={`Girone ${groupName} — clicca i giocatori nell'ordine previsto (1° → ultimo)`}
+                                        instruction={`Girone ${groupName} — clicca per ordinare: dal 1° all’ultimo`}
                                     />
                                 ))}
                             </div>
                         </div>
 
-                        {/* Sezione 4: Il Duello */}
+                        {/* Sezione 2: Final 4 — i 4 finalisti, scelti E ordinati per
+                            posizione in un'unica sezione (sostituisce "finalisti" +
+                            "classifica finale" separate) */}
+                        <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-white dark:bg-card p-5 shadow-sm space-y-4">
+                            <div className="flex items-center gap-2">
+                                <Trophy size={14} className="text-amber-500 shrink-0" />
+                                <div>
+                                    <p className="text-xs font-black uppercase tracking-[0.3em] text-amber-600 dark:text-amber-400">2 · Final 4 (classifica)</p>
+                                    <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">
+                                        Pronostica i {nFinal} che raggiungeranno la Finale, già nell'ordine di arrivo previsto (1° → {nFinal}°). La Finale riparte da zero, non conta i punti dei gironi.
+                                    </p>
+                                </div>
+                            </div>
+                            <RankingPicker
+                                players={allParticipants}
+                                ranking={finalRanking}
+                                onToggle={toggleFinalRanking}
+                                maxRank={nFinal}
+                                instruction={`Clicca i ${nFinal} finalisti per ordinarli: dal 1° al ${nFinal}°`}
+                            />
+                        </div>
+
+                        {/* Sezione 3: Il Duello */}
                         {duelloPlayers.length === 2 && (
                             <div className="rounded-3xl border border-rose-200 dark:border-rose-500/30 bg-white dark:bg-card p-5 shadow-sm space-y-4">
                                 <div className="flex items-center gap-2">
                                     <Swords size={14} className="text-rose-500 shrink-0" />
                                     <div>
-                                        <p className="text-xs font-black uppercase tracking-[0.3em] text-rose-600 dark:text-rose-400">4 · Il Duello</p>
+                                        <p className="text-xs font-black uppercase tracking-[0.3em] text-rose-600 dark:text-rose-400">3 · Il Duello</p>
                                         <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">
                                             Tra {duelloA?.nickname} e {duelloB?.nickname}, chi totalizzerà più punti nel proprio girone? Oppure pronostica il Pareggio.
                                         </p>
@@ -545,10 +508,11 @@ const SchedinaGroupForm = () => {
                             </div>
                         )}
 
-                        {/* Sezione 5: Spareggio */}
+                        {/* Sezione finale: Spareggio (numero dinamico — il Duello c'è
+                            solo se l'admin l'ha configurato) */}
                         <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm space-y-3">
                             <div>
-                                <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 dark:text-muted-foreground">5 · Spareggio (tie-breaker)</p>
+                                <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 dark:text-muted-foreground">{duelloPlayers.length === 2 ? 4 : 3} · Spareggio (tie-breaker)</p>
                                 <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">
                                     Qual è la distanza esatta di punti tra il 1° e il 2° classificato della classifica finale?
                                     <br/>
@@ -564,10 +528,16 @@ const SchedinaGroupForm = () => {
                                 disabled={isLocked}
                                 className="w-full rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3 text-sm font-black text-slate-900 dark:text-foreground outline-none focus:border-amber-400 disabled:opacity-50"
                             />
+                            {/* A differenza della Classifica Unica, qui non si può calcolare un
+                                tetto realistico: il numero di gare della Finale non è deciso alla
+                                creazione del torneo, ma durante il torneo stesso (vedi PhaseRaceEntry). */}
+                            <p className="text-[11px] text-slate-400 dark:text-muted-foreground italic">
+                                Il numero di gare della finale è variabile (attualmente almeno 4 gare). Tenta la sorte.
+                            </p>
                         </div>
 
                         {/* ── Errori ─────────────────────────────────────────── */}
-                        {errors.length > 0 && finalisti.length > 0 && (
+                        {errors.length > 0 && finalRanking.length > 0 && (
                             <div className="rounded-2xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/8 px-4 py-3 space-y-1">
                                 <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
                                     <AlertCircle size={13} className="shrink-0" />
@@ -587,13 +557,12 @@ const SchedinaGroupForm = () => {
                                     <p className="text-xs font-black">Schedina completa — pronta per l'invio</p>
                                 </div>
                                 <div className="space-y-1 pl-5 text-[11px] text-emerald-700 dark:text-emerald-300">
-                                    <p>Finalisti: {finalisti.map((id) => playerMap.get(id)?.nickname).join(', ')}</p>
-                                    <p>Classifica finale: {classifica.map((id, i) => `${i + 1}° ${playerMap.get(id)?.nickname}`).join(' · ')}</p>
                                     {gironiEntries.map(([groupName]) => (
-                                        <p key={groupName}>
+                                        <p key={`g-${groupName}`}>
                                             Girone {groupName}: {(classificheGironi[groupName] ?? []).map((id, i) => `${i + 1}° ${playerMap.get(id)?.nickname}`).join(' · ')}
                                         </p>
                                     ))}
+                                    <p>Final 4: {finalRanking.map((id, i) => `${i + 1}° ${playerMap.get(id)?.nickname}`).join(' · ')}</p>
                                     {duelloScelta && <p>Duello: {duelloScelta === 'pareggio' ? 'Pareggio' : `vince ${playerMap.get(duelloScelta)?.nickname}`}</p>}
                                     <p>Spareggio: {spareggio} pt di distanza</p>
                                 </div>

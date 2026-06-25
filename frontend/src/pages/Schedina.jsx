@@ -422,18 +422,26 @@ const Schedina = () => {
                                         </div>
                                     </div>
                                 </div>
-                            ) : (
+                            ) : (() => {
+                                // Stessa regola di chiusura del backend (vedi create_schedina/
+                                // create_schedina_deluxe): "da_svolgere" + non schedine_locked.
+                                // Senza questo controllo, il bottone "Compila schedina" restava
+                                // visibile (e il form raggiungibile) anche a torneo già avviato,
+                                // perché qui si guardava solo lo stato "concluso".
+                                const schedineClosed = tournament?.status !== 'da_svolgere' || Boolean(tournament?.schedine_locked)
+                                const canCompile = !schedineClosed && isParticipantOfCurrentTournament
+                                return (
                                 <div className="rounded-[2rem] border border-amber-200 bg-amber-50 p-5 dark:border-amber-500/30 dark:bg-amber-500/5">
                                     <div className="flex flex-wrap items-center justify-between gap-3">
                                         <div>
                                             <p className="text-sm font-black text-amber-700 dark:text-amber-300 uppercase tracking-widest">
-                                                {isTournamentDeleted ? 'Torneo non più disponibile' : hasSchedinaFeature ? 'Schedina non ancora compilata' : 'Torneo storico'}
+                                                {isTournamentDeleted ? 'Torneo non più disponibile' : !hasSchedinaFeature && tournament?.tournament_format !== 'group_stage' ? 'Torneo storico' : schedineClosed ? 'Non hai compilato la schedina' : 'Schedina non ancora compilata'}
                                             </p>
                                             <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
-                                                {isTournamentDeleted ? 'Questo torneo è stato rimosso' : hasSchedinaFeature ? 'Il vincitore verrà annunciato a torneo concluso' : 'Creato prima dell\'introduzione della schedina'}
+                                                {isTournamentDeleted ? 'Questo torneo è stato rimosso' : !hasSchedinaFeature && tournament?.tournament_format !== 'group_stage' ? 'Creato prima dell\'introduzione della schedina' : schedineClosed ? 'Le schedine per questo torneo sono chiuse' : 'Il vincitore verrà annunciato a torneo concluso'}
                                             </p>
                                         </div>
-                                        {hasSchedinaFeature && tournament?.status !== 'concluso' && isParticipantOfCurrentTournament && (
+                                        {canCompile && (
                                             <Link
                                                 to={tournament?.tournament_format === 'group_stage'
                                                     ? `/schedina/${tournamentId}/group-stage`
@@ -443,18 +451,10 @@ const Schedina = () => {
                                                 <PenLine size={12} /> Compila schedina
                                             </Link>
                                         )}
-                                        {/* Deluxe: mostra link anche senza deadline_lock */}
-                                        {!hasSchedinaFeature && tournament?.tournament_format === 'group_stage' && tournament?.status !== 'concluso' && isParticipantOfCurrentTournament && (
-                                            <Link
-                                                to={`/schedina/${tournamentId}/group-stage`}
-                                                className={`inline-flex items-center gap-1.5 rounded-2xl px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white transition hover:opacity-90 ${theme.tailwind.bg}`}
-                                            >
-                                                <PenLine size={12} /> Compila schedina
-                                            </Link>
-                                        )}
                                     </div>
                                 </div>
-                            )}
+                                )
+                            })()}
                         </div>
 
                         {/* SEZIONE 2: CLASSIFICA PRONOSTICI */}
@@ -716,6 +716,12 @@ const Schedina = () => {
                                                          <span className={`text-lg font-black shrink-0 ${isWinner ? 'text-amber-500' : 'text-slate-700 dark:text-foreground'}`}>{deluxeDetail?.winner_user_id ? entry.points : '—'}</span>
                                                     </div>
 
+                                                    {/* I pronostici altrui restano nascosti finché il torneo non è
+                                                        concluso (lo stesso vale per la modalità classic) — il
+                                                        backend azzera già tutto questo prima della conclusione,
+                                                        qui evitiamo solo di mostrare un fuori luogo "0/0 ✓". */}
+                                                    {deluxeDetail?.winner_user_id ? (
+                                                        <>
                                                     {/* Finalisti */}
                                                     <div className="space-y-1">
                                                         <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">
@@ -777,6 +783,12 @@ const Schedina = () => {
                                                         <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black ${bd.duello.corretto ? 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
                                                             {bd.duello.corretto ? '✓' : '✗'} Duello: {entry.duello_pareggio ? 'Pareggio' : entry.duello_scelta_nickname}
                                                         </span>
+                                                    )}
+                                                        </>
+                                                    ) : (
+                                                        <p className="text-[10px] italic text-slate-400 dark:text-muted-foreground">
+                                                            Pronostico inviato — i dettagli saranno visibili a torneo concluso.
+                                                        </p>
                                                     )}
                                                 </div>
                                             )

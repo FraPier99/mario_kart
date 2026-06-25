@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Ban, Clock, GripVertical, Info, Lock, Save, Send, Trophy, Zap, Swords } from 'lucide-react'
+import { Ban, Clock, Info, Lock, Save, Send, Trophy, Zap, Swords } from 'lucide-react'
 import { toast } from 'sonner'
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
-import { SortableContext, sortableKeyboardCoordinates, useSortable, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 import AppLayout from '@/components/layout/AppLayout'
 import DeadlineCountdown from '@/components/common/DeadlineCountdown'
 import { useAppData } from '@/context/AppDataContext'
@@ -38,37 +35,40 @@ const maxSpareggioGap = (nPlayers, nRaces) => {
     return perRaceGap * nRaces
 }
 
-const SortablePlayer = ({ player, index, total }) => {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: player.id })
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        zIndex: isDragging ? 50 : 'auto',
-        opacity: isDragging ? 0.7 : 1,
-    }
-
+// Riga della classifica a click-in-sequenza (al posto del drag-and-drop, che
+// sul touch era inaffidabile): si clicca un giocatore per assegnargli la
+// posizione successiva, lo si riclicca per rimuoverlo. Stesso modello del
+// form a gironi — meno bug del trascinamento.
+//   pos      = posizione 0-based nella classifica (-1 se non ancora piazzato)
+//   total    = numero totale di partecipanti
+//   complete = true quando tutti i partecipanti sono stati piazzati: solo
+//              allora ha senso evidenziare "ultimo"/"penultimo" (Guscio Blu),
+//              che altrimenti cambierebbero a ogni click.
+const ClickRankRow = ({ player, pos, total, complete, onToggle }) => {
+    const isPlaced = pos !== -1
     // Guscio Blu va all'ultimo e, da 7 partecipanti in su, anche al penultimo
     // (vedi _last_ids_from_final_order, schedine.py) — stesso simbolo "stop"
-    // (Ban) usato per la Carta Guscio Blu in PowerCard.jsx, riga evidenziata
-    // in blu per farle risaltare subito nella lista.
-    const isBlueShellRow = index === total - 1 || (total >= 7 && index === total - 2)
+    // (Ban) usato per la Carta Guscio Blu in PowerCard.jsx.
+    const isBlueShellRow = complete && (pos === total - 1 || (total >= 7 && pos === total - 2))
 
     return (
-        <div ref={setNodeRef} style={style} className={`flex items-center gap-3 rounded-2xl border px-4 py-3 shadow-sm transition ${isDragging ? 'shadow-xl border-emerald-400 dark:border-emerald-500 bg-white dark:bg-card' : isBlueShellRow ? 'border-cyan-300 bg-cyan-50/60 dark:border-cyan-500/30 dark:bg-cyan-500/10' : 'border-slate-200 bg-white dark:border-border dark:bg-card'}`}>
-            <div
-                {...attributes}
-                {...listeners}
-                style={{ touchAction: 'none' }}
-                className="flex cursor-grab items-center justify-center rounded-xl p-1.5 text-slate-400 hover:text-slate-600 active:cursor-grabbing dark:hover:text-slate-300"
-            >
-                <GripVertical size={18} />
-            </div>
-            <div className={`flex h-8 w-8 items-center justify-center rounded-xl text-xs font-black ${isBlueShellRow ? 'bg-cyan-100 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-300' : 'bg-slate-100 text-slate-500 dark:bg-muted dark:text-slate-400'}`}>
-                {index === 0 ? (
+        <button
+            type="button"
+            onClick={() => onToggle(player.id)}
+            className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left shadow-sm transition active:scale-[0.99] ${
+                isBlueShellRow
+                    ? 'border-cyan-300 bg-cyan-50/60 dark:border-cyan-500/30 dark:bg-cyan-500/10'
+                    : isPlaced
+                        ? 'border-emerald-300 bg-emerald-50/60 dark:border-emerald-500/30 dark:bg-emerald-500/10'
+                        : 'border-slate-200 bg-white hover:border-slate-300 dark:border-border dark:bg-card'
+            }`}
+        >
+            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black ${isBlueShellRow ? 'bg-cyan-100 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-300' : isPlaced ? 'bg-emerald-400 text-white' : 'bg-slate-100 text-slate-400 dark:bg-muted dark:text-slate-500'}`}>
+                {pos === 0 ? (
                     <Trophy size={14} className="text-amber-500" />
                 ) : isBlueShellRow ? (
                     <Ban size={14} title="Guscio Blu" />
-                ) : `#${index + 1}`}
+                ) : isPlaced ? `#${pos + 1}` : '—'}
             </div>
             <div className="flex items-center gap-2 min-w-0 flex-1">
                 {player.img_url ? (
@@ -78,12 +78,12 @@ const SortablePlayer = ({ player, index, total }) => {
                         {player.nickname?.charAt(0)?.toUpperCase() || '?'}
                     </div>
                 )}
-                <span className="truncate text-sm font-bold text-slate-900 dark:text-foreground">{player.nickname}</span>
+                <span className={`truncate text-sm font-bold ${isPlaced ? 'text-slate-900 dark:text-foreground' : 'text-slate-500 dark:text-slate-400'}`}>{player.nickname}</span>
             </div>
-            {index === 0 && <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">Vincitore</span>}
-            {index === total - 1 && <span className="rounded-full bg-cyan-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300">Ultimo</span>}
-            {total >= 7 && index === total - 2 && <span className="rounded-full bg-cyan-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300">Penultimo</span>}
-        </div>
+            {pos === 0 && <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">Vincitore</span>}
+            {complete && pos === total - 1 && <span className="rounded-full bg-cyan-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300">Ultimo</span>}
+            {complete && total >= 7 && pos === total - 2 && <span className="rounded-full bg-cyan-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300">Penultimo</span>}
+        </button>
     )
 }
 
@@ -153,28 +153,34 @@ const SchedinaForm = () => {
                 const raw = localStorage.getItem(draftKey)
                 if (raw) {
                     const parsed = JSON.parse(raw)
+                    // Click-in-sequenza: la classifica si costruisce piazzando i
+                    // giocatori uno alla volta, quindi una bozza PARZIALE (alcuni
+                    // piazzati, altri no) è valida — basta che siano partecipanti
+                    // reali, senza duplicati e non oltre il totale.
                     const validItems = Array.isArray(parsed.items)
-                        && parsed.items.length === participantPlayers.length
+                        && parsed.items.length <= participantPlayers.length
+                        && new Set(parsed.items).size === parsed.items.length
                         && parsed.items.every((id) => participantPlayers.some((p) => p.id === id))
                     if (validItems) draft = parsed
                 }
             } catch {
-                // bozza corrotta: la ignoriamo e ripartiamo dall'ordine di default
+                // bozza corrotta: la ignoriamo e ripartiamo da una classifica vuota
             }
         }
 
-        const defaultOrder = participantPlayers.map((p) => p.id)
+        // Si parte da una classifica VUOTA: l'utente clicca i giocatori
+        // nell'ordine di arrivo previsto (1° → ultimo).
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setItems(draft?.items ?? defaultOrder)
+        setItems(draft?.items ?? [])
         if (draft?.form) {
             setForm((prev) => ({ ...prev, ...draft.form }))
             // Mostra "bozza ripristinata" solo se contiene scelte effettive
             // dell'utente: altrimenti l'autosalvataggio dello stato iniziale
-            // (classifica di default, pronostici vuoti) verrebbe segnalato
-            // come una bozza reale a ogni successiva visita della pagina.
+            // (classifica vuota, pronostici vuoti) verrebbe segnalato come una
+            // bozza reale a ogni successiva visita della pagina.
             const hasRealChoices = Object.values(draft.form).some((v) => v !== '' && v != null)
-            const hasReorderedItems = Array.isArray(draft.items) && draft.items.some((id, i) => id !== defaultOrder[i])
-            if (hasRealChoices || hasReorderedItems) setDraftRestored(true)
+            const hasPlacedItems = Array.isArray(draft.items) && draft.items.length > 0
+            if (hasRealChoices || hasPlacedItems) setDraftRestored(true)
         }
     }, [participantPlayers, draftKey, alreadySubmitted, items.length])
 
@@ -188,25 +194,11 @@ const SchedinaForm = () => {
         }
     }, [draftKey, items, form, alreadySubmitted])
 
-    // PointerSensor da solo è inconsistente sul touch: su iOS vinceva a volte
-    // lo scroll della pagina invece del drag, su Android non partiva quasi
-    // mai. TouchSensor con un piccolo delay (invece di una soglia di
-    // distanza) distingue un tap/scroll da un drag intenzionale sul touch,
-    // senza richiedere la stessa configurazione del mouse.
-    const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-        useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
-        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-    )
-
-    const handleDragEnd = (event) => {
-        const { active, over } = event
-        if (!over || active.id === over.id) return
-        const oldIndex = items.indexOf(active.id)
-        const newIndex = items.indexOf(over.id)
-        if (oldIndex !== -1 && newIndex !== -1) {
-            setItems(arrayMove(items, oldIndex, newIndex))
-        }
+    // Click-in-sequenza (al posto del drag): clicca un giocatore non piazzato
+    // per assegnargli la posizione successiva, riclicca un già piazzato per
+    // toglierlo (le posizioni dei successivi si compattano da sole).
+    const toggleRank = (id) => {
+        setItems((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])
     }
 
     const playerMap = useMemo(() => {
@@ -406,23 +398,31 @@ const SchedinaForm = () => {
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* SEZIONE 1: CLASSIFICA ORDINATA */}
                         <div className={`rounded-[2rem] border p-6 shadow-xl ${theme.tailwind.borderSoft}`} style={{ background: `linear-gradient(135deg, ${theme.accentSoft}, transparent)` }}>
-                            <p className={`text-xs font-black uppercase tracking-[0.35em] ${theme.tailwind.text}`}>Classifica</p>
-                            <h2 className="mt-2 text-xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground">Ordina i giocatori dal 1° all'ultimo posto</h2>
-                            <p className="mt-1 text-xs text-slate-500 dark:text-muted-foreground">Trascina i giocatori per riordinarli. Primo = vincitore, ultimo = ultimo classificato.</p>
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
+                                    <p className={`text-xs font-black uppercase tracking-[0.35em] ${theme.tailwind.text}`}>Classifica</p>
+                                    <h2 className="mt-2 text-xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground">Ordina i giocatori dal 1° all'ultimo posto</h2>
+                                </div>
+                                <span className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${items.length === participantPlayers.length ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
+                                    {items.length}/{participantPlayers.length}
+                                </span>
+                            </div>
+                            <p className="mt-1 text-xs text-slate-500 dark:text-muted-foreground">Clicca i giocatori per ordinare la classifica: dal 1° all'ultimo. Primo = vincitore, ultimo = ultimo classificato. Riclicca per togliere.</p>
 
                             <div className="mt-5 space-y-2">
                                 {participantPlayers.length === 0 ? (
                                     <p className="rounded-2xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500 dark:border-slate-600 dark:text-slate-400">Nessun partecipante disponibile per questo torneo.</p>
                                 ) : (
-                                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                                        <SortableContext items={items} strategy={verticalListSortingStrategy}>
-                                            {items.map((playerId, index) => {
-                                                const p = playerMap.get(playerId)
-                                                if (!p) return null
-                                                return <SortablePlayer key={playerId} player={p} index={index} total={items.length} />
-                                            })}
-                                        </SortableContext>
-                                    </DndContext>
+                                    participantPlayers.map((p) => (
+                                        <ClickRankRow
+                                            key={p.id}
+                                            player={p}
+                                            pos={items.indexOf(p.id)}
+                                            total={participantPlayers.length}
+                                            complete={items.length === participantPlayers.length}
+                                            onToggle={toggleRank}
+                                        />
+                                    ))
                                 )}
                             </div>
                         </div>
