@@ -12,3 +12,9 @@ DEFAULT_SUPERADMIN_USERNAME = os.getenv("DEFAULT_SUPERADMIN_USERNAME", "superadm
 DEFAULT_SUPERADMIN_PASSWORD = os.getenv("DEFAULT_SUPERADMIN_PASSWORD", "superadmin123")
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+
+# Dominio pubblico del backend, usato per costruire URL assoluti (es.
+# /players/{id}/avatar) restituiti al frontend — backend e frontend vivono
+# su domini diversi (Railway/Vercel), un path relativo non risolverebbe dal
+# browser. Da impostare su Railway con il dominio reale del servizio.
+PUBLIC_API_URL = os.getenv("PUBLIC_API_URL", "http://localhost:8000")

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Camera, ChevronLeft, ChevronRight, Image as ImageIcon, MessageCircle, Pencil, Send, Smile, Trash2, Upload, X, Check } from 'lucide-react'
 import { getAvatarColor } from '@/lib/placeholders'
+import { compressImage } from '@/lib/imageCompression'
 import { toast } from 'sonner'
 import AppLayout from '@/components/layout/AppLayout'
 import { useAuth } from '@/context/AuthContext'
@@ -27,14 +28,6 @@ const renderMentions = (text) => {
             : part
     )
 }
-
-const readFileAsDataUrl = (file) =>
-    new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(String(reader.result ?? ''))
-        reader.onerror = () => reject(new Error('Impossibile leggere il file'))
-        reader.readAsDataURL(file)
-    })
 
 const formatDate = (value) => {
     if (!value) return ''
@@ -120,7 +113,7 @@ export default function Gallery() {
         if (!file) return
         if (!file.type.startsWith('image/')) { toast.error('Carica un file immagine valido'); return }
         try {
-            const data = await readFileAsDataUrl(file)
+            const data = await compressImage(file, { maxDimension: 1280, quality: 0.82 })
             setImageFileName(file.name)
             setUploadForm((f) => ({ ...f, image_data: data }))
         } catch { toast.error('Impossibile leggere il file') }
@@ -189,7 +182,7 @@ export default function Gallery() {
         if (!file.type.startsWith('image/')) { toast.error('Carica un\'immagine o una gif valida'); return }
         if (file.size > MAX_COMMENT_IMAGE_BYTES) { toast.error('File troppo grande', { description: 'Massimo 8MB.' }); return }
         try {
-            const data = await readFileAsDataUrl(file)
+            const data = await compressImage(file, { maxDimension: 800, quality: 0.8 })
             setCommentImageData(data)
             setCommentImageName(file.name)
         } catch { toast.error('Impossibile leggere il file') }

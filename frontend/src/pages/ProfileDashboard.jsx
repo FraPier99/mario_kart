@@ -11,13 +11,7 @@ import ConfirmModal from '@/components/common/ConfirmModal'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { authApi, schedineApi, inventoryApi, getApiErrorMessage } from '@/services/apiClient'
-
-const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result ?? ''))
-    reader.onerror = () => reject(new Error('Impossibile leggere il file immagine'))
-    reader.readAsDataURL(file)
-})
+import { compressImage } from '@/lib/imageCompression'
 
 const FavoriteCharacterPicker = ({ value, onChange, characters }) => {
     const [open, setOpen] = useState(false)
@@ -328,7 +322,7 @@ const Dashboard = () => {
         }
 
         try {
-            const dataUrl = await readFileAsDataUrl(file)
+            const dataUrl = await compressImage(file, { maxDimension: 400, quality: 0.85 })
             setImageFileName(file.name)
             setForm((current) => ({ ...current, img_url: dataUrl }))
         }

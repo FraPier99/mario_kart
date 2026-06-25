@@ -1,6 +1,8 @@
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from typing import Optional, Annotated
+
+from app.core.media import to_image_url
 
 #
 NormalizeStr = Annotated[str, StringConstraints(strip_whitespace=True, to_lower=True)]
@@ -22,10 +24,20 @@ class PlayerResponse(BaseModel):
     nickname: NormalizeStr
     favorite_character_id: Optional[int] = None
     img_url: Optional[str] = None
+    champion_photo: Optional[str] = None
     bio: Optional[str] = None
 
     # per far capire a pydantic che deve convertire l'istanza del modello SQLAlchemy in un dizionario
     model_config = {"from_attributes": True}
+
+    @model_validator(mode="after")
+    def _localize_images(self):
+        # Riscrive i base64 in URL dedicati (vedi app.core.media) — qualunque
+        # endpoint che usa PlayerResponse (lista, dettaglio) ne beneficia
+        # automaticamente, senza dover toccare i service che lo restituiscono.
+        self.img_url = to_image_url(f"/players/{self.id}/avatar", self.img_url)
+        self.champion_photo = to_image_url(f"/players/{self.id}/champion-photo-image", self.champion_photo)
+        return self
 
 
 class UpdatePlayer(BaseModel):

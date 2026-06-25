@@ -5,6 +5,7 @@ import AppLayout from '@/components/layout/AppLayout'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
+import { compressImage } from '@/lib/imageCompression'
 import { playersApi, getApiErrorMessage } from '@/services/apiClient'
 import { Link } from 'react-router-dom'
 
@@ -179,12 +180,7 @@ const ChampionModal = ({ entry, games, onClose, isSuperadmin, onPhotoUploaded })
     if (!file.type.startsWith('image/')) { toast.error('Carica un file immagine valido'); return }
     setUploading(true)
     try {
-      const data = await new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(String(reader.result ?? ''))
-        reader.onerror = () => reject(new Error('Impossibile leggere il file'))
-        reader.readAsDataURL(file)
-      })
+      const data = await compressImage(file, { maxDimension: 1000, quality: 0.85 })
       await playersApi.uploadChampionPhoto(player.id, data)
       toast.success('Foto campione caricata!')
       onPhotoUploaded?.(player.id, data)

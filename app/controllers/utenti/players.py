@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
+from app.core.media import decode_data_url
 from app.core.security import require_roles
 from app.services.utenti.audit_log import log_action
 from app.services.utenti.players import (
@@ -20,7 +21,12 @@ router = APIRouter(prefix="/players", tags=["Players"])
 
 
 @router.get("", response_model=list[PlayerResponse])
-def all_players(db: Session = Depends(get_db)):
+def all_players(response: Response, db: Session = Depends(get_db)):
+    # img_url/champion_photo sono base64 dentro la risposta: senza cache
+    # vengono riscaricati per intero a ogni richiesta (lista giocatori,
+    # avatar in classifica, ecc.). Endpoint pubblico (nessun Authorization),
+    # quindi "public" — la stessa risposta vale per chiunque la richieda.
+    response.headers["Cache-Control"] = "public, max-age=60"
     return get_all_players(db)
 
 
@@ -65,6 +71,36 @@ def get_player_by_id(player_id: int, db: Session = Depends(get_db)):
         )
 
     return player
+
+
+def _serve_player_image(db: Session, player_id: int, raw_value: str | None) -> Response:
+    if not raw_value or not raw_value.startswith("data:"):
+        raise HTTPException(status_code=404, detail="Immagine non disponibile")
+    mime, raw_bytes = decode_data_url(raw_value)
+    return Response(
+        content=raw_bytes,
+        media_type=mime,
+        # Cache aggressiva sicura: l'URL include un hash del contenuto
+        # (vedi to_image_url in app.core.media), quindi cambia da solo
+        # quando l'immagine cambia — non serve mai invalidare a mano.
+        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+    )
+
+
+@router.get("/{player_id}/avatar")
+def get_player_avatar(player_id: int, db: Session = Depends(get_db)):
+    player = get_player(db, player_id)
+    if not player:
+        raise HTTPException(status_code=404, detail="Giocatore non trovato")
+    return _serve_player_image(db, player_id, player.img_url)
+
+
+@router.get("/{player_id}/champion-photo-image")
+def get_player_champion_photo_image(player_id: int, db: Session = Depends(get_db)):
+    player = get_player(db, player_id)
+    if not player:
+        raise HTTPException(status_code=404, detail="Giocatore non trovato")
+    return _serve_player_image(db, player_id, player.champion_photo)
 
 
 @router.put("/{player_id}", response_model=PlayerResponse)

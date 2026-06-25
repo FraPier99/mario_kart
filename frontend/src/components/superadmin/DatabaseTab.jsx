@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import PlayerAvatar from '@/components/common/PlayerAvatar'
+import { compressImage } from '@/lib/imageCompression'
 import { playersApi, racesApi, resultsApi, schedineApi, getApiErrorMessage } from '@/services/apiClient'
 
 const SectionHeader = ({ label, open, onToggle, badge, action }) => (
@@ -26,11 +27,13 @@ const MiniImagePicker = ({ value, onChange }) => {
     const ref = useRef(null)
     const isBase64 = value?.startsWith('data:')
 
-    const processFile = (file) => {
+    const processFile = async (file) => {
         if (!file?.type.startsWith('image/')) return
-        const reader = new FileReader()
-        reader.onload = () => { if (typeof reader.result === 'string') onChange(reader.result) }
-        reader.readAsDataURL(file)
+        try {
+            onChange(await compressImage(file, { maxDimension: 800, quality: 0.82 }))
+        } catch {
+            toast.error('Impossibile leggere il file')
+        }
     }
 
     return (

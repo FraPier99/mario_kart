@@ -6,6 +6,7 @@ import ApiBanner from '@/components/common/ApiBanner'
 import PlayerAvatar from '@/components/common/PlayerAvatar'
 import { useAppData } from '@/context/AppDataContext'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
+import { compressImage } from '@/lib/imageCompression'
 import { getApiErrorMessage, playersApi } from '@/services/apiClient'
 import { COLORS } from '@/lib/constants'
 
@@ -17,12 +18,13 @@ const ImageUpload = ({ value, onChange }) => {
   const [urlDraft, setUrlDraft] = useState('')
   const inputRef = useRef(null)
 
-  const processFile = (file) => {
+  const processFile = async (file) => {
     if (!file?.type.startsWith('image/')) return
-    const reader = new FileReader()
-    reader.onload = () => { if (typeof reader.result === 'string') onChange(reader.result) }
-    reader.onerror = () => toast.error('Impossibile leggere il file')
-    reader.readAsDataURL(file)
+    try {
+      onChange(await compressImage(file, { maxDimension: 400, quality: 0.85 }))
+    } catch {
+      toast.error('Impossibile leggere il file')
+    }
   }
 
   const handleDrop = (e) => {

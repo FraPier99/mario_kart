@@ -3,6 +3,7 @@ from app.core.timezone import now_rome
 
 from sqlalchemy.orm import Session, joinedload
 
+from app.core.media import to_image_url
 from app.models import PhotoComment, Player, Tournament, TournamentPhoto, User
 from app.controllers.utenti.schemas.gallery import (
     PhotoCommentCreate,
@@ -48,7 +49,10 @@ def _serialize_comment(comment: PhotoComment) -> dict:
         if comment.user
         else f"user-{comment.user_id}",
         "nickname": player.nickname if player else None,
-        "img_url": player.img_url if player else None,
+        # Stessa trasformazione base64→URL di PlayerResponse (app.core.media):
+        # senza, lo stesso avatar da ~1MB si ripeteva una volta per ogni
+        # commento di quella persona dentro la risposta di /gallery.
+        "img_url": to_image_url(f"/players/{player.id}/avatar", player.img_url) if player else None,
         "user_img_url": user_img_url,
         "favorite_character_img_url": favorite_character.img_url
         if favorite_character

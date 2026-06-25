@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -44,7 +44,14 @@ router = APIRouter(prefix="/tournaments", tags=["Tournaments"])
 
 
 @router.get("", response_model=list[TournamentResponse])
-def get_all_tournaments(db: Session = Depends(get_db)):
+def get_all_tournaments(response: Response, db: Session = Depends(get_db)):
+    # Cache breve e non i 60s usati per /gallery e /players: questo endpoint
+    # è anche il bersaglio del polling 20s che tiene live un torneo "in
+    # corso" (TournamentDetail.jsx) — una cache più lunga lo renderebbe
+    # silenziosamente inutile per metà dei tick. 10s aiuta comunque le
+    # chiamate ravvicinate (più componenti che lo richiamano nello stesso
+    # istante) senza intaccare quella freschezza.
+    response.headers["Cache-Control"] = "public, max-age=10"
     return getAllTournaments(db)
 
 

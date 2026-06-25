@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
@@ -24,7 +24,13 @@ router = APIRouter(prefix="/gallery", tags=["Gallery"])
 
 
 @router.get("", response_model=list[TournamentPhotoResponse])
-def list_photos(db: Session = Depends(get_db), _=Depends(get_current_user)):
+def list_photos(response: Response, db: Session = Depends(get_db), _=Depends(get_current_user)):
+    # Le foto/i commenti includono image_data in base64 dentro la risposta:
+    # senza un header di cache, ogni richiesta (anche identica e ripetuta a
+    # poca distanza, es. da un polling) la riscarica per intero. "private"
+    # perché la risposta varia in base all'Authorization, non è condivisibile
+    # tra utenti diversi.
+    response.headers["Cache-Control"] = "private, max-age=60"
     return get_photos(db)
 
 
