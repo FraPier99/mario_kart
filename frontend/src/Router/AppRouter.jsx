@@ -19,7 +19,6 @@ import Compare from '../pages/Compare'
 import CircuitStats from '../pages/CircuitStats'
 import Login from '../pages/Login'
 import Dashboard from '../pages/ProfileDashboard'
-import Gallery from '../pages/Gallery'
 import CommunityUserPage from '../pages/CommunityUserPage'
 import HallOfFame from '../pages/HallOfFame'
 import ChangePassword from '../pages/ChangePassword'
@@ -62,7 +61,8 @@ const AppRouter = () =>{
                     <Route path='/stats' element={<Stats />} />
                     <Route path='/compare' element={<Compare />} />
                     <Route path='/circuits' element={<CircuitStats />} />
-                    <Route path='/gallery' element={<Gallery />} />
+                    {/* Galleria temporaneamente disattivata lato backend (foto troppo pesanti) — vedi app/main.py */}
+                    <Route path='/gallery' element={<Navigate to='/' replace />} />
                     <Route path='/community/user/:userId' element={<CommunityUserPage />} />
                     <Route path='/hall-of-fame' element={<HallOfFame />} />
                     <Route path='/dashboard' element={<Dashboard />} />

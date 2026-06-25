@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import {
   Home, Trophy, BarChart3, Users, Menu, X, Sun, Moon,
   Flag, LogOut, User, ChevronDown, PenLine,
-  Plus, Shield, Camera, LayoutDashboard, Crown, BookOpen, Zap
+  Plus, Shield, LayoutDashboard, Crown, BookOpen, Zap
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import { cn } from "@/lib/utils"
@@ -33,7 +33,7 @@ export default function Navbar() {
         { name: 'Tornei',      path: '/history', icon: <Trophy size={15} /> },
         { name: 'Classifiche', path: '/stats',   icon: <BarChart3 size={15} /> },
         { name: 'Giocatori',   path: '/players', icon: <Users size={15} /> },
-        { name: 'Galleria',    path: '/gallery', icon: <Camera size={15} /> },
+        // Galleria temporaneamente disattivata lato backend (foto troppo pesanti) — vedi app/main.py
         { name: 'Hall of Fame', path: '/hall-of-fame', icon: <Crown size={15} /> },
     ]
 
