@@ -806,10 +806,6 @@
                                                 style={{ animation: 'podium-pop-in 0.65s ease-out both', animationDelay: '0.15s' }}>
                                                 {medals[position]}
                                             </span>
-                                            <p className="relative z-10 mt-1 text-[11px] font-black uppercase tracking-wider text-white/70 will-change-transform"
-                                                style={{ animation: 'fade-in 0.65s ease-out both', animationDelay: '0.3s' }}>
-                                                {player.points ?? 0} PT
-                                            </p>
                                         </div>
                                         <p className="text-sm font-black" style={{ color: borderColors[position] }}>
                                             {medalsLabel[position]}
@@ -833,7 +829,6 @@
                                                 alt={player.nickname}
                                                 className="h-6 w-6 rounded-lg object-cover ring-1 ring-white/10" />
                                             <span className="text-sm font-bold text-white/80 flex-1 text-left truncate">{player.nickname}</span>
-                                            <span className="text-xs text-amber-300/60 font-black">{player.points ?? 0} PT</span>
                                         </div>
                                     )
                                 })}

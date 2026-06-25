@@ -41,8 +41,10 @@ const sortLeaderboard = (left, right) => {
 
 const buildPlayerStats = (players, tournaments, results, races = []) => {
     const raceToTournament = new Map()
+    const duelloRaceIds = new Set()
     races.forEach((race) => {
         raceToTournament.set(race.id, race.tournament_id)
+        if (race.is_duello) duelloRaceIds.add(race.id)
     })
 
     const statsByPlayerId = new Map()
@@ -78,6 +80,14 @@ const buildPlayerStats = (players, tournaments, results, races = []) => {
     const placementAgg = new Map()
 
     results.forEach((result) => {
+        // Le gare di spareggio/duello decidono solo l'ordine in classifica:
+        // non devono contribuire a punti/vittorie/podi/placement index, stessa
+        // regola già applicata in buildTournamentDetails per le stesse statistiche
+        // viste a livello di singolo torneo.
+        if (duelloRaceIds.has(result.race_id)) {
+            return
+        }
+
         const currentStats = statsByPlayerId.get(result.player_id)
 
         if (!currentStats) {
