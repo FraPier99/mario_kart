@@ -407,24 +407,58 @@ const SchedinaForm = () => {
                                     {items.length}/{participantPlayers.length}
                                 </span>
                             </div>
-                            <p className="mt-1 text-xs text-slate-500 dark:text-muted-foreground">Clicca i giocatori per ordinare la classifica: dal 1° all'ultimo. Primo = vincitore, ultimo = ultimo classificato. Riclicca per togliere.</p>
+                            <p className="mt-1 text-xs text-slate-500 dark:text-muted-foreground">Clicca i giocatori, dal 1° all'ultimo, per costruire la classifica. Primo = vincitore, ultimo = ultimo classificato. Riclicca un giocatore già posizionato per toglierlo.</p>
 
-                            <div className="mt-5 space-y-2">
-                                {participantPlayers.length === 0 ? (
-                                    <p className="rounded-2xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500 dark:border-slate-600 dark:text-slate-400">Nessun partecipante disponibile per questo torneo.</p>
-                                ) : (
-                                    participantPlayers.map((p) => (
-                                        <ClickRankRow
-                                            key={p.id}
-                                            player={p}
-                                            pos={items.indexOf(p.id)}
-                                            total={participantPlayers.length}
-                                            complete={items.length === participantPlayers.length}
-                                            onToggle={toggleRank}
-                                        />
-                                    ))
-                                )}
-                            </div>
+                            {participantPlayers.length === 0 ? (
+                                <p className="mt-5 rounded-2xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500 dark:border-slate-600 dark:text-slate-400">Nessun partecipante disponibile per questo torneo.</p>
+                            ) : (
+                                <>
+                                    {/* Classifica costruita: i giocatori già posizionati, mostrati
+                                        IN ORDINE di arrivo (1°→ultimo). Con molti partecipanti
+                                        tenere la lista in ordine fisso e badge sparsi confondeva —
+                                        qui invece si legge come una classifica vera che cresce. */}
+                                    {items.length > 0 && (
+                                        <div className="mt-5 space-y-2">
+                                            {items.map((id, idx) => {
+                                                const p = playerMap.get(id)
+                                                if (!p) return null
+                                                return (
+                                                    <ClickRankRow
+                                                        key={id}
+                                                        player={p}
+                                                        pos={idx}
+                                                        total={participantPlayers.length}
+                                                        complete={items.length === participantPlayers.length}
+                                                        onToggle={toggleRank}
+                                                    />
+                                                )
+                                            })}
+                                        </div>
+                                    )}
+
+                                    {/* Pool dei giocatori ancora da posizionare: cliccandone uno
+                                        viene aggiunto in coda alla classifica (posizione successiva). */}
+                                    {items.length < participantPlayers.length && (
+                                        <div className="mt-4 space-y-2">
+                                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">
+                                                {items.length === 0
+                                                    ? 'Clicca il giocatore che arriverà 1°'
+                                                    : `Da posizionare — clicca per assegnare il ${items.length + 1}° posto`}
+                                            </p>
+                                            {participantPlayers.filter((p) => !items.includes(p.id)).map((p) => (
+                                                <ClickRankRow
+                                                    key={p.id}
+                                                    player={p}
+                                                    pos={-1}
+                                                    total={participantPlayers.length}
+                                                    complete={false}
+                                                    onToggle={toggleRank}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                </>
+                            )}
                         </div>
 
                         {/* SEZIONE 2: PRONOSTICI SPECIALI E SPAREGGIO */}
