@@ -15,6 +15,7 @@ const WinnerFinalizeCard = ({ tournament, leader, onFinalized, onReplayCelebrati
     const [showConfirmModal, setShowConfirmModal] = useState(false)
     const [ties, setTies] = useState(null)
 
+    const isGroupStage = tournament?.tournament_format === 'group_stage'
     const totalRaces = Number(tournament?.n_races ?? 0)
     const playedRaces = Number(tournament?.raceCount ?? tournament?.races?.length ?? 0)
     const missingRaces = Math.max(0, totalRaces - playedRaces)
@@ -257,7 +258,9 @@ const WinnerFinalizeCard = ({ tournament, leader, onFinalized, onReplayCelebrati
                         </div>
                         {hasUnresolvedTie && (
                             <p className="mt-3 text-sm text-amber-300">
-                                Ci sono pareggi in classifica. Risolvili nella sezione "Duelli spareggio" qui sotto oppure decreta comunque il vincitore.
+                                {isGroupStage
+                                    ? 'Ci sono pareggi in classifica: vanno risolti nella sezione "Duelli spareggio" qui sotto prima di poter decretare il vincitore.'
+                                    : 'Ci sono pareggi in classifica. Risolvili nella sezione "Duelli spareggio" qui sotto oppure decreta comunque il vincitore.'}
                             </p>
                         )}
                         <div className="mt-5 flex gap-3">
@@ -270,16 +273,21 @@ const WinnerFinalizeCard = ({ tournament, leader, onFinalized, onReplayCelebrati
                                     >
                                         Risolvi duelli spareggio
                                     </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setShowConfirmModal(false)
-                                            handleFinalize()
-                                        }}
-                                        className="flex-1 rounded-xl bg-amber-500 px-4 py-2 text-sm font-black uppercase tracking-wide text-slate-900 transition hover:bg-amber-400"
-                                    >
-                                        Decreta comunque il vincitore
-                                    </button>
+                                    {/* Per i gironi il backend blocca comunque la chiusura con
+                                        spareggi di Finale/Consolazione aperti (update_tournament):
+                                        non ha senso proporre un bypass che fallirebbe sempre. */}
+                                    {!isGroupStage && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setShowConfirmModal(false)
+                                                handleFinalize()
+                                            }}
+                                            className="flex-1 rounded-xl bg-amber-500 px-4 py-2 text-sm font-black uppercase tracking-wide text-slate-900 transition hover:bg-amber-400"
+                                        >
+                                            Decreta comunque il vincitore
+                                        </button>
+                                    )}
                                 </>
                             ) : (
                                 <>

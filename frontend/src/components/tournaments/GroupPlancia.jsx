@@ -19,7 +19,7 @@
  */
 import { useEffect, useMemo, useState } from 'react'
 import { Crown, Medal, Shield, Trophy } from 'lucide-react'
-import { groupColor, groupKeysFromFormatData, groupLabel, semifinalKeysFromFormatData } from '@/lib/groupStage'
+import { consolationHeatKeysFromFormatData, groupColor, groupKeysFromFormatData, groupLabel, semifinalKeysFromFormatData } from '@/lib/groupStage'
 import OverallClassificaCard from '@/components/tournaments/OverallClassificaCard'
 import { tournamentsApi } from '@/services/apiClient'
 
@@ -225,28 +225,39 @@ const GroupPlancia = ({ tournament, players, results, highlightPlayerId = null }
 
     const groupKeys = useMemo(() => groupKeysFromFormatData(tournament?.format_data), [tournament?.format_data])
     const semiKeys = useMemo(() => semifinalKeysFromFormatData(tournament?.format_data), [tournament?.format_data])
+    // Batterie della Finalina ("B1","B2",…), presenti solo quando supera i 4
+    // giocatori (vincolo schermo) e viene quindi divisa, stesso schema delle
+    // batterie di semifinale — vedi consolationHeatKeysFromFormatData.
+    const consolationHeatKeys = useMemo(() => consolationHeatKeysFromFormatData(tournament?.format_data), [tournament?.format_data])
+    const bottomGroupNames = useMemo(
+        () => (consolationHeatKeys.length > 0 ? consolationHeatKeys.map((k) => `bottom_${k}`) : ['bottom']),
+        [consolationHeatKeys]
+    )
     const seededGroups = tournament?.format_data?.groups ?? {}
     const seededSemis = tournament?.format_data?.semifinals ?? {}
+    const seededBottomHeats = tournament?.format_data?.finals?.bottom_heats ?? {}
 
     // Suddivide le gare ufficiali per fase e gruppo/batteria. Esclude le gare
     // di spareggio (is_duello): non assegnano punti e non vanno conteggiate
     // nella classifica né nel numero di gare del girone/batteria.
     const racesByPhaseGroup = useMemo(() => {
         const races = (tournament?.races ?? []).filter((r) => !r.is_duello)
-        const map = { group: {}, semifinal: {}, finals: { top: [], bottom: [] } }
+        const map = { group: {}, semifinal: {}, finals: { top: [] } }
         for (const key of groupKeys) map.group[key] = []
         for (const key of semiKeys) map.semifinal[key] = []
+        for (const key of bottomGroupNames) map.finals[key] = []
         for (const r of races) {
             if (r.phase && r.group_name && map[r.phase]?.[r.group_name] !== undefined) {
                 map[r.phase][r.group_name].push(r)
             }
         }
         return map
-    }, [tournament?.races, groupKeys, semiKeys])
+    }, [tournament?.races, groupKeys, semiKeys, bottomGroupNames])
 
     const seededFinals = tournament?.format_data?.finals ?? {}
-    const finalsComposed = (seededFinals.top ?? []).length > 0 || (seededFinals.bottom ?? []).length > 0
-    const hasFinals = racesByPhaseGroup.finals.top.length > 0 || racesByPhaseGroup.finals.bottom.length > 0 || finalsComposed
+    const bottomSeeded = (seededFinals.bottom ?? []).length > 0
+    const finalsComposed = (seededFinals.top ?? []).length > 0 || bottomSeeded
+    const hasFinals = racesByPhaseGroup.finals.top.length > 0 || bottomGroupNames.some((k) => (racesByPhaseGroup.finals[k] ?? []).length > 0) || finalsComposed
     const hasGroup  = groupKeys.some((key) => (racesByPhaseGroup.group[key] ?? []).length > 0)
     const hasSemis  = semiKeys.length > 0
 
@@ -260,11 +271,10 @@ const GroupPlancia = ({ tournament, players, results, highlightPlayerId = null }
         return tabs
     }, [hasSemis, hasFinals])
 
-    const [activePhaseTab, setActivePhaseTab] = useState(() => {
-        if (hasFinals) return 'finals'
-        if (hasSemis) return 'semifinal'
-        return 'group'
-    })
+    // Si parte sempre dai Gironi (Fase 1), anche quando Semifinali/Finale
+    // sono già pronte: saltare direttamente alla Finale non permette di
+    // capire come ci si è arrivati senza dover tornare indietro a mano.
+    const [activePhaseTab, setActivePhaseTab] = useState('group')
 
     return (
         <div className="space-y-6">
@@ -344,14 +354,21 @@ const GroupPlancia = ({ tournament, players, results, highlightPlayerId = null }
                             seedPlayerIds={seededFinals.top ?? []}
                             highlightPlayerId={highlightPlayerId}
                         />
-                        <GroupCard
-                            groupKey="bottom"
-                            races={racesByPhaseGroup.finals.bottom}
-                            results={results}
-                            playerMap={playerMap}
-                            seedPlayerIds={seededFinals.bottom ?? []}
-                            highlightPlayerId={highlightPlayerId}
-                        />
+                        {/* Consolazione: una sola card "bottom" se entra in 4, altrimenti
+                            una card per batteria ("bottom_B1","bottom_B2",…) — la classifica
+                            generale combinata (sotto) le unisce comunque correttamente,
+                            vedi _consolation_classifica/_merge_consolation_heats lato backend. */}
+                        {bottomGroupNames.map((key) => (
+                            <GroupCard
+                                key={key}
+                                groupKey={key}
+                                races={racesByPhaseGroup.finals[key] ?? []}
+                                results={results}
+                                playerMap={playerMap}
+                                seedPlayerIds={key === 'bottom' ? (seededFinals.bottom ?? []) : (seededBottomHeats[key.slice('bottom_'.length)] ?? [])}
+                                highlightPlayerId={highlightPlayerId}
+                            />
+                        ))}
                     </div>
                 </div>
             )}

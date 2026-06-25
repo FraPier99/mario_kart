@@ -14,8 +14,13 @@ export function isSemifinalKey(key) {
     return typeof key === 'string' && /^S\d+$/.test(key)
 }
 
+/** True per le batterie della Finalina ("bottom_B1","bottom_B2",…), quando supera i 4 giocatori. */
+export function isConsolationHeatKey(key) {
+    return typeof key === 'string' && /^bottom_B\d+$/.test(key)
+}
+
 export function isFinalsGroup(key) {
-    return key === 'top' || key === 'bottom'
+    return key === 'top' || key === 'bottom' || isConsolationHeatKey(key)
 }
 
 // Spareggi a gara secca per posizioni più basse (es. "duello_podio_5_6"),
@@ -33,9 +38,11 @@ export function groupLabel(key) {
     if (key === 'bottom') return 'Consolazione'
     if (key === 'duello_podio_1_2' || key === 'finals_duello_podio_1_2') return 'Spareggio 1°/2° posto'
     if (key === 'duello_podio_3_4' || key === 'finals_duello_podio_3_4') return 'Spareggio 3°/4° posto'
+    if (key === 'finals_duello_ultimo_posto') return 'Spareggio ultimo posto Finale'
     const rangeMatch = typeof key === 'string' && key.match(PODIUM_DUEL_RANGE_RE)
     if (rangeMatch) return `Spareggio ${rangeMatch[2]}°/${rangeMatch[3]}° posto`
     if (isSemifinalKey(key)) return `Semifinale ${key.slice(1)}`
+    if (isConsolationHeatKey(key)) return `Consolazione ${key.slice('bottom_'.length)}`
     return `Girone ${key}`
 }
 
@@ -44,9 +51,14 @@ export function groupColor(key) {
     if (key === 'bottom') return 'slate'
     if (key === 'duello_podio_1_2' || key === 'finals_duello_podio_1_2') return 'amber'
     if (key === 'duello_podio_3_4' || key === 'finals_duello_podio_3_4') return 'rose'
+    if (key === 'finals_duello_ultimo_posto') return 'rose'
     if (isPodiumDuelKey(key)) return 'rose'
     if (isSemifinalKey(key)) {
         const idx = (Number(key.slice(1)) || 1) - 1
+        return SEMI_PALETTE[idx % SEMI_PALETTE.length]
+    }
+    if (isConsolationHeatKey(key)) {
+        const idx = (Number(key.slice('bottom_B'.length)) || 1) - 1
         return SEMI_PALETTE[idx % SEMI_PALETTE.length]
     }
     const idx = (Number(key) || 1) - 1
@@ -68,6 +80,18 @@ export function semifinalKeysFromFormatData(formatData) {
 /** True se il torneo richiede la fase di semifinale (qualificati > 4). */
 export function tournamentNeedsSemifinal(formatData) {
     return Boolean(formatData?.needs_semifinal) || Object.keys(formatData?.semifinals ?? {}).length > 0
+}
+
+/**
+ * Chiavi delle batterie della Finalina ("B1","B2",…), ordinate, dal
+ * format_data — presenti solo quando la Consolazione supera i 4 giocatori
+ * (vincolo schermo) e viene quindi divisa in più batterie, stesso schema
+ * delle batterie di semifinale. Vuoto se la Finalina entra in un'unica gara
+ * (group_name "bottom" semplice, caso più comune).
+ */
+export function consolationHeatKeysFromFormatData(formatData) {
+    const heats = formatData?.finals?.bottom_heats ?? {}
+    return Object.keys(heats).sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)))
 }
 
 /**

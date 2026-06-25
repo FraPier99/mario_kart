@@ -25,7 +25,7 @@ import ConsolationPodiumDuelCard from './ConsolationPodiumDuelCard'
 import TournamentResolutionNotes from './TournamentResolutionNotes'
 import OverallClassificaCard from './OverallClassificaCard'
 import WinnerFinalizeCard from './WinnerFinalizeCard'
-import { groupColor, groupKeysFromFormatData, groupLabel, semifinalKeysFromFormatData } from '@/lib/groupStage'
+import { consolationHeatKeysFromFormatData, groupColor, groupKeysFromFormatData, groupLabel, semifinalKeysFromFormatData } from '@/lib/groupStage'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -59,7 +59,12 @@ const TAB_ACTIVE_CLASSES = {
 const seededForPhase = (tournament, phase, key) => {
     const fd = tournament.format_data ?? {}
     if (phase === 'semifinal') return fd.semifinals?.[key] ?? []
-    if (phase === 'finals') return fd.finals?.[key] ?? []
+    if (phase === 'finals') {
+        // "bottom_B1"/"bottom_B2"/... → batterie della Finalina quando supera i
+        // 4 giocatori (vincolo schermo), salvate in finals.bottom_heats.B1/B2/...
+        if (key?.startsWith('bottom_')) return fd.finals?.bottom_heats?.[key.slice('bottom_'.length)] ?? []
+        return fd.finals?.[key] ?? []
+    }
     return fd.groups?.[key] ?? []
 }
 
@@ -435,28 +440,28 @@ const PhaseAdvanceCard = ({ tournament, onRefresh, phase }) => {
 
 // ─── Sub-componente: Vincitore Consolazione ────────────────────────────────────
 const ConsolazioneCard = ({ tournament, players, onRefresh }) => {
-    const [selected, setSelected] = useState(tournament.consolation_winner_id ?? '')
-    const [saving, setSaving]     = useState(false)
+    const [deciding, setDeciding] = useState(false)
+    const [ties, setTies] = useState(null)
+    const [loadingTies, setLoadingTies] = useState(true)
 
-    const hasBottomRaces = (tournament.races ?? []).some((r) => r.phase === 'finals' && r.group_name === 'bottom')
+    const hasBottomRaces = (tournament.races ?? []).some((r) => r.phase === 'finals' && (r.group_name === 'bottom' || r.group_name?.startsWith('bottom_B')))
 
-    const selectablePlayers = players.filter((p) => tournament.participant_ids?.includes(p.id))
+    useEffect(() => {
+        if (!hasBottomRaces || tournament.consolation_winner_id) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setLoadingTies(false)
+            return undefined
+        }
+        let active = true
+        setLoadingTies(true)
+        tournamentsApi.consolationTies(tournament.id)
+            .then((res) => { if (active) setTies(res.data) })
+            .catch(() => { if (active) setTies(null) })
+            .finally(() => { if (active) setLoadingTies(false) })
+        return () => { active = false }
+    }, [tournament.id, tournament.consolation_winner_id, tournament.races, hasBottomRaces])
 
     if (!hasBottomRaces) return null
-
-    const handleSave = async () => {
-        if (!selected) return
-        setSaving(true)
-        try {
-            await tournamentsApi.update(tournament.id, { consolation_winner_id: Number(selected) })
-            toast.success('Vincitore consolazione impostato!')
-            await onRefresh()
-        } catch (err) {
-            toast.error('Errore', { description: getApiErrorMessage(err) })
-        } finally {
-            setSaving(false)
-        }
-    }
 
     if (tournament.consolation_winner_id) {
         const winner = players.find((p) => p.id === tournament.consolation_winner_id)
@@ -471,30 +476,47 @@ const ConsolazioneCard = ({ tournament, players, onRefresh }) => {
         )
     }
 
+    // Stessi blocchi della Finale principale (get_finals_podium_ties):
+    // niente scelta manuale, il sistema legge la classifica reale già
+    // risolta — ma serve che ogni spareggio di Consolazione sia stato
+    // giocato prima di potercisi affidare.
+    const unresolvedTies = ties
+        ? [ties.top2, ties.top4, ...(ties.others ?? [])].filter((t) => t && t.order === null)
+        : []
+
+    const handleDecide = async () => {
+        setDeciding(true)
+        try {
+            await tournamentsApi.decreeConsolationWinner(tournament.id)
+            toast.success('Vincitore Consolazione decretato!')
+            await onRefresh()
+        } catch (err) {
+            toast.error('Errore', { description: getApiErrorMessage(err) })
+        } finally {
+            setDeciding(false)
+        }
+    }
+
     return (
         <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm space-y-3">
             <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 dark:text-muted-foreground">Vincitore Consolazione</p>
-            <div className="flex gap-3">
-                <select
-                    value={selected}
-                    onChange={(e) => setSelected(e.target.value)}
-                    className="flex-1 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3 text-sm font-black text-slate-900 dark:text-foreground outline-none focus:border-amber-400"
-                    disabled={saving}
-                >
-                    <option value="">— Seleziona vincitore consolazione —</option>
-                    {selectablePlayers.map((p) => (
-                        <option key={p.id} value={p.id}>{p.nickname}</option>
-                    ))}
-                </select>
+            {!loadingTies && unresolvedTies.length > 0 ? (
+                <div className="flex items-center gap-2 rounded-2xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-900/10 px-4 py-3">
+                    <AlertCircle size={13} className="text-rose-500 shrink-0" />
+                    <p className="text-xs text-rose-600 dark:text-rose-400 font-black">
+                        Risolvi prima gli spareggi di Consolazione (sezione "Classifica Finale").
+                    </p>
+                </div>
+            ) : (
                 <button
                     type="button"
-                    onClick={handleSave}
-                    disabled={!selected || saving}
-                    className="shrink-0 rounded-2xl bg-slate-700 hover:bg-slate-600 disabled:opacity-60 px-4 py-3 text-sm font-black uppercase tracking-widest text-white transition"
+                    onClick={handleDecide}
+                    disabled={deciding || loadingTies}
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-slate-700 hover:bg-slate-600 disabled:opacity-60 disabled:cursor-not-allowed px-4 py-3 text-sm font-black uppercase tracking-widest text-white transition active:scale-95"
                 >
-                    {saving ? <Loader2 size={14} className="animate-spin" /> : 'Conferma'}
+                    {deciding ? <><Loader2 size={14} className="animate-spin" /> Calcolo...</> : <><Medal size={14} /> Decreta Vincitore Finalina</>}
                 </button>
-            </div>
+            )}
         </div>
     )
 }
@@ -519,7 +541,7 @@ const SpareggioGironiCard = ({ tournament, players, circuits, characters, onRefr
     if (loading || tieEntries.length === 0) return null
     if (phaseFilter && data.phase !== phaseFilter) return null
 
-    const phaseLabel = data.phase === 'semifinal' ? 'Semifinali' : 'Gironi'
+    const phaseLabel = data.phase === 'semifinal' ? 'Semifinali' : data.phase === 'finals' ? 'Ultimo posto Finale' : 'Gironi'
 
     return (
         <div className="rounded-3xl border border-rose-200 dark:border-rose-500/30 bg-rose-50/60 dark:bg-rose-900/10 p-5 shadow-sm space-y-4">
@@ -658,6 +680,7 @@ const GroupManagementSection = ({
 }) => {
     const groupKeys = useMemo(() => groupKeysFromFormatData(tournament.format_data), [tournament.format_data])
     const semiKeys = useMemo(() => semifinalKeysFromFormatData(tournament.format_data), [tournament.format_data])
+    const consolationHeatKeys = useMemo(() => consolationHeatKeysFromFormatData(tournament.format_data), [tournament.format_data])
     const isTournamentLocked = tournament.status !== 'in_corso' && !isAdmin
 
     const fd = tournament.format_data ?? {}
@@ -714,11 +737,33 @@ const GroupManagementSection = ({
 
     // ── Per-group completion ─────────────────────────────────────────────
     const [completingGroup, setCompletingGroup] = useState(null)
+    const [reopeningGroup, setReopeningGroup] = useState(null)
     const [confirmCompleteGroup, setConfirmCompleteGroup] = useState(null) // { groupKey, incompleteCount? }
 
+    const handleReopenGroupClick = async (groupKey) => {
+        setReopeningGroup(groupKey)
+        try {
+            await tournamentsApi.reopenGroup(tournament.id, groupKey)
+            toast.success(`${groupLabel(groupKey)} riaperto`)
+            await onRefresh()
+        } catch (err) {
+            toast.error('Errore', { description: getApiErrorMessage(err) })
+        } finally {
+            setReopeningGroup(null)
+        }
+    }
+
     const handleCompleteGroupClick = (groupKey) => {
-        const incompleteRaces = (tournament.races ?? []).filter((r) => {
-            if (r.phase !== 'group' || r.group_name !== groupKey || r.is_duello) return false
+        const groupRaces = (tournament.races ?? []).filter(
+            (r) => r.phase === 'group' && r.group_name === groupKey && !r.is_duello
+        )
+        if (groupRaces.length === 0) {
+            toast.error('Nessuna gara registrata', {
+                description: `${groupLabel(groupKey)} non ha ancora nessuna gara: aggiungi almeno una gara prima di chiuderlo.`,
+            })
+            return
+        }
+        const incompleteRaces = groupRaces.filter((r) => {
             const groupPlayers = fd.groups?.[groupKey] ?? []
             const expected = Math.min(Math.max(groupPlayers.length, 2), 4)
             return (r.resultCount ?? r.results?.length ?? 0) < expected
@@ -760,11 +805,10 @@ const GroupManagementSection = ({
         return tabs
     }, [showSemifinaliSection])
 
-    const [activePhaseTab, setActivePhaseTab] = useState(() => {
-        if (finalsReady) return 'finali'
-        if (semisReady) return 'semifinali'
-        return 'gironi'
-    })
+    // Si parte sempre dai Gironi (Fase 1), anche quando Semifinali/Finale
+    // sono già pronte: saltare direttamente alla Finale non permette di
+    // capire come ci si è arrivati senza dover tornare indietro a mano.
+    const [activePhaseTab, setActivePhaseTab] = useState('gironi')
 
     return (
         <div className="space-y-4">
@@ -910,6 +954,28 @@ const GroupManagementSection = ({
                                             }
                                         </button>
                                     )}
+                                    {/* Riapertura: permessa solo se la fase successiva non e' stata
+                                        ancora generata, altrimenti i qualificati gia' calcolati
+                                        resterebbero incoerenti con una gara aggiunta dopo (stesso
+                                        vincolo del backend, vedi reopen_group_stage_group). */}
+                                    {isCompleted && !semisReady && !finalsReady && (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleReopenGroupClick(key)}
+                                            disabled={reopeningGroup === key}
+                                            className="w-full flex items-center justify-center gap-2 rounded-2xl border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-900/10 hover:bg-amber-100 dark:hover:bg-amber-900/20 disabled:opacity-60 disabled:cursor-not-allowed px-4 py-2.5 text-xs font-black uppercase tracking-widest text-amber-700 dark:text-amber-300 transition active:scale-95"
+                                        >
+                                            {reopeningGroup === key
+                                                ? <><Loader2 size={13} className="animate-spin" /> Riapertura...</>
+                                                : <><Unlock size={13} /> Riapri girone</>
+                                            }
+                                        </button>
+                                    )}
+                                    {isCompleted && (semisReady || finalsReady) && (
+                                        <p className="text-[10px] text-slate-400 dark:text-muted-foreground italic">
+                                            Non riapribile: la fase successiva è già stata generata.
+                                        </p>
+                                    )}
                                 </div>
                             )
                         })}
@@ -948,6 +1014,9 @@ const GroupManagementSection = ({
                                 />
                             )}
                             <SpareggioGironiCard tournament={tournament} players={players} circuits={circuits} characters={characters} onRefresh={onRefresh} phaseFilter="semifinal" />
+                            {/* Pareggio sull'ultimo posto Finale tra batterie di semifinale
+                                diverse (mai affrontate direttamente) — vedi _advance_top_n */}
+                            <SpareggioGironiCard tournament={tournament} players={players} circuits={circuits} characters={characters} onRefresh={onRefresh} phaseFilter="finals" />
                             <PhaseAdvanceCard tournament={tournament} onRefresh={onRefresh} phase="semifinal" />
                         </>
                     )}
@@ -974,7 +1043,7 @@ const GroupManagementSection = ({
                                 characters={characters}
                                 results={results}
                                 phase="finals"
-                                groups={['top', 'bottom']}
+                                groups={consolationHeatKeys.length > 0 ? ['top', ...consolationHeatKeys.map((k) => `bottom_${k}`)] : ['top', 'bottom']}
                                 onRefresh={onRefresh}
                             />
                         )}

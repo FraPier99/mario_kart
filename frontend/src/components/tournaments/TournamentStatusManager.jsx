@@ -49,6 +49,13 @@ const buildWarnings = (tournament, targetStatus) => {
     const warnings = []
     if (!tournament) return warnings
 
+    // Nei tornei a gironi le gare si creano per fase (girone → semifinale →
+    // finale), progressivamente, DOPO l'avvio: il conteggio globale n_races è
+    // solo informativo (vedi "Configurazione fasi" in GroupManagementSection),
+    // quindi confrontarlo con raceCount per avvisare di "gare mancanti" non ha
+    // senso e segnalava un problema inesistente avviando il torneo.
+    const isGroupStage = tournament.tournament_format === 'group_stage'
+
     if (targetStatus === 'in_corso') {
         const now = new Date()
         const tournamentDate = tournament.date ? new Date(tournament.date) : null
@@ -74,7 +81,7 @@ const buildWarnings = (tournament, targetStatus) => {
             })
         }
 
-        if (nRaces > 0 && raceCount === 0) {
+        if (!isGroupStage && nRaces > 0 && raceCount === 0) {
             warnings.push({
                 level: 'warning',
                 icon: '🏁',
@@ -94,16 +101,18 @@ const buildWarnings = (tournament, targetStatus) => {
                 body: 'Non è stato ancora decretato un vincitore. Usa il pulsante "Decreta vincitore" per impostarlo — questo cambierà lo stato a concluso automaticamente.',
             })
         }
-        const raceCount = tournament.raceCount ?? tournament.races?.length ?? 0
-        const nRaces = tournament.n_races ?? 0
-        const missing = Math.max(0, nRaces - raceCount)
-        if (missing > 0) {
-            warnings.push({
-                level: 'warning',
-                icon: '🏁',
-                title: `${missing} gare non ancora completate`,
-                body: `Mancano ${missing} gare su ${nRaces} previste. Stai chiudendo il torneo anticipatamente.`,
-            })
+        if (!isGroupStage) {
+            const raceCount = tournament.raceCount ?? tournament.races?.length ?? 0
+            const nRaces = tournament.n_races ?? 0
+            const missing = Math.max(0, nRaces - raceCount)
+            if (missing > 0) {
+                warnings.push({
+                    level: 'warning',
+                    icon: '🏁',
+                    title: `${missing} gare non ancora completate`,
+                    body: `Mancano ${missing} gare su ${nRaces} previste. Stai chiudendo il torneo anticipatamente.`,
+                })
+            }
         }
     }
 
@@ -245,9 +254,11 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated }) =>
                             <div key={step.value} className="flex items-center gap-1 min-w-0">
                                 <button
                                     type="button"
-                                    disabled={disabled || saving || isConcluded || step.value === rawStatus}
+                                    // "concluso" non è raggiungibile a mano: ci si arriva
+                                    // solo decretando il vincitore (Decreta Vincitore).
+                                    disabled={disabled || saving || isConcluded || step.value === rawStatus || step.value === 'concluso'}
                                     onClick={() => requestSetStatus(step.value)}
-                                    title={step.description}
+                                    title={step.value === 'concluso' ? 'Si conclude decretando il vincitore (Decreta Vincitore)' : step.description}
                                     className={`flex flex-col items-center gap-1.5 rounded-2xl px-3 py-2.5 text-center transition-all min-w-22.5 ${
                                         isActive
                                             ? `${step.activeBg} ${step.activeText} shadow-md ring-2 ring-offset-1 ${step.ring} dark:ring-offset-slate-900`
@@ -313,8 +324,12 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated }) =>
                     )}
                 </div>
 
-                {/* AVANZA */}
-                {nextStep && !isConcluded && !disabled && (
+                {/* AVANZA — solo per da_svolgere → in_corso. La conclusione NON
+                    passa da qui: avviene tramite "Decreta Vincitore" (che imposta
+                    vincitore + stato concluso e salda le schedine). Un "Avanza"
+                    verso "concluso" sarebbe fuorviante e, senza vincitore,
+                    imposterebbe solo lo stato legacy "finito". */}
+                {nextStep && nextStep.value !== 'concluso' && !isConcluded && !disabled && (
                     <div className="flex items-center justify-between gap-3 rounded-2xl border border-dashed border-slate-200 dark:border-border p-3">
                         <div className="min-w-0">
                             <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Prossimo step</p>
@@ -334,6 +349,15 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated }) =>
                                 </>
                             )}
                         </button>
+                    </div>
+                )}
+
+                {/* In corso: niente "Avanza" — il vincitore (e la conclusione) si
+                    decretano dalla sezione "Classifica Finale" → Decreta Vincitore. */}
+                {rawStatus === 'in_corso' && !disabled && (
+                    <div className="flex items-center gap-2 rounded-2xl border border-dashed border-amber-200 dark:border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/10 px-4 py-3 text-xs text-amber-700 dark:text-amber-300">
+                        <Trophy size={14} className="shrink-0" />
+                        Per concludere il torneo usa <span className="font-black">Decreta Vincitore</span> nella sezione Classifica Finale.
                     </div>
                 )}
 
