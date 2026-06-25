@@ -82,7 +82,7 @@ async def connect(sid, environ, auth=None):
     user_id = payload.get("sub")
     if not user_id:
         raise socketio.exceptions.ConnectionRefusedError("invalid token payload")
-    _sio.enter_room(sid, f"user:{user_id}")
+    await _sio.enter_room(sid, f"user:{user_id}")
 
     # Pending celebrations: emit tournament:winner for any concluded
     # tournament the user hasn't acknowledged yet (handles reconnections
