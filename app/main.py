@@ -87,7 +87,11 @@ app.include_router(results_router)
 app.include_router(circuits_router)
 app.include_router(schedine_router)
 app.include_router(inventory_router)
-app.include_router(gallery_router)
+# Galleria disattivata temporaneamente: foto base64 troppo pesanti, in attesa
+# di ricomprimere i dati esistenti e/o spostare anche queste su URL dedicati
+# (stesso trattamento gia' fatto per gli avatar). Ri-abilitare rimuovendo
+# questo commento quando il problema di peso e' risolto.
+# app.include_router(gallery_router)
 app.include_router(notifications_router)
 app.include_router(audit_log_router)
 app.include_router(schedine_deluxe_router)

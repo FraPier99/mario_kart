@@ -4,7 +4,7 @@ from app.core.timezone import now_rome
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.media import to_image_url
-from app.models import PhotoComment, Player, Tournament, TournamentPhoto, User
+from app.models import Notification, PhotoComment, Player, Tournament, TournamentPhoto, User
 from app.controllers.utenti.schemas.gallery import (
     PhotoCommentCreate,
     PhotoCommentUpdate,
@@ -117,6 +117,11 @@ def delete_photo(db: Session, photo_id: int) -> bool:
     photo = db.query(TournamentPhoto).filter(TournamentPhoto.id == photo_id).first()
     if not photo:
         return False
+    # Notification.source_photo_id non ha ON DELETE CASCADE: una menzione
+    # @utente in un commento di questa foto crea una notifica collegata che,
+    # se non ancora eliminata dal destinatario, blocca il delete della foto
+    # con un ForeignKeyViolation.
+    db.query(Notification).filter(Notification.source_photo_id == photo_id).delete()
     db.delete(photo)
     db.commit()
     return True
