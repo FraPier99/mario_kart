@@ -8,6 +8,7 @@ from app.controllers.tornei.schemas.stats import LeaderBoardResponse
 from app.services.tornei.stats import get_leaderboard as fetch_leaderboard
 from app.services.tornei.tournaments import (
     complete_group_stage_group,
+    reopen_group_stage_group,
     create_tournament,
     activate_tournament_live,
     lock_tournament_schedine,
@@ -25,6 +26,7 @@ from app.services.tornei.tournaments import (
     get_classic_podium_ties,
     get_finals_podium_ties,
     get_consolation_podium_ties,
+    decree_consolation_winner,
     get_group_stage_overall_classifica,
     get_tournament_resolution_notes,
     get_tournament_overview,
@@ -286,6 +288,24 @@ def complete_group_endpoint(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
+@router.post("/{tournament_id}/group-stage/reopen-group")
+def reopen_group_endpoint(
+    tournament_id: int,
+    body: CompleteGroupRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_roles("superadmin", "admin")),
+):
+    """
+    Riapre un girone già chiuso (es. chiuso per errore senza gare, o ne manca
+    ancora qualcuna) — permesso solo se la fase successiva non è già stata
+    generata da questi dati.
+    """
+    try:
+        return reopen_group_stage_group(db, tournament_id, body.group_key)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
 @router.get("/{tournament_id}/group-stage/ties")
 def group_stage_ties_endpoint(tournament_id: int, db: Session = Depends(get_db)):
     """
@@ -362,6 +382,22 @@ def consolation_podium_ties_endpoint(
     """
     try:
         return get_consolation_podium_ties(db, tournament_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/{tournament_id}/decree-consolation-winner")
+def decree_consolation_winner_endpoint(
+    tournament_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_roles("superadmin", "admin")),
+):
+    """
+    Calcola e assegna automaticamente il vincitore della Consolazione/
+    "Finalina" dalla classifica reale — sostituisce la scelta manuale.
+    """
+    try:
+        return decree_consolation_winner(db, tournament_id, current_user.id)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 

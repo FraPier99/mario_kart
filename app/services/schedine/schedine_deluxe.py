@@ -24,6 +24,7 @@ from app.services.schedine.schedine import (
     _find_next_tournament,
     _get_last_id,
     _get_leaderboard,
+    _last_ids_from_final_order,
 )
 from app.models import (
     Player,
@@ -564,8 +565,22 @@ def settle_deluxe_schedine(db: Session, tournament_id: int) -> dict:
         )
     db.flush()
 
+    # _get_leaderboard somma i punti su TUTTO il torneo (gironi + finale +
+    # finalina insieme) — stessa trappola del gotcha "tournament.standings"
+    # (vedi CLAUDE.md): per i gironi non è la classifica reale, perché mischia
+    # fasi con griglie/punteggi diversi e ignora gli esiti degli spareggi.
+    # get_group_stage_overall_classifica (Finale 1-4 + Finalina 5-N, già
+    # risolta rispetto ai duelli) è l'unica fonte corretta per "chi è ultimo".
+    from app.services.tornei.tournaments import get_group_stage_overall_classifica
+
+    overall_order = get_group_stage_overall_classifica(db, tournament_id)
+    last_ids = (
+        _last_ids_from_final_order(overall_order)
+        if overall_order
+        else _get_last_id(_get_leaderboard(db, tournament_id))
+    )
     blue_shell_user_ids = []
-    for player_id in _get_last_id(_get_leaderboard(db, tournament_id)):
+    for player_id in last_ids:
         player = db.query(Player).filter(Player.id == player_id).first()
         if player and player.user_account:
             grant_card(
@@ -673,8 +688,57 @@ def get_tournament_schedina_deluxe_detail(
         .first()
     )
 
+    # A torneo non ancora concluso, i pronostici altrui NON vanno mostrati —
+    # stessa regola del formato classic (get_public_tournament_schedina_overview):
+    # senza questo controllo, "Esito Schedina" mostrava da subito a chiunque i
+    # finalisti/classifica/vincitori-gironi pronosticati da TUTTI, anche prima
+    # dell'inizio del torneo. Si mostra solo che una schedina è stata inviata
+    # (utente, orario), non il suo contenuto.
+    tournament_concluded = tournament.status == "concluso"
+
     rows = []
     for s in schedine:
+        user = db.query(User).filter(User.id == s.user_id).first()
+        player = (
+            db.query(Player).filter(Player.id == user.player_id).first()
+            if user and user.player_id
+            else None
+        )
+
+        if not tournament_concluded:
+            rows.append(
+                {
+                    "schedina_id": s.id,
+                    "user_id": s.user_id,
+                    "username": user.username if user else f"user-{s.user_id}",
+                    "nickname": player.nickname if player else None,
+                    "points": 0,
+                    "tie_breaker_distance": None,
+                    "finalisti_ids": [],
+                    "finalisti_nicknames": [],
+                    "classifica_finale_ordinata": [],
+                    "classifica_finale_nicknames": [],
+                    "classifiche_gironi": {},
+                    "classifiche_gironi_nicknames": {},
+                    "duello_scelta_id": None,
+                    "duello_scelta_nickname": None,
+                    "duello_pareggio": False,
+                    "spareggio_distanza": None,
+                    "created_at": s.created_at,
+                    # Stessa forma del breakdown reale (vedi _score_schedina_groupstage)
+                    # ma vuota: il frontend accede a chiavi annidate senza optional
+                    # chaining (es. bd.finalisti.n_corretti), un dict vuoto causerebbe
+                    # un errore invece di mostrare semplicemente "0".
+                    "scoring_breakdown": {
+                        "finalisti": {"corretti": [], "n_corretti": 0, "punti": 0, "corretti_nicknames": []},
+                        "classifica_finale": {"posizioni_corrette": 0, "punti": 0, "posizioni": []},
+                        "classifiche_gironi": {"punti": 0, "gironi": {}},
+                        "duello": {"corretto": False, "punti": 0, "pareggio": False},
+                    },
+                }
+            )
+            continue
+
         score, breakdown = _score_schedina_groupstage(
             s,
             actual_finalisti=actual_finalisti,
@@ -693,12 +757,6 @@ def get_tournament_schedina_deluxe_detail(
 
         tiebreak = abs((s.spareggio_distanza or 0) - actual_gap)
 
-        user = db.query(User).filter(User.id == s.user_id).first()
-        player = (
-            db.query(Player).filter(Player.id == user.player_id).first()
-            if user and user.player_id
-            else None
-        )
         rows.append(
             {
                 "schedina_id": s.id,
@@ -731,9 +789,12 @@ def get_tournament_schedina_deluxe_detail(
             }
         )
 
-    rows.sort(key=lambda r: (-r["points"], r["tie_breaker_distance"], r["schedina_id"]))
+    if tournament_concluded:
+        rows.sort(key=lambda r: (-r["points"], r["tie_breaker_distance"], r["schedina_id"]))
+    else:
+        rows.sort(key=lambda r: r["schedina_id"])
 
-    winner_row = rows[0] if rows else None
+    winner_row = rows[0] if (rows and tournament_concluded) else None
 
     return {
         "tournament_id": tournament.id,

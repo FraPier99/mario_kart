@@ -408,6 +408,43 @@ def update_tournament(db: Session, tmentData: UpdateTournament, tournament_id: i
     previous_status = t.status
     previous_winner_id = t.winner_id
 
+    # Decreta Vincitore (group_stage): finora un avviso "soft" lato frontend
+    # (WinnerFinalizeCard) lasciava comunque la possibilità di chiudere il
+    # torneo con spareggi di Finale/Consolazione ancora aperti o senza aver
+    # decretato il vincitore della Finalina — un blocco vero va imposto qui,
+    # non solo proposto in UI.
+    if (
+        tmentData.winner_id is not None
+        and previous_winner_id is None
+        and t.tournament_format == "group_stage"
+    ):
+        fd = t.format_data or {}
+        finals = fd.get("finals") or {}
+        if not finals.get("top"):
+            raise ValueError("La Finale non è ancora stata composta.")
+        final_ties = get_finals_podium_ties(db, tournament_id)
+        if any(
+            x and x["order"] is None for x in (final_ties.get("top2"), final_ties.get("top4"))
+        ):
+            raise ValueError(
+                "Ci sono spareggi di podio della Finale ancora da risolvere."
+            )
+        if finals.get("bottom"):
+            cons_ties = get_consolation_podium_ties(db, tournament_id)
+            unresolved_cons = [
+                x
+                for x in (cons_ties.get("top2"), cons_ties.get("top4"), *cons_ties.get("others", []))
+                if x and x["order"] is None
+            ]
+            if unresolved_cons:
+                raise ValueError(
+                    "Ci sono spareggi di Consolazione/Finalina ancora da risolvere."
+                )
+            if t.consolation_winner_id is None:
+                raise ValueError(
+                    "Decreta prima il vincitore della Consolazione/Finalina."
+                )
+
     tUpdate = tmentData.model_dump(exclude_unset=True)
     participant_ids = tUpdate.pop("participant_ids", None)
     format_data_update = tUpdate.pop("format_data", None)
@@ -902,11 +939,20 @@ def _semifinal_keys_from_format_data(format_data: dict | None) -> list[str]:
     return sorted(semis.keys(), key=lambda k: int(k[1:]) if k[1:].isdigit() else 0)
 
 
-def _advance_top_n(heats_standings: dict[str, list[dict]], n: int) -> list[int]:
+def _advance_top_n(heats_standings: dict[str, list[dict]], n: int) -> tuple[list[int], list[int] | None]:
     """
     Da un insieme di batterie (semifinali) seleziona i primi `n` qualificati:
     prima i vincitori di ogni batteria (per punti), poi i secondi migliori, ecc.
     Mantiene il vincolo "finale ≤ n" indipendentemente dal numero di batterie.
+
+    Se l'ultimo posto disponibile cade in un PAREGGIO ESATTO (punti, vittorie,
+    podi) tra candidati di batterie DIVERSE — che quindi non si sono mai
+    affrontati direttamente, a differenza di un pareggio dentro la stessa
+    batteria/girone — si ferma PRIMA di quel livello e restituisce
+    (qualificati_certi, pareggiati_al_confine) invece di scegliere
+    arbitrariamente per id giocatore: il chiamante deve risolvere il
+    pareggio con uno spareggio secco prima di poter completare la lista.
+    Se non c'è ambiguità, il secondo elemento è None.
     """
     advanced: list[int] = []
     rank = 0
@@ -917,12 +963,124 @@ def _advance_top_n(heats_standings: dict[str, list[dict]], n: int) -> list[int]:
                 livello.append(standings[rank])
         if not livello:
             break
-        livello.sort(key=lambda r: (-r["punti_totali"], -r["vittorie"], r["player_id"]))
-        for row in livello:
-            if len(advanced) < n:
+        livello.sort(key=lambda r: (-r["punti_totali"], -r["vittorie"], -r["podi"], r["player_id"]))
+        remaining = n - len(advanced)
+        if len(livello) > remaining:
+            boundary = livello[remaining - 1]
+            key = (boundary["punti_totali"], boundary["vittorie"], boundary["podi"])
+            tied = [row["player_id"] for row in livello if (row["punti_totali"], row["vittorie"], row["podi"]) == key]
+            tied_positions = [i for i, row in enumerate(livello) if row["player_id"] in tied]
+            straddles_boundary = not all(pos < remaining for pos in tied_positions)
+            if len(tied) > 1 and straddles_boundary:
+                return advanced, tied
+            for row in livello[:remaining]:
+                advanced.append(row["player_id"])
+        else:
+            for row in livello:
                 advanced.append(row["player_id"])
         rank += 1
-    return advanced
+    return advanced, None
+
+
+def _merge_consolation_heats(heats_standings: dict[str, list[dict]]) -> list[dict]:
+    """
+    Come _advance_top_n, ma senza troncare a N: unisce TUTTE le batterie
+    della Finalina confrontando i pari-piazzati (1° vs 1°, poi 2° vs 2°, ...)
+    per ottenere l'ordine COMPLETO — qui serve il piazzamento di tutti, non
+    solo una selezione dei migliori (vedi _build_consolation_tiers).
+    """
+    merged: list[dict] = []
+    rank = 0
+    while True:
+        livello = []
+        for standings in heats_standings.values():
+            if rank < len(standings):
+                livello.append(standings[rank])
+        if not livello:
+            break
+        livello.sort(key=lambda r: (-r["punti_totali"], -r["vittorie"], -r["podi"], r["player_id"]))
+        merged.extend(livello)
+        rank += 1
+    return merged
+
+
+def _distribute_to_heats(ids: list[int], start_index: int) -> dict[str, list[int]]:
+    """
+    Divide una lista di id (già ordinati per forza) in batterie "B<n>"
+    bilanciate da massimo MAX_GROUP_SIZE — stesso algoritmo delle batterie
+    di semifinale. La numerazione continua da start_index+1, per poter
+    concatenare le batterie di più tier senza sovrapporre le chiavi (vedi
+    _build_consolation_tiers).
+    """
+    if len(ids) <= MAX_GROUP_SIZE:
+        return {f"B{start_index + 1}": ids}
+    layout = compute_semifinal_layout(len(ids))
+    n_heats = len(layout)
+    keys = [f"B{start_index + i + 1}" for i in range(n_heats)]
+    heats: dict[str, list[int]] = {k: [] for k in keys}
+    for idx, pid in enumerate(ids):
+        heats[keys[idx % n_heats]].append(pid)
+    return heats
+
+
+def _build_consolation_tiers(
+    tiers: list[list[dict]],
+) -> tuple[list[int], dict[str, list[int]] | None, list[list[str]] | None]:
+    """
+    Prepara il roster della Finalina da uno o più "livelli di merito" (tier),
+    dal migliore al peggiore — es. tier 0 = eliminati in semifinale (hanno
+    comunque superato il proprio girone), tier 1 = esclusi direttamente dai
+    gironi (3°/4° posto). Ogni tier viene diviso in batterie bilanciate (max
+    MAX_GROUP_SIZE, stesso schema delle semifinali, vedi _distribute_to_heats)
+    SENZA mischiare giocatori di tier diversi nella stessa batteria: chi è in
+    un tier migliore gioca sempre per posizioni più alte di chi è in un tier
+    peggiore, indipendentemente dai punti fatti. Se il totale entra in una
+    sola gara (≤ MAX_GROUP_SIZE), nessuna divisione: si gareggia tutti
+    insieme, il risultato reale decide l'ordine senza bisogno di tier.
+
+    Restituisce (id in ordine di merito, batterie o None, tier_order o None
+    — tier_order è la lista delle chiavi-batteria di ciascun tier, nello
+    stesso ordine dei tier, per la fusione gerarchica in _consolation_classifica).
+    """
+    # Un tier con un solo giocatore non potrebbe giocare una gara nella
+    # propria batteria — non raggiungibile con gli attuali vincoli di
+    # qualificazione (QUALIFY_PER_GROUP=2 garantisce almeno 2 per tier), ma
+    # per sicurezza si unisce al tier precedente invece di creare una
+    # batteria impossibile.
+    non_empty: list[list[dict]] = []
+    for tier_rows in tiers:
+        if not tier_rows:
+            continue
+        if len(tier_rows) == 1 and non_empty:
+            non_empty[-1] = non_empty[-1] + tier_rows
+        else:
+            non_empty.append(list(tier_rows))
+
+    total = sum(len(t) for t in non_empty)
+    all_ordered_ids: list[int] = []
+    for tier_rows in non_empty:
+        ordered = sorted(
+            tier_rows, key=lambda r: (-r.get("punti_totali", 0), -r.get("vittorie", 0), r["player_id"])
+        )
+        all_ordered_ids.extend(row["player_id"] for row in ordered)
+
+    if total <= MAX_GROUP_SIZE:
+        return all_ordered_ids, None, None
+
+    heats: dict[str, list[int]] = {}
+    tier_order: list[list[str]] = []
+    next_index = 0
+    for tier_rows in non_empty:
+        ordered = sorted(
+            tier_rows, key=lambda r: (-r.get("punti_totali", 0), -r.get("vittorie", 0), r["player_id"])
+        )
+        ids = [row["player_id"] for row in ordered]
+        tier_heats = _distribute_to_heats(ids, next_index)
+        heats.update(tier_heats)
+        tier_order.append(list(tier_heats.keys()))
+        next_index += len(tier_heats)
+
+    return all_ordered_ids, heats, tier_order
 
 
 def _group_standings(
@@ -1004,6 +1162,13 @@ def complete_group_stage_group(db: Session, tournament_id: int, group_key: str) 
     """
     Marca un girone come completato aggiungendo group_key a
     format_data.completed_groups. Restituisce la lista aggiornata.
+
+    Richiede almeno una gara ufficiale registrata per quel girone: senza
+    questo controllo era possibile chiudere un girone senza aver giocato
+    nessuna gara, restando bloccati più avanti (la fase successiva richiede
+    tutti i gironi completati, ma l'interfaccia non permette di aggiungere
+    gare a un girone già chiuso) — vedi anche reopen_group_stage_group per
+    sbloccare un girone chiuso per errore.
     """
     torneo = db.query(Tournament).filter(Tournament.id == tournament_id).first()
     if not torneo:
@@ -1013,7 +1178,54 @@ def complete_group_stage_group(db: Session, tournament_id: int, group_key: str) 
 
     completed = list((torneo.format_data or {}).get("completed_groups", []))
     if group_key not in completed:
+        from app.models import Race
+
+        has_races = (
+            db.query(Race.id)
+            .filter(
+                Race.tournament_id == tournament_id,
+                Race.phase == "group",
+                Race.group_name == group_key,
+                Race.is_duello.is_(False),
+            )
+            .first()
+            is not None
+        )
+        if not has_races:
+            raise ValueError(
+                f"Il girone {group_key} non ha ancora nessuna gara registrata: "
+                "aggiungi almeno una gara prima di chiuderlo."
+            )
         completed.append(group_key)
+        _persist_format_data(db, torneo, completed_groups=completed)
+
+    return {"completed_groups": completed}
+
+
+def reopen_group_stage_group(db: Session, tournament_id: int, group_key: str) -> dict:
+    """
+    Riapre un girone già chiuso (lo rimuove da format_data.completed_groups)
+    — serve a sbloccare un girone chiuso per errore senza gare, o cui ne manca
+    ancora qualcuna. Permesso solo se la fase successiva (semifinale o
+    finale) non è già stata generata da questi dati: altrimenti i qualificati
+    già calcolati resterebbero incoerenti con una gara aggiunta dopo.
+    """
+    torneo = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+    if not torneo:
+        raise ValueError("Torneo non trovato")
+    if torneo.tournament_format != "group_stage":
+        raise ValueError("Questo torneo non è in formato group_stage")
+
+    fd = torneo.format_data or {}
+    if fd.get("semifinals") or (fd.get("finals") or {}).get("top"):
+        raise ValueError(
+            "Non puoi riaprire un girone: la fase successiva (semifinale o finale) "
+            "è già stata generata da questi dati."
+        )
+
+    completed = list(fd.get("completed_groups", []))
+    if group_key in completed:
+        completed.remove(group_key)
         _persist_format_data(db, torneo, completed_groups=completed)
 
     return {"completed_groups": completed}
@@ -1033,7 +1245,10 @@ def generate_group_stage_finals(
       2a. Se i qualificati sono ≤ 4 → vanno direttamente in FINALE ("top").
       2b. Se i qualificati sono > 4 → si genera la SEMIFINALE (phase="semifinal",
           batterie "S1","S2"... da max 4); i primi di ogni batteria avanzano poi
-          alla FINALE fino a riempire 4 posti.
+          alla FINALE fino a riempire 4 posti. Chi viene eliminato in
+          semifinale (qualificato dal girone ma fuori dal Final 4) si unisce
+          ai 3°/4° dei gironi nella Finalina, invece di restare senza
+          piazzamento/gara successiva.
       3. FINALE ("top", Final 4) + CONSOLAZIONE ("bottom").
 
     Persiste la composizione delle fasi in tournament.format_data:
@@ -1089,25 +1304,27 @@ def generate_group_stage_finals(
         )
 
     qualificati: list[dict] = []  # {player_id, punti_totali, vittorie, group_rank}
-    consolation_ids: list[int] = []
+    consolation_rows: list[dict] = []  # {player_id, punti_totali, vittorie, podi}
     for key in group_keys:
         classifica = classifiche[key]
         for rank, row in enumerate(classifica):
             if rank < QUALIFY_PER_GROUP:
                 qualificati.append({**row, "group_rank": rank})
             else:
-                consolation_ids.append(row["player_id"])
+                consolation_rows.append(row)
+    consolation_ids = [row["player_id"] for row in consolation_rows]
 
     needs_semifinal = len(qualificati) > FINAL_SLOTS
 
     # ── 2a. Nessuna semifinale: i qualificati vanno diretti in finale ───────────
     if not needs_semifinal:
         top_ids = [q["player_id"] for q in qualificati]
+        bottom_ids, bottom_heats, bottom_tiers = _build_consolation_tiers([consolation_rows])
         _persist_format_data(
             db,
             torneo,
             needs_semifinal=False,
-            finals={"top": top_ids, "bottom": consolation_ids},
+            finals={"top": top_ids, "bottom": bottom_ids, "bottom_heats": bottom_heats, "bottom_tiers": bottom_tiers},
         )
         _touch_phase_change(
             db,
@@ -1120,11 +1337,14 @@ def generate_group_stage_finals(
             "stage": "finals",
             "needs_semifinal": False,
             "fase_1": {f"girone_{k}": classifiche[k] for k in group_keys},
-            "fase_2": {"top": top_ids, "bottom": consolation_ids},
+            "fase_2": {"top": top_ids, "bottom": bottom_ids, "bottom_heats": bottom_heats, "bottom_tiers": bottom_tiers},
             "messaggio": (
                 f"Finale generata: {len(top_ids)} qualificati alla Finale, "
-                f"{len(consolation_ids)} alla Consolazione. "
-                "Crea le gare con phase='finals' e group_name='top'/'bottom'."
+                f"{len(bottom_ids)} alla Consolazione"
+                + (f" (divisa in {len(bottom_heats)} batterie, max 4 a gara)" if bottom_heats else "")
+                + ". Crea le gare con phase='finals' e group_name='top'/'bottom'"
+                + ("'/'bottom_B1'/'bottom_B2'/…" if bottom_heats else "")
+                + "."
             ),
         }
 
@@ -1147,12 +1367,16 @@ def generate_group_stage_finals(
         heats: dict[str, list[int]] = {f"S{i + 1}": [] for i in range(n_heats)}
         for idx, q in enumerate(qualificati_ordinati):
             heats[f"S{(idx % n_heats) + 1}"].append(q["player_id"])
+        # Roster preliminare della Finalina (solo i 3°/4° dei gironi: i
+        # perdenti di semifinale si aggiungeranno quando questa funzione
+        # verrà richiamata dopo aver giocato le batterie, vedi sotto).
+        bottom_ids, bottom_heats, bottom_tiers = _build_consolation_tiers([consolation_rows])
         _persist_format_data(
             db,
             torneo,
             needs_semifinal=True,
             semifinals=heats,
-            finals={"bottom": consolation_ids},
+            finals={"bottom": bottom_ids, "bottom_heats": bottom_heats, "bottom_tiers": bottom_tiers},
         )
         _touch_phase_change(
             db,
@@ -1167,7 +1391,7 @@ def generate_group_stage_finals(
             "needs_semifinal": True,
             "fase_1": {f"girone_{k}": classifiche[k] for k in group_keys},
             "semifinals": heats,
-            "consolation": consolation_ids,
+            "consolation": bottom_ids,
             "messaggio": (
                 f"Semifinali generate: {riepilogo}. "
                 "Crea le gare con phase='semifinal' e group_name='S1'/'S2'/…, "
@@ -1187,11 +1411,45 @@ def generate_group_stage_finals(
             "Registra uno Spareggio (primo a 2 vittorie, piste random) tra i giocatori in parità "
             "prima di generare la Finale."
         )
-    top_ids = _advance_top_n(semi_standings, FINAL_SLOTS)
+    top_ids, boundary_tied = _advance_top_n(semi_standings, FINAL_SLOTS)
+    if boundary_tied:
+        order = _resolve_tie_with_spareggio(
+            db, tournament_id, "finals", FINALS_DUELLO_ULTIMO_POSTO, boundary_tied
+        )
+        if not order:
+            nomi = _join_names(db, boundary_tied)
+            raise ValueError(
+                f"Pareggio (punti, vittorie e podi) per l'ultimo posto Finale tra {nomi}, "
+                "giocatori di batterie di semifinale diverse (non si sono affrontati direttamente). "
+                "Registra uno Spareggio (primo a 2 vittorie, piste random) prima di generare la Finale."
+            )
+        remaining = FINAL_SLOTS - len(top_ids)
+        top_ids = top_ids + order[:remaining]
+    # I qualificati dai gironi che NON rientrano nel Final 4 (eliminati in
+    # semifinale) si uniscono ai 3°/4° dei gironi nella Finalina, invece di
+    # restare senza alcun piazzamento/gara successiva.
+    top_ids_set = set(top_ids)
+    semifinal_loser_rows = [
+        row
+        for key in semi_keys
+        for row in semi_standings[key]
+        if row["player_id"] not in top_ids_set
+    ]
+    # Tier 0 (migliore): eliminati in semifinale — hanno comunque superato
+    # il proprio girone, meritano di giocare per le posizioni più alte della
+    # Finalina. Tier 1 (peggiore): esclusi direttamente dai gironi (3°/4°).
+    # _build_consolation_tiers mantiene i due gruppi su batterie separate
+    # quando il totale supera i 4 (vincolo schermo), invece di mischiarli
+    # per punti come prima — chi è eliminato in semifinale non deve mai
+    # ritrovarsi a giocare per posizioni più basse di chi è eliminato subito
+    # ai gironi.
+    bottom_ids, bottom_heats, bottom_tiers = _build_consolation_tiers(
+        [semifinal_loser_rows, consolation_rows]
+    )
     _persist_format_data(
         db,
         torneo,
-        finals={"top": top_ids, "bottom": consolation_ids},
+        finals={"top": top_ids, "bottom": bottom_ids, "bottom_heats": bottom_heats, "bottom_tiers": bottom_tiers},
     )
     _touch_phase_change(
         db,
@@ -1204,10 +1462,14 @@ def generate_group_stage_finals(
         "stage": "finals",
         "needs_semifinal": True,
         "semifinals": {k: semi_standings[k] for k in semi_keys},
-        "fase_2": {"top": top_ids, "bottom": consolation_ids},
+        "fase_2": {"top": top_ids, "bottom": bottom_ids, "bottom_heats": bottom_heats, "bottom_tiers": bottom_tiers},
         "messaggio": (
-            f"Finale composta dalle semifinali: {len(top_ids)} finalisti. "
-            "Crea le gare con phase='finals' e group_name='top'/'bottom'."
+            f"Finale composta dalle semifinali: {len(top_ids)} finalisti, "
+            f"{len(bottom_ids)} alla Finalina (gironi + eliminati in semifinale)"
+            + (f", divisa in {len(bottom_heats)} batterie (max 4 a gara)" if bottom_heats else "")
+            + ". Crea le gare con phase='finals' e group_name='top'/'bottom'"
+            + ("'/'bottom_B1'/'bottom_B2'/…" if bottom_heats else "")
+            + "."
         ),
     }
 
@@ -1236,7 +1498,15 @@ def get_group_stage_ties(db: Session, tournament_id: int) -> dict:
     semifinals = fd.get("semifinals") or {}
     if semifinals:
         semi_keys = _semifinal_keys_from_format_data(fd)
-        _, ties = _group_standings(db, tournament_id, "semifinal", semi_keys)
+        semi_standings, ties = _group_standings(db, tournament_id, "semifinal", semi_keys)
+        if not ties:
+            # Nessun pareggio DENTRO una batteria: controlla anche il confine
+            # dell'ultimo posto Finale TRA batterie diverse (vedi
+            # _advance_top_n) — stesso tipo di pareggio, ma tra giocatori che
+            # non si sono mai affrontati direttamente.
+            _, boundary_tied = _advance_top_n(semi_standings, FINAL_SLOTS)
+            if boundary_tied:
+                return {"phase": "finals", "ties": {FINALS_DUELLO_ULTIMO_POSTO: boundary_tied}}
         return {"phase": "semifinal", "ties": ties}
 
     group_keys = sorted(groups_seed.keys(), key=lambda k: int(k))
@@ -1312,6 +1582,13 @@ FINALS_DUELLO_PODIO_3_4 = "finals_duello_podio_3_4"
 # risolto" quando in realtà si trattava di un duello diverso.
 FINALS_DUELLO_CONSOLAZIONE_1_2 = "finals_duello_consolazione_1_2"
 FINALS_DUELLO_CONSOLAZIONE_3_4 = "finals_duello_consolazione_3_4"
+
+# group_name usato per lo spareggio sull'ultimo posto Finale quando il
+# confine (Final 4) cade tra candidati di batterie di semifinale DIVERSE:
+# non si sono mai affrontati direttamente (gare separate, avversari diversi),
+# quindi un pareggio esatto su punti/vittorie/podi va deciso con una gara
+# secca, non con un criterio arbitrario (vedi _advance_top_n).
+FINALS_DUELLO_ULTIMO_POSTO = "finals_duello_ultimo_posto"
 
 
 def _classic_classifica(db: Session, tournament_id: int) -> list[dict]:
@@ -1639,8 +1916,48 @@ def get_finals_final_classifica(db: Session, tournament_id: int) -> list[int]:
 
 
 def _consolation_classifica(db: Session, tournament_id: int) -> list[dict]:
-    """Classifica della Consolazione ("Finalina") di un torneo a gironi (sole gare ufficiali)."""
+    """
+    Classifica della Consolazione ("Finalina") di un torneo a gironi (sole
+    gare ufficiali). Se la Finalina supera i 4 giocatori è divisa in
+    batterie "B1","B2",... per tier di merito (vedi _build_consolation_tiers,
+    stesso vincolo schermo delle semifinali): in tal caso unisce le
+    classifiche delle singole batterie con lo stesso criterio usato per le
+    semifinali (_merge_consolation_heats) DENTRO ogni tier, poi concatena i
+    tier nell'ordine di merito (mai per punti tra tier diversi) — chi è
+    eliminato in semifinale resta sempre davanti a chi è eliminato subito ai
+    gironi, anche se quest'ultimo ha fatto più punti nella propria batteria.
+    """
     from app.models import Race
+
+    torneo = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+    finals_fd = ((torneo.format_data or {}).get("finals") or {}) if torneo else {}
+    bottom_heats = finals_fd.get("bottom_heats")
+    bottom_tiers = finals_fd.get("bottom_tiers")
+
+    if bottom_heats:
+        heats_standings: dict[str, list[dict]] = {}
+        for key in bottom_heats:
+            race_ids = [
+                r.id
+                for r in db.query(Race.id)
+                .filter(
+                    Race.tournament_id == tournament_id,
+                    Race.phase == "finals",
+                    Race.group_name == f"bottom_{key}",
+                    Race.is_duello.is_(False),
+                )
+                .all()
+            ]
+            heats_standings[key] = _classifica_girone(db, race_ids) if race_ids else []
+        if not any(heats_standings.values()):
+            return []
+        if bottom_tiers:
+            merged: list[dict] = []
+            for tier_keys in bottom_tiers:
+                tier_standings = {k: heats_standings[k] for k in tier_keys if k in heats_standings}
+                merged.extend(_merge_consolation_heats(tier_standings))
+            return merged
+        return _merge_consolation_heats(heats_standings)
 
     race_ids = [
         r.id
@@ -1746,6 +2063,54 @@ def get_consolation_final_classifica(db: Session, tournament_id: int) -> list[in
             order[start : start + len(tie["order"])] = tie["order"]
 
     return order
+
+
+def decree_consolation_winner(
+    db: Session, tournament_id: int, actor_user_id: int | None = None
+) -> dict:
+    """
+    Calcola e assegna automaticamente il vincitore della Consolazione/
+    "Finalina" leggendo la classifica reale (già risolta rispetto agli
+    eventuali spareggi podio, vedi get_consolation_final_classifica) —
+    sostituisce la scelta manuale tramite select, che non aveva senso dato
+    che il sistema può già calcolarlo da solo (stessa logica già usata per
+    decretare il vincitore della Finale principale).
+    """
+    torneo = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+    if not torneo:
+        raise ValueError("Torneo non trovato")
+    if torneo.tournament_format != "group_stage":
+        raise ValueError("Questo torneo non è in formato group_stage")
+
+    fd = torneo.format_data or {}
+    bottom_ids = (fd.get("finals") or {}).get("bottom") or []
+    if not bottom_ids:
+        raise ValueError("La Finalina non è ancora stata composta.")
+
+    ties = get_consolation_podium_ties(db, tournament_id)
+    unresolved = [
+        t for t in (ties.get("top2"), ties.get("top4"), *ties.get("others", [])) if t and t["order"] is None
+    ]
+    if unresolved:
+        raise ValueError(
+            "Ci sono spareggi di Consolazione ancora da risolvere prima di poter decretare il vincitore."
+        )
+
+    order = get_consolation_final_classifica(db, tournament_id)
+    if not order:
+        raise ValueError("Nessuna gara registrata per la Consolazione.")
+
+    torneo.consolation_winner_id = order[0]
+    db.commit()
+    db.refresh(torneo)
+    _touch_phase_change(
+        db,
+        torneo,
+        actor_user_id,
+        action="consolation_winner_decided",
+        description=f"Vincitore della Consolazione decretato per '{torneo.name}'.",
+    )
+    return {"consolation_winner_id": torneo.consolation_winner_id}
 
 
 def get_group_stage_overall_classifica(db: Session, tournament_id: int) -> list[int]:
