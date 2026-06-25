@@ -218,8 +218,13 @@ def update_my_profile(
 ):
     from app.models import Player
     from app.services.utenti.players import sanitize_nickname
+    from app.core.image_optim import optimize_image_data_url
 
     try:
+        # Avatar: ottimizzazione automatica → WebP ridimensionato (animato per
+        # le GIF). Unico punto, qui, riusato in entrambi i rami (create/update).
+        optimized_img = optimize_image_data_url(profile_data.img_url, max_dimension=400)
+
         # Auto-create a Player for superadmin without linked player
         if not current_user.player_id:
             raw_nickname = profile_data.nickname or current_user.username
@@ -235,7 +240,7 @@ def update_my_profile(
                 first_name=profile_data.first_name or "",
                 last_name=profile_data.last_name or "",
                 nickname=nickname,
-                img_url=profile_data.img_url,
+                img_url=optimized_img,
                 favorite_character_id=profile_data.favorite_character_id,
             )
             db.add(player)
@@ -250,7 +255,7 @@ def update_my_profile(
             last_name=profile_data.last_name,
             nickname=profile_data.nickname,
             favorite_character_id=profile_data.favorite_character_id,
-            img_url=profile_data.img_url,
+            img_url=optimized_img,
             bio=profile_data.bio,
         )
         player = update_player(db, update_payload, current_user.player_id)

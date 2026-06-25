@@ -101,10 +101,13 @@ def get_photo(db: Session, photo_id: int) -> dict | None:
 
 
 def create_photo(db: Session, user_id: int, payload: TournamentPhotoCreate) -> dict:
+    # Foto galleria: WebP ridimensionato (max 1280px). Vedi app.core.image_optim.
+    from app.core.image_optim import optimize_image_data_url
+
     photo = TournamentPhoto(
         tournament_id=payload.tournament_id,
         uploaded_by_user_id=user_id,
-        image_data=payload.image_data,
+        image_data=optimize_image_data_url(payload.image_data, max_dimension=1280),
         caption=payload.caption,
     )
     db.add(photo)
@@ -136,6 +139,11 @@ def add_comment(
     image_data = payload.image_data or None
     if not text and not image_data:
         raise ValueError("Il commento deve contenere del testo o un'immagine")
+    # Allegato commento: WebP ridimensionato (max 800px). Vedi app.core.image_optim.
+    if image_data:
+        from app.core.image_optim import optimize_image_data_url
+
+        image_data = optimize_image_data_url(image_data, max_dimension=800)
     parent_id = payload.parent_id
     comment = PhotoComment(
         photo_id=photo_id,

@@ -147,7 +147,11 @@ def upload_champion_photo(
     player = db.query(Player).filter(Player.id == player_id).first()
     if not player:
         raise HTTPException(status_code=404, detail="Giocatore non trovato")
-    player.champion_photo = payload.image_data
+    # Foto campione: WebP ridimensionato (max 1000px, è una foto più grande
+    # di un avatar). Vedi app.core.image_optim.
+    from app.core.image_optim import optimize_image_data_url
+
+    player.champion_photo = optimize_image_data_url(payload.image_data, max_dimension=1000)
     db.commit()
     log_action(
         db,
