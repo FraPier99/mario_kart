@@ -16,6 +16,15 @@ const SOCKET_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
 // invece di festeggiare un torneo concluso da troppo tempo.
 const CELEBRATION_MAX_AGE_MS = 2 * 24 * 60 * 60 * 1000
 
+// Intervallo del polling di fallback quando il socket non è connesso. Prima
+// girava ogni 15-30s per TUTTA la sessione di OGNI utente loggato,
+// indipendentemente dal fatto che i socket funzionassero — col CORS dei
+// socket ora fixato è quasi sempre del tutto ridondante (la push live basta),
+// quindi qui parte solo se il socket non si è connesso entro qualche secondo,
+// e con un intervallo molto più rilassato.
+const FALLBACK_POLL_DELAY_MS = 60000
+const FALLBACK_START_DELAY_MS = 5000
+
 export function SocketProvider({ children }) {
     const { user, isAuthenticated } = useAuth()
     const { triggerCelebration } = useCelebration()
@@ -24,17 +33,11 @@ export function SocketProvider({ children }) {
     const triggerRef = useRef(triggerCelebration)
     useEffect(() => { triggerRef.current = triggerCelebration }, [triggerCelebration])
 
-    // Fallback "missed celebration" polling: indipendente dalla connessione
-    // socket. In precedenza partiva solo dentro socket.on('connect', ...),
-    // quindi se il socket non si connetteva mai (es. CORS/proxy/server
-    // misconfigurato in produzione) l'utente non vedeva l'overlay nemmeno al
-    // login successivo — il fallback esisteva solo "sulla carta". Ora parte
-    // comunque al login, e funziona da solo anche con i socket completamente
-    // fuori uso.
     useEffect(() => {
         if (!isAuthenticated || !user) return undefined
 
         let active = true
+        let connected = false
         let pollInterval = null
 
         const triggerConcluded = async () => {
@@ -48,17 +51,11 @@ export function SocketProvider({ children }) {
                 if (!latest) return false
 
                 const seenKey = `kart_celebration_seen_${latest.id}_${user.id}`
-                if (localStorage.getItem(seenKey) === '1') {
-                    if (pollInterval) clearInterval(pollInterval)
-                    return false
-                }
+                if (localStorage.getItem(seenKey) === '1') return false
                 localStorage.setItem(seenKey, '1')
 
                 const concludedAt = new Date(latest.last_phase_change_at ?? latest.date ?? 0).getTime()
-                if (Date.now() - concludedAt > CELEBRATION_MAX_AGE_MS) {
-                    if (pollInterval) clearInterval(pollInterval)
-                    return false
-                }
+                if (Date.now() - concludedAt > CELEBRATION_MAX_AGE_MS) return false
 
                 let leader = { playerId: latest.winner_id, nickname: 'Campione' }
                 let standings = [leader]
@@ -79,79 +76,92 @@ export function SocketProvider({ children }) {
             return false
         }
 
-        triggerConcluded().then((found) => {
-            if (!active) return
-            const delay = found ? 30000 : 15000
-            pollInterval = setInterval(async () => {
-                const done = await triggerConcluded()
-                if (done || !active) return
-                clearInterval(pollInterval)
-                pollInterval = null
-            }, delay)
-        })
+        // Controllo immediato una sola volta al login, indipendente dal
+        // socket: copre il caso "primo accesso dopo la fine del torneo".
+        triggerConcluded()
+
+        const startPolling = () => {
+            if (pollInterval || !active) return
+            pollInterval = setInterval(() => {
+                if (!active || connected) return
+                triggerConcluded()
+            }, FALLBACK_POLL_DELAY_MS)
+        }
+        const stopPolling = () => {
+            if (pollInterval) { clearInterval(pollInterval); pollInterval = null }
+        }
+        // Dà al socket un attimo per connettersi prima di accendere il
+        // polling — se si connette in tempo, il polling non parte mai.
+        const fallbackTimer = setTimeout(() => { if (!connected) startPolling() }, FALLBACK_START_DELAY_MS)
+
+        const token = authStorage.getToken()
+        let socket = null
+        if (token) {
+            socket = io(SOCKET_URL, {
+                auth: { token },
+                transports: ['websocket', 'polling'],
+                reconnection: true,
+                reconnectionAttempts: 10,
+                reconnectionDelay: 2000,
+            })
+
+            socket.on('connect', () => {
+                connected = true
+                setIsConnected(true)
+                stopPolling()
+            })
+            socket.on('disconnect', () => {
+                connected = false
+                setIsConnected(false)
+                startPolling()
+            })
+            socket.on('connect_error', () => {
+                connected = false
+                setIsConnected(false)
+            })
+
+            socket.on('tournament:winner', async (data) => {
+                const seenKey = `kart_celebration_seen_${data.tournament_id}_${user.id}`
+                if (localStorage.getItem(seenKey) === '1') return
+                localStorage.setItem(seenKey, '1')
+
+                const leader = {
+                    playerId: data.winner_id,
+                    nickname: data.winner_nickname,
+                    img_url: data.winner_img_url ?? null,
+                }
+
+                try {
+                    const [tournRes, lbRes] = await Promise.allSettled([
+                        tournamentsApi.get(data.tournament_id),
+                        tournamentsApi.leaderboard(data.tournament_id),
+                    ])
+                    const t = tournRes.status === 'fulfilled' ? tournRes.value.data ?? {} : {}
+                    const standings = t.standings?.length ? t.standings
+                        : lbRes.status === 'fulfilled' && Array.isArray(lbRes.value.data) && lbRes.value.data.length
+                            ? lbRes.value.data.map((p) => ({
+                                playerId: p.id, nickname: p.nickname,
+                                points: p.total_point ?? 0,
+                            }))
+                            : [leader]
+                    triggerRef.current(leader, standings, {
+                        id: data.tournament_id, name: data.tournament_name, ...t,
+                    })
+                } catch {
+                    triggerRef.current(leader, [leader], {
+                        id: data.tournament_id, name: data.tournament_name,
+                    })
+                }
+            })
+
+            socketRef.current = socket
+        }
 
         return () => {
             active = false
-            if (pollInterval) clearInterval(pollInterval)
-        }
-    }, [isAuthenticated, user])
-
-    useEffect(() => {
-        if (!isAuthenticated || !user) return undefined
-
-        const token = authStorage.getToken()
-        if (!token) return undefined
-
-        const socket = io(SOCKET_URL, {
-            auth: { token },
-            transports: ['websocket', 'polling'],
-            reconnection: true,
-            reconnectionAttempts: 10,
-            reconnectionDelay: 2000,
-        })
-
-        socket.on('connect', () => setIsConnected(true))
-        socket.on('disconnect', () => setIsConnected(false))
-        socket.on('connect_error', () => setIsConnected(false))
-
-        socket.on('tournament:winner', async (data) => {
-            const seenKey = `kart_celebration_seen_${data.tournament_id}_${user.id}`
-            if (localStorage.getItem(seenKey) === '1') return
-            localStorage.setItem(seenKey, '1')
-
-            const leader = {
-                playerId: data.winner_id,
-                nickname: data.winner_nickname,
-                img_url: data.winner_img_url ?? null,
-            }
-
-            try {
-                const [tournRes, lbRes] = await Promise.allSettled([
-                    tournamentsApi.get(data.tournament_id),
-                    tournamentsApi.leaderboard(data.tournament_id),
-                ])
-                const t = tournRes.status === 'fulfilled' ? tournRes.value.data ?? {} : {}
-                const standings = t.standings?.length ? t.standings
-                    : lbRes.status === 'fulfilled' && Array.isArray(lbRes.value.data) && lbRes.value.data.length
-                        ? lbRes.value.data.map((p) => ({
-                            playerId: p.id, nickname: p.nickname,
-                            points: p.total_point ?? 0,
-                        }))
-                        : [leader]
-                triggerRef.current(leader, standings, {
-                    id: data.tournament_id, name: data.tournament_name, ...t,
-                })
-            } catch {
-                triggerRef.current(leader, [leader], {
-                    id: data.tournament_id, name: data.tournament_name,
-                })
-            }
-        })
-
-        socketRef.current = socket
-
-        return () => {
-            socket.close()
+            clearTimeout(fallbackTimer)
+            stopPolling()
+            socket?.close()
             socketRef.current = null
             setIsConnected(false)
         }

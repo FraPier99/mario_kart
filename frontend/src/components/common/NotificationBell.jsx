@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Bell, BellRing, PenLine, Trophy, Zap, MessageCircle, ArrowRight, X } from 'lucide-react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { notificationsApi, schedineApi } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
 
@@ -51,7 +51,6 @@ const resolveNotifContext = (notif, getTournamentDisplayNumber) => {
 }
 
 export default function NotificationBell() {
-  const location = useLocation()
   const { getTournamentDisplayNumber } = useAppData()
   const [open, setOpen] = useState(false)
   const [notifications, setNotifications] = useState([])
@@ -90,8 +89,22 @@ export default function NotificationBell() {
     finally { setLoading(false) }
   }, [])
 
+  // Prima ricaricava a ogni cambio di pagina (location.pathname in
+  // dipendenza) — con una SPA navigata spesso erano due chiamate API in più
+  // ad ogni click sul menu, per un dato che non cambia così in fretta. Ora
+  // carica una volta al mount e poi periodicamente, più al ritorno sul tab.
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { load() }, [location.pathname, load])
+  useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    const interval = setInterval(() => load(), 45000)
+    const onVisible = () => { if (document.visibilityState === 'visible') load() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [load])
 
   useEffect(() => {
     if (!open) return
