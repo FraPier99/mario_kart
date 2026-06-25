@@ -145,6 +145,17 @@ qualificati → semifinale in 2 batterie da 3 → Finale prende i migliori 4,
 gli altri 2 (eliminati in semifinale) si uniscono ai 3 esclusi dai gironi →
 Finalina da 5.
 
+Se la Finalina supera i 4 (vincolo schermo) viene divisa in batterie
+"B1","B2",… **per livello di merito**, non a caso (`_build_consolation_tiers`):
+tier 0 = eliminati in semifinale (hanno superato il girone), tier 1 = esclusi
+direttamente dai gironi. I due tier non condividono mai una batteria, e in
+classifica generale i tier si concatenano dal migliore al peggiore — chi è
+uscito in semifinale resta sempre davanti a chi è uscito ai gironi, anche con
+meno punti (`_consolation_classifica` fonde le batterie dentro ogni tier con
+`_merge_consolation_heats`, poi concatena i tier). Esempio, Finalina da 5
+(caso 9 giocatori): B1 = 2 eliminati in semifinale (5°-6°), B2 = 3 esclusi
+dai gironi (7°-8°-9°).
+
 - **Requisito minimo**: 8 partecipanti (`tournament_format = "group_stage"`)
 - **Composizione gironi**: il minor numero di gironi possibile, max 4
   giocatori/girone, scarto massimo 1 tra gironi (es. 11 → 4,4,3)
