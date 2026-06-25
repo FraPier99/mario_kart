@@ -69,15 +69,18 @@ gare di duello). Non esiste più distinzione "best-of-3 solo per il 1°/2°
 posto vs. gara secca per il resto": il formato del duello è identico per
 ogni blocco in parità.
 
-Il torneo si conclude automaticamente — `maybe_finalize_classic_tournament` /
-`maybe_finalize_group_stage_tournament`, chiamate da
-`_maybe_finalize_after_duel` in `app/services/tornei/results.py` ogni volta
-che si registra un risultato di duello — solo quando **tutti** i duelli
-rilevati sono risolti: imposta `winner_id`/`status = "concluso"` e salda le
-schedine (rispettivamente `settle_tournament_schedine` o
-`settle_deluxe_schedine`, con assegnazione automatica delle Card premio).
-Anche le posizioni basse contano: non decidono il vincitore ma decidono la
-classifica finale (rilevante per i pronostici di classifica completa).
+Il torneo **non si conclude mai automaticamente**, nemmeno quando tutti i
+duelli rilevati sono risolti: la finalizzazione è sempre un passo manuale
+dell'admin, tramite il pulsante "Decreta Vincitore" (`WinnerFinalizeCard.jsx`
+→ `update_tournament`/`set_tournament_playoff_winner` in
+`app/services/tornei/tournaments.py`), che imposta `winner_id`/
+`status = "concluso"` e salda le schedine (rispettivamente
+`settle_tournament_schedine` o `settle_deluxe_schedine`, con assegnazione
+automatica delle Card premio) — ma solo dopo aver verificato che non resti
+nessun duello/pareggio ancora da risolvere (`_has_unresolved_ties`), nel
+qual caso il pulsante resta bloccato. Anche le posizioni basse contano: non
+decidono il vincitore ma decidono la classifica finale (rilevante per i
+pronostici di classifica completa).
 
 Ogni duello usa un `group_name` dedicato: `duello_podio_1_2`, `duello_podio_3_4`,
 oppure generato dinamicamente come `duello_podio_<inizio>_<fine>` per le
@@ -105,6 +108,17 @@ piste random. Le gare di spareggio sono `is_duello=True` e quindi escluse
 dalla classifica/punti del girone (vedi `racesByPhaseGroup` in
 `GroupPlancia.jsx`, che le filtra esplicitamente).
 
+**Caso particolare — ultimo posto Finale tra batterie di semifinale diverse**:
+quando i qualificati alla Finale vanno scelti tra più batterie di semifinale
+(`_advance_top_n`), i candidati di batterie diverse non si sono mai
+affrontati direttamente (gare separate). Se il confronto per punti/vittorie/
+podi sull'ultimo posto disponibile è in parità ESATTA tra giocatori di
+batterie diverse, si gioca lo stesso spareggio (`finals_duello_ultimo_posto`,
+phase `"finals"`) — non un criterio arbitrario. Se invece non c'è parità
+esatta (uno ha più punti dell'altro, anche di poco), si avanza per punti
+senza spareggio: è l'unico confronto possibile tra heat che non si sono mai
+incontrate.
+
 ---
 
 ## 4. Torneo a gironi flessibile — chi avanza e perché
@@ -120,8 +134,16 @@ Qualificati ≤ 4 ?
               ↓  _advance_top_n: primi N qualificati per "livello"
               │  (1° di ogni batteria, poi i 2° migliori, ecc.)
               ↓
-            Fase 3: Finale (top) + Consolazione (bottom)
+            Fase 3: Finale (top) + Consolazione (bottom, gironi + eliminati in semifinale)
 ```
+
+Quando c'è una fase di semifinale, la Consolazione/"Finalina" finale non è
+solo i 3°/4° dei gironi: si uniscono anche i qualificati dal girone che NON
+rientrano nel Final 4 (eliminati in semifinale) — altrimenti resterebbero
+senza piazzamento. Esempio concreto, 9 giocatori (3 gironi da 3): 6
+qualificati → semifinale in 2 batterie da 3 → Finale prende i migliori 4,
+gli altri 2 (eliminati in semifinale) si uniscono ai 3 esclusi dai gironi →
+Finalina da 5.
 
 - **Requisito minimo**: 8 partecipanti (`tournament_format = "group_stage"`)
 - **Composizione gironi**: il minor numero di gironi possibile, max 4
@@ -149,7 +171,7 @@ il proprio girone, e dopo l'avanzamento solo la fase in cui si trova
 | Layout gironi (N bilanciati) | `compute_group_layout` — `app/services/tornei/tournaments.py` |
 | Avanzamento qualificati > 4 | `_advance_top_n` — idem |
 | Pareggi podio classic/finale | `get_classic_podium_ties`, `get_finals_podium_ties` — idem |
-| Auto-conclusione torneo dopo duello | `maybe_finalize_classic_tournament`, `maybe_finalize_group_stage_tournament` — idem |
+| Conclusione torneo (manuale, mai automatica) | `update_tournament`/`set_tournament_playoff_winner` + `_has_unresolved_ties` — idem |
 | Limite 1 carta/torneo | `_check_player_card_limit` — `app/controllers/cards/inventory.py` |
 | Card non su gare di spareggio | `_check_not_duello_race` — idem |
 | Punteggio gare (griglia dinamica) | `app/data/punteggi.py` (`PUNTEGGI_CONFIG`) |

@@ -53,7 +53,7 @@ Ogni gara di duello:
 - Non assegna punti alla classifica generale (le gare di spareggio sono escluse dalle statistiche)
 - Se tutti i circuiti sono già stati usati, il pool viene **resettato**
 - I circuiti già usati nei duelli si considerano utilizzati
-- Il torneo **si conclude automaticamente** (vincitore, schedine saldate, Card premio assegnate) solo quando **tutti** i duelli rilevati sono stati risolti — anche quelli sulle posizioni più basse, che non decidono il vincitore ma decidono la classifica finale
+- Il torneo **non si conclude mai automaticamente**: una volta risolti tutti i duelli rilevati (anche quelli sulle posizioni più basse, che non decidono il vincitore ma decidono la classifica finale), è l'admin a dover premere "Decreta Vincitore" — un controllo automatico blocca il pulsante se resta qualche duello da risolvere
 
 ### 2e. Chiusura schedine
 
@@ -84,18 +84,22 @@ In caso di parità nel girone, l'ordine è determinato da:
 2. **Podi** (piazzamenti entro il 3° posto)
 3. **Spareggio** — al meglio (primo a 2 vittorie) su piste scelte a caso tra quelle non utilizzate nel girone
 
-### 3c. Fase 2 — Finale
+### 3c. Fase 2 — Semifinali e Finale
 
-- Se i qualificati (top 2 per gruppo) sono **≤ 4**: si passa direttamente alla Finale (gruppo "top" per il podio) + Consolazione (gruppo "bottom")
-- Se i qualificati sono **> 4**: vengono generate **Semifinali** prima della Finale
+- Se i qualificati (top 2 per girone) sono **≤ 4**: si passa direttamente alla Finale (gruppo "top", Final 4) + Consolazione/"Finalina" (gruppo "bottom")
+- Se i qualificati sono **> 4**: vengono generate **Semifinali** (batterie S1, S2, ..., massimo 4 per batteria) prima della Finale. Per scegliere i 4 finalisti tra più batterie: prima i vincitori di ogni batteria, poi i migliori "secondi" per punti, fino a riempire i 4 posti
+- **Chi viene eliminato in semifinale** (qualificato dal girone ma escluso dal Final 4) **si unisce ai 3°/4° classificati dei gironi nella Finalina**, invece di restare senza piazzamento. Esempio: 9 giocatori → 3 gironi da 3 → 6 qualificati → semifinale in 2 batterie da 3 → Finale prende i migliori 4, gli altri 2 si uniscono ai 3 esclusi dai gironi → **Finalina da 5**
+- **Se la Finalina supera i 4 giocatori** (vincolo schermo, come i gironi): viene divisa in batterie "B1", "B2", ... bilanciate, distribuendo i giocatori per forza così ogni batteria ha un mix di livelli simile. L'ordine finale tra batterie diverse si stabilisce per punti, stesso criterio della semifinale
 - La classifica della Finale riparte da zero (indipendente dai gironi)
 
 ### 3d. Duelli
 
 - **Qualificazione (Gironi/Semifinali)**: pareggio al posto di qualificazione → spareggio **al meglio, primo a 2 vittorie** (vedi 3b). Le gare di spareggio non assegnano punti alla classifica del girone (sono escluse dalle statistiche)
-- **Podio di Finale** (1°/2°, 3°/4° posto generale): stesso meccanismo del Duello classic (2d) — **primo a 3 vittorie**, qualunque sia il numero di pareggiati. Il torneo si conclude automaticamente solo a duello risolto.
-- **Podio di Consolazione/"Finalina"** (5°/6°, 7°/8° posto generale): stesso meccanismo, ma **completamente separato** da quello della Finale (group_name dedicati) — un pareggio in Consolazione non interferisce con un pareggio (magari già risolto) della Finale, e viceversa.
+- **Ultimo posto Finale tra batterie di semifinale diverse**: i candidati di batterie diverse non si sono mai affrontati direttamente (gare separate). Se il confronto per punti/vittorie/podi sull'ultimo posto disponibile è in **parità esatta** tra giocatori di batterie diverse, si gioca uno spareggio dedicato invece di scegliere arbitrariamente. Se non c'è parità esatta, vince chi ha più punti (è l'unico confronto possibile tra batterie che non si sono mai incontrate)
+- **Podio di Finale** (1°/2°, 3°/4° posto generale): stesso meccanismo del Duello classic (2d) — **primo a 3 vittorie**, qualunque sia il numero di pareggiati
+- **Podio di Consolazione/"Finalina"** (5°/6°, 7°/8° posto generale, e oltre se la Finalina è più numerosa): stesso meccanismo, ma **completamente separato** da quello della Finale (group_name dedicati) — un pareggio in Consolazione non interferisce con un pareggio (magari già risolto) della Finale, e viceversa
 - In tutti i casi, i circuiti vengono **sorteggiati random** tra quelli disponibili per quel girone/fase
+- Il torneo **non si conclude mai automaticamente**: risolti i duelli di Finale e Consolazione, l'admin deve comunque premere "Decreta Vincitore" (bloccato se resta un duello da risolvere)
 
 ### 3e. Carte Potere
 
