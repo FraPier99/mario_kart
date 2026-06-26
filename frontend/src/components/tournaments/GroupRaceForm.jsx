@@ -16,6 +16,7 @@ import { toast } from 'sonner'
 import { racesApi, resultsApi, getApiErrorMessage } from '@/services/apiClient'
 import { groupColor, groupLabel } from '@/lib/groupStage'
 import CircuitPicker from '@/components/tournaments/CircuitPicker'
+import { useAppData } from '@/context/AppDataContext'
 
 const PUNTI_4 = [5, 3, 2, 1]
 
@@ -148,6 +149,25 @@ const GroupRaceForm = ({
     const slotCount = Math.min(Math.max(activeGroupPlayers.length, 2), 4)
     const PUNTI = PUNTI_4.slice(0, slotCount)
 
+    const { results } = useAppData()
+
+    // Stesso criterio di ResultEntryForm.jsx (torneo classic): dalla seconda
+    // gara in poi, preseleziona il personaggio scelto dal giocatore nella sua
+    // gara più recente in questo torneo, invece del solo favorite_character_id.
+    const getPlayerPreviousCharacterId = (playerId) => {
+        if (!playerId) return null
+        const tournamentRaces = tournament?.races ?? []
+        const prevResult = results
+            .filter((r) => r.player_id === Number(playerId))
+            .filter((r) => tournamentRaces.some((race) => race.id === r.race_id))
+            .sort((a, b) => {
+                const raceA = tournamentRaces.find((race) => race.id === a.race_id)
+                const raceB = tournamentRaces.find((race) => race.id === b.race_id)
+                return (raceB?.race_order ?? 0) - (raceA?.race_order ?? 0)
+            })[0]
+        return prevResult?.character_id ?? null
+    }
+
     const emptySlots = () => Array.from({ length: slotCount }, (_, i) => ({
         playerId: '',
         characterId: activeGroupPlayers[i]?.favorite_character_id ?? '',
@@ -205,9 +225,13 @@ const GroupRaceForm = ({
     const setSlotPlayer = (index, playerId) => {
         setSlots((prev) => prev.map((s, i) => {
             if (i !== index) return s
-            // auto-fill character from the newly selected player's favorite
+            // Preferisce il personaggio dell'ultima gara giocata da questo
+            // pilota in questo torneo; altrimenti il favorite_character_id.
             const player = activeGroupPlayers.find((p) => String(p.id) === String(playerId))
-            const characterId = player?.favorite_character_id ? String(player.favorite_character_id) : s.characterId
+            const previousCharacterId = getPlayerPreviousCharacterId(playerId)
+            const characterId = previousCharacterId
+                ? String(previousCharacterId)
+                : player?.favorite_character_id ? String(player.favorite_character_id) : s.characterId
             return { ...s, playerId, characterId }
         }))
         setErrors([])

@@ -9,6 +9,8 @@
         unlockCelebrationAudio,
         stopWav,
     } from '@/lib/celebrationSound'
+    import { preloadMkdsCharacterVoiceByName } from '@/lib/mkdsSounds'
+    import { preloadCharacterVoice as preloadMk8dCharacterVoiceByName } from '@/lib/mk8dSounds'
     import { getCelebrationConfig } from '@/config/celebrationConfig'
     import { loadOverlayTexts } from '@/lib/overlayTexts'
     import { useAppData } from '@/context/AppDataContext'
@@ -132,6 +134,29 @@
         // Sync charactersById ref for effect closures
         useEffect(() => { charactersByIdRef.current = charactersById }, [charactersById])
 
+        // Precarica (fetch+decode) le voci di tutti i personaggi coinvolti
+        // appena l'overlay monta, invece di aspettare la fase che ne ha
+        // bisogno: senza questo, il primo utilizzo di un personaggio durante
+        // countdown/winnerReveal/winner sconta il fetch+decode al momento
+        // della reveal, percepito come suono "in ritardo" rispetto
+        // all'animazione (e a volte il verso del personaggio precedente
+        // arriva solo quando è già in scena il successivo).
+        useEffect(() => {
+            if (!charactersById?.size) return
+            const names = new Set()
+            const addCharOf = (entity) => {
+                const cid = entity?.lastCharacterId ?? entity?.favoriteCharacterId ?? entity?.favorite_character_id
+                const c = cid && charactersById.get(cid)
+                if (c?.name) names.add(c.name)
+            }
+            addCharOf(leader)
+            standings?.forEach(addCharOf)
+            names.forEach((name) => {
+                preloadMkdsCharacterVoiceByName(name)
+                preloadMk8dCharacterVoiceByName(name)
+            })
+        }, [charactersById, leader, standings])
+
         // Lock body scroll
         useEffect(() => {
             document.body.style.overflow = 'hidden'
@@ -163,16 +188,25 @@
             setShellAnim('intro')
         }
 
+        let cancelled = false
         if (config.characterVoice?.[phase] && leaderCharacterId && charactersByIdRef.current) {
             const c = charactersByIdRef.current.get(leaderCharacterId)
             if (c) {
                 if (winnerVoiceRef.current?.stop) { winnerVoiceRef.current.stop(); winnerVoiceRef.current = null }
                 ;(async () => {
                     const ctrl = await config.characterVoice[phase](c.name)
+                    // Se la fase è già cambiata (o l'overlay è stato chiuso/smontato)
+                    // prima che questa promise risolva, il controller arriva "orfano":
+                    // senza questo controllo resta in play (ed eventualmente in loop,
+                    // vedi 'winner') anche dopo la chiusura/navigazione, perché nessun
+                    // ref lo referenzia più per fermarlo.
+                    if (cancelled) { ctrl?.stop?.(); return }
                     if (ctrl?.stop) winnerVoiceRef.current = ctrl
                 })()
             }
         }
+
+        return () => { cancelled = true }
     }, [phase, config])
 
         // Canvas-confetti effects
@@ -297,6 +331,10 @@
             setCountdownMessage(null)
             setRevealPlayer(null)
             const timers = []
+            // Guardia contro la stessa "voce orfana" della fase precedente:
+            // se l'effetto viene rieseguito/smontato prima che onReveal()
+            // risolva, il controller non deve finire nel ref ma va fermato.
+            let cancelled = false
             const ROULETTE_MS = 1200
             const HOLD = 2200
             const STEP = ROULETTE_MS + HOLD + 500
@@ -321,7 +359,10 @@
                     const charId = player.lastCharacterId || player.favoriteCharacterId || player.favorite_character_id
                     const cn = charId && charactersByIdRef.current?.get(charId)?.name
                     if (countdownVoiceRef.current?.stop) { countdownVoiceRef.current.stop(); countdownVoiceRef.current = null }
-                    config.countdown.onReveal(cn).then(ctrl => { countdownVoiceRef.current = ctrl ?? null })
+                    config.countdown.onReveal(cn).then(ctrl => {
+                        if (cancelled) { ctrl?.stop?.(); return }
+                        countdownVoiceRef.current = ctrl ?? null
+                    })
                     setTimeout(() => setRevealPlayer(null), HOLD)
                 }, rouletteStart + ROULETTE_MS))
             })
@@ -346,7 +387,10 @@
                     const charId = player.lastCharacterId || player.favoriteCharacterId || player.favorite_character_id
                     const cn = charId && charactersByIdRef.current?.get(charId)?.name
                     if (countdownVoiceRef.current?.stop) { countdownVoiceRef.current.stop(); countdownVoiceRef.current = null }
-                    config.countdown.onReveal(cn).then(ctrl => { countdownVoiceRef.current = ctrl ?? null })
+                    config.countdown.onReveal(cn).then(ctrl => {
+                        if (cancelled) { ctrl?.stop?.(); return }
+                        countdownVoiceRef.current = ctrl ?? null
+                    })
                     if (i === podium.length - 1) {
                         setCountdownMessage(overlayTexts?.countdown?.championReveal ?? 'E il nostro Campione è...')
                         setTimeout(() => setCountdownMessage(null), 1500)
@@ -387,6 +431,7 @@
             }, totalDuration)
 
             return () => {
+                cancelled = true
                 setDrumrollActive(false)
                 timers.forEach((t) => clearTimeout(t))
                 if (countdownRef.current) clearTimeout(countdownRef.current)
@@ -408,6 +453,10 @@
                 winnerVoiceRef.current.stop()
                 winnerVoiceRef.current = null
             }
+            if (countdownVoiceRef.current) {
+                countdownVoiceRef.current.stop()
+                countdownVoiceRef.current = null
+            }
             [thankyouRef, derapataRef, blueShellRef, countdownRef, winnerRevealRef].forEach((ref) => {
                 if (ref.current) clearTimeout(ref.current)
             })
@@ -424,6 +473,13 @@
                 heartbeatIntervalRef.current = null
             }
         }, [])
+
+        // Rete di sicurezza: se il genitore smonta l'overlay senza passare da
+        // close()/skipToWinner() (es. logout, cambio pagina che rimuove il
+        // componente da sotto), questo effetto ferma comunque ogni suono/loop
+        // residuo — altrimenti il loop voce vincitore continua a suonare
+        // anche se il componente non esiste più.
+        useEffect(() => () => cleanupTimers(), [cleanupTimers])
 
         const close = useCallback(() => {
             cleanupTimers()
