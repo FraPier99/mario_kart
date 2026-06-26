@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
-import { FileText, Trophy, Users, PenLine, Clock, AlertTriangle, ScrollText, ArrowLeft, Sparkles, Star } from 'lucide-react'
+import { FileText, Trophy, Users, PenLine, Clock, AlertTriangle, ScrollText, ArrowLeft, Sparkles, Star, ChevronDown } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import ApiBanner from '@/components/common/ApiBanner'
 import { useAppData } from '@/context/AppDataContext'
@@ -59,6 +59,20 @@ const Schedina = () => {
     const [deluxeDetail, setDeluxeDetail] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
+
+    // Schedine espanse (Esito + Le Mie Schedine): le card sono dropdown
+    // collassati per stare compatti su mobile. La propria card ("isMe") è
+    // aperta di default — l'insieme contiene gli id su cui l'utente ha
+    // INVERTITO lo stato di default (vedi isSchedinaOpen).
+    const [expandedSchedine, setExpandedSchedine] = useState(() => new Set())
+    const toggleSchedinaExpand = (id) => setExpandedSchedine((prev) => {
+        const next = new Set(prev)
+        next.has(id) ? next.delete(id) : next.add(id)
+        return next
+    })
+    // Aperta se: è la mia (default aperto) e non l'ho chiusa, oppure è di un
+    // altro (default chiuso) e l'ho aperta.
+    const isSchedinaOpen = (id, isMe) => (expandedSchedine.has(id) ? !isMe : isMe)
 
     // game filters + sub-tabs
     const [overviewGameId, setOverviewGameId] = useState('')
@@ -483,11 +497,12 @@ const Schedina = () => {
                                             const isWinner = entry.user_id === tournamentDetail.winner_user_id
                                             const bd = getBreakdown(entry)
                                             const nPos = (entry.classifica_ordinata ?? []).length
+                                            const open = isSchedinaOpen(entry.schedina_id, isMe)
                                             return (
                                                 <div key={entry.schedina_id}
                                                     className={`rounded-2xl border p-4 space-y-3 transition ${isWinner ? 'border-amber-300 dark:border-amber-500/40 bg-amber-50/50 dark:bg-amber-500/5' : isMe ? 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/30 dark:bg-emerald-500/5' : 'border-slate-200 dark:border-border bg-white dark:bg-card'}`}>
-                                                    {/* Header row */}
-                                                    <div className="flex items-center justify-between gap-3">
+                                                    {/* Header row — clic per espandere/comprimere */}
+                                                    <button type="button" onClick={() => toggleSchedinaExpand(entry.schedina_id)} className="flex w-full items-center justify-between gap-3 text-left">
                                                         <div className="flex items-center gap-2.5">
                                                             <span className={`text-sm font-black ${isWinner ? 'text-amber-500' : 'text-slate-400 dark:text-muted-foreground'}`}>#{index + 1}</span>
                                                             {img ? <img src={img} alt={nick} className="h-8 w-8 rounded-full object-cover ring-2 ring-white dark:ring-slate-700" />
@@ -502,10 +517,12 @@ const Schedina = () => {
                                                                 </p>
                                                             </div>
                                                         </div>
-                                                        <div className="flex flex-col items-end gap-1">
+                                                        <div className="flex items-center gap-2 shrink-0">
                                                             <span className={`text-lg font-black ${isWinner ? 'text-amber-500' : 'text-slate-700 dark:text-foreground'}`}>{tournamentDetail?.winner_user_id ? entry.points : '—'}</span>
+                                                            <ChevronDown size={16} className={`text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
                                                         </div>
-                                                    </div>
+                                                    </button>
+                                                    {open && (<>
                                                     {/* Picks grid */}
                                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[10px]">
                                                         {[
@@ -549,6 +566,7 @@ const Schedina = () => {
                                                             </div>
                                                         ) : null
                                                     })()}
+                                                    </>)}
                                                 </div>
                                             )
                                         })}
@@ -694,11 +712,12 @@ const Schedina = () => {
                                             const nick = entry.nickname ?? entry.username
                                             const img = getPlayerImg(nick)
                                             const bd = entry.scoring_breakdown
+                                            const open = isSchedinaOpen(entry.schedina_id, isMe)
                                             return (
                                                 <div key={entry.schedina_id}
                                                     className={`rounded-2xl border p-4 space-y-3 transition ${isWinner ? 'border-amber-300 dark:border-amber-500/40 bg-amber-50/50 dark:bg-amber-500/5' : isMe ? 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/30 dark:bg-emerald-500/5' : 'border-slate-200 dark:border-border bg-white dark:bg-card'}`}>
-                                                    {/* Header row */}
-                                                    <div className="flex items-center justify-between gap-3">
+                                                    {/* Header row — clic per espandere/comprimere */}
+                                                    <button type="button" onClick={() => toggleSchedinaExpand(entry.schedina_id)} className="flex w-full items-center justify-between gap-3 text-left">
                                                         <div className="flex items-center gap-2.5 min-w-0">
                                                             <span className={`text-sm font-black shrink-0 ${isWinner ? 'text-amber-500' : 'text-slate-400 dark:text-muted-foreground'}`}>#{index + 1}</span>
                                                             {img ? <img src={img} alt={nick} className="h-8 w-8 shrink-0 rounded-full object-cover ring-2 ring-white dark:ring-slate-700" />
@@ -713,14 +732,17 @@ const Schedina = () => {
                                                                  </p>
                                                              </div>
                                                          </div>
-                                                         <span className={`text-lg font-black shrink-0 ${isWinner ? 'text-amber-500' : 'text-slate-700 dark:text-foreground'}`}>{deluxeDetail?.winner_user_id ? entry.points : '—'}</span>
-                                                    </div>
+                                                         <div className="flex items-center gap-2 shrink-0">
+                                                             <span className={`text-lg font-black ${isWinner ? 'text-amber-500' : 'text-slate-700 dark:text-foreground'}`}>{deluxeDetail?.winner_user_id ? entry.points : '—'}</span>
+                                                             <ChevronDown size={16} className={`text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+                                                         </div>
+                                                    </button>
 
                                                     {/* I pronostici altrui restano nascosti finché il torneo non è
                                                         concluso (lo stesso vale per la modalità classic) — il
                                                         backend azzera già tutto questo prima della conclusione,
                                                         qui evitiamo solo di mostrare un fuori luogo "0/0 ✓". */}
-                                                    {deluxeDetail?.winner_user_id ? (
+                                                    {open && (deluxeDetail?.winner_user_id ? (
                                                         <>
                                                     {/* Finalisti */}
                                                     <div className="space-y-1">
@@ -789,7 +811,7 @@ const Schedina = () => {
                                                         <p className="text-[10px] italic text-slate-400 dark:text-muted-foreground">
                                                             Pronostico inviato — i dettagli saranno visibili a torneo concluso.
                                                         </p>
-                                                    )}
+                                                    ))}
                                                 </div>
                                             )
                                         })}
@@ -1122,6 +1144,8 @@ const Schedina = () => {
                                         {filteredMySchedine.map((s) => {
                                             const t = getTournamentById(s.tournament_id)
                                             const isWon = s.status === 'settled' && mySchedine.length > 0 && overview?.winners?.some(w => w.user_id === user?.id && w.tournament_id === s.tournament_id)
+                                            const fullOrder = s.classifica_ordinata ?? []
+                                            const open = expandedSchedine.has(`mia-${s.id}`)
                                             return (
                                                 <div key={s.id} className={`rounded-[2rem] border bg-white p-5 shadow-xl dark:bg-card ${isWon ? 'border-amber-200 dark:border-amber-500/30' : 'border-slate-200 dark:border-border'}`}>
                                                     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1143,14 +1167,15 @@ const Schedina = () => {
                                                         </div>
                                                     </div>
 
+                                                    {/* Riepilogo compatto (sempre visibile) */}
                                                     <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
                                                         {(() => {
-                                                            const sNPos = (s.classifica_ordinata ?? []).length
+                                                            const sNPos = fullOrder.length
                                                             return [
-                                                                { label: '1°', playerId: s.classifica_ordinata?.[0] },
-                                                                sNPos >= 2 && { label: '2°', playerId: s.classifica_ordinata?.[1] },
-                                                                sNPos >= 3 && { label: '3°', playerId: s.classifica_ordinata?.[2] },
-                                                                sNPos > 3 && { label: 'Ultimo', playerId: s.classifica_ordinata?.[sNPos - 1] },
+                                                                { label: '1°', playerId: fullOrder[0] },
+                                                                sNPos >= 2 && { label: '2°', playerId: fullOrder[1] },
+                                                                sNPos >= 3 && { label: '3°', playerId: fullOrder[2] },
+                                                                sNPos > 3 && { label: 'Ultimo', playerId: fullOrder[sNPos - 1] },
                                                                 { label: 'Streak', playerId: s.maggiore_streak_vittorie_id, nickname: s.maggiore_streak_nickname },
                                                             ].filter(Boolean)
                                                         })().map(({ label, playerId, nickname }) => {
@@ -1167,6 +1192,36 @@ const Schedina = () => {
                                                             )
                                                         })}
                                                     </div>
+
+                                                    {/* Classifica completa pronosticata (dropdown): il riepilogo
+                                                        sopra mostra solo le posizioni chiave, qui c'è l'ordine intero. */}
+                                                    {fullOrder.length > 0 && (
+                                                        <>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => toggleSchedinaExpand(`mia-${s.id}`)}
+                                                                className="mt-3 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground transition hover:text-slate-700 dark:hover:text-slate-300"
+                                                            >
+                                                                {open ? 'Nascondi classifica completa' : 'Mostra classifica completa'}
+                                                                <ChevronDown size={13} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+                                                            </button>
+                                                            {open && (
+                                                                <div className="mt-2 space-y-1">
+                                                                    {fullOrder.map((pid, i) => {
+                                                                        const nick = pid ? getPlayerNickname(pid) : null
+                                                                        const img = nick ? getPlayerImg(nick) : null
+                                                                        return (
+                                                                            <div key={`${pid}-${i}`} className="flex items-center gap-2 rounded-xl bg-slate-50 dark:bg-muted px-3 py-1.5">
+                                                                                <span className="w-5 shrink-0 text-center text-xs font-black text-slate-400">{i + 1}°</span>
+                                                                                {img ? <img src={img} alt={nick} className="h-5 w-5 shrink-0 rounded-full object-cover" /> : <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-[8px] font-black text-slate-500">{(nick ?? '?').charAt(0).toUpperCase()}</div>}
+                                                                                <span className="truncate text-xs font-bold text-slate-900 dark:text-foreground">{nick ?? `#${pid}`}</span>
+                                                                            </div>
+                                                                        )
+                                                                    })}
+                                                                </div>
+                                                            )}
+                                                        </>
+                                                    )}
                                                     {s.duello_scelta_nickname && (
                                                         <p className="mt-2 text-xs text-slate-500 dark:text-muted-foreground">Duello: {s.duello_scelta_nickname}</p>
                                                     )}
