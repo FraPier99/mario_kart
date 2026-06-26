@@ -54,6 +54,7 @@ const Schedina = () => {
     const [tournamentDetail, setTournamentDetail] = useState(null)
     const [pendingSchedine, setPendingSchedine] = useState([])
     const [mySchedine, setMySchedine] = useState([])
+    const [myDeluxeSchedine, setMyDeluxeSchedine] = useState([])
     const [participantsStatus, setParticipantsStatus] = useState([])
     const [allByTournament, setAllByTournament] = useState(null)
     const [deluxeDetail, setDeluxeDetail] = useState(null)
@@ -125,14 +126,26 @@ const Schedina = () => {
         setWinnerNotification(next)
     }, [overview, user])
 
-    // memo for filtering mySchedine by game
+    // Le Mie Schedine: lista unificata dei due formati (classic + gironi),
+    // taggata con `format`, filtrata per gioco e ordinata per data torneo
+    // (le più recenti in alto). Senza questo, i tornei a gironi mancavano.
     const filteredMySchedine = useMemo(() => {
-        if (!mySchedineGameId) return mySchedine
-        return mySchedine.filter(s => {
-            const t = getTournamentById(s.tournament_id)
-            return t && t.game_id === Number(mySchedineGameId)
+        const tagged = [
+            ...mySchedine.map((s) => ({ ...s, format: 'classic' })),
+            ...myDeluxeSchedine.map((s) => ({ ...s, format: 'group_stage' })),
+        ]
+        const filtered = mySchedineGameId
+            ? tagged.filter((s) => {
+                const t = getTournamentById(s.tournament_id)
+                return t && t.game_id === Number(mySchedineGameId)
+            })
+            : tagged
+        return filtered.sort((a, b) => {
+            const ta = getTournamentById(a.tournament_id)?.date ?? a.created_at
+            const tb = getTournamentById(b.tournament_id)?.date ?? b.created_at
+            return new Date(tb).getTime() - new Date(ta).getTime()
         })
-    }, [mySchedine, mySchedineGameId, getTournamentById])
+    }, [mySchedine, myDeluxeSchedine, mySchedineGameId, getTournamentById])
 
     const getBreakdown = (entry) => entry.scoring_breakdown ?? []
 
@@ -171,7 +184,11 @@ const Schedina = () => {
             if (isSuperadmin) {
                 requests.push(schedineApi.allByTournament())
             } else {
+                // Le Mie Schedine deve includere ENTRAMBI i formati: classic
+                // (schedineApi.me) e gironi (schedineDeluxeApi.me), altrimenti
+                // le schedine dei tornei a gironi non comparivano affatto.
                 requests.push(schedineApi.me())
+                requests.push(schedineDeluxeApi.me())
             }
 
             const isGroupStage = tournament?.tournament_format === 'group_stage'
@@ -192,11 +209,12 @@ const Schedina = () => {
             const overviewRes = responses[idx++]
             const pendingRes = responses[idx++]
 
-            let allByTournamentRes, meRes
+            let allByTournamentRes, meRes, meDeluxeRes
             if (isSuperadmin) {
                 allByTournamentRes = responses[idx++]
             } else {
                 meRes = responses[idx++]
+                meDeluxeRes = responses[idx++]
             }
 
             let detailRes, deluxeDetailRes, participantsRes
@@ -220,8 +238,14 @@ const Schedina = () => {
                 if (allByTournamentRes?.status === 'fulfilled') {
                     setAllByTournament(allByTournamentRes.value.data?.tournaments ?? null)
                 }
-            } else if (meRes?.status === 'fulfilled') {
-                setMySchedine(meRes.value.data?.schedine ?? [])
+            } else {
+                if (meRes?.status === 'fulfilled') {
+                    setMySchedine(meRes.value.data?.schedine ?? [])
+                }
+                if (meDeluxeRes?.status === 'fulfilled') {
+                    const d = meDeluxeRes.value.data
+                    setMyDeluxeSchedine(Array.isArray(d) ? d : (d ? [d] : []))
+                }
             }
             if (tournamentId) {
                 if (detailRes?.status === 'fulfilled') {
@@ -279,6 +303,94 @@ const Schedina = () => {
                 <span className={`truncate text-xs ${textColor}`}>{nickname}</span>
                 {correct === true && <span className="text-emerald-500 text-[9px]">✓</span>}
                 {correct === false && <span className="text-rose-400 text-[9px]">✗</span>}
+            </div>
+        )
+    }
+
+    // Riga "posizione + giocatore" per le liste ordinate (classifica completa,
+    // gironi, Final 4) mostrate nel dettaglio della schedina compilata.
+    const RankRow = ({ position, playerId }) => {
+        const nick = playerId != null ? getPlayerNickname(playerId) : null
+        const img = nick ? getPlayerImg(nick) : null
+        return (
+            <div className="flex items-center gap-2 rounded-xl bg-slate-50 dark:bg-muted px-3 py-1.5">
+                <span className="w-6 shrink-0 text-center text-xs font-black text-slate-400">{position}</span>
+                {img ? <img src={img} alt={nick} className="h-5 w-5 shrink-0 rounded-full object-cover" /> : <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-[8px] font-black text-slate-500">{(nick ?? '?').charAt(0).toUpperCase()}</div>}
+                <span className="truncate text-xs font-bold text-slate-900 dark:text-foreground">{nick ?? `#${playerId}`}</span>
+            </div>
+        )
+    }
+
+    const DetailLabel = ({ children }) => (
+        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">{children}</p>
+    )
+
+    // Dettaglio COMPLETO della schedina compilata dall'utente (i suoi pronostici),
+    // formato classic. Nessun marcatore di correttezza: mostra solo cosa ha scelto.
+    const renderClassicSchedinaDetail = (s) => {
+        const order = s.classifica_ordinata ?? []
+        const duello = s.duello_pareggio ? 'Pareggio' : (s.duello_scelta_nickname ?? (s.duello_scelta_id ? getPlayerNickname(s.duello_scelta_id) : null))
+        return (
+            <div className="space-y-3">
+                {order.length > 0 && (
+                    <div className="space-y-1.5">
+                        <DetailLabel>Classifica pronosticata</DetailLabel>
+                        <div className="space-y-1">
+                            {order.map((pid, i) => <RankRow key={`${pid}-${i}`} position={`${i + 1}°`} playerId={pid} />)}
+                        </div>
+                    </div>
+                )}
+                <div className="flex flex-wrap gap-2 text-xs">
+                    {s.maggiore_streak_vittorie_id && (
+                        <span className="rounded-full bg-sky-50 dark:bg-sky-500/10 px-3 py-1 font-bold text-sky-700 dark:text-sky-300">Maggior streak: {s.maggiore_streak_nickname ?? getPlayerNickname(s.maggiore_streak_vittorie_id)}</span>
+                    )}
+                    {duello && (
+                        <span className="rounded-full bg-purple-50 dark:bg-purple-500/10 px-3 py-1 font-bold text-purple-700 dark:text-purple-300">Duello: {duello}</span>
+                    )}
+                    {(s.spareggio_punti_vincitore ?? null) != null && (
+                        <span className="rounded-full bg-slate-100 dark:bg-muted px-3 py-1 font-bold text-slate-600 dark:text-muted-foreground">Spareggio: {s.spareggio_punti_vincitore} pt</span>
+                    )}
+                </div>
+            </div>
+        )
+    }
+
+    // Dettaglio COMPLETO della schedina compilata, formato a gironi.
+    const renderDeluxeSchedinaDetail = (s) => {
+        const final4 = (s.classifica_finale_ordinata?.length ? s.classifica_finale_ordinata : s.finalisti_ids) ?? []
+        const gironi = s.classifiche_gironi ?? {}
+        const duello = s.duello_pareggio ? 'Pareggio' : (s.duello_scelta_nickname ?? (s.duello_scelta_id ? getPlayerNickname(s.duello_scelta_id) : null))
+        return (
+            <div className="space-y-3">
+                {final4.length > 0 && (
+                    <div className="space-y-1.5">
+                        <DetailLabel>Final 4 (classifica)</DetailLabel>
+                        <div className="space-y-1">
+                            {final4.map((pid, i) => <RankRow key={`f-${pid}-${i}`} position={`${i + 1}°`} playerId={pid} />)}
+                        </div>
+                    </div>
+                )}
+                {Object.keys(gironi).length > 0 && (
+                    <div className="space-y-2">
+                        <DetailLabel>Classifica gironi</DetailLabel>
+                        {Object.entries(gironi).sort((a, b) => Number(a[0]) - Number(b[0])).map(([girone, ids]) => (
+                            <div key={girone} className="space-y-1">
+                                <p className="text-[8px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Girone {girone}</p>
+                                <div className="space-y-1">
+                                    {(ids ?? []).map((pid, i) => <RankRow key={`g-${girone}-${pid}-${i}`} position={`${i + 1}°`} playerId={pid} />)}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+                <div className="flex flex-wrap gap-2 text-xs">
+                    {duello && (
+                        <span className="rounded-full bg-purple-50 dark:bg-purple-500/10 px-3 py-1 font-bold text-purple-700 dark:text-purple-300">Duello: {duello}</span>
+                    )}
+                    {(s.spareggio_distanza ?? null) != null && (
+                        <span className="rounded-full bg-slate-100 dark:bg-muted px-3 py-1 font-bold text-slate-600 dark:text-muted-foreground">Spareggio: {s.spareggio_distanza} pt</span>
+                    )}
+                </div>
             </div>
         )
     }
@@ -496,7 +608,6 @@ const Schedina = () => {
                                             const img = getPlayerImg(nick)
                                             const isWinner = entry.user_id === tournamentDetail.winner_user_id
                                             const bd = getBreakdown(entry)
-                                            const nPos = (entry.classifica_ordinata ?? []).length
                                             const open = isSchedinaOpen(entry.schedina_id, isMe)
                                             return (
                                                 <div key={entry.schedina_id}
@@ -522,20 +633,19 @@ const Schedina = () => {
                                                             <ChevronDown size={16} className={`text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
                                                         </div>
                                                     </button>
-                                                    {open && (<>
-                                                    {/* Picks grid */}
-                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[10px]">
-                                                        {[
-                                                            { label: '1°', val: renderPick(entry.classifica_ordinata?.[0], null, getPositionCorrect(bd, 0)) },
-                                                            showSecond && { label: '2°', val: renderPick(entry.classifica_ordinata?.[1], null, getPositionCorrect(bd, 1)) },
-                                                            showThird && { label: '3°', val: renderPick(entry.classifica_ordinata?.[2], null, getPositionCorrect(bd, 2)) },
-                                                            showUltimoSeparate && { label: 'Ultimo', val: renderPick(entry.classifica_ordinata?.[nPos - 1], null, getPositionCorrect(bd, nPos - 1)) },
-                                                        ].filter(Boolean).map(({ label, val }) => (
-                                                            <div key={label} className="rounded-xl bg-slate-50 dark:bg-muted p-1.5">
-                                                                <p className="font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 text-[8px] mb-0.5">{label}</p>
-                                                                {val}
-                                                            </div>
-                                                        ))}
+                                                    {open && (tournamentDetail?.winner_user_id ? (<>
+                                                    {/* Classifica completa pronosticata (tutte le posizioni, non
+                                                        solo 1°/2°/3°/Ultimo), con marcatori di correttezza. */}
+                                                    <div className="space-y-1">
+                                                        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">Classifica pronosticata</p>
+                                                        <div className="space-y-1">
+                                                            {(entry.classifica_ordinata ?? []).map((pid, i) => (
+                                                                <div key={`${pid}-${i}`} className="flex items-center gap-2 rounded-xl bg-slate-50 dark:bg-muted px-2.5 py-1">
+                                                                    <span className="w-5 shrink-0 text-center text-[10px] font-black text-slate-400">{i + 1}°</span>
+                                                                    {renderPick(pid, null, getPositionCorrect(bd, i))}
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                     {(entry.maggiore_streak_vittorie_id || entry.duello_scelta_id) && (
                                                         <div className="flex flex-wrap gap-1.5 text-[10px]">
@@ -566,7 +676,11 @@ const Schedina = () => {
                                                             </div>
                                                         ) : null
                                                     })()}
-                                                    </>)}
+                                                    </>) : (
+                                                        <p className="text-[10px] italic text-slate-400 dark:text-muted-foreground">
+                                                            Pronostico inviato — i dettagli saranno visibili a torneo concluso.
+                                                        </p>
+                                                    ))}
                                                 </div>
                                             )
                                         })}
@@ -1143,14 +1257,16 @@ const Schedina = () => {
                                     <>
                                         {filteredMySchedine.map((s) => {
                                             const t = getTournamentById(s.tournament_id)
-                                            const isWon = s.status === 'settled' && mySchedine.length > 0 && overview?.winners?.some(w => w.user_id === user?.id && w.tournament_id === s.tournament_id)
-                                            const fullOrder = s.classifica_ordinata ?? []
-                                            const open = expandedSchedine.has(`mia-${s.id}`)
+                                            const isWon = s.status === 'settled' && overview?.winners?.some(w => w.user_id === user?.id && w.tournament_id === s.tournament_id)
+                                            const key = `${s.format}-${s.id}`
+                                            const open = expandedSchedine.has(key)
                                             return (
-                                                <div key={s.id} className={`rounded-[2rem] border bg-white p-5 shadow-xl dark:bg-card ${isWon ? 'border-amber-200 dark:border-amber-500/30' : 'border-slate-200 dark:border-border'}`}>
+                                                <div key={key} className={`rounded-[2rem] border bg-white p-5 shadow-xl dark:bg-card ${isWon ? 'border-amber-200 dark:border-amber-500/30' : 'border-slate-200 dark:border-border'}`}>
                                                     <div className="flex flex-wrap items-start justify-between gap-3">
                                                         <div>
-                                                            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Torneo #{getTournamentDisplayNumber(s.tournament_id)}</p>
+                                                            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">
+                                                                Torneo #{getTournamentDisplayNumber(s.tournament_id)} · {s.format === 'group_stage' ? 'A Gironi' : 'Classifica Unica'}
+                                                            </p>
                                                             <h3 className={`text-lg font-black uppercase tracking-tight ${isWon ? 'text-amber-700 dark:text-amber-300' : 'text-slate-900 dark:text-foreground'}`}>
                                                                 {t?.name ?? `Torneo #${getTournamentDisplayNumber(s.tournament_id)}`}
                                                                 {isWon && <span className="ml-2 text-sm">🏆</span>}
@@ -1167,63 +1283,22 @@ const Schedina = () => {
                                                         </div>
                                                     </div>
 
-                                                    {/* Riepilogo compatto (sempre visibile) */}
-                                                    <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-                                                        {(() => {
-                                                            const sNPos = fullOrder.length
-                                                            return [
-                                                                { label: '1°', playerId: fullOrder[0] },
-                                                                sNPos >= 2 && { label: '2°', playerId: fullOrder[1] },
-                                                                sNPos >= 3 && { label: '3°', playerId: fullOrder[2] },
-                                                                sNPos > 3 && { label: 'Ultimo', playerId: fullOrder[sNPos - 1] },
-                                                                { label: 'Streak', playerId: s.maggiore_streak_vittorie_id, nickname: s.maggiore_streak_nickname },
-                                                            ].filter(Boolean)
-                                                        })().map(({ label, playerId, nickname }) => {
-                                                            const nick = nickname ?? (playerId ? getPlayerNickname(playerId) : null)
-                                                            const img = nick ? getPlayerImg(nick) : null
-                                                            return (
-                                                                <div key={label} className="rounded-xl bg-slate-50 p-2.5 dark:bg-muted">
-                                                                    <p className="text-[8px] font-black uppercase tracking-wider text-slate-400">{label}</p>
-                                                                    <div className="mt-1 flex items-center gap-1.5">
-                                                                        {img ? <img src={img} alt={nick} className="h-5 w-5 rounded-full object-cover shrink-0" /> : playerId ? <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-[8px] font-black text-slate-500">{(nick ?? '?').charAt(0).toUpperCase()}</div> : null}
-                                                                        <p className="text-xs font-bold text-slate-900 dark:text-foreground truncate">{nick ?? '—'}</p>
-                                                                    </div>
-                                                                </div>
-                                                            )
-                                                        })}
-                                                    </div>
-
-                                                    {/* Classifica completa pronosticata (dropdown): il riepilogo
-                                                        sopra mostra solo le posizioni chiave, qui c'è l'ordine intero. */}
-                                                    {fullOrder.length > 0 && (
-                                                        <>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => toggleSchedinaExpand(`mia-${s.id}`)}
-                                                                className="mt-3 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground transition hover:text-slate-700 dark:hover:text-slate-300"
-                                                            >
-                                                                {open ? 'Nascondi classifica completa' : 'Mostra classifica completa'}
-                                                                <ChevronDown size={13} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
-                                                            </button>
-                                                            {open && (
-                                                                <div className="mt-2 space-y-1">
-                                                                    {fullOrder.map((pid, i) => {
-                                                                        const nick = pid ? getPlayerNickname(pid) : null
-                                                                        const img = nick ? getPlayerImg(nick) : null
-                                                                        return (
-                                                                            <div key={`${pid}-${i}`} className="flex items-center gap-2 rounded-xl bg-slate-50 dark:bg-muted px-3 py-1.5">
-                                                                                <span className="w-5 shrink-0 text-center text-xs font-black text-slate-400">{i + 1}°</span>
-                                                                                {img ? <img src={img} alt={nick} className="h-5 w-5 shrink-0 rounded-full object-cover" /> : <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-[8px] font-black text-slate-500">{(nick ?? '?').charAt(0).toUpperCase()}</div>}
-                                                                                <span className="truncate text-xs font-bold text-slate-900 dark:text-foreground">{nick ?? `#${pid}`}</span>
-                                                                            </div>
-                                                                        )
-                                                                    })}
-                                                                </div>
-                                                            )}
-                                                        </>
-                                                    )}
-                                                    {s.duello_scelta_nickname && (
-                                                        <p className="mt-2 text-xs text-slate-500 dark:text-muted-foreground">Duello: {s.duello_scelta_nickname}</p>
+                                                    {/* Dropdown: la schedina compilata per intero (i pronostici
+                                                        dell'utente). È la sua schedina, quindi sempre visibile. */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleSchedinaExpand(key)}
+                                                        className="mt-3 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground transition hover:text-slate-700 dark:hover:text-slate-300"
+                                                    >
+                                                        {open ? 'Nascondi la mia schedina' : 'Mostra la mia schedina'}
+                                                        <ChevronDown size={13} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+                                                    </button>
+                                                    {open && (
+                                                        <div className="mt-3">
+                                                            {s.format === 'group_stage'
+                                                                ? renderDeluxeSchedinaDetail(s)
+                                                                : renderClassicSchedinaDetail(s)}
+                                                        </div>
                                                     )}
                                                 </div>
                                             )
