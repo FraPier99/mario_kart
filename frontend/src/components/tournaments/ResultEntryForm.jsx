@@ -254,7 +254,7 @@ const PlayerGrid = ({ players, alreadyEnteredPlayerIds, value, onChange, disable
     )
 }
 
-const CharacterGrid = ({ characters, value, onChange, disabled, takenCharacterIds }) => {
+const CharacterGrid = ({ characters, value, onChange, disabled }) => {
     const [open, setOpen] = useState(false)
     const [query, setQuery] = useState('')
     const triggerRef = useRef(null)
@@ -333,14 +333,12 @@ const CharacterGrid = ({ characters, value, onChange, disabled, takenCharacterId
                         <div className="grid grid-cols-4 gap-2">
                             {filtered.map((ch) => {
                                 const isSelected = ch.id === Number(value)
-                                const isTaken = takenCharacterIds?.has(ch.id) && !isSelected
                                 return (
                                     <button
                                         key={ch.id}
                                         type="button"
-                                        onClick={() => { if (!isTaken) { onChange(ch.id); setOpen(false); setQuery('') } }}
-                                        disabled={isTaken}
-                                        className={`relative flex flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 transition-all ${isSelected ? 'bg-emerald-950/50 ring-2 ring-emerald-500' : isTaken ? 'opacity-30 cursor-not-allowed' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                                        onClick={() => { onChange(ch.id); setOpen(false); setQuery('') }}
+                                        className={`relative flex flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 transition-all ${isSelected ? 'bg-emerald-950/50 ring-2 ring-emerald-500' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                                     >
                                         {ch.img_url ? (
                                             <img src={ch.img_url} alt={ch.name} className="h-10 w-10 rounded-xl object-cover ring-1 ring-slate-200 dark:ring-slate-600" />
@@ -350,11 +348,6 @@ const CharacterGrid = ({ characters, value, onChange, disabled, takenCharacterId
                                             </div>
                                         )}
                                         <span className="w-full text-center text-[10px] leading-tight font-bold text-slate-600 dark:text-slate-300 truncate">{ch.name}</span>
-                                        {isTaken && (
-                                            <div className="absolute inset-0 rounded-xl flex items-center justify-center bg-black/30 dark:bg-black/50">
-                                                <span className="text-[8px] font-black text-white uppercase">Usato</span>
-                                            </div>
-                                        )}
                                     </button>
                                 )
                             })}
@@ -497,14 +490,6 @@ const ResultEntryForm = ({ tournament, races, tournamentParticipants, onCreated,
         if (!formState.race_id) return ids
         results.filter((r) => r.race_id === Number(formState.race_id)).forEach((r) => ids.add(r.player_id))
         localEntries.filter((e) => e.race_id === Number(formState.race_id)).forEach((e) => ids.add(e.player_id))
-        return ids
-    }, [formState.race_id, results, localEntries])
-
-    const takenCharacterIds = useMemo(() => {
-        const ids = new Set()
-        if (!formState.race_id) return ids
-        results.filter((r) => r.race_id === Number(formState.race_id)).forEach((r) => ids.add(r.character_id))
-        localEntries.filter((e) => e.race_id === Number(formState.race_id)).forEach((e) => ids.add(e.character_id))
         return ids
     }, [formState.race_id, results, localEntries])
 
@@ -662,7 +647,6 @@ const ResultEntryForm = ({ tournament, races, tournamentParticipants, onCreated,
                         value={formState.character_id}
                         onChange={(val) => handleChange('character_id', val)}
                         disabled={disabled || isRaceComplete}
-                        takenCharacterIds={takenCharacterIds}
                     />
                 </label>
 
