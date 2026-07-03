@@ -289,5 +289,7 @@ e lasciati nel DB locale per i prossimi giri: `collaudo_admin`, `collaudo1`
 - Server senza compressione: risolto aggiungendo GZipMiddleware in
   `app/main.py` — boot rimisurato 72.5 KB → 9.7 KB (-87%).
 
-**Da approfondire (non bloccante):** `deadline_lock` non è enforced su
-POST /schedine (chiusura solo a evento/status — comportamento forse voluto).
+- `deadline_lock` non enforced su POST /schedine: **confermato obsoleto** —
+  la logica deadline non si usa più, la chiusura schedine è solo a evento
+  (bottone "Chiudi Schedine" / avanzamento di stato). Il campo e i countdown
+  nel frontend sono residui legacy.
