@@ -250,14 +250,14 @@ def update_my_profile(
             db.refresh(current_user)
             return player
 
-        update_payload = UpdatePlayer(
-            first_name=profile_data.first_name,
-            last_name=profile_data.last_name,
-            nickname=profile_data.nickname,
-            favorite_character_id=profile_data.favorite_character_id,
-            img_url=optimized_img,
-            bio=profile_data.bio,
-        )
+        # Inoltra SOLO i campi presenti nella richiesta: update_player usa
+        # exclude_unset, ma costruire UpdatePlayer con tutti i campi espliciti
+        # li marcava tutti come "set" — un aggiornamento parziale (es. solo
+        # avatar) azzerava first_name/last_name/nickname (NOT NULL sul DB).
+        incoming = profile_data.model_dump(exclude_unset=True)
+        if "img_url" in incoming:
+            incoming["img_url"] = optimized_img
+        update_payload = UpdatePlayer(**incoming)
         player = update_player(db, update_payload, current_user.player_id)
         if not player:
             raise HTTPException(status_code=404, detail="Profilo non trovato")
