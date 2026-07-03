@@ -282,7 +282,12 @@ e lasciati nel DB locale per i prossimi giri: `collaudo_admin`, `collaudo1`
    `get_finals_final_classifica`, già duel-resolved). Verificato: pronostico
    perfetto passato da 45 a 51 pt.
 
-**Da approfondire (non bloccanti):** con streak massima condivisa da tutti a
-quota 1, il pronostico "Maggior Streak" classic non premia nessuno;
-`deadline_lock` non è enforced su POST /schedine (chiusura solo a
-evento/status — comportamento forse voluto).
+**Note chiuse:**
+- "Maggior Streak" con streak massima 1 non premia nessuno: **regola voluta
+  e confermata** (una streak richiede almeno 2 vittorie consecutive — vedi
+  `_get_streak_winners`, `best_streak < 2` → nessun vincitore).
+- Server senza compressione: risolto aggiungendo GZipMiddleware in
+  `app/main.py` — boot rimisurato 72.5 KB → 9.7 KB (-87%).
+
+**Da approfondire (non bloccante):** `deadline_lock` non è enforced su
+POST /schedine (chiusura solo a evento/status — comportamento forse voluto).

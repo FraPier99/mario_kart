@@ -3,6 +3,7 @@ import asyncio
 import socketio
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.gzip import GZipMiddleware
 
 from app.core.bootstrap import bootstrap_database
 from app.realtime.manager import get_sio, init_loop
@@ -50,6 +51,15 @@ tags_metadata = [
 
 
 app = FastAPI(title="Lega Kart API", openapi_tags=tags_metadata)
+
+# Comprime le risposte JSON (l'egress Railway si paga sui byte trasferiti):
+# misurato sul boot dell'app (i 7 endpoint di AppDataContext) -87%.
+# minimum_size=1024: sotto 1KB il guadagno non ripaga l'overhead gzip.
+# Va aggiunto PRIMA di CORSMiddleware: Starlette esegue i middleware in
+# ordine inverso di registrazione, e CORS deve avvolgere (quindi essere
+# registrato dopo) la compressione per mettere i suoi header sulla
+# risposta già compressa.
+app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 app.add_middleware(
     CORSMiddleware,
