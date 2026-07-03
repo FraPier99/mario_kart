@@ -84,32 +84,16 @@ def _get_actual_finalisti(db: Session, tournament_id: int) -> list[int]:
 
 def _get_actual_classifica_finale(db: Session, tournament_id: int) -> list[int]:
     """
-    Classifica finale reale (podio della fase finale "top"), calcolata sommando
-    i punti delle gare phase='finals'/group_name='top'. Riparte da 0: non
-    cumula i punti dei gironi (fase 1).
+    Classifica finale reale (podio della fase finale "top"), con 1°/2° e 3°/4°
+    riordinati secondo l'esito degli eventuali duelli di podio della Finale.
+    Delegata a get_finals_final_classifica: ordinare qui per soli punti
+    (con fallback deterministico sull'id) ignorava i duelli risolti — a pari
+    punti la schedina veniva liquidata contro un podio diverso da quello
+    decretato (stesso gotcha della classifica classic, vedi CLAUDE.md).
     """
-    finals_races = (
-        db.query(Race)
-        .filter(
-            Race.tournament_id == tournament_id,
-            Race.phase == "finals",
-            Race.group_name == "top",
-            Race.is_duello.is_(False),
-        )
-        .all()
-    )
-    if not finals_races:
-        return []
+    from app.services.tornei.tournaments import get_finals_final_classifica
 
-    race_ids = [r.id for r in finals_races]
-    rows = (
-        db.query(Result.player_id, func.sum(Result.points).label("punti_totali"))
-        .filter(Result.race_id.in_(race_ids))
-        .group_by(Result.player_id)
-        .order_by(func.sum(Result.points).desc(), Result.player_id.asc())
-        .all()
-    )
-    return [r.player_id for r in rows]
+    return get_finals_final_classifica(db, tournament_id)
 
 
 def _get_actual_classifiche_gironi(
