@@ -9,12 +9,6 @@ import { useTheme } from '@/context/ThemeContext'
 import { getProfileTheme } from '@/lib/profileTheme'
 import { schedineApi, schedineDeluxeApi } from '@/services/apiClient'
 
-const formatDeadline = (deadlineLock) => {
-    if (!deadlineLock) return 'Nessuna scadenza'
-    const d = new Date(deadlineLock)
-    return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
-
 const formatDate = (value) => {
     if (!value) return 'data non disponibile'
     return new Date(value).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -412,8 +406,8 @@ const Schedina = () => {
         <AppLayout>
             <section className="mx-auto max-w-7xl px-4 py-8 animate-fade-in">
 
-                {/* ── PENDING BANNER — Da compilare (non scadute) ── */}
-                {pendingSchedine.length > 0 && !tournamentId && (
+                {/* ── PENDING BANNER — Da compilare (schedine ancora aperte) ── */}
+                {pendingSchedine.some((n) => !n.schedine_locked) && !tournamentId && (
                     <div className="mb-6 rounded-[2rem] overflow-hidden shadow-xl" style={{ background: 'linear-gradient(135deg, #fef3c7, #fde68a)' }}>
                         <div className="border border-amber-300 rounded-[2rem] p-6">
                             <div className="flex items-center gap-3 mb-4">
@@ -428,7 +422,11 @@ const Schedina = () => {
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                {pendingSchedine.map((n) => (
+                                {/* Solo le schedine ancora compilabili: la deadline è
+                                    legacy, la chiusura è a evento (schedine_locked).
+                                    Quelle chiuse senza compilazione compaiono come
+                                    "Non compilata" nel dettaglio del torneo. */}
+                                {pendingSchedine.filter((n) => !n.schedine_locked).map((n) => (
                                     <div key={n.tournament_id} className="flex items-center justify-between gap-3 rounded-2xl bg-white/70 shadow-sm p-3">
                                         <div className="flex items-center gap-3 min-w-0 flex-1">
                                             <Clock size={16} className="text-amber-500 shrink-0" />
@@ -438,9 +436,6 @@ const Schedina = () => {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">
-                                            <span className="rounded-full bg-amber-100 text-amber-700 px-3 py-1 text-[10px] font-black uppercase tracking-[0.3em]">
-                                                {formatDeadline(n.deadline_lock)}
-                                            </span>
                                             <Link
                                                 to={n.tournament_format === 'group_stage' ? `/schedina/${n.tournament_id}/group-stage` : `/schedina/${n.tournament_id}/compila`}
                                                 className={`inline-flex items-center gap-1.5 rounded-2xl px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition hover:opacity-90 ${theme.tailwind.bg}`}

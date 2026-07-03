@@ -138,7 +138,12 @@ class SchedinaPendingNotification(BaseModel):
     tournament_id: int
     tournament_name: str
     tournament_date: Optional[date] = None
+    # deadline_lock è legacy (la deadline non blocca più nulla): il client
+    # deve basarsi su schedine_locked per distinguere "compila ora" da
+    # "schedina non compilata" — la chiusura è solo a evento
+    # (bottone "Chiudi Schedine" / avanzamento di stato).
     deadline_lock: Optional[datetime] = None
+    schedine_locked: bool = False
     tournament_format: Optional[str] = None
     message: str
 

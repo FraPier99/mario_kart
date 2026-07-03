@@ -25,7 +25,6 @@ import { CheckCircle2, AlertCircle, Loader2, Lock, Save, Send, Trophy, Crown, In
 import { toast } from 'sonner'
 import AppLayout from '@/components/layout/AppLayout'
 import ApiBanner from '@/components/common/ApiBanner'
-import DeadlineCountdown from '@/components/common/DeadlineCountdown'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { schedineDeluxeApi, getApiErrorMessage } from '@/services/apiClient'
@@ -372,9 +371,6 @@ const SchedinaGroupForm = () => {
                     <h1 className="mt-2 text-3xl font-black text-slate-900 dark:text-foreground">
                         {tournament.name}
                     </h1>
-                    {tournament.deadline_lock && canSubmit && (
-                        <DeadlineCountdown deadline={tournament.deadline_lock} passedLabel="Deadline scaduta" className="mt-3" hideWhenPassed />
-                    )}
                     {!existing && !loading && canSubmit && draftRestored && (
                         <div className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-sky-100 dark:bg-sky-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-sky-700 dark:text-sky-400">
                             <Save size={13} />

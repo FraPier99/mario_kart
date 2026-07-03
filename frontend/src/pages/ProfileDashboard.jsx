@@ -177,17 +177,6 @@ const FavoriteCharacterPicker = ({ value, onChange, characters }) => {
     )
 }
 
-const formatDeadline = (deadlineLock) => {
-    if (!deadlineLock) return 'Nessuna scadenza'
-    const d = new Date(deadlineLock)
-    return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
-
-const isDeadlinePassed = (deadlineLock) => {
-    if (!deadlineLock) return false
-    return new Date(deadlineLock) < new Date()
-}
-
 const SchedinaBadge = () => {
     const [notifications, setNotifications] = useState([])
     const [loading, setLoading] = useState(true)
@@ -220,26 +209,32 @@ const SchedinaBadge = () => {
             </div>
             <div className="mt-4 space-y-2">
                 {notifications.map((n) => {
-                    const passed = isDeadlinePassed(n.deadline_lock)
+                    // La deadline è legacy e non blocca nulla: la schedina è
+                    // compilabile finché le schedine non vengono chiuse a
+                    // evento (bottone "Chiudi Schedine" / avanzamento). Se il
+                    // torneo è andato avanti senza compilazione, si mostra
+                    // semplicemente "Non compilata".
+                    const locked = Boolean(n.schedine_locked)
                     return (
                         <Link
                             key={n.tournament_id}
-                            to={passed ? '#' : `/schedina/${n.tournament_id}`}
-                            onClick={(e) => { if (passed) e.preventDefault() }}
-                            className={`flex items-center justify-between gap-3 rounded-2xl p-3 transition ${passed ? 'bg-slate-100 opacity-60 dark:bg-slate-800' : 'bg-white shadow-sm hover:shadow-md dark:bg-card'}`}
+                            to={locked ? '#' : `/schedina/${n.tournament_id}`}
+                            onClick={(e) => { if (locked) e.preventDefault() }}
+                            className={`flex items-center justify-between gap-3 rounded-2xl p-3 transition ${locked ? 'bg-slate-100 opacity-60 dark:bg-slate-800' : 'bg-white shadow-sm hover:shadow-md dark:bg-card'}`}
                         >
                             <div className="flex items-center gap-3">
-                                    <Clock size={16} className={`shrink-0 ${passed ? 'text-slate-400' : 'text-amber-500'}`} />
+                                    <Clock size={16} className={`shrink-0 ${locked ? 'text-slate-400' : 'text-amber-500'}`} />
                                     <div className="min-w-0">
                                         <p className="text-sm font-bold text-slate-900 dark:text-foreground truncate">{n.tournament_name}</p>
                                         <p className="text-xs text-slate-500 dark:text-muted-foreground">{n.message}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
-                                    <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.3em] ${passed ? 'bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300'}`}>
-                                        {passed ? 'Scaduta' : formatDeadline(n.deadline_lock)}
-                                    </span>
-                                    {!passed && (
+                                    {locked ? (
+                                        <span className="rounded-full bg-slate-200 px-3 py-1 text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+                                            Non compilata
+                                        </span>
+                                    ) : (
                                         <Link
                                             to={n.tournament_format === 'group_stage' ? `/schedina/${n.tournament_id}/group-stage` : `/schedina/${n.tournament_id}/compila`}
                                             className="inline-flex items-center gap-1.5 rounded-2xl bg-emerald-600 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-emerald-500"

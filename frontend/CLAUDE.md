@@ -25,7 +25,7 @@ src/
 ├── components/
 │   ├── tournaments/       19 components — GroupManagementSection.jsx (group_stage admin), GroupPlancia.jsx (per-girone standings, exports GroupCard), PodiumDuelCard.jsx (generic duel UI, wrapped by ClassicPodiumDuelCard.jsx / FinalsPodiumDuelCard.jsx), WinnerFinalizeCard.jsx (decree winner + tie-block warnings)
 │   ├── cards/              PowerCard.jsx (card visual, both grid and mini modes)
-│   └── common/              ApiBanner, CircuitThumbnail (circuit thumbnail with hover zoom + tooltip), DeadlineCountdown, NotificationBell
+│   └── common/              ApiBanner, CircuitThumbnail (circuit thumbnail with hover zoom + tooltip), NotificationBell
 ├── context/
 │   ├── AppDataContext.jsx  client-side computed standings (buildTournamentDetails) — see root CLAUDE.md gotcha on tournament.standings scope
 │   └── AuthContext.jsx

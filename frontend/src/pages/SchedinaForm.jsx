@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Ban, Clock, Info, Lock, Save, Send, Trophy, Zap, Swords } from 'lucide-react'
 import { toast } from 'sonner'
 import AppLayout from '@/components/layout/AppLayout'
-import DeadlineCountdown from '@/components/common/DeadlineCountdown'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
@@ -338,9 +337,6 @@ const SchedinaForm = () => {
                     <h1 className="mt-2 text-3xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground md:text-4xl">
                         {tournament?.name ?? `Torneo #${getTournamentDisplayNumber(tournamentId)}`}
                     </h1>
-                    {tournament?.deadline_lock && !schedineLocked && (
-                        <DeadlineCountdown deadline={tournament.deadline_lock} className="mt-3" hideWhenPassed />
-                    )}
                     {hasSchedinaFeature && !alreadySubmitted && !schedineLocked && draftRestored && (
                         <div className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-sky-100 dark:bg-sky-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-sky-700 dark:text-sky-400">
                             <Save size={13} />

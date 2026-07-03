@@ -144,6 +144,7 @@ def get_pending_notifications(
             tournament_name=t.name,
             tournament_date=t.date,
             deadline_lock=t.deadline_lock,
+            schedine_locked=bool(t.schedine_locked),
             tournament_format=t.tournament_format,
             message=f"Hai una schedina da compilare per il torneo del {t.date.strftime('%d/%m') if t.date else 'data TBD'}",
         )
