@@ -189,9 +189,12 @@ Prerequisiti:
 ### 3.5 Tie di qualificazione
 
 - [ ] Costruire un pareggio sul cutoff di un girone (es. 2°/3° a pari punti
-      con 2 che passano) → il sistema propone lo **spareggio a gara secca**
-      (non best-of-3), con pista casuale mai usata
-- [ ] Risolto lo spareggio, la qualificazione rispecchia l'esito
+      con 2 che passano) → il sistema rileva il tie e blocca la generazione
+      della fase successiva; si risolve con lo **spareggio "primo a 2
+      vittorie"** (gare `is_duello=true` con stesso phase/group_name — vedi
+      `_resolve_tie_with_spareggio`), con pista casuale mai usata
+- [ ] Risolto lo spareggio, la qualificazione rispecchia l'esito e le gare
+      di spareggio NON aggiungono punti alla classifica del girone
 
 ### 3.6 Finale e Finalina
 
@@ -238,4 +241,48 @@ Prerequisiti:
 
 | Data | Chi | Esito | Note |
 |------|-----|-------|------|
-|      |     |       |      |
+| 2026-07-03 | Claude (API-driven, locale) | POSITIVO con 2 fix | Vedi esiti sotto. Punti browser-only (1.3, 2.8-audio, drag&drop) restano da fare a mano |
+
+## Esiti collaudo 2026-07-03 (API-driven, ambiente locale)
+
+Eseguito interamente via API contro il backend locale (tornei di test 130
+classic / 131 gironi / 132 ritiro, poi eliminati). Utenti di collaudo creati
+e lasciati nel DB locale per i prossimi giri: `collaudo_admin`, `collaudo1`
+(player test2), `collaudo2` (player test3), password `collaudo123`.
+
+- **Sez. 0-1**: PASS. Boot 72.5 KB, zero base64 residui, avatar WebP con
+  cache immutable, GIF animata→WebP animato in upload. Ricompressione locale
+  -64.5%. Non bloccanti: niente GZipMiddleware (boot potenziale ~9.6 KB,
+  -87%), 5 endpoint di boot senza Cache-Control.
+- **Sez. 2 (classic, torneo 130)**: PASS su tutti i punti (creazione,
+  schedine+censura, chiusura, gare, stesso personaggio per 2 piloti OK,
+  posizione duplicata rifiutata da vincolo DB, limite 1 carta, no carte nei
+  duelli, tie 1°/2° rilevato, first-to-3, no auto-finalize, decreta,
+  liquidazione con classifica duel-resolved, Master/Blue Shell/premi/
+  notifiche, censura rimossa a fine torneo).
+- **Sez. 3 (gironi, torneo 131)**: PASS con 1 bug trovato e corretto.
+  Verificati: seed 2 gironi, schedina deluxe + censura, lock doppio
+  (flag + status), pista riusabile tra gironi, validazione gioco/circuito,
+  tie sul cutoff rilevato, generate-finals bloccata col tie, spareggio
+  primo-a-2 (le gare non danno punti al girone), finals top/bottom, tie
+  1°/2° in Finale, decreta bloccato con tie irrisolto E senza decreto
+  Finalina, duello first-to-3, liquidazione, classifiche per girone.
+- **Sez. 4**: PASS. Ritiro a torneo in corso persiste correttamente;
+  eliminazione tornei via endpoint → zero orfani; baseline ri-misurata
+  identica (72.5 KB).
+
+**Bug trovati e corretti durante il collaudo:**
+1. `PUT /auth/me/profile` con soli campi parziali (es. solo avatar) azzerava
+   first_name/last_name/nickname → 500 NotNullViolation. Fix in
+   `app/controllers/utenti/auth.py` (inoltra solo i campi presenti).
+2. **Liquidazione schedine deluxe ignorava i duelli di podio della Finale**:
+   `_get_actual_classifica_finale` ordinava per punti+id, quindi a pari punti
+   la schedina veniva liquidata contro un podio diverso da quello decretato
+   dal duello. Fix in `app/services/schedine/schedine_deluxe.py` (delega a
+   `get_finals_final_classifica`, già duel-resolved). Verificato: pronostico
+   perfetto passato da 45 a 51 pt.
+
+**Da approfondire (non bloccanti):** con streak massima condivisa da tutti a
+quota 1, il pronostico "Maggior Streak" classic non premia nessuno;
+`deadline_lock` non è enforced su POST /schedine (chiusura solo a
+evento/status — comportamento forse voluto).
