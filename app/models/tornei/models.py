@@ -98,7 +98,10 @@ class Tournament(Base):
 
     winner_id = Column(Integer, ForeignKey("players.id"), nullable=True)
     deadline_lock = Column(DateTime, nullable=True)
-    vincitore_schedina_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    # Nonostante il nome, contiene un player_id (non uno user_id): assegnato
+    # da winner_user.player_id in schedine.py/schedine_deluxe.py, e la
+    # migrazione reale (bootstrap.py) referenzia "players(id)".
+    vincitore_schedina_id = Column(Integer, ForeignKey("players.id"), nullable=True)
 
     duello_player_a_id = Column(Integer, ForeignKey("players.id"), nullable=True)
     duello_player_b_id = Column(Integer, ForeignKey("players.id"), nullable=True)
@@ -122,7 +125,7 @@ class Tournament(Base):
         "Race", back_populates="tournament", cascade="all, delete-orphan"
     )
     winner = relationship("Player", back_populates="wins", foreign_keys=[winner_id])
-    vincitore_schedina = relationship("User", foreign_keys=[vincitore_schedina_id])
+    vincitore_schedina = relationship("Player", foreign_keys=[vincitore_schedina_id])
     duello_player_a = relationship("Player", foreign_keys=[duello_player_a_id])
     duello_player_b = relationship("Player", foreign_keys=[duello_player_b_id])
     consolation_winner = relationship("Player", foreign_keys=[consolation_winner_id])
