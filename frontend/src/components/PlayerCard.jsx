@@ -19,17 +19,20 @@ const PlayerCard = ({ players, statsByPlayerId, handlePlayerClick }) => {
                 return (
                     <div
                         key={p.id}
-                        style={{ animationDelay: `${idx * 0.04}s` }}
-                        className={`animate-fade-in flex flex-col items-center overflow-hidden rounded-2xl border transition-all duration-300 hover:scale-[1.03] hover:shadow-xl ${
+                        style={{
+                            animationDelay: `${idx * 0.04}s`,
+                            boxShadow: isWinner ? 'var(--circuit-shadow-md)' : 'var(--circuit-shadow-sm)',
+                        }}
+                        className={`animate-fade-in flex flex-col items-center overflow-hidden rounded-2xl border-2 transition-all duration-300 hover:scale-[1.03] ${
                             isWinner
-                                ? 'border-amber-400/50 dark:border-amber-500/30 bg-linear-to-br from-amber-100/90 via-amber-50/60 to-amber-100/80 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60 shadow-lg shadow-amber-300/30 dark:shadow-amber-950/40 ring-1 ring-amber-400/30 dark:ring-amber-500/20'
-                                : 'border-gray-100 dark:border-border bg-white dark:bg-card shadow-sm'
+                                ? 'border-circuit-ink bg-linear-to-br from-amber-100/90 via-amber-50/60 to-amber-100/80 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60'
+                                : 'border-slate-300 dark:border-border bg-white dark:bg-card'
                         }`}
                     >
                         <div className="relative h-32 w-full bg-gradient-to-b from-slate-50 dark:from-muted to-slate-200 dark:to-muted pb-2">
                             {isWinner && (
-                                <div className="absolute right-2 top-2 rounded-full bg-amber-400 p-1.5 shadow-lg">
-                                    <Crown size={16} className="text-amber-950" />
+                                <div className="absolute right-2 top-2 rounded-full border-2 border-circuit-ink bg-circuit-gold p-1.5" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+                                    <Crown size={16} className="text-circuit-ink" />
                                 </div>
                             )}
                             <img
@@ -40,7 +43,7 @@ const PlayerCard = ({ players, statsByPlayerId, handlePlayerClick }) => {
                         </div>
 
                         <div className="flex w-full grow flex-col items-center p-4 text-center">
-                            <span className="mb-2 rounded-full bg-emerald-500 px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+                            <span className="font-title mb-2 rounded-full border-2 border-emerald-700/30 bg-emerald-500 px-3 py-1 text-[9px] tracking-wide text-white">
                                 {p.nickname?.toUpperCase()}
                             </span>
 
@@ -51,7 +54,8 @@ const PlayerCard = ({ players, statsByPlayerId, handlePlayerClick }) => {
                             <button
                                 type="button"
                                 onClick={() => handlePlayerClick(p)}
-                                className="mt-auto cursor-pointer rounded-xl bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700"
+                                className="font-title mt-auto cursor-pointer rounded-xl border-2 border-blue-800/30 bg-blue-600 px-4 py-2 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-blue-700"
+                                style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
                             >
                                 Visualizza Profilo
                             </button>
