@@ -82,7 +82,7 @@ export default function Navbar() {
     <Link
       to={item.path}
       className={cn(
-        "relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-150 select-none",
+        "font-title relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] tracking-wide transition-all duration-150 select-none",
         isActive(item.path)
           ? "text-white shadow-md"
           : "text-slate-300 hover:text-white hover:bg-white/8"
@@ -120,7 +120,7 @@ export default function Navbar() {
         </Link>
 
         {/* DESKTOP — NAV LINKS centrati */}
-        <div className="hidden md:flex items-center gap-0.5 rounded-2xl border border-white/5 bg-white/4 p-1">
+        <div className="hidden md:flex items-center gap-0.5 rounded-xl border border-white/15 bg-white/4 p-1">
           {navItems.map((item) => {
             if (item.name === 'Tornei') {
               return (
@@ -128,7 +128,7 @@ export default function Navbar() {
                   <button
                     type="button"
                     onClick={() => setTorneiOpen((v) => !v)}
-                    className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-150 select-none"
+                    className="font-title relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] tracking-wide transition-all duration-150 select-none"
                     style={isTorneiActive() ? {
                       background: 'linear-gradient(135deg, var(--mk-primary), var(--mk-primary-strong))',
                       boxShadow: '0 4px 14px var(--mk-primary-soft)',
@@ -252,7 +252,7 @@ export default function Navbar() {
             type="button"
             onClick={toggleDark}
             title={dark ? 'Modalità chiara' : 'Modalità scura'}
-            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl border border-white/8 text-slate-400 transition hover:border-white/15 hover:text-white"
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-white/15 text-slate-400 transition hover:border-white/25 hover:text-white"
           >
             {dark ? <Sun size={15} /> : <Moon size={15} />}
           </button>
@@ -355,7 +355,7 @@ export default function Navbar() {
           <button
             type="button"
             onClick={toggleDark}
-            className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/8 text-slate-400"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 text-slate-400"
           >
             {dark ? <Sun size={15} /> : <Moon size={15} />}
           </button>
@@ -363,7 +363,7 @@ export default function Navbar() {
           <button
             type="button"
             onClick={() => setMobileOpen((v) => !v)}
-            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl border border-white/8 text-slate-300 transition hover:bg-white/8 hover:text-white"
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-white/15 text-slate-300 transition hover:bg-white/8 hover:text-white"
           >
             {mobileOpen ? <X size={17} /> : <Menu size={17} />}
           </button>
