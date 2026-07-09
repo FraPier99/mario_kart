@@ -25,8 +25,8 @@ const Hero = () => {
     return (
         <section className="mx-auto max-w-7xl px-4 py-8">
             <div
-                className={`overflow-hidden rounded-[2rem] border shadow-2xl backdrop-blur-xl transition-all duration-500 ${goldCard ? 'gold-card-shimmer border-amber-400/50 dark:border-amber-500/30 shadow-amber-300/30 dark:shadow-amber-950/40 ring-1 ring-amber-400/30 dark:ring-amber-500/20' : ''}`}
-                style={{ background: goldCard ? goldBackground : theme.cardBackground, ...(goldCard ? {} : { borderColor: theme.border }) }}
+                className={`overflow-hidden rounded-[2rem] border-2 backdrop-blur-xl transition-all duration-500 ${goldCard ? 'gold-card-shimmer border-circuit-ink' : 'border-slate-900/70 dark:border-white/20'}`}
+                style={{ background: goldCard ? goldBackground : theme.cardBackground, boxShadow: 'var(--circuit-shadow-lg)' }}
             >
 
                 {/* ── Header ── */}
@@ -77,10 +77,11 @@ const Hero = () => {
                 {/* ── Body grid: profile card + character card ── */}
                 <div className="grid gap-4 p-6 sm:grid-cols-2">
                     {/* Profile card */}
-                    <Link to="/dashboard" className={`flex flex-col items-center gap-4 rounded-3xl border p-5 shadow-md ${isChampion ? 'border-amber-400/50 dark:border-amber-500/30 ring-1 ring-amber-400/30 dark:ring-amber-500/20' : theme.tailwind.borderSoft} transition hover:scale-[1.02]`}
+                    <Link to="/dashboard" className="flex flex-col items-center gap-4 rounded-3xl border-2 border-slate-900/40 dark:border-white/15 p-5 transition hover:scale-[1.02]"
                         style={{ background: isChampion
                             ? (dark ? 'linear-gradient(to bottom right, rgba(67,20,7,0.60), rgba(120,53,15,0.30), rgba(67,20,7,0.60))' : 'linear-gradient(to bottom right, rgba(254,243,199,0.92), rgba(255,251,235,0.70), rgba(254,243,199,0.88))')
-                            : (dark ? 'rgba(30,41,59,0.7)' : 'rgba(255,255,255,0.7)') }}>
+                            : (dark ? 'rgba(30,41,59,0.7)' : 'rgba(255,255,255,0.7)'),
+                            boxShadow: 'var(--circuit-shadow-sm)' }}>
                         <div className="relative mt-1">
                             <div className="absolute inset-0 rounded-full bg-emerald-400/20 blur-xl scale-150 pointer-events-none" />
                             <div className={`relative flex h-20 w-20 items-center justify-center rounded-full border-[2.5px] overflow-hidden bg-gradient-to-br from-emerald-400 to-green-500 shadow-lg shadow-emerald-400/20 ${isChampion ? 'border-amber-400' : 'border-emerald-400'}`}>
@@ -104,39 +105,39 @@ const Hero = () => {
 
                     {/* Favorite character card */}
                     {isSuperadmin ? (
-                        <div className={`rounded-3xl border p-4 shadow-md ${isChampion ? 'border-amber-400/50 dark:border-amber-500/30 ring-1 ring-amber-400/30 dark:ring-amber-500/20' : ''}`}
+                        <div className="rounded-3xl border-2 border-slate-900/40 dark:border-white/15 p-4"
                             style={{ background: isChampion
                                 ? (dark ? 'linear-gradient(to bottom right, rgba(67,20,7,0.60), rgba(120,53,15,0.30), rgba(67,20,7,0.60))' : 'linear-gradient(to bottom right, rgba(254,243,199,0.92), rgba(255,251,235,0.70), rgba(254,243,199,0.88))')
                                 : (dark ? 'rgba(30,41,59,0.7)' : 'rgba(255,255,255,0.7)'),
-                            ...(isChampion ? {} : { borderColor: theme.border }) }}>
-                            <p className="text-[10px] font-black uppercase tracking-[0.35em] mb-3" style={{ color: theme.accentStrong }}>
+                            boxShadow: 'var(--circuit-shadow-sm)' }}>
+                            <p className="font-title text-[9px] tracking-wide mb-3" style={{ color: theme.accentStrong }}>
                                 Metriche di sistema
                             </p>
                             <div className="grid gap-3">
-                                <div className="rounded-2xl bg-white/70 dark:bg-slate-700/50 p-3">
+                                <div className="rounded-xl border border-slate-900/10 dark:border-white/10 bg-white/70 dark:bg-slate-700/50 p-3">
                                     <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Tornei totali</p>
-                                    <p className="mt-1 text-2xl font-black text-slate-900 dark:text-foreground">{totalTournaments}</p>
+                                    <p className="font-title mt-1 text-xl text-slate-900 dark:text-foreground">{totalTournaments}</p>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <div className="rounded-2xl bg-white/70 dark:bg-slate-700/50 p-3">
+                                    <div className="rounded-xl border border-slate-900/10 dark:border-white/10 bg-white/70 dark:bg-slate-700/50 p-3">
                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Giocatori</p>
-                                        <p className="mt-1 text-xl font-black text-slate-900 dark:text-foreground">{totalPlayers}</p>
+                                        <p className="font-title mt-1 text-lg text-slate-900 dark:text-foreground">{totalPlayers}</p>
                                     </div>
-                                    <div className="rounded-2xl bg-white/70 dark:bg-slate-700/50 p-3">
+                                    <div className="rounded-xl border border-slate-900/10 dark:border-white/10 bg-white/70 dark:bg-slate-700/50 p-3">
                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Tornei attivi</p>
-                                        <p className="mt-1 text-xl font-black text-slate-900 dark:text-foreground">{activeTournaments}</p>
+                                        <p className="font-title mt-1 text-lg text-slate-900 dark:text-foreground">{activeTournaments}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     ) : (
-                        <div className={`flex flex-col items-center gap-4 rounded-3xl border p-5 shadow-md ${favoriteCharacter ? (isChampion ? 'border-amber-400/50 dark:border-amber-500/30 ring-1 ring-amber-400/30 dark:ring-amber-500/20' : theme.tailwind.borderSoft) : 'border-dashed border-slate-300 dark:border-slate-600'}`}
+                        <div className={`flex flex-col items-center gap-4 rounded-3xl p-5 ${favoriteCharacter ? 'border-2 border-slate-900/40 dark:border-white/15' : 'border-2 border-dashed border-slate-300 dark:border-slate-600'}`}
                             style={{ background: !favoriteCharacter
                                 ? (dark ? 'rgba(30,41,59,0.4)' : 'rgba(255,255,255,0.5)')
                                 : isChampion
                                     ? (dark ? 'linear-gradient(to bottom right, rgba(67,20,7,0.60), rgba(120,53,15,0.30), rgba(67,20,7,0.60))' : 'linear-gradient(to bottom right, rgba(254,243,199,0.92), rgba(255,251,235,0.70), rgba(254,243,199,0.88))')
                                     : (dark ? 'rgba(30,41,59,0.7)' : 'rgba(255,255,255,0.7)'),
-                            ...(isChampion || favoriteCharacter ? {} : { borderColor: theme.border }) }}>
+                            ...(favoriteCharacter ? { boxShadow: 'var(--circuit-shadow-sm)' } : {}) }}>
                             {favoriteCharacter ? (
                                 <>
                                     <div className="relative mt-1">
