@@ -46,12 +46,12 @@ export default function ChangePassword() {
         <AppLayout>
             <section className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-lg items-center justify-center px-4 py-8">
                 <div className="w-full animate-fade-in">
-                    <div className="rounded-[2rem] border border-amber-200 dark:border-amber-500/30 bg-white dark:bg-card p-8 shadow-2xl">
+                    <div className="rounded-[2rem] border-2 border-amber-400/60 dark:border-amber-500/30 bg-white dark:bg-card p-8" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                         <div className="flex flex-col items-center text-center mb-6">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-400/30 mb-4">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-circuit-ink bg-gradient-to-br from-amber-400 to-orange-500 mb-4" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                 <Key size={28} className="text-white" />
                             </div>
-                            <p className="text-xs font-black uppercase tracking-[0.35em] text-amber-600 dark:text-amber-400">Sicurezza</p>
+                            <p className="font-title text-[10px] tracking-wide text-amber-600 dark:text-amber-400">Sicurezza</p>
                             <h1 className="mt-1 text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground">Cambio Password</h1>
                             <p className="mt-2 text-sm text-slate-500 dark:text-muted-foreground">
                                 È richiesto un cambio password prima di procedere.
@@ -80,14 +80,15 @@ export default function ChangePassword() {
                             </label>
 
                             {error && (
-                                <div className="flex items-start gap-3 rounded-2xl border border-rose-400/20 bg-rose-500/10 p-4 text-sm text-rose-600 dark:text-rose-200">
+                                <div className="flex items-start gap-3 rounded-2xl border-2 border-rose-400/30 bg-rose-500/10 p-4 text-sm text-rose-600 dark:text-rose-200">
                                     <AlertTriangle size={16} className="mt-0.5 shrink-0 text-rose-400" />
                                     <p>{error}</p>
                                 </div>
                             )}
 
                             <button type="submit" disabled={submitting}
-                                className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-3 text-sm font-black uppercase tracking-widest text-white transition hover:from-amber-400 hover:to-orange-400 disabled:cursor-not-allowed disabled:opacity-60">
+                                className="font-title mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-orange-900/40 bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-3 text-xs tracking-wide text-white transition active:translate-y-px hover:from-amber-400 hover:to-orange-400 disabled:cursor-not-allowed disabled:opacity-60"
+                                style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                 <Key size={16} />
                                 {submitting ? 'Aggiornamento...' : 'Cambia Password'}
                             </button>

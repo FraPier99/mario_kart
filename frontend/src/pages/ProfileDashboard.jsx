@@ -462,7 +462,7 @@ const Dashboard = () => {
                                     )}
                                 </div>
                                 <div>
-                                    <p className="text-xs font-black uppercase tracking-[0.35em] text-emerald-600 dark:text-emerald-400">
+                                    <p className="font-title text-[10px] tracking-wide text-emerald-600 dark:text-emerald-400">
                                         {isAdmin ? 'Admin' : 'Profilo'}
                                     </p>
                                     <h1 className="mt-0.5 text-2xl font-black text-slate-900 dark:text-foreground">

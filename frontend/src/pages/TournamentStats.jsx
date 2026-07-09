@@ -170,7 +170,7 @@ const TournamentStats = () => {
                             <ArrowLeft size={14} />
                             Torna al torneo
                         </button>
-                        <p className="text-xs font-black uppercase tracking-[0.3em] text-emerald-600">Statistiche</p>
+                        <p className="font-title text-[10px] tracking-wide text-emerald-600">Statistiche</p>
                         <h1 className="mt-1 text-3xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground">{tournament.name}</h1>
                     </div>
                     <button

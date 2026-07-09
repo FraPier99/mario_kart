@@ -333,7 +333,7 @@ const SchedinaForm = () => {
         <AppLayout>
             <section className="mx-auto max-w-4xl px-4 py-8 animate-fade-in">
                 <div className="mb-6">
-                    <p className={`text-xs font-black uppercase tracking-[0.35em] ${theme.tailwind.text}`}>Compila schedina</p>
+                    <p className={`font-title text-[10px] tracking-wide ${theme.tailwind.text}`}>Compila schedina</p>
                     <h1 className="mt-2 text-3xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground md:text-4xl">
                         {tournament?.name ?? `Torneo #${getTournamentDisplayNumber(tournamentId)}`}
                     </h1>

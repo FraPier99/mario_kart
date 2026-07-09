@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Zap, Star, Trophy, Users, Sparkles } from 'lucide-react'
+import { Zap, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import AppLayout from '@/components/layout/AppLayout'
 import PowerCard from '@/components/cards/PowerCard'
@@ -172,7 +172,7 @@ const Cards = () => {
                 <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <div>
-                            <p className={`text-xs font-black uppercase tracking-[0.35em] ${theme.tailwind.text}`}>CARTE</p>
+                            <p className={`font-title text-[10px] tracking-wide ${theme.tailwind.text}`}>CARTE</p>
                             <h1 className="mt-2 text-3xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground md:text-4xl">Carte Potere</h1>
                             <p className="mt-2 max-w-2xl text-sm text-slate-500 dark:text-muted-foreground uppercase">
                                 Inventario globale e personale delle carte potere

@@ -63,7 +63,7 @@ const NewTournament = () => {
         <AppLayout>
             <section className="mx-auto max-w-5xl px-4 py-12">
                 <div className="mb-8 text-center">
-                    <p className="text-xs font-black uppercase tracking-[0.3em] text-emerald-600">Nuovo torneo</p>
+                    <p className="font-title text-[10px] tracking-wide text-emerald-600">Nuovo torneo</p>
                     <h1 className="mt-3 text-4xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground">Crea un torneo</h1>
                     <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-500 dark:text-muted-foreground">
                         Seleziona i partecipanti, assegna il gioco e poi gestisci gare e risultati dalla pagina dedicata.

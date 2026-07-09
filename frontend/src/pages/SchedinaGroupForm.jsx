@@ -365,7 +365,7 @@ const SchedinaGroupForm = () => {
 
                 {/* ── Header ─────────────────────────────────────────────────── */}
                 <div>
-                    <p className="text-[9px] font-black uppercase tracking-[0.4em] text-violet-500">
+                    <p className="font-title text-[9px] tracking-wide text-violet-500">
                         Schedina Pronostici · A Gironi
                     </p>
                     <h1 className="mt-2 text-3xl font-black text-slate-900 dark:text-foreground">

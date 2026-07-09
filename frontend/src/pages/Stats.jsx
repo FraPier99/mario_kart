@@ -12,7 +12,7 @@ import { downloadCSV } from '@/lib/utils'
 const ScoreLegend = () => {
     const [open, setOpen] = useState(false)
     return (
-        <div className="mb-6 overflow-hidden rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card">
+        <div className="mb-6 overflow-hidden rounded-2xl border-2 border-slate-300 dark:border-border bg-white dark:bg-card">
             <button
                 type="button"
                 onClick={() => setOpen((v) => !v)}
@@ -79,7 +79,7 @@ const ScoreLegend = () => {
 }
 
 const Stats = () => {
-    const { leaderboardRows, homeMetrics, loading, errorMessage, refresh, charactersById, games, getLeaderboardByGame, getHomeMetricsByGame, players, statsByPlayerId } = useAppData()
+    const { leaderboardRows, homeMetrics, loading, errorMessage, refresh, charactersById, games, getLeaderboardByGame, getHomeMetricsByGame, players } = useAppData()
     const { user, isSuperadmin } = useAuth()
     const navigate = useNavigate()
     const [selectedGameId, setSelectedGameId] = useState('')
@@ -141,7 +141,7 @@ const Stats = () => {
         <AppLayout>
             <section className="mx-auto max-w-7xl px-4 py-12">
                 <div className="mb-8 text-center">
-                    <p className="text-xs font-black uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400">Classifica generale</p>
+                    <p className="font-title text-[10px] tracking-wide text-emerald-600 dark:text-emerald-400">Classifica generale</p>
                     <h1 className="mt-3 text-4xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground">Tornei vinti, placement e podi</h1>
                     <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-500 dark:text-muted-foreground">
                         La classifica ordina i piloti per tornei vinti, placement index (media piazzamenti normalizzata) e podi rate. I punti assoluti sono solo informativi.
@@ -150,7 +150,7 @@ const Stats = () => {
                         <select
                             value={selectedGameId}
                             onChange={(e) => setSelectedGameId(e.target.value)}
-                            className="rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-2.5 text-sm font-black uppercase tracking-widest outline-none focus:border-emerald-500"
+                            className="font-title rounded-xl border-2 border-slate-300 dark:border-border bg-white dark:bg-card px-4 py-2.5 text-[10px] tracking-wide outline-none focus:border-emerald-500"
                         >
                             <option value="">Tutti i giochi</option>
                             {games.map((g) => (
@@ -159,7 +159,8 @@ const Stats = () => {
                         </select>
                         <button
                             onClick={handleExportCSV}
-                            className="flex cursor-pointer items-center gap-2 rounded-2xl bg-slate-900 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white transition hover:bg-slate-700"
+                            className="font-title flex cursor-pointer items-center gap-2 rounded-xl border-2 border-slate-900 bg-slate-900 px-4 py-2.5 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-slate-700"
+                            style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
                         >
                             <Download size={14} />
                             CSV
@@ -182,17 +183,17 @@ const Stats = () => {
                 />
 
                 <div className="mb-8 grid gap-4 md:grid-cols-3">
-                    <div className="rounded-3xl bg-white dark:bg-card p-5 shadow-lg shadow-slate-200/60 dark:shadow-black/20">
+                    <div className="rounded-2xl border-2 border-slate-900/15 dark:border-white/15 bg-white dark:bg-card p-5" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                         <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Giocatori attivi</p>
-                        <p className="mt-2 text-4xl font-black text-slate-900 dark:text-foreground">{metrics.activePlayers}</p>
+                        <p className="font-title mt-2 text-3xl text-slate-900 dark:text-foreground">{metrics.activePlayers}</p>
                     </div>
-                    <div className="rounded-3xl bg-white dark:bg-card p-5 shadow-lg shadow-slate-200/60 dark:shadow-black/20">
+                    <div className="rounded-2xl border-2 border-slate-900/15 dark:border-white/15 bg-white dark:bg-card p-5" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                         <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Gare completate</p>
-                        <p className="mt-2 text-4xl font-black text-slate-900 dark:text-foreground">{metrics.completedRaces}</p>
+                        <p className="font-title mt-2 text-3xl text-slate-900 dark:text-foreground">{metrics.completedRaces}</p>
                     </div>
-                    <div className="rounded-3xl bg-white dark:bg-card p-5 shadow-lg shadow-slate-200/60 dark:shadow-black/20">
+                    <div className="rounded-2xl border-2 border-slate-900/15 dark:border-white/15 bg-white dark:bg-card p-5" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                         <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Trofei vinti</p>
-                        <p className="mt-2 text-4xl font-black text-slate-900 dark:text-foreground">{metrics.trophiesWon}</p>
+                        <p className="font-title mt-2 text-3xl text-slate-900 dark:text-foreground">{metrics.trophiesWon}</p>
                     </div>
                 </div>
 

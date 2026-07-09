@@ -986,7 +986,7 @@ const Schedina = () => {
                                     </div>
                                 )}
                                 <div>
-                                    <p className={`text-xs font-black uppercase tracking-[0.35em] ${theme.tailwind.text}`}>SCHEDINA</p>
+                                    <p className={`font-title text-[10px] tracking-wide ${theme.tailwind.text}`}>SCHEDINA</p>
                                     <h1 className="mt-2 text-3xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground md:text-4xl">Schedina</h1>
                                     <p className="mt-2 max-w-2xl text-sm text-slate-500 dark:text-muted-foreground uppercase">
                                         Storici vincitori e storici schedine dei tornei

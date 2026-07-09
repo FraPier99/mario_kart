@@ -253,7 +253,7 @@ export default function Gallery() {
                 {/* HEADER */}
                 <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
                     <div>
-                        <p className="text-xs font-black uppercase tracking-[0.35em] text-emerald-600 dark:text-emerald-400">Galleria</p>
+                        <p className="font-title text-[10px] tracking-wide text-emerald-600 dark:text-emerald-400">Galleria</p>
                         <h1 className="mt-1 text-3xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground md:text-4xl">Foto Tornei</h1>
                         <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">Rivivi i momenti migliori delle serate di gioco</p>
                     </div>

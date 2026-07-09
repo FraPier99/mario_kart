@@ -163,7 +163,7 @@ const Compare = () => {
         <AppLayout>
             <section className="mx-auto max-w-7xl px-4 py-8 animate-fade-in">
                 <div className="mb-8 text-center">
-                    <p className="text-xs font-black uppercase tracking-[0.3em] text-emerald-600">Confronto 1vs1</p>
+                    <p className="font-title text-[10px] tracking-wide text-emerald-600">Confronto 1vs1</p>
                     <h1 className="mt-2 text-3xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground md:text-4xl">SFIDA TESTA A TESTA</h1>
                     <p className="mx-auto mt-2 max-w-2xl text-sm text-slate-500 dark:text-muted-foreground">
                         Seleziona due giocatori per confrontare le loro statistiche nelle gare comuni.

@@ -503,14 +503,14 @@ export default function AdminDashboard() {
             <section className="mx-auto max-w-7xl px-4 py-8 animate-fade-in space-y-6">
 
                 {/* Header + tab bar */}
-                <div className="rounded-[2rem] border border-slate-200 dark:border-border bg-white dark:bg-card shadow-xl overflow-hidden">
+                <div className="rounded-[2rem] border-2 border-slate-900/20 dark:border-white/15 bg-white dark:bg-card overflow-hidden" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                     <div className="p-6 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-emerald-700/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                                 <Shield size={22} />
                             </div>
                             <div>
-                                <p className="text-xs font-black uppercase tracking-[0.35em] text-emerald-600 dark:text-emerald-400">Pannello di controllo</p>
+                                <p className="font-title text-[10px] tracking-wide text-emerald-600 dark:text-emerald-400">Pannello di controllo</p>
                                 <h1 className="mt-0.5 text-2xl font-black text-slate-900 dark:text-foreground">Pannello Admin</h1>
                                 <p className="text-sm text-slate-500 dark:text-muted-foreground">
                                     {user?.username} · <span className="capitalize">{user?.role}</span>

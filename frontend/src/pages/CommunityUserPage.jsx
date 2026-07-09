@@ -4,13 +4,11 @@ import { ArrowLeft, Crown, Flag, Trophy, Star, BarChart3, UserCircle2, Sparkles,
 import AppLayout from '@/components/layout/AppLayout'
 import { authApi, getApiErrorMessage } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
-import { useAuth } from '@/context/AuthContext'
 import { toast } from 'sonner'
 
 const CommunityUserPage = () => {
     const { userId } = useParams()
     const { statsByPlayerId, charactersById, games, getLeaderboardByGame } = useAppData()
-    const { isSuperadmin } = useAuth()
     const [communityUser, setCommunityUser] = useState(null)
     const [loading, setLoading] = useState(true)
     const [notFound, setNotFound] = useState(false)
@@ -122,7 +120,7 @@ const CommunityUserPage = () => {
                             )}
                         </div>
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-emerald-600 dark:text-emerald-400">
+                            <p className="font-title text-[9px] tracking-wide text-emerald-600 dark:text-emerald-400">
                                 {communityUser.role === 'superadmin' ? 'Superadmin' : communityUser.role === 'admin' ? 'Admin' : 'Giocatore'}
                             </p>
                             <h1 className="mt-1 text-2xl font-black text-slate-900 dark:text-foreground">{player?.nickname ?? communityUser.username}</h1>

@@ -484,14 +484,14 @@ export default function SuperAdminPanel() {
             <section className="mx-auto max-w-7xl px-4 py-8 animate-fade-in">
 
                 {/* Header */}
-                <div className="mb-6 rounded-[2rem] border border-amber-400/50 dark:border-amber-500/30 bg-linear-to-br from-amber-100/90 via-amber-50/60 to-amber-100/80 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60 overflow-hidden shadow-xl shadow-amber-300/20 dark:shadow-amber-950/40">
+                <div className="mb-6 rounded-[2rem] border-2 border-circuit-ink bg-linear-to-br from-amber-100/90 via-amber-50/60 to-amber-100/80 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60 overflow-hidden" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                     <div className="p-6">
                         <div className="flex items-center gap-4">
-                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-400/30">
+                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-circuit-ink bg-gradient-to-br from-amber-400 to-orange-500" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                 <Shield size={26} className="text-white" />
                             </div>
                             <div>
-                                <p className="text-xs font-black uppercase tracking-[0.35em] text-amber-600 dark:text-amber-400">Pannello di controllo</p>
+                                <p className="font-title text-[10px] tracking-wide text-amber-600 dark:text-amber-400">Pannello di controllo</p>
                                 <h1 className="mt-0.5 text-2xl font-black text-slate-900 dark:text-foreground">SuperAdmin</h1>
                                 <p className="text-sm text-slate-500 dark:text-muted-foreground">Accesso completo · {user?.username}</p>
                             </div>
