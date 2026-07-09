@@ -18,6 +18,14 @@
 > Bug 3 (unscoreable Classifica Finale positions beyond `FINAL_SLOTS=4`) and
 > Info 5 (pre-existing orphaned cards for user 10) are left as documented
 > findings — both are minor/non-blocking and out of scope for this session.
+>
+> **Update (2026-07-09)**: Bug 3 has also since been fixed (commit `624caeb`,
+> "Schedine: form a click-in-sequenza e fix stato compilazione") —
+> `frontend/src/pages/SchedinaGroupForm.jsx:160` now caps the predicted final
+> ranking at `nFinal = Math.min(4, allParticipants.length)`, so users can no
+> longer predict unscoreable positions beyond `FINAL_SLOTS`. Info 5 required
+> no action per the original finding. **All bugs in this report are now
+> resolved**; kept for historical reference only.
 
 Date: 2026-06-14
 Scope: End-to-end exercise of the tournament + schedina lifecycle for both
