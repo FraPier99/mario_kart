@@ -33,13 +33,23 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
         return buildAvatarPlaceholder(character?.name ?? '')
     }
 
-    const posTextColor = (index) => {
-        if (index <= 2 && theme?.tailwind?.text) return theme.tailwind.text
-        if (index === 0) return 'text-amber-600 dark:text-amber-400'
-        if (index === 1) return 'text-slate-400 dark:text-slate-500'
-        if (index === 2) return 'text-orange-500 dark:text-orange-400'
-        return 'text-slate-500 dark:text-muted-foreground'
+    // Medaglia circolare per il podio (1°/2°/3°), numero nudo oltre —
+    // vedi piano "Circuito": le posizioni podio si leggono a colpo
+    // d'occhio invece di dover distinguere solo dal colore del testo.
+    const medalClasses = (index) => {
+        if (index === 0) return 'bg-circuit-gold text-circuit-ink border-circuit-ink'
+        if (index === 1) return 'bg-slate-300 text-slate-800 border-circuit-ink'
+        if (index === 2) return 'bg-orange-400 text-orange-950 border-circuit-ink'
+        return 'bg-slate-100 dark:bg-muted text-slate-500 dark:text-muted-foreground border-transparent'
     }
+
+    const PositionBadge = ({ index, size = 'md' }) => (
+        <span
+            className={`inline-flex items-center justify-center rounded-full font-title shrink-0 ${medalClasses(index)} ${size === 'lg' ? 'h-9 w-9 text-sm border-2' : 'h-7 w-7 text-xs border-2'}`}
+        >
+            {index + 1}
+        </span>
+    )
 
     const placementTextColor = (index) => {
         if (index === 0) return 'text-emerald-600 dark:text-emerald-400'
@@ -104,7 +114,10 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
     )
 
     return (
-        <div className="h-full overflow-hidden rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-lg shadow-slate-200/60 dark:shadow-black/20 flex flex-col">
+        <div
+            className="h-full overflow-hidden rounded-2xl border-2 border-slate-900 dark:border-white/20 bg-white dark:bg-card flex flex-col"
+            style={{ boxShadow: 'var(--circuit-shadow-md)' }}
+        >
             <div className="divide-y divide-slate-100 dark:border-border md:hidden">
                 {rows.map((row, index) => {
                     const charactersUsed = resolveUsedCharacters(row)
@@ -115,7 +128,7 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                     return (
                         <div key={row.playerId} className={`px-4 py-4 space-y-2 ${isCurrentUser ? `${theme?.tailwind?.bgSoft ?? 'bg-amber-500/10'} border-l-4 ${theme?.tailwind?.border ?? 'border-amber-500'}` : podiumBgMobile(index)}`}>
                             <div className="flex items-center justify-between gap-2">
-                                <span className={`text-lg font-black ${posTextColor(index)}`}>{index + 1}</span>
+                                <PositionBadge index={index} size="lg" />
                                 {showTournamentWins && (
                                     <span className="rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-xs font-black text-amber-700 dark:text-amber-400">
                                         {row.tournamentWins} vinti / {row.tournamentsPlayed} fatti
@@ -168,7 +181,7 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
 
             <div className="hidden md:block flex-1 overflow-x-auto overflow-y-auto">
                 <table className="min-w-[600px] w-full text-left">
-                    <thead className="bg-slate-50 dark:bg-muted text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">
+                    <thead className="bg-slate-50 dark:bg-muted font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">
                         <tr>
                             <th className="px-5 py-4">Pos</th>
                             <th className="px-5 py-4">Giocatore</th>
@@ -185,7 +198,9 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
 
                             return (
                                 <tr key={row.playerId} className={`border-b border-slate-100/80 dark:border-slate-800/50 ${isCurrentUser ? `${theme?.tailwind?.bgSoft ?? 'bg-amber-500/10'} border-l-4 ${theme?.tailwind?.border ?? 'border-amber-500'}` : podiumBg(index)}`}>
-                                    <td className={`px-5 py-4 text-lg font-black align-middle ${posTextColor(index)}`}>{index + 1}</td>
+                                    <td className="px-5 py-4 align-middle">
+                                        <PositionBadge index={index} size="lg" />
+                                    </td>
                                     <td className="px-5 py-4 align-middle w-[35%]">
                                         <PlayerCell row={row} charactersUsed={charactersUsed} onPlayerClick={onPlayerClick} />
                                     </td>
