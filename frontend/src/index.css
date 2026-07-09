@@ -99,7 +99,39 @@
   --sidebar-ring: oklch(0.708 0 0)
 }
 
+/* ============================================================
+   CIRCUITO — token layer per la direzione visiva "gaming"
+   (vedi piano approvato). Solo dichiarazioni: nessun componente
+   li usa ancora — vengono adottati in modo incrementale nelle
+   fasi successive (chrome, poi componenti dati, poi pagine).
+   ============================================================ */
+:root {
+  --circuit-asphalt: #1b1f2a;
+  --circuit-cloudline: #edf1f7;
+  --circuit-ink: #12141b;
+  --circuit-red: #e13c2e;
+  --circuit-gold: #f6b60d;
+  --circuit-blue: #2e7df0;
+
+  /* Ombra "offset" piatta (non sfocata), stile Cartridge & Track */
+  --circuit-shadow-color: 27, 31, 42;
+  --circuit-shadow-sm: 3px 3px 0 rgba(var(--circuit-shadow-color), 0.25);
+  --circuit-shadow-md: 5px 5px 0 rgba(var(--circuit-shadow-color), 0.2);
+  --circuit-shadow-lg: 6px 6px 0 rgba(var(--circuit-shadow-color), 0.18);
+  --circuit-border-width: 2px;
+}
+
+.dark {
+  --circuit-shadow-color: 0, 0, 0;
+}
+
 @theme inline {
+  --color-circuit-asphalt: var(--circuit-asphalt);
+  --color-circuit-cloudline: var(--circuit-cloudline);
+  --color-circuit-ink: var(--circuit-ink);
+  --color-circuit-red: var(--circuit-red);
+  --color-circuit-gold: var(--circuit-gold);
+  --color-circuit-blue: var(--circuit-blue);
   --font-heading: var(--heading);
   --font-sans: 'Geist Variable', sans-serif;
   --font-pixel: var(--pixel);
