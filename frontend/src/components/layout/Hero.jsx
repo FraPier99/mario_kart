@@ -6,7 +6,7 @@ import { useTheme } from '@/context/ThemeContext'
 import { getProfileTheme } from '@/lib/profileTheme'
 
 const Hero = () => {
-    const { statsByPlayerId, charactersById, tournaments, players: allPlayers } = useAppData()
+    const { statsByPlayerId, charactersById, tournaments, players: allPlayers, loading } = useAppData()
     const { user, isSuperadmin } = useAuth()
     const { dark } = useTheme()
     const theme = getProfileTheme(user, charactersById, dark)
@@ -116,16 +116,16 @@ const Hero = () => {
                             <div className="grid gap-3">
                                 <div className="rounded-xl border border-slate-900/10 dark:border-white/10 bg-white/70 dark:bg-slate-700/50 p-3">
                                     <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Tornei totali</p>
-                                    <p className="font-title mt-1 text-xl text-slate-900 dark:text-foreground">{totalTournaments}</p>
+                                    <p className="font-title mt-1 text-xl text-slate-900 dark:text-foreground">{loading ? '—' : totalTournaments}</p>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="rounded-xl border border-slate-900/10 dark:border-white/10 bg-white/70 dark:bg-slate-700/50 p-3">
                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Giocatori</p>
-                                        <p className="font-title mt-1 text-lg text-slate-900 dark:text-foreground">{totalPlayers}</p>
+                                        <p className="font-title mt-1 text-lg text-slate-900 dark:text-foreground">{loading ? '—' : totalPlayers}</p>
                                     </div>
                                     <div className="rounded-xl border border-slate-900/10 dark:border-white/10 bg-white/70 dark:bg-slate-700/50 p-3">
                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Tornei attivi</p>
-                                        <p className="font-title mt-1 text-lg text-slate-900 dark:text-foreground">{activeTournaments}</p>
+                                        <p className="font-title mt-1 text-lg text-slate-900 dark:text-foreground">{loading ? '—' : activeTournaments}</p>
                                     </div>
                                 </div>
                             </div>

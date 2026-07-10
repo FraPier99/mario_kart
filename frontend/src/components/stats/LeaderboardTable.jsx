@@ -86,6 +86,8 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                 <img
                     src={row.img_url || buildAvatarPlaceholder(row.nickname)}
                     alt={row.nickname}
+                    loading="lazy"
+                    decoding="async"
                     className="h-12 w-12 rounded-full object-cover shrink-0"
                 />
             </div>
@@ -104,6 +106,8 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                                 src={charImage(character)}
                                 alt={character.name}
                                 title={character.name}
+                                loading="lazy"
+                                decoding="async"
                                 className="h-6 w-6 rounded-full border border-white/70 dark:border-slate-700 object-cover shrink-0"
                             />
                         ))}
@@ -139,7 +143,7 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                             <div className="flex items-center gap-3 text-sm">
                                 {firstCharacterName ? (
                                     <div className="flex items-center gap-1.5 text-slate-600 dark:text-muted-foreground">
-                                        <img src={charImage(firstCharacter)} alt={firstCharacterName} className="h-6 w-6 rounded-full object-cover shrink-0" />
+                                        <img src={charImage(firstCharacter)} alt={firstCharacterName} loading="lazy" decoding="async" className="h-6 w-6 rounded-full object-cover shrink-0" />
                                         <span className="text-xs font-medium">{firstCharacterName}</span>
                                     </div>
                                 ) : (

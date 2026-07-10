@@ -186,20 +186,34 @@ const buildPlayerStats = (players, tournaments, results, races = []) => {
 }
 
 const buildTournamentDetails = (tournaments, races, results, playersById) => {
+    const racesByTournamentId = new Map()
+    races.forEach((race) => {
+        const list = racesByTournamentId.get(race.tournament_id)
+        if (list) list.push(race)
+        else racesByTournamentId.set(race.tournament_id, [race])
+    })
+
+    const resultsByRaceId = new Map()
+    results.forEach((result) => {
+        const list = resultsByRaceId.get(result.race_id)
+        if (list) list.push(result)
+        else resultsByRaceId.set(result.race_id, [result])
+    })
+
     return tournaments
         .slice()
         .sort(sortTournamentByDate)
         .map((tournament) => {
-            const tournamentRaces = races
-                .filter((race) => race.tournament_id === tournament.id)
+            const tournamentRaces = (racesByTournamentId.get(tournament.id) ?? [])
+                .slice()
                 .sort(sortRaceByOrder)
 
             const standingsByPlayerId = new Map()
             const lastCharacterByPlayerId = new Map()
 
             const detailedRaces = tournamentRaces.map((race) => {
-                const raceResults = results
-                    .filter((result) => result.race_id === race.id)
+                const raceResults = (resultsByRaceId.get(race.id) ?? [])
+                    .slice()
                     .sort(sortResultByPosition)
                     .map((result) => ({
                         ...result,

@@ -98,6 +98,8 @@ const ChampionCard = ({ player, wins, gamesWon, tournaments, index, onEntryClick
           <img
             src={player.champion_photo || player.img_url || buildAvatarPlaceholder(player.nickname)}
             alt={player.nickname}
+            loading="lazy"
+            decoding="async"
             className="relative h-24 w-24 rounded-2xl object-cover ring-2 ring-white/60 dark:ring-amber-500/30 shadow-lg"
           />
         </div>
@@ -282,7 +284,7 @@ const ChampionModal = ({ entry, games, onClose, isSuperadmin, onPhotoUploaded })
 }
 
 const HallOfFame = () => {
-  const { detailedTournaments, playersById, games } = useAppData()
+  const { detailedTournaments, playersById, games, loading } = useAppData()
   const { isSuperadmin } = useAuth()
   const [selectedGameId, setSelectedGameId] = useState('')
   const [selectedEntry, setSelectedEntry] = useState(null)
@@ -430,15 +432,15 @@ const HallOfFame = () => {
         <div className="mb-8 grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl border-2 border-amber-400/50 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-center" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
             <p className="font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">Campioni</p>
-            <p className="font-title mt-1 text-2xl text-amber-800 dark:text-amber-200">{totalChampions}</p>
+            <p className="font-title mt-1 text-2xl text-amber-800 dark:text-amber-200">{loading ? '—' : totalChampions}</p>
           </div>
           <div className="rounded-2xl border-2 border-amber-400/50 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-center" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
             <p className="font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">Titoli assegnati</p>
-            <p className="font-title mt-1 text-2xl text-amber-800 dark:text-amber-200">{totalWins}</p>
+            <p className="font-title mt-1 text-2xl text-amber-800 dark:text-amber-200">{loading ? '—' : totalWins}</p>
           </div>
           <div className="rounded-2xl border-2 border-amber-400/50 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-center" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
             <p className="font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">Giochi coperti</p>
-            <p className="font-title mt-1 text-2xl text-amber-800 dark:text-amber-200">{uniqueGames}</p>
+            <p className="font-title mt-1 text-2xl text-amber-800 dark:text-amber-200">{loading ? '—' : uniqueGames}</p>
           </div>
         </div>
 
@@ -461,7 +463,17 @@ const HallOfFame = () => {
         </div>
 
         {/* ── Champions Grid ── */}
-        {champions.length > 0 ? (
+        {loading ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-2xl border-2 border-amber-400/30 dark:border-amber-500/20 bg-amber-50/60 dark:bg-amber-950/20 p-5">
+                <div className="mx-auto h-24 w-24 animate-shimmer rounded-2xl bg-linear-to-r from-amber-200 via-amber-300 to-amber-200 dark:from-amber-900 dark:via-amber-800 dark:to-amber-900 bg-size-[200%_100%]" />
+                <div className="mt-4 h-4 w-2/3 mx-auto animate-shimmer rounded-lg bg-linear-to-r from-amber-200 via-amber-300 to-amber-200 dark:from-amber-900 dark:via-amber-800 dark:to-amber-900 bg-size-[200%_100%]" />
+                <div className="mt-3 h-8 w-1/2 mx-auto animate-shimmer rounded-xl bg-linear-to-r from-amber-200 via-amber-300 to-amber-200 dark:from-amber-900 dark:via-amber-800 dark:to-amber-900 bg-size-[200%_100%]" />
+              </div>
+            ))}
+          </div>
+        ) : champions.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {champions.map((entry, idx) => (
               <ChampionCard
