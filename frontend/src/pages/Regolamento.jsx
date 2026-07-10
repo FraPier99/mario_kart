@@ -85,7 +85,7 @@ const Regolamento = () => {
                                             <span className="text-sky-600 dark:text-sky-400">{icon}</span>
                                             <p className="font-title text-[9px] tracking-wide text-slate-500">{title}</p>
                                         </div>
-                                        <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-relaxed">{body}</p>
+                                        <p className="text-sm text-slate-500 dark:text-muted-foreground leading-relaxed">{body}</p>
                                     </div>
                                 ))}
                             </div>
@@ -118,7 +118,7 @@ const Regolamento = () => {
                                             <span className="text-emerald-600 dark:text-emerald-400">{icon}</span>
                                             <p className="font-title text-[9px] tracking-wide text-slate-500">{title}</p>
                                         </div>
-                                        <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-relaxed">{body}</p>
+                                        <p className="text-sm text-slate-500 dark:text-muted-foreground leading-relaxed">{body}</p>
                                     </div>
                                 ))}
                             </div>
