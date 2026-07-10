@@ -60,8 +60,8 @@ const ChampionCard = ({ player, wins, gamesWon, tournaments, index, onEntryClick
 
   return (
     <div
-      className="group relative overflow-hidden rounded-[2rem] border border-amber-400/50 dark:border-amber-500/30 bg-linear-to-br from-amber-100/90 via-amber-50/60 to-amber-100/80 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60 shadow-lg shadow-amber-300/30 dark:shadow-amber-950/40 ring-1 ring-amber-400/30 dark:ring-amber-500/20 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-amber-300/50 dark:hover:shadow-amber-950/60 gold-card-shimmer"
-      style={{ animation: `fade-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both`, animationDelay: `${index * 0.06}s` }}
+      className="group relative overflow-hidden rounded-2xl border-2 border-amber-400/60 dark:border-amber-500/30 bg-linear-to-br from-amber-100/90 via-amber-50/60 to-amber-100/80 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60 transition-all duration-500 hover:scale-[1.02] gold-card-shimmer"
+      style={{ animation: `fade-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both`, animationDelay: `${index * 0.06}s`, boxShadow: 'var(--circuit-shadow-md)' }}
     >
       {/* Crown badge */}
       <div className="absolute right-3 top-3 z-10 rounded-full bg-amber-400 p-1.5 shadow-lg shadow-amber-400/40" style={{ animation: 'crown-drop 1.2s cubic-bezier(0.34,1.56,0.64,1) both 0.3s' }}>
@@ -160,7 +160,8 @@ const ChampionCard = ({ player, wins, gamesWon, tournaments, index, onEntryClick
         <button
           type="button"
           onClick={() => onEntryClick({ player, wins, tournaments })}
-          className="mt-4 w-full cursor-pointer rounded-xl bg-amber-600 py-2 text-xs font-black uppercase tracking-widest text-white transition hover:bg-amber-500 shadow-lg shadow-amber-600/30"
+          className="font-title mt-4 w-full cursor-pointer rounded-xl border-2 border-amber-800/30 bg-amber-600 py-2 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-amber-500"
+          style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
         >
           Vedi dettagli
         </button>
@@ -195,7 +196,7 @@ const ChampionModal = ({ entry, games, onClose, isSuperadmin, onPhotoUploaded })
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm p-4 overflow-y-auto" onClick={onClose}>
       <div className="flex min-h-full items-center justify-center" onClick={(e) => e.stopPropagation()}>
-      <div className="relative w-full max-w-lg rounded-[2rem] border border-amber-200 dark:border-amber-500/30 bg-white dark:bg-card shadow-2xl animate-scale-in">
+      <div className="relative w-full max-w-lg rounded-2xl border-2 border-amber-400/60 dark:border-amber-500/30 bg-white dark:bg-card animate-scale-in" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
         {/* Photo area */}
         <div className="relative h-56 bg-gradient-to-br from-amber-100 to-amber-300 dark:from-amber-950 dark:to-amber-800 flex items-center justify-center overflow-hidden">
           {player.champion_photo ? (
@@ -237,7 +238,7 @@ const ChampionModal = ({ entry, games, onClose, isSuperadmin, onPhotoUploaded })
 
         {/* Tournament list */}
         <div className="px-6 py-5">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 dark:text-muted-foreground mb-3 flex items-center gap-1.5">
+          <p className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground mb-3 flex items-center gap-1.5">
             <Trophy size={12} /> Tornei vinti
           </p>
           <div className="space-y-2 max-h-52 overflow-y-auto">
@@ -267,7 +268,7 @@ const ChampionModal = ({ entry, games, onClose, isSuperadmin, onPhotoUploaded })
           <div className="border-t border-amber-100 dark:border-amber-500/20 px-6 py-4">
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
             <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-amber-300 dark:border-amber-500/30 py-3 text-xs font-black uppercase tracking-widest text-amber-500 dark:text-amber-400 transition hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 disabled:opacity-60"
+              className="font-title flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-amber-300 dark:border-amber-500/30 py-3 text-[10px] tracking-wide text-amber-500 dark:text-amber-400 transition hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 disabled:opacity-60"
             >
               <Upload size={14} />
               {uploading ? 'Caricamento...' : player.champion_photo ? 'Cambia foto vincitore' : 'Carica foto vincitore'}
@@ -427,17 +428,17 @@ const HallOfFame = () => {
 
         {/* ── Stats bar ── */}
         <div className="mb-8 grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-amber-200/60 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-center shadow-sm">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-600 dark:text-amber-400">Campioni</p>
-            <p className="mt-1 text-3xl font-black text-amber-800 dark:text-amber-200">{totalChampions}</p>
+          <div className="rounded-2xl border-2 border-amber-400/50 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-center" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+            <p className="font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">Campioni</p>
+            <p className="font-title mt-1 text-2xl text-amber-800 dark:text-amber-200">{totalChampions}</p>
           </div>
-          <div className="rounded-2xl border border-amber-200/60 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-center shadow-sm">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-600 dark:text-amber-400">Titoli assegnati</p>
-            <p className="mt-1 text-3xl font-black text-amber-800 dark:text-amber-200">{totalWins}</p>
+          <div className="rounded-2xl border-2 border-amber-400/50 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-center" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+            <p className="font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">Titoli assegnati</p>
+            <p className="font-title mt-1 text-2xl text-amber-800 dark:text-amber-200">{totalWins}</p>
           </div>
-          <div className="rounded-2xl border border-amber-200/60 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-center shadow-sm">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-600 dark:text-amber-400">Giochi coperti</p>
-            <p className="mt-1 text-3xl font-black text-amber-800 dark:text-amber-200">{uniqueGames}</p>
+          <div className="rounded-2xl border-2 border-amber-400/50 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-center" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+            <p className="font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">Giochi coperti</p>
+            <p className="font-title mt-1 text-2xl text-amber-800 dark:text-amber-200">{uniqueGames}</p>
           </div>
         </div>
 
@@ -445,12 +446,12 @@ const HallOfFame = () => {
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Filter size={15} className="text-amber-500" />
-            <span className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 dark:text-muted-foreground">Filtra per gioco</span>
+            <span className="font-title text-[10px] tracking-wide text-slate-500 dark:text-muted-foreground">Filtra per gioco</span>
           </div>
           <select
             value={selectedGameId}
             onChange={(e) => setSelectedGameId(e.target.value)}
-            className="rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-white dark:bg-card px-4 py-2.5 text-sm font-black uppercase tracking-widest outline-none focus:border-amber-500 text-slate-800 dark:text-foreground"
+            className="font-title rounded-xl border-2 border-amber-300 dark:border-amber-500/30 bg-white dark:bg-card px-4 py-2.5 text-[10px] tracking-wide outline-none focus:border-amber-500 text-slate-800 dark:text-foreground"
           >
             <option value="">Tutti i giochi</option>
             {games.map((g) => (
@@ -475,7 +476,7 @@ const HallOfFame = () => {
             ))}
           </div>
         ) : (
-          <div className="rounded-[2rem] border border-dashed border-amber-200 dark:border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/10 px-8 py-16 text-center">
+          <div className="rounded-2xl border-2 border-dashed border-amber-300 dark:border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/10 px-8 py-16 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 dark:bg-amber-900/30">
               <Trophy size={28} className="text-amber-500" />
             </div>
@@ -485,7 +486,8 @@ const HallOfFame = () => {
             </p>
             <Link
               to="/history"
-              className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-amber-600 px-5 py-3 text-xs font-black uppercase tracking-widest text-white transition hover:bg-amber-500 shadow-lg"
+              className="font-title mt-5 inline-flex items-center gap-2 rounded-xl border-2 border-amber-800/30 bg-amber-600 px-5 py-3 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-amber-500"
+              style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
             >
               <Trophy size={14} />
               Vedi tornei

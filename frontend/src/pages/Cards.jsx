@@ -191,10 +191,18 @@ const Cards = () => {
                                 </div>
                             ) : null
                         })()}
-                        <Link to="/dashboard" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-700 transition hover:border-slate-300 dark:border-border dark:bg-card dark:text-foreground">
+                        <Link
+                            to="/dashboard"
+                            className="font-title rounded-xl border-2 border-slate-900 dark:border-white/20 bg-white px-4 py-3 text-[10px] tracking-wide text-slate-700 transition active:translate-y-px hover:border-slate-700 dark:bg-card dark:text-foreground"
+                            style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
+                        >
                             Il mio profilo
                         </Link>
-                        <Link to="/history" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-700 transition hover:border-slate-300 dark:border-border dark:bg-card dark:text-foreground">
+                        <Link
+                            to="/history"
+                            className="font-title rounded-xl border-2 border-slate-900 dark:border-white/20 bg-white px-4 py-3 text-[10px] tracking-wide text-slate-700 transition active:translate-y-px hover:border-slate-700 dark:bg-card dark:text-foreground"
+                            style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
+                        >
                             Storico tornei
                         </Link>
                     </div>
