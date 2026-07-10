@@ -54,7 +54,8 @@ const ClickRankRow = ({ player, pos, total, complete, onToggle }) => {
         <button
             type="button"
             onClick={() => onToggle(player.id)}
-            className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left shadow-sm transition active:scale-[0.99] ${
+            style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
+            className={`flex w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left transition active:scale-[0.99] ${
                 isBlueShellRow
                     ? 'border-cyan-300 bg-cyan-50/60 dark:border-cyan-500/30 dark:bg-cyan-500/10'
                     : isPlaced
@@ -79,9 +80,9 @@ const ClickRankRow = ({ player, pos, total, complete, onToggle }) => {
                 )}
                 <span className={`truncate text-sm font-bold ${isPlaced ? 'text-slate-900 dark:text-foreground' : 'text-slate-500 dark:text-slate-400'}`}>{player.nickname}</span>
             </div>
-            {pos === 0 && <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">Vincitore</span>}
-            {complete && pos === total - 1 && <span className="rounded-full bg-cyan-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300">Ultimo</span>}
-            {complete && total >= 7 && pos === total - 2 && <span className="rounded-full bg-cyan-100 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300">Penultimo</span>}
+            {pos === 0 && <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[9px] font-title tracking-wide text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">Vincitore</span>}
+            {complete && pos === total - 1 && <span className="rounded-full bg-cyan-100 px-2.5 py-0.5 text-[9px] font-title tracking-wide text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300">Ultimo</span>}
+            {complete && total >= 7 && pos === total - 2 && <span className="rounded-full bg-cyan-100 px-2.5 py-0.5 text-[9px] font-title tracking-wide text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300">Penultimo</span>}
         </button>
     )
 }
@@ -295,7 +296,7 @@ const SchedinaForm = () => {
         return (
             <AppLayout>
                 <section className="mx-auto max-w-3xl px-4 py-8 animate-fade-in">
-                    <div className={`rounded-[2rem] border p-8 text-center ${theme.tailwind.borderSoft}`} style={{ background: `linear-gradient(135deg, ${theme.accentSoft}, transparent)` }}>
+                    <div className={`rounded-[2rem] border-2 p-8 text-center ${theme.tailwind.borderSoft}`} style={{ background: `linear-gradient(135deg, ${theme.accentSoft}, transparent)`, boxShadow: 'var(--circuit-shadow-lg)' }}>
                         <Lock size={48} className={`mx-auto ${theme.tailwind.text}`} />
                         <h2 className="mt-4 text-xl font-black text-slate-900 dark:text-foreground">Accesso negato</h2>
                         <p className={`mt-2 text-sm ${theme.tailwind.text}`}>
@@ -314,7 +315,7 @@ const SchedinaForm = () => {
         return (
             <AppLayout>
                 <section className="mx-auto max-w-3xl px-4 py-8 animate-fade-in">
-                    <div className={`rounded-[2rem] border p-8 text-center ${theme.tailwind.borderSoft}`} style={{ background: `linear-gradient(135deg, ${theme.accentSoft}, transparent)` }}>
+                    <div className={`rounded-[2rem] border-2 p-8 text-center ${theme.tailwind.borderSoft}`} style={{ background: `linear-gradient(135deg, ${theme.accentSoft}, transparent)`, boxShadow: 'var(--circuit-shadow-lg)' }}>
                         <Lock size={48} className={`mx-auto ${theme.tailwind.text}`} />
                         <h2 className="mt-4 text-xl font-black text-slate-900 dark:text-foreground">Non sei iscritto</h2>
                         <p className={`mt-2 text-sm ${theme.tailwind.text}`}>
@@ -338,7 +339,7 @@ const SchedinaForm = () => {
                         {tournament?.name ?? `Torneo #${getTournamentDisplayNumber(tournamentId)}`}
                     </h1>
                     {hasSchedinaFeature && !alreadySubmitted && !schedineLocked && draftRestored && (
-                        <div className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-sky-100 dark:bg-sky-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-sky-700 dark:text-sky-400">
+                        <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border-2 border-sky-200 dark:border-sky-500/30 bg-sky-100 dark:bg-sky-500/10 px-4 py-2 text-[10px] font-title tracking-wide text-sky-700 dark:text-sky-400">
                             <Save size={13} />
                             Bozza ripristinata dal salvataggio automatico
                         </div>
@@ -346,7 +347,7 @@ const SchedinaForm = () => {
                 </div>
 
                 {!hasSchedinaFeature && (
-                    <div className="rounded-[2rem] border border-amber-200 bg-amber-50 p-8 text-center dark:border-amber-500/30 dark:bg-amber-500/5">
+                    <div className="rounded-[2rem] border-2 border-amber-200 bg-amber-50 p-8 text-center dark:border-amber-500/30 dark:bg-amber-500/5" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                         <Clock size={48} className="mx-auto text-amber-500 dark:text-amber-400" />
                         <h2 className="mt-4 text-xl font-black text-amber-800 dark:text-amber-200">Torneo storico</h2>
                         <p className="mt-2 text-sm text-amber-700 dark:text-amber-300">
@@ -356,7 +357,7 @@ const SchedinaForm = () => {
                 )}
 
                 {hasSchedinaFeature && schedineLocked && !alreadySubmitted && (
-                    <div className="rounded-[2rem] border border-red-200 bg-red-50 p-8 text-center dark:border-red-500/30 dark:bg-red-500/5">
+                    <div className="rounded-[2rem] border-2 border-red-200 bg-red-50 p-8 text-center dark:border-red-500/30 dark:bg-red-500/5" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                         <Lock size={48} className="mx-auto text-red-400 dark:text-red-500" />
                         <h2 className="mt-4 text-xl font-black text-red-800 dark:text-red-300">Schedina non compilata</h2>
                         <p className="mt-2 text-sm text-red-600 dark:text-red-400">
@@ -366,7 +367,7 @@ const SchedinaForm = () => {
                 )}
 
                 {hasSchedinaFeature && alreadySubmitted && (
-                    <div className="rounded-[2rem] border border-emerald-200 bg-emerald-50 p-8 text-center dark:border-emerald-500/30 dark:bg-emerald-500/5">
+                    <div className="rounded-[2rem] border-2 border-emerald-200 bg-emerald-50 p-8 text-center dark:border-emerald-500/30 dark:bg-emerald-500/5" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                         <Send size={48} className="mx-auto text-emerald-400 dark:text-emerald-500" />
                         <h2 className="mt-4 text-xl font-black text-emerald-800 dark:text-emerald-300">Schedina già compilata</h2>
                         <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-400">
@@ -376,14 +377,14 @@ const SchedinaForm = () => {
                 )}
 
                 {hasSchedinaFeature && (
-                    <div className="rounded-3xl border border-violet-200 dark:border-violet-500/30 bg-violet-50/60 dark:bg-violet-900/10 p-4 space-y-2">
+                    <div className="rounded-3xl border-2 border-violet-200 dark:border-violet-500/30 bg-violet-50/60 dark:bg-violet-900/10 p-4 space-y-2" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                         <div className="flex items-center gap-2 mb-1">
                             <Info size={13} className="text-violet-500 shrink-0" />
-                            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-violet-600 dark:text-violet-400">Come funziona il punteggio</p>
+                            <p className="font-title text-[9px] tracking-wide text-violet-600 dark:text-violet-400">Come funziona il punteggio</p>
                         </div>
                         {SCORING_RULES.map((r) => (
                             <div key={r.label + r.desc} className="flex items-start gap-3">
-                                <span className="shrink-0 rounded-lg bg-violet-100 dark:bg-violet-900/40 px-2 py-0.5 text-[10px] font-black text-violet-700 dark:text-violet-300 min-w-12 text-center">{r.label}</span>
+                                <span className="shrink-0 rounded-lg bg-violet-100 dark:bg-violet-900/40 px-2 py-0.5 font-title text-[10px] tracking-wide text-violet-700 dark:text-violet-300 min-w-12 text-center">{r.label}</span>
                                 <span className="text-[11px] text-slate-600 dark:text-muted-foreground">{r.desc}</span>
                             </div>
                         ))}
@@ -393,13 +394,13 @@ const SchedinaForm = () => {
                 {hasSchedinaFeature && !schedineLocked && !alreadySubmitted && !loading && (
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* SEZIONE 1: CLASSIFICA ORDINATA */}
-                        <div className={`rounded-[2rem] border p-6 shadow-xl ${theme.tailwind.borderSoft}`} style={{ background: `linear-gradient(135deg, ${theme.accentSoft}, transparent)` }}>
+                        <div className={`rounded-[2rem] border-2 p-6 ${theme.tailwind.borderSoft}`} style={{ background: `linear-gradient(135deg, ${theme.accentSoft}, transparent)`, boxShadow: 'var(--circuit-shadow-lg)' }}>
                             <div className="flex items-center justify-between gap-3">
                                 <div>
-                                    <p className={`text-xs font-black uppercase tracking-[0.35em] ${theme.tailwind.text}`}>Classifica</p>
+                                    <p className={`font-title text-xs tracking-wide ${theme.tailwind.text}`}>Classifica</p>
                                     <h2 className="mt-2 text-xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground">Ordina i giocatori dal 1° all'ultimo posto</h2>
                                 </div>
-                                <span className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${items.length === participantPlayers.length ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
+                                <span className={`shrink-0 rounded-full px-3 py-1 font-title text-[10px] tracking-wide ${items.length === participantPlayers.length ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
                                     {items.length}/{participantPlayers.length}
                                 </span>
                             </div>
@@ -458,33 +459,33 @@ const SchedinaForm = () => {
                         </div>
 
                         {/* SEZIONE 2: PRONOSTICI SPECIALI E SPAREGGIO */}
-                        <div className={`rounded-[2rem] border p-6 shadow-xl ${theme.tailwind.borderSoft}`} style={{ background: `linear-gradient(135deg, ${theme.accentSoft}, transparent)` }}>
-                            <p className={`text-xs font-black uppercase tracking-[0.35em] ${theme.tailwind.text}`}>Side Bets</p>
+                        <div className={`rounded-[2rem] border-2 p-6 ${theme.tailwind.borderSoft}`} style={{ background: `linear-gradient(135deg, ${theme.accentSoft}, transparent)`, boxShadow: 'var(--circuit-shadow-lg)' }}>
+                            <p className={`font-title text-xs tracking-wide ${theme.tailwind.text}`}>Side Bets</p>
                             <h2 className="mt-2 text-xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground">Pronostici speciali</h2>
 
                             <div className="mt-6 grid gap-5 md:grid-cols-2">
-                                <label className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 dark:border-border dark:bg-card">
-                                    <span className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-sky-600 dark:text-sky-400">
+                                <label className="space-y-2 rounded-2xl border-2 border-slate-200 bg-white p-4 dark:border-border dark:bg-card" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+                                    <span className="flex items-center gap-2 font-title text-xs tracking-wide text-sky-600 dark:text-sky-400">
                                         <Zap size={14} /> Maggior Streak (+{PUNTI_PRONOSTICO}pt)
                                     </span>
                                     <p className="text-[10px] text-slate-400 dark:text-slate-500">Indovina quale pilota registrerà la striscia più lunga di primi posti consecutivi nelle singole gare.</p>
-                                    <select value={form.maggiore_streak_vittorie_id} onChange={handleChange('maggiore_streak_vittorie_id')} required className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-sky-500 dark:border-border dark:bg-muted dark:text-foreground">
+                                    <select value={form.maggiore_streak_vittorie_id} onChange={handleChange('maggiore_streak_vittorie_id')} required className="w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-sky-500 dark:border-border dark:bg-muted dark:text-foreground">
                                         <option value="">Seleziona</option>
                                         {playerOptions}
                                     </select>
                                 </label>
 
-                                <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 dark:border-border dark:bg-card">
-                                    <span className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-purple-600 dark:text-purple-400">
+                                <div className="space-y-2 rounded-2xl border-2 border-slate-200 bg-white p-4 dark:border-border dark:bg-card" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+                                    <span className="flex items-center gap-2 font-title text-xs tracking-wide text-purple-600 dark:text-purple-400">
                                         <Swords size={14} /> Il Duello Casuale (+{PUNTI_PRONOSTICO}pt)
                                     </span>
                                     <p className="text-[10px] text-slate-400 dark:text-slate-500">All'apertura del torneo, il sistema genera una coppia di piloti casuale identica per tutti. Pronostica chi tra i due totalizzerà più punti in classifica generale, oppure se finiranno in Pareggio.</p>
                                     {duelloPlayerALabel && duelloPlayerBLabel ? (
                                         <div className="mt-2 space-y-3">
-                                            <span className="block rounded-xl border border-purple-200 bg-purple-50 px-4 py-2.5 text-center text-sm font-bold text-purple-700 dark:border-purple-500/30 dark:bg-purple-500/10 dark:text-purple-300">
+                                            <span className="block rounded-xl border-2 border-purple-200 bg-purple-50 px-4 py-2.5 text-center text-sm font-bold text-purple-700 dark:border-purple-500/30 dark:bg-purple-500/10 dark:text-purple-300">
                                                 {duelloPlayerALabel} 🆚 {duelloPlayerBLabel}
                                             </span>
-                                            <select value={form.duello_scelta_id} onChange={handleChange('duello_scelta_id')} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-purple-500 dark:border-border dark:bg-muted dark:text-foreground">
+                                            <select value={form.duello_scelta_id} onChange={handleChange('duello_scelta_id')} className="w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-purple-500 dark:border-border dark:bg-muted dark:text-foreground">
                                                 <option value="">Chi vince?</option>
                                                 {duelloSceltaOptions.map((opt) => (
                                                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -498,14 +499,14 @@ const SchedinaForm = () => {
                             </div>
 
                             {/* SPAREGGIO */}
-                            <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 dark:border-border dark:bg-card">
-                                <span className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                            <div className="mt-4 rounded-2xl border-2 border-slate-200 bg-white p-4 dark:border-border dark:bg-card" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+                                <span className="flex items-center gap-2 font-title text-xs tracking-wide text-emerald-600 dark:text-emerald-400">
                                     <Clock size={14} /> Spareggio
                                 </span>
                                 <h3 className="mt-1 text-sm font-black uppercase tracking-tight text-slate-900 dark:text-foreground">Punti di distacco</h3>
                                 <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">Usato solo come criterio di spareggio in caso di parità nel punteggio finale.</p>
                                 <label className="mt-3 flex items-center gap-3">
-                                    <span className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground shrink-0">Distanza 1°-2°:</span>
+                                    <span className="font-title text-xs tracking-wide text-slate-500 dark:text-muted-foreground shrink-0">Distanza 1°-2°:</span>
                                     <input
                                         type="number"
                                         min="0"
@@ -514,7 +515,7 @@ const SchedinaForm = () => {
                                         onChange={handleChange('spareggio_punti_vincitore')}
                                         required
                                         placeholder={spareggioPlaceholder}
-                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-emerald-500 dark:border-border dark:bg-muted dark:text-foreground"
+                                        className="w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-emerald-500 dark:border-border dark:bg-muted dark:text-foreground"
                                     />
                                     <span className="text-xs font-black text-slate-400">pt</span>
                                 </label>
@@ -522,14 +523,15 @@ const SchedinaForm = () => {
                             </div>
                         </div>
 
-                        <p className="flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-muted-foreground">
+                        <p className="flex items-center justify-center gap-1.5 font-title text-[10px] tracking-wide text-slate-400 dark:text-muted-foreground">
                             <Save size={11} /> I tuoi pronostici vengono salvati automaticamente in locale mentre compili
                         </p>
 
                         <button
                             type="submit"
                             disabled={submitting}
-                            className={`w-full rounded-2xl px-5 py-4 text-sm font-black uppercase tracking-widest text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 ${theme.tailwind.bg}`}
+                            style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
+                            className={`w-full rounded-2xl border-2 border-transparent px-5 py-4 font-title text-sm tracking-wide text-white transition hover:opacity-90 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 ${theme.tailwind.bg}`}
                         >
                             {submitting ? 'Invio in corso...' : 'Invia schedina'}
                         </button>

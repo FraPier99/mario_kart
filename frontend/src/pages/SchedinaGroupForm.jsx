@@ -56,10 +56,10 @@ const RankingPicker = ({ players, ranking, onToggle, maxRank = null, instruction
     return (
     <div className="space-y-2">
         <div className="flex items-center justify-between">
-            <p className="text-[9px] font-black uppercase tracking-[0.35em] text-slate-500 dark:text-muted-foreground">
+            <p className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">
                 {instruction}
             </p>
-            <span className={`text-[9px] font-black ${ranking.length === target ? 'text-emerald-500' : 'text-slate-400'}`}>
+            <span className={`font-title text-[9px] tracking-wide ${ranking.length === target ? 'text-emerald-500' : 'text-slate-400'}`}>
                 {ranking.length}/{target} posizionati
             </span>
         </div>
@@ -74,9 +74,10 @@ const RankingPicker = ({ players, ranking, onToggle, maxRank = null, instruction
                         type="button"
                         onClick={() => !isDisabled && onToggle(p.id)}
                         disabled={isDisabled}
-                        className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition ${
+                        style={isPlaced ? { boxShadow: 'var(--circuit-shadow-sm)' } : undefined}
+                        className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left transition ${
                             isPlaced
-                                ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20 shadow-sm'
+                                ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20'
                                 : isDisabled
                                     ? 'border-slate-100 dark:border-border/50 bg-slate-50/60 dark:bg-card/50 opacity-50 cursor-not-allowed'
                                     : 'border-slate-200 dark:border-border bg-white dark:bg-card hover:border-slate-300 cursor-pointer'
@@ -103,7 +104,7 @@ const RankingPicker = ({ players, ranking, onToggle, maxRank = null, instruction
 const SinglePlayerSelect = ({ players, selected, onSelect, label, description }) => (
     <div className="space-y-2">
         <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.35em] text-slate-500 dark:text-muted-foreground">{label}</p>
+            <p className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">{label}</p>
             {description && <p className="text-[10px] text-slate-400 dark:text-muted-foreground mt-0.5">{description}</p>}
         </div>
         <div className="grid gap-2 sm:grid-cols-2">
@@ -114,9 +115,10 @@ const SinglePlayerSelect = ({ players, selected, onSelect, label, description })
                         key={p.id}
                         type="button"
                         onClick={() => onSelect(p.id)}
-                        className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition ${
+                        style={isSelected ? { boxShadow: 'var(--circuit-shadow-sm)' } : undefined}
+                        className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left transition ${
                             isSelected
-                                ? 'border-rose-400 bg-rose-50 dark:bg-rose-900/20 shadow-sm'
+                                ? 'border-rose-400 bg-rose-50 dark:bg-rose-900/20'
                                 : 'border-slate-200 dark:border-border bg-white dark:bg-card hover:border-slate-300 cursor-pointer'
                         }`}
                     >
@@ -372,7 +374,7 @@ const SchedinaGroupForm = () => {
                         {tournament.name}
                     </h1>
                     {!existing && !loading && canSubmit && draftRestored && (
-                        <div className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-sky-100 dark:bg-sky-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-sky-700 dark:text-sky-400">
+                        <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border-2 border-sky-200 dark:border-sky-500/30 bg-sky-100 dark:bg-sky-500/10 px-4 py-2 text-[10px] font-title tracking-wide text-sky-700 dark:text-sky-400">
                             <Save size={13} />
                             Bozza ripristinata dal salvataggio automatico
                         </div>
@@ -380,16 +382,16 @@ const SchedinaGroupForm = () => {
                 </div>
 
                 {/* ── Regole punteggio ───────────────────────────────────────── */}
-                <div className="rounded-3xl border border-violet-200 dark:border-violet-500/30 bg-violet-50/60 dark:bg-violet-900/10 p-4 space-y-2">
+                <div className="rounded-3xl border-2 border-violet-200 dark:border-violet-500/30 bg-violet-50/60 dark:bg-violet-900/10 p-4 space-y-2" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                     <div className="flex items-center gap-2 mb-1">
                         <Info size={13} className="text-violet-500 shrink-0" />
-                        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-violet-600 dark:text-violet-400">
+                        <p className="font-title text-[9px] tracking-wide text-violet-600 dark:text-violet-400">
                             Come funziona il punteggio · {PUNTI_PRONOSTICO} pt per pronostico esatto
                         </p>
                     </div>
                     {SCORING_RULES.map((r) => (
                         <div key={r.desc} className="flex items-start gap-3">
-                            <span className="shrink-0 rounded-lg bg-violet-100 dark:bg-violet-900/40 px-2 py-0.5 text-[10px] font-black text-violet-700 dark:text-violet-300 min-w-12 text-center">{r.label}</span>
+                            <span className="shrink-0 rounded-lg bg-violet-100 dark:bg-violet-900/40 px-2 py-0.5 font-title text-[10px] tracking-wide text-violet-700 dark:text-violet-300 min-w-12 text-center">{r.label}</span>
                             <span className="text-[11px] text-slate-600 dark:text-muted-foreground">{r.desc}</span>
                         </div>
                     ))}
@@ -400,7 +402,7 @@ const SchedinaGroupForm = () => {
 
                 {/* ── Schedina già inviata ───────────────────────────────────── */}
                 {existing && (
-                    <div className={`rounded-3xl border px-5 py-4 ${existing.status === 'settled' ? 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-900/10' : 'border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-900/10'}`}>
+                    <div className={`rounded-3xl border-2 px-5 py-4 ${existing.status === 'settled' ? 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-900/10' : 'border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-900/10'}`} style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                         <div className="flex items-center gap-3">
                             {existing.status === 'settled'
                                 ? <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />
@@ -428,11 +430,11 @@ const SchedinaGroupForm = () => {
 
                         {/* Sezione 1: Classifica Gironi (la fase 1, prima di tutto:
                             non si può sapere chi va in finale senza prima i gironi) */}
-                        <div className="rounded-3xl border border-sky-200 dark:border-sky-500/30 bg-white dark:bg-card p-5 shadow-sm space-y-4">
+                        <div className="rounded-3xl border-2 border-sky-200 dark:border-sky-500/30 bg-white dark:bg-card p-5 space-y-4" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                             <div className="flex items-center gap-2">
                                 <Users size={14} className="text-sky-500 shrink-0" />
                                 <div>
-                                    <p className="text-xs font-black uppercase tracking-[0.3em] text-sky-600 dark:text-sky-400">1 · Classifica Gironi</p>
+                                    <p className="font-title text-xs tracking-wide text-sky-600 dark:text-sky-400">1 · Classifica Gironi</p>
                                     <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">Per ciascun girone della fase 1, in che ordine arriveranno i giocatori?</p>
                                 </div>
                             </div>
@@ -452,11 +454,11 @@ const SchedinaGroupForm = () => {
                         {/* Sezione 2: Final 4 — i 4 finalisti, scelti E ordinati per
                             posizione in un'unica sezione (sostituisce "finalisti" +
                             "classifica finale" separate) */}
-                        <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-white dark:bg-card p-5 shadow-sm space-y-4">
+                        <div className="rounded-3xl border-2 border-amber-200 dark:border-amber-500/30 bg-white dark:bg-card p-5 space-y-4" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                             <div className="flex items-center gap-2">
                                 <Trophy size={14} className="text-amber-500 shrink-0" />
                                 <div>
-                                    <p className="text-xs font-black uppercase tracking-[0.3em] text-amber-600 dark:text-amber-400">2 · Final 4 (classifica)</p>
+                                    <p className="font-title text-xs tracking-wide text-amber-600 dark:text-amber-400">2 · Final 4 (classifica)</p>
                                     <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">
                                         Pronostica i {nFinal} che raggiungeranno la Finale, già nell'ordine di arrivo previsto (1° → {nFinal}°). La Finale riparte da zero, non conta i punti dei gironi.
                                     </p>
@@ -473,11 +475,11 @@ const SchedinaGroupForm = () => {
 
                         {/* Sezione 3: Il Duello */}
                         {duelloPlayers.length === 2 && (
-                            <div className="rounded-3xl border border-rose-200 dark:border-rose-500/30 bg-white dark:bg-card p-5 shadow-sm space-y-4">
+                            <div className="rounded-3xl border-2 border-rose-200 dark:border-rose-500/30 bg-white dark:bg-card p-5 space-y-4" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                                 <div className="flex items-center gap-2">
                                     <Swords size={14} className="text-rose-500 shrink-0" />
                                     <div>
-                                        <p className="text-xs font-black uppercase tracking-[0.3em] text-rose-600 dark:text-rose-400">3 · Il Duello</p>
+                                        <p className="font-title text-xs tracking-wide text-rose-600 dark:text-rose-400">3 · Il Duello</p>
                                         <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">
                                             Tra {duelloA?.nickname} e {duelloB?.nickname}, chi totalizzerà più punti nel proprio girone? Oppure pronostica il Pareggio.
                                         </p>
@@ -492,9 +494,10 @@ const SchedinaGroupForm = () => {
                                 <button
                                     type="button"
                                     onClick={() => setDuelloScelta('pareggio')}
-                                    className={`flex w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-black transition ${
+                                    style={duelloScelta === 'pareggio' ? { boxShadow: 'var(--circuit-shadow-sm)' } : undefined}
+                                    className={`flex w-full items-center justify-center gap-2 rounded-2xl border-2 px-4 py-3 text-sm font-black transition ${
                                         duelloScelta === 'pareggio'
-                                            ? 'border-rose-400 bg-rose-50 dark:bg-rose-900/20 text-rose-800 dark:text-rose-200 shadow-sm'
+                                            ? 'border-rose-400 bg-rose-50 dark:bg-rose-900/20 text-rose-800 dark:text-rose-200'
                                             : 'border-slate-200 dark:border-border bg-white dark:bg-card text-slate-700 dark:text-slate-300 hover:border-slate-300 cursor-pointer'
                                     }`}
                                 >
@@ -506,9 +509,9 @@ const SchedinaGroupForm = () => {
 
                         {/* Sezione finale: Spareggio (numero dinamico — il Duello c'è
                             solo se l'admin l'ha configurato) */}
-                        <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm space-y-3">
+                        <div className="rounded-3xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-5 space-y-3" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                             <div>
-                                <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 dark:text-muted-foreground">{duelloPlayers.length === 2 ? 4 : 3} · Spareggio (tie-breaker)</p>
+                                <p className="font-title text-xs tracking-wide text-slate-500 dark:text-muted-foreground">{duelloPlayers.length === 2 ? 4 : 3} · Spareggio (tie-breaker)</p>
                                 <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">
                                     Qual è la distanza esatta di punti tra il 1° e il 2° classificato della classifica finale?
                                     <br/>
@@ -522,7 +525,7 @@ const SchedinaGroupForm = () => {
                                 onChange={(e) => setSpareggio(e.target.value)}
                                 placeholder="Es. 12"
                                 disabled={isLocked}
-                                className="w-full rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3 text-sm font-black text-slate-900 dark:text-foreground outline-none focus:border-amber-400 disabled:opacity-50"
+                                className="w-full rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3 text-sm font-black text-slate-900 dark:text-foreground outline-none focus:border-amber-400 disabled:opacity-50"
                             />
                             {/* A differenza della Classifica Unica, qui non si può calcolare un
                                 tetto realistico: il numero di gare della Finale non è deciso alla
@@ -534,7 +537,7 @@ const SchedinaGroupForm = () => {
 
                         {/* ── Errori ─────────────────────────────────────────── */}
                         {errors.length > 0 && finalRanking.length > 0 && (
-                            <div className="rounded-2xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/8 px-4 py-3 space-y-1">
+                            <div className="rounded-2xl border-2 border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/8 px-4 py-3 space-y-1">
                                 <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
                                     <AlertCircle size={13} className="shrink-0" />
                                     <p className="text-xs font-black">Correggi prima di inviare</p>
@@ -547,7 +550,7 @@ const SchedinaGroupForm = () => {
 
                         {/* ── Anteprima (tutto completo) ─────────────────────── */}
                         {isValid && !existing && (
-                            <div className="rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/8 px-4 py-3 space-y-2">
+                            <div className="rounded-2xl border-2 border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/8 px-4 py-3 space-y-2">
                                 <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                                     <CheckCircle2 size={13} />
                                     <p className="text-xs font-black">Schedina completa — pronta per l'invio</p>
@@ -567,7 +570,7 @@ const SchedinaGroupForm = () => {
 
                         {/* ── Submit ─────────────────────────────────────────── */}
                         {!existing && (
-                            <p className="flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-muted-foreground">
+                            <p className="flex items-center justify-center gap-1.5 font-title text-[10px] tracking-wide text-slate-400 dark:text-muted-foreground">
                                 <Save size={11} /> I tuoi pronostici vengono salvati automaticamente in locale mentre compili
                             </p>
                         )}
@@ -575,7 +578,8 @@ const SchedinaGroupForm = () => {
                             <button
                                 type="submit"
                                 disabled={!isValid || submitting || isLocked}
-                                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-violet-500 hover:bg-violet-400 disabled:opacity-60 disabled:cursor-not-allowed px-5 py-4 text-sm font-black uppercase tracking-widest text-white transition active:scale-[0.98]"
+                                style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
+                                className="w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-transparent bg-violet-500 hover:bg-violet-400 disabled:opacity-60 disabled:cursor-not-allowed px-5 py-4 font-title text-sm tracking-wide text-white transition active:translate-y-px"
                             >
                                 {submitting
                                     ? <><Loader2 size={15} className="animate-spin" /> Invio in corso...</>

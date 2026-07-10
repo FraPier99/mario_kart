@@ -86,10 +86,10 @@ const FavoriteCharacterPicker = ({ value, onChange, characters }) => {
             <button
                 type="button"
                 onClick={() => setOpen((current) => !current)}
-                className="flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-slate-900 outline-none transition hover:border-emerald-400 dark:border-border dark:bg-muted dark:text-foreground"
+                className="flex w-full items-center justify-between gap-3 rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-left text-slate-900 outline-none transition hover:border-emerald-400 dark:border-border dark:bg-muted dark:text-foreground"
             >
                 <span className="flex min-w-0 items-center gap-3">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900">
                         {selectedCharacter?.img_url ? (
                             <img src={selectedCharacter.img_url} alt={selectedCharacter.name} className="h-full w-full object-cover" />
                         ) : (
@@ -97,7 +97,7 @@ const FavoriteCharacterPicker = ({ value, onChange, characters }) => {
                         )}
                     </span>
                     <span className="min-w-0">
-                        <span className="block text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Personaggio preferito</span>
+                        <span className="block font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">Personaggio preferito</span>
                         <span className="block truncate text-sm font-bold text-slate-900 dark:text-foreground">
                             {selectedCharacter?.name ?? 'Nessuno selezionato'}
                         </span>
@@ -109,8 +109,8 @@ const FavoriteCharacterPicker = ({ value, onChange, characters }) => {
             {open && createPortal(
                 <div
                     ref={menuRef}
-                    className="fixed z-9999 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-border dark:bg-card"
-                    style={menuStyle}
+                    className="fixed z-9999 overflow-hidden rounded-3xl border-2 border-slate-200 bg-white dark:border-border dark:bg-card"
+                    style={{ ...menuStyle, boxShadow: 'var(--circuit-shadow-md)' }}
                 >
                     <div className="flex items-center gap-2 border-b border-slate-100 px-3 py-2 dark:border-white/10">
                         <Search size={14} className="text-slate-400" />
@@ -147,7 +147,7 @@ const FavoriteCharacterPicker = ({ value, onChange, characters }) => {
                                             setOpen(false)
                                             setQuery('')
                                         }}
-                                        className={`relative flex flex-col items-center gap-2 rounded-2xl border px-3 py-3 text-center transition ${isSelected ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10' : 'border-slate-200 hover:border-emerald-300 hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/5'}`}
+                                        className={`relative flex flex-col items-center gap-2 rounded-2xl border-2 px-3 py-3 text-center transition ${isSelected ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10' : 'border-slate-200 hover:border-emerald-300 hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/5'}`}
                                     >
                                         <span className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-900">
                                             {character.img_url ? (
@@ -156,7 +156,7 @@ const FavoriteCharacterPicker = ({ value, onChange, characters }) => {
                                                 <span className="text-lg font-black text-slate-400">{character.name?.charAt(0)?.toUpperCase() ?? '?'}</span>
                                             )}
                                         </span>
-                                        <span className="w-full truncate text-xs font-black uppercase tracking-[0.2em] text-slate-900 dark:text-foreground">{character.name}</span>
+                                        <span className="w-full truncate font-title text-[9px] tracking-wide text-slate-900 dark:text-foreground">{character.name}</span>
                                         {isSelected && (
                                             <span className="absolute right-2 top-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white">
                                                 <Check size={12} />
@@ -197,13 +197,13 @@ const SchedinaBadge = () => {
     if (loading || !notifications.length) return null
 
     return (
-        <div className="rounded-[2rem] border border-amber-200 bg-amber-50 p-6 shadow-xl dark:border-amber-500/30 dark:bg-amber-500/5">
+        <div className="rounded-[2rem] border-2 border-amber-200 bg-amber-50 p-6 dark:border-amber-500/30 dark:bg-amber-500/5" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
             <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100 dark:bg-amber-500/20">
                     <AlertTriangle size={20} className="text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                    <p className="text-xs font-black uppercase tracking-[0.35em] text-amber-600 dark:text-amber-400">Schedine da compilare</p>
+                    <p className="font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">Schedine da compilare</p>
                     <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">Hai {notifications.length} torneo{notifications.length > 1 ? 'i' : ''} in attesa della tua schedina</p>
                 </div>
             </div>
@@ -220,7 +220,8 @@ const SchedinaBadge = () => {
                             key={n.tournament_id}
                             to={locked ? '#' : `/schedina/${n.tournament_id}`}
                             onClick={(e) => { if (locked) e.preventDefault() }}
-                            className={`flex items-center justify-between gap-3 rounded-2xl p-3 transition ${locked ? 'bg-slate-100 opacity-60 dark:bg-slate-800' : 'bg-white shadow-sm hover:shadow-md dark:bg-card'}`}
+                            className={`flex items-center justify-between gap-3 rounded-2xl border-2 p-3 transition ${locked ? 'border-transparent bg-slate-100 opacity-60 dark:bg-slate-800' : 'border-slate-200 dark:border-border bg-white dark:bg-card'}`}
+                            style={locked ? undefined : { boxShadow: 'var(--circuit-shadow-sm)' }}
                         >
                             <div className="flex items-center gap-3">
                                     <Clock size={16} className={`shrink-0 ${locked ? 'text-slate-400' : 'text-amber-500'}`} />
@@ -231,13 +232,14 @@ const SchedinaBadge = () => {
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
                                     {locked ? (
-                                        <span className="rounded-full bg-slate-200 px-3 py-1 text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+                                        <span className="rounded-full bg-slate-200 px-3 py-1 font-title text-[8px] tracking-wide text-slate-500 dark:bg-slate-700 dark:text-slate-400">
                                             Non compilata
                                         </span>
                                     ) : (
                                         <Link
                                             to={n.tournament_format === 'group_stage' ? `/schedina/${n.tournament_id}/group-stage` : `/schedina/${n.tournament_id}/compila`}
-                                            className="inline-flex items-center gap-1.5 rounded-2xl bg-emerald-600 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-emerald-500"
+                                            className="inline-flex items-center gap-1.5 rounded-2xl border-2 border-emerald-600 bg-emerald-600 px-4 py-2 font-title text-[8px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-500"
+                                            style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
                                         >
                                             <PenLine size={12} />
                                             Compila Ora
@@ -435,7 +437,7 @@ const Dashboard = () => {
             <section className="mx-auto max-w-7xl px-4 py-8 animate-fade-in space-y-6">
 
                 {/* ── HEADER PROFILO ───────────────────────────── */}
-                <div className={`rounded-[2rem] border shadow-xl overflow-hidden ${goldBorder} ${goldBg}`}>
+                <div className={`rounded-[2rem] border-2 overflow-hidden ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                     <div className="p-6">
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <div className="flex items-center gap-4">
@@ -476,11 +478,11 @@ const Dashboard = () => {
                             </div>
                             <div className="flex items-center gap-2">
                                 {isAdmin && !isSuperadmin && (
-                                    <Link to="/tournaments/new" className="rounded-2xl bg-emerald-600 px-3 py-2.5 text-xs font-black uppercase tracking-widest text-white transition hover:bg-emerald-500">
+                                    <Link to="/tournaments/new" className="rounded-2xl border-2 border-emerald-600 bg-emerald-600 px-3 py-2.5 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-500">
                                         Nuovo torneo
                                     </Link>
                                 )}
-                                <button onClick={logout} type="button" className="rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5 text-sm font-black uppercase tracking-widest text-slate-700 dark:text-foreground transition hover:bg-slate-100">
+                                <button onClick={logout} type="button" className="rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5 font-title text-[10px] tracking-wide text-slate-700 dark:text-foreground transition active:translate-y-px hover:bg-slate-100">
                                     Esci
                                 </button>
                             </div>
@@ -493,7 +495,7 @@ const Dashboard = () => {
                             {PROFILE_TABS.map((tab) => (
                                 <button key={tab.key} type="button"
                                     onClick={() => setProfileTab(tab.key)}
-                                    className={`shrink-0 px-4 py-3 text-xs font-black uppercase tracking-widest border-b-2 transition ${profileTab === tab.key ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-transparent text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'}`}>
+                                    className={`shrink-0 px-4 py-3 font-title text-[10px] tracking-wide border-b-2 transition ${profileTab === tab.key ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-transparent text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'}`}>
                                     {tab.label}
                                 </button>
                             ))}
@@ -505,7 +507,7 @@ const Dashboard = () => {
                 {profileTab === 'panoramica' && player && (() => {
                     const isChampion = (playerStats?.tournamentWins ?? 0) > 0
                     return (
-                    <div className={`relative rounded-[2rem] border p-6 shadow-xl gold-card-shimmer ${goldBorder} ${goldBg}`}>
+                    <div className={`relative rounded-[2rem] border-2 p-6 gold-card-shimmer ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                         {(isChampion || isSuperadmin) && (
                             <div className="absolute right-4 top-4 rounded-full bg-amber-400 p-1.5 shadow-lg z-10">
                                 <Crown size={16} className="text-amber-950" />
@@ -514,12 +516,12 @@ const Dashboard = () => {
                         <div className="space-y-6">
                         {/* Champion banner */}
                         {isChampion && (
-                            <div className="flex items-center gap-4 rounded-[2rem] border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/8 px-5 py-4 shadow-sm">
+                            <div className="flex items-center gap-4 rounded-[2rem] border-2 border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/8 px-5 py-4" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-400/20 text-amber-600 dark:text-amber-300">
                                     <Trophy size={22} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.35em] text-amber-600 dark:text-amber-400">Hall of Fame</p>
+                                    <p className="font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">Hall of Fame</p>
                                     <p className="mt-0.5 text-base font-black text-amber-800 dark:text-amber-200">
                                         {playerStats.tournamentWins} {playerStats.tournamentWins === 1 ? 'torneo vinto' : 'tornei vinti'} · Campione della lega
                                     </p>
@@ -534,20 +536,20 @@ const Dashboard = () => {
                                     label: 'Tornei vinti', value: playerStats?.tournamentWins ?? 0,
                                     sub: `di ${playerStats?.tournamentsPlayed ?? 0} giocati`,
                                     iconCls: isChampion ? 'bg-amber-400/25 text-amber-600 dark:text-amber-300' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-                                    cardCls: isChampion ? 'border-amber-300 dark:border-amber-500/40 bg-amber-50/70 dark:bg-amber-900/15 shadow-amber-200/50 dark:shadow-amber-900/30 shadow-md' : 'border-slate-200 dark:border-border bg-white dark:bg-card shadow-sm',
+                                    cardCls: isChampion ? 'border-amber-300 dark:border-amber-500/40 bg-amber-50/70 dark:bg-amber-900/15' : 'border-slate-200 dark:border-border bg-white dark:bg-card',
                                     Icon: Trophy,
                                 },
-                                { label: 'Vittorie gara', value: playerStats?.raceWins ?? 0, sub: `Win Rate ${playerStats?.winRate ?? 0}%`, iconCls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', cardCls: 'border-slate-200 dark:border-border bg-white dark:bg-card shadow-sm', Icon: Flag },
-                                { label: 'Podi totali', value: playerStats?.podiums ?? 0, sub: `Podium Rate ${playerStats?.podiumRate ?? 0}%`, iconCls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', cardCls: 'border-slate-200 dark:border-border bg-white dark:bg-card shadow-sm', Icon: Star },
-                                { label: 'Punti totali', value: playerStats?.points ?? 0, sub: `Efficienza ${playerStats?.avgEfficiency ?? 0}%`, iconCls: 'bg-violet-500/10 text-violet-600 dark:text-violet-400', cardCls: 'border-slate-200 dark:border-border bg-white dark:bg-card shadow-sm', Icon: BarChart3 },
+                                { label: 'Vittorie gara', value: playerStats?.raceWins ?? 0, sub: `Win Rate ${playerStats?.winRate ?? 0}%`, iconCls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', cardCls: 'border-slate-200 dark:border-border bg-white dark:bg-card', Icon: Flag },
+                                { label: 'Podi totali', value: playerStats?.podiums ?? 0, sub: `Podium Rate ${playerStats?.podiumRate ?? 0}%`, iconCls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', cardCls: 'border-slate-200 dark:border-border bg-white dark:bg-card', Icon: Star },
+                                { label: 'Punti totali', value: playerStats?.points ?? 0, sub: `Efficienza ${playerStats?.avgEfficiency ?? 0}%`, iconCls: 'bg-violet-500/10 text-violet-600 dark:text-violet-400', cardCls: 'border-slate-200 dark:border-border bg-white dark:bg-card', Icon: BarChart3 },
                             ].map(({ label, value, sub, iconCls, cardCls, Icon }) => (
-                                <div key={label} className={`flex items-start gap-3 rounded-2xl border p-4 ${cardCls}`}>
+                                <div key={label} className={`flex items-start gap-3 rounded-2xl border-2 p-4 ${cardCls}`} style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                     <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconCls}`}>
                                         <Icon size={16} />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">{label}</p>
-                                        <p className="mt-1 text-2xl font-black leading-none text-slate-900 dark:text-foreground">{value}</p>
+                                        <p className="font-title text-[9px] tracking-wide text-slate-400">{label}</p>
+                                        <p className="mt-1 font-title text-2xl leading-none text-slate-900 dark:text-foreground">{value}</p>
                                         <p className="mt-1 text-[10px] leading-snug text-slate-500 dark:text-muted-foreground">{sub}</p>
                                     </div>
                                 </div>
@@ -556,15 +558,15 @@ const Dashboard = () => {
 
                         {/* Bio */}
                         {player?.bio && (
-                            <div className="rounded-[2rem] border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm">
-                                <p className="mb-3 text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Bio</p>
+                            <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-5" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+                                <p className="mb-3 font-title text-[9px] tracking-wide text-slate-400">Bio</p>
                                 <p className="text-sm text-slate-700 dark:text-foreground leading-relaxed whitespace-pre-wrap">{player.bio}</p>
                             </div>
                         )}
 
                         {/* Quick links */}
                         <div className="grid gap-3 sm:grid-cols-3">
-                            <Link to="/stats" className="group flex items-center gap-3 rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card p-4 transition hover:border-emerald-300 hover:shadow-sm">
+                            <Link to="/stats" className="group flex items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-4 transition hover:border-emerald-300" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
                                     <Trophy size={16} />
                                 </div>
@@ -574,7 +576,7 @@ const Dashboard = () => {
                                 </div>
                                 <ArrowRight size={14} className="text-slate-300 group-hover:text-emerald-500 transition" />
                             </Link>
-                            <Link to="/history" className="group flex items-center gap-3 rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card p-4 transition hover:border-emerald-300 hover:shadow-sm">
+                            <Link to="/history" className="group flex items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-4 transition hover:border-emerald-300" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
                                     <BarChart3 size={16} />
                                 </div>
@@ -584,7 +586,7 @@ const Dashboard = () => {
                                 </div>
                                 <ArrowRight size={14} className="text-slate-300 group-hover:text-emerald-500 transition" />
                             </Link>
-                            <Link to="/schedina" className="group flex items-center gap-3 rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card p-4 transition hover:border-emerald-300 hover:shadow-sm">
+                            <Link to="/schedina" className="group flex items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-4 transition hover:border-emerald-300" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                                     <PenLine size={16} />
                                 </div>
@@ -602,7 +604,7 @@ const Dashboard = () => {
 
                 {/* ── TAB: PROFILO ─────────────────────────────── */}
                 {profileTab === 'profilo' && (
-                    <div className={`relative rounded-[2rem] border p-6 shadow-xl gold-card-shimmer ${goldBorder} ${goldBg}`}>
+                    <div className={`relative rounded-[2rem] border-2 p-6 gold-card-shimmer ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                         {(isChampion || isSuperadmin) && (
                             <div className="absolute right-4 top-4 rounded-full bg-amber-400 p-1.5 shadow-lg z-10">
                                 <Crown size={16} className="text-amber-950" />
@@ -610,7 +612,7 @@ const Dashboard = () => {
                         )}
                         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
                             <div>
-                                <p className="text-xs font-black uppercase tracking-[0.35em] text-emerald-600 dark:text-emerald-400">Modifica profilo</p>
+                                <p className="font-title text-[9px] tracking-wide text-emerald-600 dark:text-emerald-400">Modifica profilo</p>
                                 <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">Aggiorna nome, nickname, immagine e personaggio preferito.</p>
                             </div>
                         </div>
@@ -620,25 +622,25 @@ const Dashboard = () => {
                                 {!isSuperadmin && (
                                     <>
                                         <label className="space-y-2">
-                                            <span className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Nome</span>
-                                            <input name="first_name" value={form.first_name} onChange={handleFormChange} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-emerald-500 dark:border-border dark:bg-muted dark:text-foreground" />
+                                            <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">Nome</span>
+                                            <input name="first_name" value={form.first_name} onChange={handleFormChange} className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-emerald-500 dark:border-border dark:bg-muted dark:text-foreground" />
                                         </label>
                                         <label className="space-y-2">
-                                            <span className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Cognome</span>
-                                            <input name="last_name" value={form.last_name} onChange={handleFormChange} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-emerald-500 dark:border-border dark:bg-muted dark:text-foreground" />
+                                            <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">Cognome</span>
+                                            <input name="last_name" value={form.last_name} onChange={handleFormChange} className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-emerald-500 dark:border-border dark:bg-muted dark:text-foreground" />
                                         </label>
                                     </>
                                 )}
                                 <label className="space-y-2">
-                                    <span className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Nickname</span>
-                                    <input name="nickname" value={form.nickname} onChange={handleFormChange} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-emerald-500 dark:border-border dark:bg-muted dark:text-foreground" />
+                                    <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">Nickname</span>
+                                    <input name="nickname" value={form.nickname} onChange={handleFormChange} className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-emerald-500 dark:border-border dark:bg-muted dark:text-foreground" />
                                     <p className="text-[10px] text-slate-400 dark:text-muted-foreground">
                                         Verrà salvato in minuscolo e senza spazi o caratteri speciali (es. "{form.nickname.toLowerCase().replace(/[^a-z0-9]/g, '') || 'fra'}") — usalo per accedere insieme alla password.
                                     </p>
                                 </label>
                                 <div className="space-y-2">
-                                    <span className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Immagine profilo</span>
-                                    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-slate-600 transition hover:border-emerald-400 hover:text-slate-900 dark:border-border dark:bg-muted dark:text-muted-foreground dark:hover:text-foreground">
+                                    <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">Immagine profilo</span>
+                                    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-slate-600 transition hover:border-emerald-400 hover:text-slate-900 dark:border-border dark:bg-muted dark:text-muted-foreground dark:hover:text-foreground">
                                         <span className="flex items-center gap-2 truncate">
                                             <Upload size={16} />
                                             <span className="truncate">{imageFileName || 'Scegli un file JPEG, PNG, WEBP o GIF'}</span>
@@ -647,7 +649,7 @@ const Dashboard = () => {
                                     </label>
                                     {(form.img_url || imageFileName) && (
                                         <div className="flex items-center gap-3">
-                                            <button type="button" onClick={clearProfileImage} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-black uppercase tracking-widest text-slate-600 transition hover:border-rose-300 hover:text-rose-600 dark:border-border dark:text-muted-foreground">
+                                            <button type="button" onClick={clearProfileImage} className="rounded-xl border-2 border-slate-200 px-3 py-2 font-title text-[9px] tracking-wide text-slate-600 transition active:translate-y-px hover:border-rose-300 hover:text-rose-600 dark:border-border dark:text-muted-foreground">
                                                 Rimuovi immagine
                                             </button>
                                             <span className="text-xs text-slate-500 dark:text-muted-foreground">L'immagine verrà salvata con il profilo</span>
@@ -658,10 +660,10 @@ const Dashboard = () => {
 
                             <div className="space-y-2">
                                 <label className="space-y-1.5">
-                                    <span className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Bio</span>
+                                    <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">Bio</span>
                                     <textarea name="bio" value={form.bio} onChange={handleFormChange} rows={3} maxLength={500}
                                         placeholder="Parla di te, del tuo rapporto con Mario Kart..."
-                                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-emerald-500 resize-none dark:border-border dark:bg-muted dark:text-foreground" />
+                                        className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-emerald-500 resize-none dark:border-border dark:bg-muted dark:text-foreground" />
                                     <p className="text-[10px] text-slate-400 dark:text-muted-foreground">{form.bio.length}/500 caratteri</p>
                                 </label>
                             </div>
@@ -674,13 +676,13 @@ const Dashboard = () => {
                                 />
                             </div>
 
-                            <button type="submit" disabled={(!player && !isSuperadmin) || saving} className="rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black uppercase tracking-widest text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60">
+                            <button type="submit" disabled={(!player && !isSuperadmin) || saving} className="rounded-2xl border-2 border-emerald-600 bg-emerald-600 px-5 py-3 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                 {saving ? 'Salvataggio...' : 'Salva profilo'}
                             </button>
                         </form>
 
                         {!player && !isSuperadmin && (
-                            <div className="mt-4 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 p-4">
+                            <div className="mt-4 rounded-2xl border-2 border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 p-4">
                                 <p className="text-xs font-black text-amber-700 dark:text-amber-300">Nessun giocatore collegato a questo account. Chiedi a un admin di associarlo.</p>
                             </div>
                         )}
@@ -689,25 +691,25 @@ const Dashboard = () => {
 
                 {/* ── TAB: SICUREZZA ─────────────────────────────── */}
                 {profileTab === 'sicurezza' && (
-                    <div className={`rounded-[2rem] border p-6 shadow-xl gold-card-shimmer ${goldBorder} ${goldBg}`}>
-                        <p className="text-xs font-black uppercase tracking-[0.35em] text-slate-500 dark:text-muted-foreground">Sicurezza</p>
+                    <div className={`rounded-[2rem] border-2 p-6 gold-card-shimmer ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
+                        <p className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">Sicurezza</p>
                         <h2 className="mt-1 text-lg font-black text-slate-900 dark:text-foreground">Cambia password</h2>
                         <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">Inserisci la password attuale per confermare la tua identità, poi la nuova password.</p>
                         <form onSubmit={handleChangePassword} className="mt-4 space-y-3">
                             <label className="block space-y-1.5">
-                                <span className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Password attuale</span>
+                                <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">Password attuale</span>
                                 <input
                                     type="password"
                                     value={pwForm.current_password}
                                     onChange={(e) => setPwForm((p) => ({ ...p, current_password: e.target.value }))}
                                     required
                                     autoComplete="current-password"
-                                    className="w-full rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3 text-slate-900 dark:text-foreground outline-none focus:border-emerald-500"
+                                    className="w-full rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3 text-slate-900 dark:text-foreground outline-none focus:border-emerald-500"
                                 />
                             </label>
                             <div className="grid gap-3 md:grid-cols-2">
                                 <label className="block space-y-1.5">
-                                    <span className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Nuova password</span>
+                                    <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">Nuova password</span>
                                     <input
                                         type="password"
                                         value={pwForm.new_password}
@@ -715,18 +717,18 @@ const Dashboard = () => {
                                         required
                                         minLength={6}
                                         autoComplete="new-password"
-                                        className="w-full rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3 text-slate-900 dark:text-foreground outline-none focus:border-emerald-500"
+                                        className="w-full rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3 text-slate-900 dark:text-foreground outline-none focus:border-emerald-500"
                                     />
                                 </label>
                                 <label className="block space-y-1.5">
-                                    <span className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Conferma nuova password</span>
+                                    <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">Conferma nuova password</span>
                                     <input
                                         type="password"
                                         value={pwForm.confirm_password}
                                         onChange={(e) => setPwForm((p) => ({ ...p, confirm_password: e.target.value }))}
                                         required
                                         autoComplete="new-password"
-                                        className={`w-full rounded-2xl border bg-slate-50 dark:bg-muted px-4 py-3 text-slate-900 dark:text-foreground outline-none focus:border-emerald-500 ${pwForm.confirm_password && pwForm.new_password !== pwForm.confirm_password ? 'border-rose-400 dark:border-rose-500' : 'border-slate-200 dark:border-border'}`}
+                                        className={`w-full rounded-2xl border-2 bg-slate-50 dark:bg-muted px-4 py-3 text-slate-900 dark:text-foreground outline-none focus:border-emerald-500 ${pwForm.confirm_password && pwForm.new_password !== pwForm.confirm_password ? 'border-rose-400 dark:border-rose-500' : 'border-slate-200 dark:border-border'}`}
                                     />
                                 </label>
                             </div>
@@ -736,7 +738,8 @@ const Dashboard = () => {
                             <button
                                 type="submit"
                                 disabled={pwSaving || !pwForm.current_password || !pwForm.new_password || pwForm.new_password !== pwForm.confirm_password}
-                                className="rounded-2xl bg-slate-900 dark:bg-slate-700 px-5 py-3 text-sm font-black uppercase tracking-widest text-white transition hover:bg-slate-700 dark:hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-60"
+                                className="rounded-2xl border-2 border-slate-900 dark:border-slate-700 bg-slate-900 dark:bg-slate-700 px-5 py-3 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-slate-700 dark:hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-60"
+                                style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
                             >
                                 {pwSaving ? 'Aggiornamento...' : 'Cambia password'}
                             </button>
@@ -746,7 +749,7 @@ const Dashboard = () => {
 
                 {/* ── TAB: STATISTICHE ─────────────────────────────── */}
                 {profileTab === 'statistiche' && (
-                    <div className={`rounded-[2rem] border p-6 shadow-xl gold-card-shimmer ${goldBorder} ${goldBg}`}>
+                    <div className={`rounded-[2rem] border-2 p-6 gold-card-shimmer ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                         <div className="space-y-4">
                         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                             {[
@@ -755,13 +758,13 @@ const Dashboard = () => {
                                 { label: 'Podi totali', value: playerStats?.podiums ?? 0, sub: `Podium Rate ${playerStats?.podiumRate ?? 0}%`, Icon: Star, iconCls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', cardCls: 'border-slate-200 dark:border-border bg-white dark:bg-card' },
                                 { label: 'Punti totali', value: playerStats?.points ?? 0, sub: `Efficienza ${playerStats?.avgEfficiency ?? 0}%`, Icon: BarChart3, iconCls: 'bg-violet-500/10 text-violet-600 dark:text-violet-400', cardCls: 'border-slate-200 dark:border-border bg-white dark:bg-card' },
                             ].map(({ label, value, sub, Icon, iconCls, cardCls }) => (
-                                <div key={label} className={`flex items-start gap-3 rounded-2xl border p-4 shadow-sm ${cardCls}`}>
+                                <div key={label} className={`flex items-start gap-3 rounded-2xl border-2 p-4 ${cardCls}`} style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                     <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconCls}`}>
                                         <Icon size={16} />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">{label}</p>
-                                        <p className="mt-1 text-2xl font-black leading-none text-slate-900 dark:text-foreground">{value}</p>
+                                        <p className="font-title text-[9px] tracking-wide text-slate-400">{label}</p>
+                                        <p className="mt-1 font-title text-2xl leading-none text-slate-900 dark:text-foreground">{value}</p>
                                         <p className="mt-1 text-[10px] leading-snug text-slate-500 dark:text-muted-foreground">{sub}</p>
                                     </div>
                                 </div>
@@ -769,11 +772,11 @@ const Dashboard = () => {
                         </div>
 
                         {/* Statistiche per gioco */}
-                        <div className="rounded-[2rem] border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm">
+                        <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-5" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                                <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Statistiche per gioco</p>
+                                <p className="font-title text-[9px] tracking-wide text-slate-400">Statistiche per gioco</p>
                                 <select value={selectedGameId} onChange={e => setSelectedGameId(e.target.value)}
-                                    className="rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-foreground outline-none focus:border-emerald-400">
+                                    className="rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2 font-title text-[9px] tracking-wide text-slate-700 dark:text-foreground outline-none focus:border-emerald-400">
                                     <option value="">Seleziona un gioco</option>
                                     {games.map((g) => (
                                         <option key={g.id} value={g.id}>{g.name}</option>
@@ -789,13 +792,13 @@ const Dashboard = () => {
                                             { label: 'Podi totali', value: gameStats.podiums, sub: `Podium Rate ${gameStats.podiumRate}%`, iconCls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', Icon: Star },
                                             { label: 'Vittorie gara', value: gameStats.raceWins, sub: `Win Rate ${gameStats.winRate}%`, iconCls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', Icon: Flag },
                                         ].map(({ label, value, sub, iconCls, Icon }) => (
-                                            <div key={label} className="flex items-start gap-3 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-4 shadow-sm">
+                                            <div key={label} className="flex items-start gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-4" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                                 <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconCls}`}>
                                                     <Icon size={16} />
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">{label}</p>
-                                                    <p className="mt-1 text-2xl font-black leading-none text-slate-900 dark:text-foreground">{value}</p>
+                                                    <p className="font-title text-[9px] tracking-wide text-slate-400">{label}</p>
+                                                    <p className="mt-1 font-title text-2xl leading-none text-slate-900 dark:text-foreground">{value}</p>
                                                     <p className="mt-1 text-[10px] leading-snug text-slate-500 dark:text-muted-foreground">{sub}</p>
                                                 </div>
                                             </div>
@@ -816,7 +819,7 @@ const Dashboard = () => {
                         </div>
 
                         {!playerStats && (
-                            <div className="rounded-2xl border border-dashed border-slate-200 dark:border-border p-5 text-center text-sm text-slate-500 dark:text-muted-foreground">
+                            <div className="rounded-2xl border-2 border-dashed border-slate-200 dark:border-border p-5 text-center text-sm text-slate-500 dark:text-muted-foreground">
                                 Nessuna statistica disponibile. Chiedi a un admin di collegarti a un giocatore.
                             </div>
                         )}
@@ -829,13 +832,13 @@ const Dashboard = () => {
                     <div className="space-y-4">
                         <SchedinaBadge />
 
-                        <div className={`rounded-[2rem] border p-6 shadow-xl gold-card-shimmer ${goldBorder} ${goldBg}`}>
-                            <p className="text-xs font-black uppercase tracking-[0.35em] text-emerald-600 dark:text-emerald-400">Inventario</p>
+                        <div className={`rounded-[2rem] border-2 p-6 gold-card-shimmer ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
+                            <p className="font-title text-[9px] tracking-wide text-emerald-600 dark:text-emerald-400">Inventario</p>
                             <h2 className="mt-1 text-lg font-black uppercase tracking-tight text-slate-900 dark:text-foreground">I Miei Poteri</h2>
                             {inventoryLoading ? (
                                 <p className="mt-4 text-sm text-slate-500 dark:text-muted-foreground">Caricamento poteri...</p>
                             ) : inventory.length === 0 ? (
-                                <div className="mt-4 rounded-2xl border border-dashed border-slate-200 dark:border-white/10 p-4 text-center">
+                                <div className="mt-4 rounded-2xl border-2 border-dashed border-slate-200 dark:border-white/10 p-4 text-center">
                                     <Zap size={24} className="mx-auto text-slate-300 dark:text-slate-600" />
                                     <p className="mt-2 text-sm text-slate-500 dark:text-muted-foreground">Nessun potere nell'inventario</p>
                                 </div>
@@ -843,7 +846,7 @@ const Dashboard = () => {
                                 <div className="grid gap-3">
                                     {inventory.filter((item) => !item.is_consumed).length > 0 && (
                                         <>
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Disponibili ({inventory.filter((item) => !item.is_consumed).length})</p>
+                                            <p className="font-title text-[9px] tracking-wide text-slate-400">Disponibili ({inventory.filter((item) => !item.is_consumed).length})</p>
                                             <div className="grid grid-cols-2 gap-3">
                                                 {inventory.filter((item) => !item.is_consumed).map((item) => (
                                                     <PowerCard
@@ -861,8 +864,8 @@ const Dashboard = () => {
                                         </>
                                     )}
                                     {inventory.filter((item) => item.is_consumed).length > 0 && (
-                                        <details className="mt-2 rounded-2xl border border-slate-200 dark:border-border bg-white/60 dark:bg-card/60 p-3">
-                                            <summary className="cursor-pointer text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 select-none">
+                                        <details className="mt-2 rounded-2xl border-2 border-slate-200 dark:border-border bg-white/60 dark:bg-card/60 p-3">
+                                            <summary className="cursor-pointer font-title text-[9px] tracking-wide text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 select-none">
                                                 Consumate ({inventory.filter((item) => item.is_consumed).length})
                                             </summary>
                                             <div className="mt-3 space-y-2">
@@ -892,20 +895,21 @@ const Dashboard = () => {
 
                 {/* ── BANNER SUPERADMIN → redirect to /superadmin ── */}
                 {isSuperadmin && (
-                    <div className="rounded-[2rem] border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 p-6 shadow-xl">
+                    <div className="rounded-[2rem] border-2 border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 p-6" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <div className="flex items-center gap-4">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-400/30">
                                     <Shield size={22} />
                                 </div>
                                 <div>
-                                    <p className="text-xs font-black uppercase tracking-[0.35em] text-amber-600 dark:text-amber-400">Accesso completo</p>
+                                    <p className="font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">Accesso completo</p>
                                     <h2 className="mt-0.5 text-lg font-black text-slate-900 dark:text-foreground">Pannello SuperAdmin</h2>
                                     <p className="text-sm text-slate-500 dark:text-muted-foreground">Gestisci utenti, tornei, carte e audit log da un unico pannello.</p>
                                 </div>
                             </div>
                             <Link to="/superadmin"
-                                className="inline-flex items-center gap-2 rounded-2xl bg-amber-500 px-5 py-3 text-sm font-black uppercase tracking-widest text-white transition hover:bg-amber-400 shadow-lg shadow-amber-400/30">
+                                className="inline-flex items-center gap-2 rounded-2xl border-2 border-amber-500 bg-amber-500 px-5 py-3 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-amber-400"
+                                style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                 <Shield size={16} /> Apri Pannello
                             </Link>
                         </div>

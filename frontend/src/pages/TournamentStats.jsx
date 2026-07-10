@@ -14,8 +14,8 @@ const COLORS = ['#059669', '#2563eb', '#d97706', '#dc2626', '#7c3aed', '#0891b2'
 const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null
     return (
-        <div className="rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card p-3 shadow-lg">
-            <p className="mb-1 text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">{label}</p>
+        <div className="rounded-xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-3" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+            <p className="mb-1 font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">{label}</p>
             {payload.map((entry, idx) => (
                 <p key={idx} className="text-sm font-bold" style={{ color: entry.color }}>{entry.name}: {entry.value}</p>
             ))}
@@ -24,20 +24,20 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 const InfoCard = ({ icon: Icon, label, value, color }) => (
-    <div className="flex items-center gap-3 rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card p-4 shadow-sm">
+    <div className="flex items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-4" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
         <div className={`rounded-xl p-2.5 ${color}`}>{Icon && <Icon size={20} className="text-white" />}</div>
         <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">{label}</p>
-            <p className="text-lg font-black text-slate-900 dark:text-foreground">{value}</p>
+            <p className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">{label}</p>
+            <p className="font-title text-lg text-slate-900 dark:text-foreground">{value}</p>
         </div>
     </div>
 )
 
 const ChartCard = ({ title, icon: Icon, children }) => (
-    <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-6 shadow-lg shadow-slate-200/60 dark:shadow-black/20">
+    <div className="rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-6" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
         <div className="mb-4 flex items-center gap-2">
             {Icon && <Icon size={18} className="text-slate-600 dark:text-muted-foreground" />}
-            <h3 className="text-sm font-black uppercase tracking-widest text-slate-700 dark:text-muted-foreground">{title}</h3>
+            <h3 className="font-title text-xs tracking-wide text-slate-700 dark:text-muted-foreground">{title}</h3>
         </div>
         {children}
     </div>
@@ -138,7 +138,8 @@ const TournamentStats = () => {
                 .lg\\:grid-cols-2 { grid-template-columns: 1fr !important; gap: 1rem !important; }
                 .recharts-responsive-container { height: 220px !important; }
                 .recharts-responsive-container svg { overflow: visible !important; }
-                .rounded-3xl { box-shadow: none !important; }
+                .rounded-3xl, .rounded-2xl, [style*="box-shadow"] { box-shadow: none !important; }
+                .rounded-2xl, .rounded-3xl { border-width: 1px !important; }
                 .space-y-10 { gap: 0.75rem !important; }
                 .mb-8 { margin-bottom: 0.75rem !important; }
                 .mt-8 { margin-top: 0.75rem !important; }
@@ -175,7 +176,8 @@ const TournamentStats = () => {
                     </div>
                     <button
                         onClick={handleDownloadPDF}
-                        className="flex cursor-pointer items-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black uppercase tracking-widest text-white transition hover:bg-slate-700"
+                        className="flex cursor-pointer items-center gap-2 rounded-2xl border-2 border-slate-900 bg-slate-900 px-5 py-3 font-title text-[11px] tracking-wide text-white transition active:translate-y-px hover:bg-slate-700"
+                        style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
                     >
                         <Download size={16} />
                         Scarica PDF
@@ -286,9 +288,9 @@ const TournamentStats = () => {
                     </ChartCard>
                 </div>
 
-                <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-lg shadow-slate-200/60 dark:shadow-black/20">
+                <div className="mt-8 overflow-hidden rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-border bg-slate-50 dark:bg-muted px-6 py-4">
-                        <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-slate-700 dark:text-muted-foreground">
+                        <h3 className="flex items-center gap-2 font-title text-xs tracking-wide text-slate-700 dark:text-muted-foreground">
                             <CircuitBoard size={16} />
                             Dettaglio gare
                         </h3>
@@ -310,7 +312,8 @@ const TournamentStats = () => {
                                 })
                                 downloadCSV(headers, rows, `${tournament.name}-gare.csv`)
                             }}
-                            className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-slate-800 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-slate-700"
+                            className="flex cursor-pointer items-center gap-1.5 rounded-xl border-2 border-slate-800 bg-slate-800 px-3 py-1.5 font-title text-[9px] tracking-wide text-white transition active:translate-y-px hover:bg-slate-700"
+                            style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
                         >
                             <FileSpreadsheet size={12} />
                             CSV
@@ -319,7 +322,7 @@ const TournamentStats = () => {
                     <div className="overflow-x-auto p-1">
                         <table className="w-full text-left text-sm">
                             <thead>
-                                <tr className="border-b border-slate-200 dark:border-border text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">
+                                <tr className="border-b border-slate-200 dark:border-border font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">
                                     <th className="px-4 py-3">Gara</th>
                                     <th className="px-4 py-3">Circuito</th>
                                     {tournament.standings.slice().reverse().map((s) => (
@@ -341,14 +344,21 @@ const TournamentStats = () => {
                                             </td>
                                             {tournament.standings.slice().reverse().map((s) => {
                                                 const res = resultMap[s.playerId]
-                                                let badge = 'bg-slate-100 dark:bg-muted text-slate-500 dark:text-muted-foreground'
-                                                if (res?.position === 1) badge = 'bg-emerald-100 text-emerald-700'
-                                                else if (res?.position === 2) badge = 'bg-blue-100 text-blue-700'
-                                                else if (res?.position === 3) badge = 'bg-amber-100 text-amber-700'
+                                                let badge = 'bg-slate-100 dark:bg-muted text-slate-500 dark:text-muted-foreground border-transparent'
+                                                if (res?.position === 1) badge = 'bg-circuit-gold text-circuit-ink border-circuit-ink'
+                                                else if (res?.position === 2) badge = 'bg-slate-300 text-slate-800 border-circuit-ink'
+                                                else if (res?.position === 3) badge = 'bg-orange-400 text-orange-950 border-circuit-ink'
                                                 return (
                                                     <td key={s.playerId} className="px-3 py-3 text-right">
-                                                        <span className={`inline-block rounded-lg px-2 py-0.5 text-[11px] font-black ${badge}`}>
-                                                            {res ? `#${res.position}  ${res.points}pt` : '—'}
+                                                        <span className="inline-flex items-center justify-end gap-1.5">
+                                                            {res ? (
+                                                                <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full border-2 font-title text-[10px] ${badge}`}>
+                                                                    {res.position}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-[11px] font-black text-slate-400 dark:text-muted-foreground">—</span>
+                                                            )}
+                                                            {res && <span className="text-[11px] font-black text-slate-600 dark:text-muted-foreground">{res.points}pt</span>}
                                                         </span>
                                                     </td>
                                                 )

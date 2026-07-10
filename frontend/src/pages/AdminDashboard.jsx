@@ -40,12 +40,12 @@ const METRIC_CARD_COLORS = {
 }
 
 const MetricMini = ({ icon: Icon, label, value, sub, color = 'amber' }) => (
-    <div className={`rounded-2xl border p-4 flex flex-col gap-1 ${METRIC_CARD_COLORS[color] ?? METRIC_CARD_COLORS.amber}`}>
+    <div className={`rounded-2xl border-2 p-4 flex flex-col gap-1 ${METRIC_CARD_COLORS[color] ?? METRIC_CARD_COLORS.amber}`} style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
         <div className="flex items-center justify-between mb-0.5">
-            <p className="text-[8px] font-black uppercase tracking-[0.3em] text-slate-500 dark:text-muted-foreground leading-none">{label}</p>
+            <p className="font-title text-[8px] tracking-wide text-slate-500 dark:text-muted-foreground leading-none">{label}</p>
             <Icon size={12} />
         </div>
-        <p className="text-2xl font-black leading-none">{value}</p>
+        <p className="font-title text-2xl leading-none">{value}</p>
         {sub && <p className="text-[9px] text-slate-400 dark:text-muted-foreground">{sub}</p>}
     </div>
 )
@@ -77,7 +77,7 @@ const AdminProfileCard = ({ user, players, charactersById }) => {
     const avatarSrc = favChar?.img_url ?? playerData?.img_url ?? null
 
     return (
-        <div className="flex h-full flex-col items-center gap-4 rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5">
+        <div className="flex h-full flex-col items-center gap-4 rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-5" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
             <div className="relative mt-1">
                 <div className="absolute inset-0 rounded-full bg-emerald-400/20 blur-xl scale-150 pointer-events-none" />
                 <div className="relative flex h-20 w-20 items-center justify-center rounded-full border-[2.5px] border-emerald-400 overflow-hidden bg-gradient-to-br from-emerald-400 to-green-500 shadow-lg shadow-emerald-400/20">
@@ -89,7 +89,7 @@ const AdminProfileCard = ({ user, players, charactersById }) => {
             </div>
             <div className="flex flex-1 flex-col items-center gap-1 text-center">
                 <p className="text-sm font-black text-slate-900 dark:text-foreground">{playerData?.nickname ?? user?.username}</p>
-                <p className="text-[9px] font-black uppercase tracking-[0.4em] text-emerald-600 dark:text-emerald-400">Admin</p>
+                <p className="font-title text-[9px] tracking-wide text-emerald-600 dark:text-emerald-400">Admin</p>
                 {favChar && (
                     <div className="mt-1 flex items-center gap-1">
                         {favChar.img_url && <img src={favChar.img_url} alt={favChar.name} className="h-4 w-4 rounded-full object-cover" />}
@@ -98,7 +98,7 @@ const AdminProfileCard = ({ user, players, charactersById }) => {
                 )}
             </div>
             <Link to="/dashboard"
-                className="w-full rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 py-2 text-center text-[9px] font-black uppercase tracking-[0.3em] text-emerald-700 dark:text-emerald-300 transition hover:bg-emerald-100 dark:hover:bg-emerald-500/15">
+                className="w-full rounded-xl border-2 border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 py-2 text-center font-title text-[9px] tracking-wide text-emerald-700 dark:text-emerald-300 transition active:translate-y-px hover:bg-emerald-100 dark:hover:bg-emerald-500/15">
                 Vedi Profilo
             </Link>
         </div>
@@ -110,7 +110,7 @@ const PlayersStatCard = ({ players, tournaments }) => {
     const faces = players.slice(0, 5)
     const sparkData = tournaments.slice(-8).map(t => t.participant_ids?.length ?? 0)
     return (
-        <div className="flex items-center gap-3 rounded-2xl border border-emerald-100 dark:border-emerald-500/20 bg-emerald-50/70 dark:bg-emerald-500/8 px-4 py-3">
+        <div className="flex items-center gap-3 rounded-2xl border-2 border-emerald-100 dark:border-emerald-500/20 bg-emerald-50/70 dark:bg-emerald-500/8 px-4 py-3" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
             <div className="flex -space-x-2 shrink-0">
                 {faces.map((p, i) => (
                     <div key={p.id} style={{ zIndex: 10 - i }}
@@ -129,8 +129,8 @@ const PlayersStatCard = ({ players, tournaments }) => {
             </div>
             <Sparkline data={sparkData} color="#10b981" height={28} width={68} />
             <div className="ml-auto text-right shrink-0">
-                <p className="text-xl font-black text-emerald-700 dark:text-emerald-300 leading-none">{players.length}</p>
-                <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-0.5">Giocatori</p>
+                <p className="font-title text-xl text-emerald-700 dark:text-emerald-300 leading-none">{players.length}</p>
+                <p className="font-title text-[8px] tracking-wide text-slate-500 mt-0.5">Giocatori</p>
             </div>
         </div>
     )
@@ -139,10 +139,10 @@ const PlayersStatCard = ({ players, tournaments }) => {
 const RacesStatCard = ({ completedRaces, totalRaces }) => {
     const pct = totalRaces > 0 ? Math.min(100, Math.round((completedRaces / totalRaces) * 100)) : 0
     return (
-        <div className="flex items-center gap-3 rounded-2xl border border-rose-100 dark:border-rose-500/20 bg-rose-50/70 dark:bg-rose-500/8 px-4 py-3">
+        <div className="flex items-center gap-3 rounded-2xl border-2 border-rose-100 dark:border-rose-500/20 bg-rose-50/70 dark:bg-rose-500/8 px-4 py-3" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
             <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
-                    <p className="text-[8px] font-black uppercase tracking-widest text-slate-500">Completamento</p>
+                    <p className="font-title text-[8px] tracking-wide text-slate-500">Completamento</p>
                     <p className="text-[9px] font-black text-rose-600 dark:text-rose-400">{pct}%</p>
                 </div>
                 <div className="h-1.5 rounded-full bg-rose-100 dark:bg-rose-900/40 overflow-hidden mb-2">
@@ -156,15 +156,15 @@ const RacesStatCard = ({ completedRaces, totalRaces }) => {
                 </div>
             </div>
             <div className="text-right shrink-0">
-                <p className="text-xl font-black text-rose-700 dark:text-rose-300 leading-none">{completedRaces}</p>
-                <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-0.5">Gare</p>
+                <p className="font-title text-xl text-rose-700 dark:text-rose-300 leading-none">{completedRaces}</p>
+                <p className="font-title text-[8px] tracking-wide text-slate-500 mt-0.5">Gare</p>
             </div>
         </div>
     )
 }
 
 const TrophiesStatCard = ({ concluded }) => (
-    <div className="flex items-center gap-3 rounded-2xl border border-amber-100 dark:border-amber-500/20 bg-amber-50/70 dark:bg-amber-500/8 px-4 py-3">
+    <div className="flex items-center gap-3 rounded-2xl border-2 border-amber-100 dark:border-amber-500/20 bg-amber-50/70 dark:bg-amber-500/8 px-4 py-3" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
         <div className="flex flex-wrap gap-1 flex-1">
             {concluded > 0
                 ? Array.from({ length: Math.min(concluded, 8) }).map((_, i) => (
@@ -175,8 +175,8 @@ const TrophiesStatCard = ({ concluded }) => (
             {concluded > 8 && <span className="text-[9px] font-black text-amber-500">+{concluded - 8}</span>}
         </div>
         <div className="text-right shrink-0">
-            <p className="text-xl font-black text-amber-700 dark:text-amber-300 leading-none">{concluded}</p>
-            <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-0.5">Trofei</p>
+            <p className="font-title text-xl text-amber-700 dark:text-amber-300 leading-none">{concluded}</p>
+            <p className="font-title text-[8px] tracking-wide text-slate-500 mt-0.5">Trofei</p>
         </div>
     </div>
 )
@@ -184,7 +184,7 @@ const TrophiesStatCard = ({ concluded }) => (
 // ── Tournament Timeline Widget ───────────────────────────────────
 const TournamentTimeline = ({ tournament }) => {
     if (!tournament) return (
-        <div className="flex items-center justify-center rounded-2xl border border-dashed border-slate-200 dark:border-border bg-white dark:bg-card p-5 h-full">
+        <div className="flex items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-border bg-white dark:bg-card p-5 h-full">
             <p className="text-xs text-slate-400 dark:text-muted-foreground">Nessun torneo attivo</p>
         </div>
     )
@@ -196,8 +196,8 @@ const TournamentTimeline = ({ tournament }) => {
     ]
     const currentIdx = STEPS.findIndex(s => s.key === tournament.status)
     return (
-        <div className="flex flex-col rounded-2xl border border-emerald-100 dark:border-emerald-500/20 bg-white dark:bg-card p-4 h-full">
-            <p className="text-[8px] font-black uppercase tracking-[0.35em] text-emerald-600 dark:text-emerald-400 mb-1">Torneo recente</p>
+        <div className="flex flex-col rounded-2xl border-2 border-emerald-100 dark:border-emerald-500/20 bg-white dark:bg-card p-4 h-full" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+            <p className="font-title text-[8px] tracking-wide text-emerald-600 dark:text-emerald-400 mb-1">Torneo recente</p>
             <p className="text-sm font-black text-slate-900 dark:text-foreground truncate mb-4">{tournament.name}</p>
             <div className="relative flex-1 pl-6">
                 <div className="absolute left-[11px] top-1 bottom-1 w-px border-l-2 border-dashed border-slate-200 dark:border-white/10" />
@@ -228,7 +228,7 @@ const TournamentTimeline = ({ tournament }) => {
                 </div>
             </div>
             <Link to={`/tournaments/${tournament.id}`}
-                className="mt-4 w-full rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 py-1.5 text-center text-[9px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-300 transition hover:bg-emerald-100 dark:hover:bg-emerald-500/20">
+                className="mt-4 w-full rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border-2 border-emerald-200 dark:border-emerald-500/30 py-1.5 text-center font-title text-[9px] tracking-wide text-emerald-700 dark:text-emerald-300 transition active:translate-y-px hover:bg-emerald-100 dark:hover:bg-emerald-500/20">
                 Apri Torneo
             </Link>
         </div>
@@ -282,7 +282,7 @@ const PanoramicaTab = ({ stats, tournaments, activeTournament, players, characte
                         thirdAction,
                     ]
                 })().map(({ to, label, desc, color, icon: Icon }) => (
-                    <Link key={to} to={to} className="group flex items-center gap-3 rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card p-4 transition hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-sm">
+                    <Link key={to} to={to} className="group flex items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-4 transition hover:border-emerald-300 dark:hover:border-emerald-700" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${color}`}>
                             <Icon size={16} className="text-white" />
                         </div>
@@ -299,9 +299,9 @@ const PanoramicaTab = ({ stats, tournaments, activeTournament, players, characte
         </div>
 
         {/* Ultimi tornei */}
-        <div className="rounded-[2rem] border border-slate-200 dark:border-border bg-white dark:bg-card shadow-xl overflow-hidden">
+        <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
             <div className="flex items-center justify-between gap-3 p-5 border-b border-slate-100 dark:border-border">
-                <p className="text-xs font-black uppercase tracking-[0.35em] text-slate-500 dark:text-muted-foreground">Ultimi tornei</p>
+                <p className="font-title text-xs tracking-wide text-slate-500 dark:text-muted-foreground">Ultimi tornei</p>
                 <Link to="/history" className="text-xs font-black text-emerald-600 dark:text-emerald-400 hover:underline">Vedi tutti</Link>
             </div>
             <div className="divide-y divide-slate-100 dark:divide-white/5">
@@ -322,11 +322,11 @@ const PanoramicaTab = ({ stats, tournaments, activeTournament, players, characte
                                     🏁 {t.n_races}
                                 </span>
                             )}
-                            <span className={`rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${STATUS_COLOR[t.status] ?? STATUS_COLOR.da_svolgere}`}>
+                            <span className={`rounded-full px-2.5 py-0.5 font-title text-[9px] tracking-wide ${STATUS_COLOR[t.status] ?? STATUS_COLOR.da_svolgere}`}>
                                 {STATUS_LABEL[t.status] ?? t.status}
                             </span>
                             <Link to={`/tournaments/${t.id}`}
-                                className="flex items-center gap-1 rounded-lg border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-2 py-1 text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 transition hover:text-emerald-500 hover:border-emerald-300 dark:hover:border-emerald-700">
+                                className="flex items-center gap-1 rounded-lg border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-2 py-1 font-title text-[9px] tracking-wide text-slate-600 dark:text-slate-300 transition active:translate-y-px hover:text-emerald-500 hover:border-emerald-300 dark:hover:border-emerald-700">
                                 <ExternalLink size={10} /> Apri
                             </Link>
                         </div>
@@ -353,18 +353,18 @@ const TorneiTab = ({ tournaments }) => {
                 <div className="flex gap-1 overflow-x-auto">
                     {FILTERS.map(f => (
                         <button key={f} type="button" onClick={() => setFilter(f)}
-                            className={`shrink-0 rounded-xl px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition ${filter === f ? 'bg-emerald-500 text-white' : 'border border-slate-200 dark:border-border bg-white dark:bg-card text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'}`}>
+                            className={`shrink-0 rounded-xl px-3 py-1.5 font-title text-[10px] tracking-wide transition active:translate-y-px ${filter === f ? 'bg-emerald-500 text-white' : 'border-2 border-slate-200 dark:border-border bg-white dark:bg-card text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'}`}>
                             {FILTER_LABELS[f]}
                         </button>
                     ))}
                 </div>
                 <Link to="/tournaments/new"
-                    className="flex items-center gap-1.5 rounded-xl bg-emerald-500 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-emerald-400">
+                    className="flex items-center gap-1.5 rounded-xl bg-emerald-500 px-3 py-1.5 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-400">
                     <Plus size={12} /> Nuovo torneo
                 </Link>
             </div>
 
-            <div className="rounded-[2rem] border border-slate-200 dark:border-border bg-white dark:bg-card shadow-xl overflow-hidden">
+            <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                 {filtered.map((t, i) => (
                     <div key={t.id} className={`flex items-center justify-between gap-4 px-5 py-4 ${i > 0 ? 'border-t border-slate-100 dark:border-white/5' : ''}`}>
                         <div className="min-w-0">
@@ -375,11 +375,11 @@ const TorneiTab = ({ tournaments }) => {
                             </p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                            <span className={`rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${STATUS_COLOR[t.status] ?? STATUS_COLOR.da_svolgere}`}>
+                            <span className={`rounded-full px-2.5 py-0.5 font-title text-[9px] tracking-wide ${STATUS_COLOR[t.status] ?? STATUS_COLOR.da_svolgere}`}>
                                 {STATUS_LABEL[t.status] ?? t.status}
                             </span>
                             <Link to={`/tournaments/${t.id}`}
-                                className="flex items-center gap-1 rounded-lg border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-2 py-1 text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 transition hover:text-emerald-500 hover:border-emerald-300">
+                                className="flex items-center gap-1 rounded-lg border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-2 py-1 font-title text-[9px] tracking-wide text-slate-600 dark:text-slate-300 transition active:translate-y-px hover:text-emerald-500 hover:border-emerald-300">
                                 <ExternalLink size={10} /> Apri
                             </Link>
                         </div>
@@ -416,16 +416,16 @@ const GiocatoriTab = ({ players }) => {
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                         placeholder="Cerca giocatore..."
-                        className="w-full rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-foreground placeholder:text-slate-400 outline-none focus:border-emerald-500 transition"
+                        className="w-full rounded-xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-foreground placeholder:text-slate-400 outline-none focus:border-emerald-500 transition"
                     />
                 </div>
                 <Link to="/admin/players"
-                    className="flex items-center gap-1.5 rounded-xl bg-blue-500 px-3 py-2.5 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-blue-400">
+                    className="flex items-center gap-1.5 rounded-xl bg-blue-500 px-3 py-2.5 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-blue-400">
                     <Plus size={12} /> Aggiungi
                 </Link>
             </div>
 
-            <div className="rounded-[2rem] border border-slate-200 dark:border-border bg-white dark:bg-card shadow-xl overflow-hidden">
+            <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                 <div className="grid gap-px">
                     {filtered.map((p, i) => (
                         <div key={p.id} className={`flex items-center gap-3 px-4 py-3 transition hover:bg-slate-50 dark:hover:bg-white/3 ${i > 0 ? 'border-t border-slate-100 dark:border-white/5' : ''}`}>
@@ -450,7 +450,7 @@ const GiocatoriTab = ({ players }) => {
             </div>
 
             <Link to="/admin/players"
-                className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 transition hover:text-slate-900 dark:hover:text-foreground hover:border-emerald-300">
+                className="flex items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-3 font-title text-xs tracking-wide text-slate-600 dark:text-slate-400 transition active:translate-y-px hover:text-slate-900 dark:hover:text-foreground hover:border-emerald-300">
                 <Users size={14} /> Gestione completa giocatori
                 <ArrowRight size={13} className="ml-auto" />
             </Link>
@@ -518,7 +518,7 @@ export default function AdminDashboard() {
                             </div>
                         </div>
                         <Link to="/tournaments/new"
-                            className="hidden sm:flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2 text-xs font-black uppercase tracking-widest text-white transition hover:bg-emerald-400 shadow-sm">
+                            className="hidden sm:flex items-center gap-2 rounded-2xl border-2 border-circuit-ink bg-emerald-500 px-4 py-2 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-400" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                             <Plus size={14} /> Nuovo torneo
                         </Link>
                     </div>
@@ -528,7 +528,7 @@ export default function AdminDashboard() {
                         <div className="flex gap-0.5 overflow-x-auto">
                             {TABS.map(({ key, label, icon: Icon }) => (
                                 <button key={key} type="button" onClick={() => setActiveTab(key)}
-                                    className={`flex shrink-0 items-center gap-2 px-4 py-3 text-xs font-black uppercase tracking-widest border-b-2 transition ${activeTab === key ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-transparent text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'}`}>
+                                    className={`flex shrink-0 items-center gap-2 px-4 py-3 font-title text-[10px] tracking-wide border-b-2 transition active:translate-y-px ${activeTab === key ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-transparent text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'}`}>
                                     <Icon size={13} />
                                     {label}
                                 </button>

@@ -385,10 +385,10 @@ const TournamentDetail = () => {
             <AppLayout>
                 <section className="mx-auto max-w-5xl px-4 py-8 space-y-6 animate-fade-in">
                     {/* Header */}
-                    <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-6 shadow-sm">
+                    <div className="rounded-2xl border-2 border-slate-900/20 dark:border-white/15 bg-white dark:bg-card p-6" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                         <div className="flex flex-wrap items-start justify-between gap-4">
                             <div>
-                                <p className="text-xs font-black uppercase tracking-[0.35em] text-emerald-600 dark:text-emerald-400">Torneo #{getTournamentDisplayNumber(tournament.id)}</p>
+                                <p className="font-title text-[10px] tracking-wide text-emerald-600 dark:text-emerald-400">Torneo #{getTournamentDisplayNumber(tournament.id)}</p>
                                 <h1 className="mt-1 text-3xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground">{tournament.name}</h1>
                                 <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-500 dark:text-muted-foreground">
                                     <span>{tournament.date}</span>
@@ -414,25 +414,26 @@ const TournamentDetail = () => {
                             </div>
                             <div className="flex items-center gap-2 flex-wrap">
                                 <button type="button" onClick={() => navigate('/history')}
-                                    className="rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-600 dark:text-muted-foreground transition hover:border-slate-300 dark:hover:border-slate-500">
+                                    className="font-title rounded-xl border-2 border-slate-300 dark:border-border bg-slate-50 dark:bg-muted px-4 py-2 text-[10px] tracking-wide text-slate-600 dark:text-muted-foreground transition active:translate-y-px hover:border-slate-400 dark:hover:border-slate-500">
                                     ← Storico
                                 </button>
                                 <button type="button" onClick={() => navigate(`/tournaments/${tournamentId}/stats`)}
-                                    className="rounded-2xl bg-emerald-600 px-4 py-2 text-xs font-black uppercase tracking-widest text-white transition hover:bg-emerald-500">
+                                    className="font-title rounded-xl border-2 border-emerald-800/30 bg-emerald-600 px-4 py-2 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-500"
+                                    style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                     Stats
                                 </button>
                                 <button type="button" onClick={() => navigate(`/schedina/${tournamentId}`, { state: { fromAdmin: adminModeOn } })}
-                                    className="rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-4 py-2 text-xs font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-300 transition hover:bg-emerald-100">
+                                    className="font-title rounded-xl border-2 border-emerald-300 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-4 py-2 text-[10px] tracking-wide text-emerald-700 dark:text-emerald-300 transition active:translate-y-px hover:bg-emerald-100">
                                     Schedina
                                 </button>
                                 {userHasPredicted !== null && (
-                                    <span className={`flex items-center gap-1.5 rounded-2xl px-3 py-2 text-[10px] font-black uppercase tracking-wider ${userHasPredicted ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30'}`}>
+                                    <span className={`font-title flex items-center gap-1.5 rounded-xl px-3 py-2 text-[9px] tracking-wide ${userHasPredicted ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-2 border-emerald-300 dark:border-emerald-500/30' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-2 border-amber-300 dark:border-amber-500/30'}`}>
                                         {userHasPredicted ? '✓ Hai compilato la schedina — esito a fine torneo' : '○ Non hai compilato la schedina'}
                                     </span>
                                 )}
                                 {isParticipantAdmin && (
                                     <button type="button" onClick={() => setAdminModeOn(true)}
-                                        className="flex items-center gap-1.5 rounded-2xl border border-violet-200 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/10 px-4 py-2 text-xs font-black uppercase tracking-widest text-violet-700 dark:text-violet-300 transition hover:bg-violet-100">
+                                        className="font-title flex items-center gap-1.5 rounded-xl border-2 border-violet-300 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/10 px-4 py-2 text-[10px] tracking-wide text-violet-700 dark:text-violet-300 transition active:translate-y-px hover:bg-violet-100">
                                         <Settings size={13} /> Modalità Admin
                                     </button>
                                 )}
@@ -441,7 +442,7 @@ const TournamentDetail = () => {
 
                         {tournamentParticipants.length > 0 && (
                             <div className="mt-4 flex flex-wrap items-center gap-2">
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Partecipanti</span>
+                                <span className="font-title text-[9px] tracking-wide text-slate-400">Partecipanti</span>
                                 <div className="flex -space-x-2">
                                     {tournamentParticipants.slice(0, 8).map((p) => (
                                         <div key={p.id} title={p.nickname} className="h-7 w-7 overflow-hidden rounded-full border-2 border-white dark:border-card bg-slate-100 dark:bg-slate-800 shadow-sm">
@@ -459,13 +460,13 @@ const TournamentDetail = () => {
                     Classifica/Gare/Carte) su schermi piccoli flex-1 le comprimeva
                     finché l'ultima non veniva tagliata dal contenitore, qui invece
                     restano alla larghezza naturale e la riga scorre orizzontalmente. */}
-                    <div className="flex gap-1 overflow-x-auto rounded-2xl bg-slate-100 dark:bg-muted p-1">
+                    <div className="flex gap-1 overflow-x-auto rounded-xl border-2 border-slate-200 dark:border-border bg-slate-100 dark:bg-muted p-1">
                         {USER_TABS.map(({ key, label, icon: Icon }) => (
                             <button
                                 key={key}
                                 type="button"
                                 onClick={() => setUserTab(key)}
-                                className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-widest transition-all justify-center ${
+                                className={`font-title flex shrink-0 items-center gap-2 rounded-lg px-4 py-2.5 text-[10px] tracking-wide transition-all justify-center ${
                                     userTab === key
                                         ? 'bg-white dark:bg-card text-slate-900 dark:text-foreground shadow-sm'
                                         : 'text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'
@@ -704,31 +705,32 @@ const TournamentDetail = () => {
             return (
                 <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
                     onClick={() => setConfirmDeleteTournament(false)}>
-                    <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl animate-scale-in"
+                    <div className="w-full max-w-sm rounded-2xl border-2 border-white/20 bg-slate-900 p-6 animate-scale-in"
+                        style={{ boxShadow: 'var(--circuit-shadow-lg)' }}
                         onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-rose-500/20">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-rose-500/30 bg-rose-500/20">
                                 <Trash2 size={18} className="text-rose-400" />
                             </div>
                             <div>
-                                <p className="text-xs font-black uppercase tracking-[0.3em] text-rose-400">Azione irreversibile</p>
+                                <p className="font-title text-[9px] tracking-wide text-rose-400">Azione irreversibile</p>
                                 <h4 className="text-lg font-black text-white">Eliminare il torneo?</h4>
                             </div>
                         </div>
 
                         <div className="space-y-2 mb-5">
-                            <div className="flex items-start gap-2 rounded-2xl border border-rose-500/25 bg-rose-500/8 p-3">
+                            <div className="flex items-start gap-2 rounded-xl border-2 border-rose-500/25 bg-rose-500/8 p-3">
                                 <AlertCircle size={14} className="shrink-0 mt-0.5 text-rose-400" />
                                 <p className="text-[11px] text-slate-300">Verranno eliminate a cascata tutte le gare, i risultati e le schedine associate. Non è possibile annullare.</p>
                             </div>
                             {hasRaces && (
-                                <div className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/8 px-3 py-2">
+                                <div className="flex items-center gap-2 rounded-xl border-2 border-amber-500/20 bg-amber-500/8 px-3 py-2">
                                     <span className="text-amber-400">🏁</span>
                                     <p className="text-[11px] text-amber-300">{tournament.raceCount} gare con risultati verranno perse.</p>
                                 </div>
                             )}
                             {hasWinner && (
-                                <div className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/8 px-3 py-2">
+                                <div className="flex items-center gap-2 rounded-xl border-2 border-amber-500/20 bg-amber-500/8 px-3 py-2">
                                     <span className="text-amber-400">🏆</span>
                                     <p className="text-[11px] text-amber-300">Il torneo ha un vincitore ufficiale — verrà rimosso dallo storico.</p>
                                 </div>
@@ -737,11 +739,12 @@ const TournamentDetail = () => {
 
                         <div className="flex gap-3">
                             <button onClick={() => setConfirmDeleteTournament(false)}
-                                className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-white/10">
+                                className="flex-1 rounded-xl border-2 border-white/15 bg-white/5 px-4 py-2.5 text-sm font-bold text-white transition active:translate-y-px hover:bg-white/10">
                                 Annulla
                             </button>
                             <button onClick={handleDeleteTournament} disabled={deleting}
-                                className="flex-1 rounded-2xl bg-rose-600 px-4 py-2.5 text-sm font-black text-white transition hover:bg-rose-500 disabled:opacity-60">
+                                className="font-title flex-1 rounded-xl border-2 border-rose-900/30 bg-rose-600 px-4 py-2.5 text-[11px] tracking-wide text-white transition active:translate-y-px hover:bg-rose-500 disabled:opacity-60"
+                                style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                 {deleting ? 'Eliminazione...' : 'Elimina definitivamente'}
                             </button>
                         </div>
@@ -754,15 +757,16 @@ const TournamentDetail = () => {
         {showCardModal && selectedCard && (
             <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
                 onClick={() => { setShowCardModal(false); setCardEffectOwner('') }}>
-                <div className="w-full max-w-md rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-6 shadow-2xl animate-scale-in"
+                <div className="w-full max-w-md rounded-2xl border-2 border-slate-200 dark:border-white/15 bg-white dark:bg-slate-900 p-6 animate-scale-in"
+                    style={{ boxShadow: 'var(--circuit-shadow-lg)' }}
                     onClick={(e) => e.stopPropagation()}>
                     {/* Header */}
                     <div className="flex items-center gap-3 mb-5">
-                        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg ${selectedCard.card_type === 'master' ? 'from-amber-400 to-orange-500' : 'from-cyan-400 to-blue-600'}`}>
+                        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-circuit-ink bg-gradient-to-br text-white ${selectedCard.card_type === 'master' ? 'from-amber-400 to-orange-500' : 'from-cyan-400 to-blue-600'}`} style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                             {selectedCard.card_type === 'master' ? <Shield size={22} /> : <Ban size={22} />}
                         </div>
                         <div>
-                            <p className={`text-xs font-black uppercase tracking-[0.3em] ${selectedCard.card_type === 'master' ? 'text-amber-500 dark:text-amber-400' : 'text-cyan-600 dark:text-cyan-400'}`}>
+                            <p className={`font-title text-[9px] tracking-wide ${selectedCard.card_type === 'master' ? 'text-amber-500 dark:text-amber-400' : 'text-cyan-600 dark:text-cyan-400'}`}>
                                 Registra uso carta
                             </p>
                             <h4 className="text-lg font-black text-slate-900 dark:text-white">{selectedCard.card_name}</h4>
@@ -772,7 +776,7 @@ const TournamentDetail = () => {
                     <div className="space-y-4">
                         {/* Portatore della carta */}
                         <label className="block space-y-1.5">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Chi usa la carta</span>
+                            <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-slate-400">Chi usa la carta</span>
                             <PortalSelect
                                 value={cardEffectOwner}
                                 onChange={setCardEffectOwner}
@@ -790,7 +794,7 @@ const TournamentDetail = () => {
 
                         {/* Effetto */}
                         <label className="block space-y-1.5">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Effetto applicato</span>
+                            <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-slate-400">Effetto applicato</span>
                             <PortalSelect
                                 value={cardEffectOption}
                                 onChange={(v) => { setCardEffectOption(v); setCardEffectCustom('') }}
@@ -804,20 +808,20 @@ const TournamentDetail = () => {
 
                         {cardEffectOption === 'custom' && (
                             <label className="block space-y-1.5">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Descrivi l'effetto</span>
+                                <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-slate-400">Descrivi l'effetto</span>
                                 <input
                                     type="text"
                                     value={cardEffectCustom}
                                     onChange={(e) => setCardEffectCustom(e.target.value)}
                                     placeholder="Es. Annulla la penalizzazione della gara 3"
-                                    className="w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-3 text-sm text-slate-900 dark:text-white outline-none focus:border-amber-400 placeholder:text-slate-400"
+                                    className="w-full rounded-xl border-2 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-3 text-sm text-slate-900 dark:text-white outline-none focus:border-amber-400 placeholder:text-slate-400"
                                 />
                             </label>
                         )}
 
                         {/* Bersaglio */}
                         <label className="block space-y-1.5">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                            <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-slate-400">
                                 {selectedCard.card_type === 'master' ? 'Beneficiario / contesto (opzionale)' : 'Giocatore bersaglio'}
                             </span>
                             <PortalSelect
@@ -835,7 +839,7 @@ const TournamentDetail = () => {
 
                         {/* Gara — collega l'uso allo storico carte per fase/gara */}
                         <label className="block space-y-1.5">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Gara (opzionale)</span>
+                            <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-slate-400">Gara (opzionale)</span>
                             <PortalSelect
                                 value={cardRaceId}
                                 onChange={setCardRaceId}
@@ -856,12 +860,13 @@ const TournamentDetail = () => {
 
                     <div className="mt-5 flex gap-3">
                         <button type="button" onClick={() => { setShowCardModal(false); setCardEffectOwner('') }}
-                            className="flex-1 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-sm font-bold text-slate-700 dark:text-white transition hover:bg-slate-100 dark:hover:bg-white/10">
+                            className="flex-1 rounded-xl border-2 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-sm font-bold text-slate-700 dark:text-white transition active:translate-y-px hover:bg-slate-100 dark:hover:bg-white/10">
                             Annulla
                         </button>
                         <button type="button" onClick={handleUseCard}
                             disabled={usingCard || !cardEffectOption || !cardEffectOwner || (cardEffectOption === 'custom' && !cardEffectCustom.trim())}
-                            className={`flex-1 rounded-2xl px-4 py-2.5 text-sm font-black uppercase tracking-wider text-white transition bg-gradient-to-r disabled:opacity-50 disabled:cursor-not-allowed ${selectedCard.card_type === 'master' ? 'from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400' : 'from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400'}`}>
+                            className={`font-title flex-1 rounded-xl border-2 border-black/20 px-4 py-2.5 text-[11px] tracking-wide text-white transition bg-gradient-to-r active:translate-y-px disabled:opacity-50 disabled:cursor-not-allowed ${selectedCard.card_type === 'master' ? 'from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400' : 'from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400'}`}
+                            style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                             {usingCard ? 'Registrazione…' : 'Registra uso'}
                         </button>
                     </div>
@@ -872,12 +877,12 @@ const TournamentDetail = () => {
         <AppLayout>
             <section className="mx-auto max-w-7xl px-4 py-12 space-y-10">
                 <ApiBanner title="Errore caricamento torneo" message={errorMessage} />
-                <div className="rounded-3xl border border-slate-200 dark:border-emerald-900/40 bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-emerald-950 p-8 shadow-xl shadow-slate-200/50 dark:shadow-slate-900/20">
+                <div className="rounded-2xl border-2 border-slate-900/20 dark:border-emerald-500/30 bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-emerald-950 p-8" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                     <div className="flex items-start gap-3 mb-4">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-xl border-2 border-emerald-800/30 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                             <Trophy size={16} />
                         </div>
-                        <p className="text-xs font-black uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400 mt-1">
+                        <p className="font-title text-[10px] tracking-wide text-emerald-600 dark:text-emerald-400 mt-1.5">
                             {tournamentStatus === 'concluso' ? 'Torneo concluso' : 'Gestione torneo'}
                         </p>
                     </div>
@@ -885,13 +890,13 @@ const TournamentDetail = () => {
                         <div className="min-w-0">
                             <h1 className="text-4xl font-black uppercase tracking-tight text-slate-900 dark:text-white">{tournament.name}</h1>
                             <div className="mt-4 flex flex-wrap gap-2 text-sm">
-                                <span className="rounded-full bg-slate-100 dark:bg-white/10 px-3 py-1 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/5">Data: {tournament.date}</span>
-                                <span className="rounded-full bg-slate-100 dark:bg-white/10 px-3 py-1 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/5">Gioco: {games.find((game) => game.id === tournament.game_id)?.name ?? `#${tournament.game_id}`}</span>
-                                <span className="rounded-full bg-slate-100 dark:bg-white/10 px-3 py-1 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/5">Gare: {tournament.raceCount}/{tournament.n_races}</span>
-                                <span className={`rounded-full px-3 py-1 font-black uppercase tracking-widest border ${getTournamentStatusBadge(tournamentStatus)}`}>
+                                <span className="rounded-full bg-slate-100 dark:bg-white/10 px-3 py-1 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-white/10">Data: {tournament.date}</span>
+                                <span className="rounded-full bg-slate-100 dark:bg-white/10 px-3 py-1 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-white/10">Gioco: {games.find((game) => game.id === tournament.game_id)?.name ?? `#${tournament.game_id}`}</span>
+                                <span className="rounded-full bg-slate-100 dark:bg-white/10 px-3 py-1 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-white/10">Gare: {tournament.raceCount}/{tournament.n_races}</span>
+                                <span className={`font-title rounded-full px-3 py-1 text-[10px] tracking-wide border-2 ${getTournamentStatusBadge(tournamentStatus)}`}>
                                     Stato: {getTournamentStatusLabel(tournamentStatus)}
                                 </span>
-                                <span className="rounded-full bg-amber-50 dark:bg-amber-400/20 px-3 py-1 font-black text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/20">
+                                <span className="rounded-full bg-amber-50 dark:bg-amber-400/20 px-3 py-1 font-black text-amber-700 dark:text-amber-300 border-2 border-amber-300 dark:border-amber-500/20">
                                     <Crown size={14} className="-mt-0.5 me-1 inline" />
                                     Vincitore: {tournament.winner?.nickname ?? '—'}
                                 </span>
@@ -899,7 +904,7 @@ const TournamentDetail = () => {
                             {/* Partecipanti con avatar */}
                             {tournamentParticipants.length > 0 && (
                                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mr-1">Partecipanti</span>
+                                    <span className="font-title text-[9px] tracking-wide text-slate-400 mr-1">Partecipanti</span>
                                     <div className="flex -space-x-2">
                                         {tournamentParticipants.slice(0, 8).map((p) => {
                                             const isWithdrawn = (tournament.withdrawn_player_ids ?? []).includes(p.id)
@@ -919,7 +924,7 @@ const TournamentDetail = () => {
                                             )
                                         })}
                                     </div>
-                                    <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-black text-emerald-300 border border-emerald-500/20">
+                                    <span className="font-title rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[9px] tracking-wide text-emerald-300 border-2 border-emerald-500/30">
                                         {tournamentParticipants.length}
                                     </span>
                                     {tournamentParticipants.length > 8 && (
@@ -932,7 +937,7 @@ const TournamentDetail = () => {
                             {isParticipantAdmin && (
                                 <button
                                     onClick={() => setAdminModeOn(false)}
-                                    className="rounded-2xl border border-violet-200 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/10 px-4 py-3 text-xs font-black uppercase tracking-widest text-violet-700 dark:text-violet-300 transition hover:bg-violet-100"
+                                    className="font-title rounded-xl border-2 border-violet-300 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/10 px-4 py-3 text-[10px] tracking-wide text-violet-700 dark:text-violet-300 transition active:translate-y-px hover:bg-violet-100"
                                 >
                                     <Settings size={13} className="inline -mt-0.5 me-1" />
                                     Esci da Modalità Admin
@@ -941,7 +946,8 @@ const TournamentDetail = () => {
                             <button
                                 onClick={() => setConfirmDeleteTournament(true)}
                                 disabled={deleting}
-                                className="rounded-2xl bg-rose-600 px-5 py-3 text-sm font-black uppercase tracking-widest text-white transition hover:bg-rose-500 disabled:opacity-60 shadow-lg shadow-rose-600/30"
+                                className="font-title rounded-xl border-2 border-rose-900/30 bg-rose-600 px-5 py-3 text-[11px] tracking-wide text-white transition active:translate-y-px hover:bg-rose-500 disabled:opacity-60"
+                                style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
                             >
                                 <Trash2 size={14} className="inline -mt-0.5 me-1" />
                                 Elimina
@@ -952,35 +958,35 @@ const TournamentDetail = () => {
 
                 <TournamentInfoPanel tournament={tournament} isAdmin={isAdmin} isSuperadmin={isSuperadmin} />
 
-                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-3 shadow-sm">
+                <div className="rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-3" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                     <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                        <span className="px-2 text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Sezione</span>
+                        <span className="font-title px-2 text-[10px] tracking-wide text-slate-500 dark:text-muted-foreground">Sezione</span>
                         <div className="inline-flex rounded-xl bg-slate-100 dark:bg-muted p-1 overflow-x-auto max-w-full gap-0.5">
                             <button type="button" onClick={() => setActiveSection('management')}
-                                className={`rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest whitespace-nowrap transition ${activeSection === 'management' ? 'bg-emerald-500 text-white shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
+                                className={`font-title rounded-lg px-3 py-2 text-[10px] tracking-wide whitespace-nowrap transition ${activeSection === 'management' ? 'bg-emerald-500 text-white shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
                                 Gestione
                             </button>
                             <button type="button" onClick={() => setActiveSection('leaderboard')}
-                                className={`rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest whitespace-nowrap transition ${activeSection === 'leaderboard' ? 'bg-amber-500 text-white shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
+                                className={`font-title rounded-lg px-3 py-2 text-[10px] tracking-wide whitespace-nowrap transition ${activeSection === 'leaderboard' ? 'bg-amber-500 text-white shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
                                 Classifica
                             </button>
                             <button type="button" onClick={() => setActiveSection('races')}
-                                className={`rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest whitespace-nowrap transition ${activeSection === 'races' ? 'bg-blue-500 text-white shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
+                                className={`font-title rounded-lg px-3 py-2 text-[10px] tracking-wide whitespace-nowrap transition ${activeSection === 'races' ? 'bg-blue-500 text-white shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
                                 Gare
                             </button>
                             <button type="button" onClick={() => setActiveSection('carte')}
-                                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest whitespace-nowrap transition ${activeSection === 'carte' ? 'bg-amber-400 text-amber-950 shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
+                                className={`font-title flex items-center gap-1.5 rounded-lg px-3 py-2 text-[10px] tracking-wide whitespace-nowrap transition ${activeSection === 'carte' ? 'bg-amber-400 text-amber-950 shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
                                 <Zap size={12} />
                                 Carte
                                 {inventory.filter((c) => !c.is_consumed).length > 0 && (
-                                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[9px] font-black text-white">
+                                    <span className="font-title flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[9px] text-white">
                                         {inventory.filter((c) => !c.is_consumed).length}
                                     </span>
                                 )}
                             </button>
                             {isAdmin && (
                                 <button type="button" onClick={() => setActiveSection('schedina')}
-                                    className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest whitespace-nowrap transition ${activeSection === 'schedina' ? 'bg-sky-500 text-white shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
+                                    className={`font-title flex items-center gap-1.5 rounded-lg px-3 py-2 text-[10px] tracking-wide whitespace-nowrap transition ${activeSection === 'schedina' ? 'bg-sky-500 text-white shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
                                     <ListChecks size={12} />
                                     Schedine
                                 </button>

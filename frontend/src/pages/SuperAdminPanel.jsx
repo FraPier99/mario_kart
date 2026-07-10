@@ -70,7 +70,7 @@ const AdminProfileCard = ({ user, players, charactersById }) => {
     const avatarSrc = favChar?.img_url ?? playerData?.img_url ?? null
 
     return (
-        <div className="flex h-full flex-col items-center gap-4 rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5">
+        <div className="flex h-full flex-col items-center gap-4 rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-5" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
             {/* Anello luminoso */}
             <div className="relative mt-1">
                 <div className="absolute inset-0 rounded-full bg-amber-400/20 blur-xl scale-150 pointer-events-none" />
@@ -83,7 +83,7 @@ const AdminProfileCard = ({ user, players, charactersById }) => {
             </div>
             <div className="flex flex-1 flex-col items-center gap-1 text-center">
                 <p className="text-sm font-black text-slate-900 dark:text-foreground">{playerData?.nickname ?? user?.username}</p>
-                <p className="text-[9px] font-black uppercase tracking-[0.4em] text-amber-600 dark:text-amber-400">SuperAdmin</p>
+                <p className="font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">SuperAdmin</p>
                 {favChar && (
                     <div className="mt-1 flex items-center gap-1">
                         {favChar.img_url && <img src={favChar.img_url} alt={favChar.name} className="h-4 w-4 rounded-full object-cover" />}
@@ -92,7 +92,7 @@ const AdminProfileCard = ({ user, players, charactersById }) => {
                 )}
             </div>
             <Link to="/dashboard"
-                className="w-full rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 py-2 text-center text-[9px] font-black uppercase tracking-[0.3em] text-amber-700 dark:text-amber-300 transition hover:bg-amber-100 dark:hover:bg-amber-500/15">
+                className="w-full rounded-xl border-2 border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 py-2 text-center font-title text-[9px] tracking-wide text-amber-700 dark:text-amber-300 transition active:translate-y-px hover:bg-amber-100 dark:hover:bg-amber-500/15">
                 Modifica Profilo
             </Link>
         </div>
@@ -108,12 +108,12 @@ const MetricMini = ({ label, value, icon: Icon, color = 'amber', sub }) => {
         emerald: 'border-emerald-100 dark:border-emerald-500/20 bg-emerald-50/70 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300 [&>div>svg]:text-emerald-400',
     }
     return (
-        <div className={`rounded-2xl border p-4 flex flex-col gap-1 ${C[color] ?? C.amber}`}>
+        <div className={`rounded-2xl border-2 p-4 flex flex-col gap-1 ${C[color] ?? C.amber}`} style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
             <div className="flex items-center justify-between mb-0.5">
-                <p className="text-[8px] font-black uppercase tracking-[0.3em] text-slate-500 dark:text-muted-foreground leading-none">{label}</p>
+                <p className="font-title text-[8px] tracking-wide text-slate-500 dark:text-muted-foreground leading-none">{label}</p>
                 <Icon size={12} />
             </div>
-            <p className="text-2xl font-black leading-none">{value}</p>
+            <p className="font-title text-2xl leading-none">{value}</p>
             {sub && <p className="text-[9px] text-slate-400 dark:text-muted-foreground">{sub}</p>}
         </div>
     )
@@ -124,7 +124,7 @@ const PlayersStatCard = ({ players, tournaments }) => {
     const faces = players.slice(0, 5)
     const sparkData = tournaments.slice(-8).map(t => t.participant_ids?.length ?? 0)
     return (
-        <div className="flex items-center gap-2 rounded-2xl border border-emerald-100 dark:border-emerald-500/20 bg-emerald-50/70 dark:bg-emerald-500/8 px-3 py-3 overflow-hidden min-w-0">
+        <div className="flex items-center gap-2 rounded-2xl border-2 border-emerald-100 dark:border-emerald-500/20 bg-emerald-50/70 dark:bg-emerald-500/8 px-3 py-3 overflow-hidden min-w-0" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
             <div className="flex -space-x-2 shrink-0">
                 {faces.map((p, i) => (
                     <div key={p.id} style={{ zIndex: 10 - i }}
@@ -143,8 +143,8 @@ const PlayersStatCard = ({ players, tournaments }) => {
             </div>
             <Sparkline data={sparkData} color="#10b981" height={24} width={56} />
             <div className="ml-auto text-right shrink-0">
-                <p className="text-lg font-black text-emerald-700 dark:text-emerald-300 leading-none">{players.length}</p>
-                <p className="text-[7px] font-black uppercase tracking-widest text-slate-500 mt-0.5">Giocatori</p>
+                <p className="font-title text-lg text-emerald-700 dark:text-emerald-300 leading-none">{players.length}</p>
+                <p className="font-title text-[7px] tracking-wide text-slate-500 mt-0.5">Giocatori</p>
             </div>
         </div>
     )
@@ -154,10 +154,10 @@ const PlayersStatCard = ({ players, tournaments }) => {
 const RacesStatCard = ({ completedRaces, totalRaces }) => {
     const pct = totalRaces > 0 ? Math.min(100, Math.round((completedRaces / totalRaces) * 100)) : 0
     return (
-        <div className="flex items-center gap-3 rounded-2xl border border-rose-100 dark:border-rose-500/20 bg-rose-50/70 dark:bg-rose-500/8 px-4 py-3">
+        <div className="flex items-center gap-3 rounded-2xl border-2 border-rose-100 dark:border-rose-500/20 bg-rose-50/70 dark:bg-rose-500/8 px-4 py-3" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
             <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
-                    <p className="text-[8px] font-black uppercase tracking-widest text-slate-500">Completamento</p>
+                    <p className="font-title text-[8px] tracking-wide text-slate-500">Completamento</p>
                     <p className="text-[9px] font-black text-rose-600 dark:text-rose-400">{pct}%</p>
                 </div>
                 <div className="h-1.5 rounded-full bg-rose-100 dark:bg-rose-900/40 overflow-hidden mb-2">
@@ -171,8 +171,8 @@ const RacesStatCard = ({ completedRaces, totalRaces }) => {
                 </div>
             </div>
             <div className="text-right shrink-0">
-                <p className="text-xl font-black text-rose-700 dark:text-rose-300 leading-none">{completedRaces}</p>
-                <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-0.5">Gare</p>
+                <p className="font-title text-xl text-rose-700 dark:text-rose-300 leading-none">{completedRaces}</p>
+                <p className="font-title text-[8px] tracking-wide text-slate-500 mt-0.5">Gare</p>
             </div>
         </div>
     )
@@ -180,7 +180,7 @@ const RacesStatCard = ({ completedRaces, totalRaces }) => {
 
 // ── Stat card orizzontale — Trofei ────────────────────────────────
 const TrophiesStatCard = ({ concluded }) => (
-    <div className="flex items-center gap-3 rounded-2xl border border-amber-100 dark:border-amber-500/20 bg-amber-50/70 dark:bg-amber-500/8 px-4 py-3">
+    <div className="flex items-center gap-3 rounded-2xl border-2 border-amber-100 dark:border-amber-500/20 bg-amber-50/70 dark:bg-amber-500/8 px-4 py-3" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
         <div className="flex flex-wrap gap-1 flex-1">
             {concluded > 0
                 ? Array.from({ length: Math.min(concluded, 8) }).map((_, i) => (
@@ -191,8 +191,8 @@ const TrophiesStatCard = ({ concluded }) => (
             {concluded > 8 && <span className="text-[9px] font-black text-amber-500">+{concluded - 8}</span>}
         </div>
         <div className="text-right shrink-0">
-            <p className="text-xl font-black text-amber-700 dark:text-amber-300 leading-none">{concluded}</p>
-            <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-0.5">Trofei</p>
+            <p className="font-title text-xl text-amber-700 dark:text-amber-300 leading-none">{concluded}</p>
+            <p className="font-title text-[8px] tracking-wide text-slate-500 mt-0.5">Trofei</p>
         </div>
     </div>
 )
@@ -200,7 +200,7 @@ const TrophiesStatCard = ({ concluded }) => (
 // ── Widget timeline torneo ────────────────────────────────────────
 const TournamentTimeline = ({ tournament }) => {
     if (!tournament) return (
-        <div className="flex items-center justify-center rounded-2xl border border-dashed border-slate-200 dark:border-border bg-white dark:bg-card p-5 h-full">
+        <div className="flex items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-border bg-white dark:bg-card p-5 h-full">
             <p className="text-xs text-slate-400 dark:text-muted-foreground">Nessun torneo attivo</p>
         </div>
     )
@@ -212,8 +212,8 @@ const TournamentTimeline = ({ tournament }) => {
     ]
     const currentIdx = STEPS.findIndex(s => s.key === tournament.status)
     return (
-        <div className="flex flex-col rounded-2xl border border-amber-100 dark:border-amber-500/20 bg-white dark:bg-card p-4 h-full">
-            <p className="text-[8px] font-black uppercase tracking-[0.35em] text-amber-600 dark:text-amber-400 mb-1">Torneo recente</p>
+        <div className="flex flex-col rounded-2xl border-2 border-amber-100 dark:border-amber-500/20 bg-white dark:bg-card p-4 h-full" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+            <p className="font-title text-[8px] tracking-wide text-amber-600 dark:text-amber-400 mb-1">Torneo recente</p>
             <p className="text-sm font-black text-slate-900 dark:text-foreground truncate mb-4">{tournament.name}</p>
             <div className="relative flex-1 pl-6">
                 <div className="absolute left-[11px] top-1 bottom-1 w-px border-l-2 border-dashed border-slate-200 dark:border-white/10" />
@@ -244,7 +244,7 @@ const TournamentTimeline = ({ tournament }) => {
                 </div>
             </div>
             <Link to={`/tournaments/${tournament.id}`}
-                className="mt-4 w-full rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 py-1.5 text-center text-[9px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-300 transition hover:bg-amber-100 dark:hover:bg-amber-500/20">
+                className="mt-4 w-full rounded-xl bg-amber-50 dark:bg-amber-500/10 border-2 border-amber-200 dark:border-amber-500/30 py-1.5 text-center font-title text-[9px] tracking-wide text-amber-700 dark:text-amber-300 transition active:translate-y-px hover:bg-amber-100 dark:hover:bg-amber-500/20">
                 Apri Torneo
             </Link>
         </div>
@@ -503,7 +503,7 @@ export default function SuperAdminPanel() {
                         <div className="flex gap-0.5 overflow-x-auto">
                             {TABS.map(({ key, label, icon: Icon }) => (
                                 <button key={key} type="button" onClick={() => setActiveTab(key)}
-                                    className={`flex shrink-0 items-center gap-2 px-4 py-3 text-xs font-black uppercase tracking-widest border-b-2 transition ${activeTab === key ? 'border-amber-500 text-amber-600 dark:text-amber-400' : 'border-transparent text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'}`}>
+                                    className={`flex shrink-0 items-center gap-2 px-4 py-3 font-title text-[10px] tracking-wide border-b-2 transition active:translate-y-px ${activeTab === key ? 'border-amber-500 text-amber-600 dark:text-amber-400' : 'border-transparent text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'}`}>
                                     <Icon size={13} />
                                     {label}
                                 </button>
@@ -560,7 +560,7 @@ export default function SuperAdminPanel() {
                                         thirdAction,
                                     ]
                                 })().map(({ to, label, desc, color, icon: Icon }) => (
-                                    <Link key={to} to={to} className="group flex items-center gap-3 rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card p-4 transition hover:border-amber-300 dark:hover:border-amber-700 hover:shadow-sm">
+                                    <Link key={to} to={to} className="group flex items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-4 transition hover:border-amber-300 dark:hover:border-amber-700" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${color}`}>
                                             <Icon size={16} className="text-white" />
                                         </div>
@@ -579,9 +579,9 @@ export default function SuperAdminPanel() {
                         </div>
 
                         {/* Ultimi tornei */}
-                        <div className="rounded-[2rem] border border-slate-200 dark:border-border bg-white dark:bg-card shadow-xl overflow-hidden">
+                        <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                             <div className="flex items-center justify-between gap-3 p-5 border-b border-slate-100 dark:border-border">
-                                <p className="text-xs font-black uppercase tracking-[0.35em] text-slate-500 dark:text-muted-foreground">Ultimi tornei</p>
+                                <p className="font-title text-xs tracking-wide text-slate-500 dark:text-muted-foreground">Ultimi tornei</p>
                                 <Link to="/history" className="text-xs font-black text-amber-600 dark:text-amber-400 hover:underline">Vedi tutti</Link>
                             </div>
                             <div className="divide-y divide-slate-100 dark:divide-white/5">
@@ -603,11 +603,11 @@ export default function SuperAdminPanel() {
                                                     🏁 {t.n_races}
                                                 </span>
                                             )}
-                                            <span className={`rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${STATUS_COLOR[t.status] ?? STATUS_COLOR.da_svolgere}`}>
+                                            <span className={`rounded-full px-2.5 py-0.5 font-title text-[9px] tracking-wide ${STATUS_COLOR[t.status] ?? STATUS_COLOR.da_svolgere}`}>
                                                 {STATUS_LABEL[t.status] ?? t.status}
                                             </span>
                                             <Link to={`/tournaments/${t.id}`}
-                                                className="flex items-center gap-1 rounded-lg border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-2 py-1 text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 transition hover:text-amber-500 hover:border-amber-300 dark:hover:border-amber-700">
+                                                className="flex items-center gap-1 rounded-lg border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-2 py-1 font-title text-[9px] tracking-wide text-slate-600 dark:text-slate-300 transition active:translate-y-px hover:text-amber-500 hover:border-amber-300 dark:hover:border-amber-700">
                                                 <ExternalLink size={10} /> Apri
                                             </Link>
                                         </div>
@@ -619,9 +619,9 @@ export default function SuperAdminPanel() {
 
                         {/* Ultimi log */}
                         {auditLogs.length > 0 && (
-                            <div className="rounded-[2rem] border border-slate-200 dark:border-border bg-white dark:bg-card shadow-xl overflow-hidden">
+                            <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                                 <div className="flex items-center justify-between gap-3 p-5 border-b border-slate-100 dark:border-border">
-                                    <p className="text-xs font-black uppercase tracking-[0.35em] text-slate-500 dark:text-muted-foreground">Attività recente</p>
+                                    <p className="font-title text-xs tracking-wide text-slate-500 dark:text-muted-foreground">Attività recente</p>
                                     <button type="button" onClick={() => setActiveTab('log')} className="text-xs font-black text-amber-600 dark:text-amber-400 hover:underline">Vedi tutto</button>
                                 </div>
                                 <div className="divide-y divide-slate-100 dark:divide-white/5">
@@ -630,7 +630,7 @@ export default function SuperAdminPanel() {
                                         const tsStr = ts.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }) + ' ' + ts.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
                                         return (
                                             <div key={log.id} className="flex items-center gap-3 px-5 py-3">
-                                                <span className={`shrink-0 rounded-lg px-2 py-0.5 text-[9px] font-black uppercase tracking-widest ${ACTION_COLOR[log.action] ?? 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}>
+                                                <span className={`shrink-0 rounded-lg px-2 py-0.5 font-title text-[9px] tracking-wide ${ACTION_COLOR[log.action] ?? 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}>
                                                     {log.action.replace(/_/g, ' ')}
                                                 </span>
                                                 <p className="flex-1 text-xs text-slate-700 dark:text-slate-300 truncate">{log.description}</p>
@@ -643,20 +643,20 @@ export default function SuperAdminPanel() {
                         )}
 
                         {/* ── OPERAZIONI UTILI ── */}
-                        <div className="rounded-[2rem] border border-emerald-200 dark:border-emerald-500/30 bg-white dark:bg-card p-5 shadow-xl">
+                        <div className="rounded-[2rem] border-2 border-emerald-200 dark:border-emerald-500/30 bg-white dark:bg-card p-5" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-green-600 text-white shadow">
                                     <Zap size={16} />
                                 </div>
                                 <div>
-                                    <p className="text-xs font-black uppercase tracking-[0.35em] text-emerald-600 dark:text-emerald-400">Manutenzione</p>
+                                    <p className="font-title text-xs tracking-wide text-emerald-600 dark:text-emerald-400">Manutenzione</p>
                                     <h2 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-foreground">Operazioni Utili</h2>
                                 </div>
                             </div>
                             <p className="text-xs text-slate-500 dark:text-muted-foreground mb-4">Strumenti rapidi per operazioni comuni senza passare dal database.</p>
                             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                 <button type="button" onClick={refresh}
-                                    className="flex items-center gap-3 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-4 text-left transition hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-sm group">
+                                    className="flex items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-4 text-left transition hover:border-emerald-300 dark:hover:border-emerald-700 group" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-500">
                                         <RefreshCw size={15} className="text-white" />
                                     </div>
@@ -666,7 +666,7 @@ export default function SuperAdminPanel() {
                                     </div>
                                 </button>
                                 <button type="button" onClick={() => { try { localStorage.clear(); toast.success('Cache locale pulita') } catch { toast.error('Errore pulizia') } }}
-                                    className="flex items-center gap-3 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-4 text-left transition hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-sm group">
+                                    className="flex items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-4 text-left transition hover:border-emerald-300 dark:hover:border-emerald-700 group" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-500">
                                         <Trash2 size={15} className="text-white" />
                                     </div>
@@ -676,7 +676,7 @@ export default function SuperAdminPanel() {
                                     </div>
                                 </button>
                                 <button type="button" onClick={() => { navigator.clipboard.writeText(JSON.stringify({ stats, players: players.length, tournaments: tournaments.length, users: users.length }, null, 2)); toast.success('Riepilogo copiato!') }}
-                                    className="flex items-center gap-3 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-4 text-left transition hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-sm group">
+                                    className="flex items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-4 text-left transition hover:border-emerald-300 dark:hover:border-emerald-700 group" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-500">
                                         <Copy size={15} className="text-white" />
                                     </div>
@@ -688,7 +688,7 @@ export default function SuperAdminPanel() {
                                 <button type="button" onClick={() => setConfirmModal({ open: true, title: 'Attenzione', message: 'Resettare i punteggi di tutte le schedine aperte? I tornei e i risultati non saranno modificati.', confirmText: 'Resetta', confirmVariant: 'danger',
                                     onConfirm: () => { toast.success('Funzione non ancora implementata — azione simulata'); setConfirmModal(p => ({ ...p, open: false })) }
                                 })}
-                                    className="flex items-center gap-3 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-4 text-left transition hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-sm group">
+                                    className="flex items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-4 text-left transition hover:border-emerald-300 dark:hover:border-emerald-700 group" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500">
                                         <AlertTriangle size={15} className="text-white" />
                                     </div>
@@ -698,7 +698,7 @@ export default function SuperAdminPanel() {
                                     </div>
                                 </button>
                                 <Link to="/hall-of-fame"
-                                    className="flex items-center gap-3 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-4 text-left transition hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-sm group">
+                                    className="flex items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-4 text-left transition hover:border-emerald-300 dark:hover:border-emerald-700 group" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500">
                                         <Trophy size={15} className="text-white" />
                                     </div>
@@ -708,7 +708,7 @@ export default function SuperAdminPanel() {
                                     </div>
                                 </Link>
                                 <button type="button" onClick={() => { window.open(import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/docs', '_blank') }}
-                                    className="flex items-center gap-3 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-4 text-left transition hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-sm group">
+                                    className="flex items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-4 text-left transition hover:border-emerald-300 dark:hover:border-emerald-700 group" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-700">
                                         <ExternalLink size={15} className="text-white" />
                                     </div>
@@ -728,10 +728,10 @@ export default function SuperAdminPanel() {
 
                         {/* Password temporanea */}
                         {lastResetInfo && (
-                            <div className="rounded-[2rem] border-2 border-rose-400 bg-rose-50 dark:bg-rose-500/10 p-5 shadow-xl">
+                            <div className="rounded-[2rem] border-2 border-rose-400 bg-rose-50 dark:bg-rose-500/10 p-5" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                                 <div className="flex items-start justify-between gap-3">
                                     <div>
-                                        <p className="text-xs font-black uppercase tracking-[0.35em] text-rose-600 dark:text-rose-400">Password temporanea generata</p>
+                                        <p className="font-title text-xs tracking-wide text-rose-600 dark:text-rose-400">Password temporanea generata</p>
                                         <p className="mt-1 text-sm text-rose-800 dark:text-rose-200">Copia e consegna a <strong>{lastResetInfo.username}</strong> — non verrà mostrata di nuovo.</p>
                                     </div>
                                     <button type="button" onClick={() => setLastResetInfo(null)} className="shrink-0 rounded-full p-1 text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20">
@@ -739,11 +739,11 @@ export default function SuperAdminPanel() {
                                     </button>
                                 </div>
                                 <div className="mt-3 flex items-center gap-3">
-                                    <code className="flex-1 rounded-xl bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-500/40 px-4 py-3 text-lg font-mono font-black tracking-widest text-rose-700 dark:text-rose-300 select-all">
+                                    <code className="flex-1 rounded-xl bg-white dark:bg-slate-900 border-2 border-rose-300 dark:border-rose-500/40 px-4 py-3 text-lg font-mono font-black tracking-widest text-rose-700 dark:text-rose-300 select-all">
                                         {lastResetInfo.temp_password}
                                     </code>
                                     <button type="button" onClick={() => { navigator.clipboard.writeText(lastResetInfo.temp_password); toast.success('Copiata!') }}
-                                        className="shrink-0 rounded-xl bg-rose-600 px-3 py-2.5 text-xs font-black uppercase tracking-widest text-white hover:bg-rose-500 transition">
+                                        className="shrink-0 rounded-xl bg-rose-600 px-3 py-2.5 font-title text-[10px] tracking-wide text-white hover:bg-rose-500 transition active:translate-y-px">
                                         <Copy size={14} />
                                     </button>
                                 </div>
@@ -751,19 +751,19 @@ export default function SuperAdminPanel() {
                         )}
 
                         {/* Gestione utenti — full width */}
-                        <div className="rounded-[2rem] border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-xl">
+                        <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-5" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                             <div className="flex items-center justify-between gap-3 mb-3">
                                 <div>
-                                    <p className="text-xs font-black uppercase tracking-[0.35em] text-emerald-600 dark:text-emerald-400">Account registrati</p>
+                                    <p className="font-title text-xs tracking-wide text-emerald-600 dark:text-emerald-400">Account registrati</p>
                                     <h2 className="mt-0.5 text-lg font-black uppercase tracking-tight text-slate-900 dark:text-foreground">Gestione utenti</h2>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <button type="button" onClick={() => setShowCreateModal(true)}
-                                        className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-black uppercase tracking-widest text-white transition hover:bg-emerald-500">
+                                        className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-500">
                                         <Plus size={12} /> Crea account
                                     </button>
                                     <button type="button" onClick={loadUsers}
-                                        className="flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-slate-800 px-3 py-2 text-xs font-black uppercase tracking-widest text-slate-700 dark:text-slate-100 transition hover:bg-slate-100 dark:hover:bg-slate-700">
+                                        className="flex items-center gap-1.5 rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-slate-800 px-3 py-2 font-title text-[10px] tracking-wide text-slate-700 dark:text-slate-100 transition active:translate-y-px hover:bg-slate-100 dark:hover:bg-slate-700">
                                         <RefreshCw size={12} /> Aggiorna
                                     </button>
                                 </div>
@@ -771,13 +771,13 @@ export default function SuperAdminPanel() {
                             <div className="relative mb-3">
                                 <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input type="text" placeholder="Cerca username o nickname..." value={userSearch} onChange={e => setUserSearch(e.target.value)}
-                                    className="w-full rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-slate-800 pl-8 pr-4 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:border-emerald-500 transition" />
+                                    className="w-full rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-slate-800 pl-8 pr-4 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:border-emerald-500 transition" />
                             </div>
                             <div className="max-h-[520px] space-y-2 overflow-y-auto pr-1">
                                 {usersLoading ? (
                                     <p className="py-6 text-center text-sm text-slate-500 dark:text-muted-foreground">Caricamento...</p>
                                 ) : filteredUsers.map(account => (
-                                    <div key={account.id} className="rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5">
+                                    <div key={account.id} className="rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5">
                                         <div className="flex items-center justify-between gap-2">
                                             <div className="min-w-0">
                                                 <p className="truncate text-sm font-black text-slate-900 dark:text-foreground">{account.username}</p>
@@ -785,7 +785,7 @@ export default function SuperAdminPanel() {
                                                     {account.player?.nickname ?? 'Nessun giocatore collegato'} · <span className="capitalize">{account.role}</span>
                                                 </p>
                                             </div>
-                                            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.35em] ${account.is_active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300' : 'bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400'}`}>
+                                            <span className={`shrink-0 rounded-full px-2 py-0.5 font-title text-[9px] tracking-wide ${account.is_active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300' : 'bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400'}`}>
                                                 {account.is_active ? 'Attivo' : 'Bloccato'}
                                             </span>
                                         </div>
@@ -796,28 +796,28 @@ export default function SuperAdminPanel() {
                                                 setConfirmModal({ open: true, title: 'Cambia ruolo', message: `Cambiare il ruolo di "${account.username}" a "${newRole}"?`, confirmText: 'Cambia', confirmVariant: 'warning',
                                                     onConfirm: () => { updateUserRow(account.id, { role: newRole }); setConfirmModal(p => ({ ...p, open: false })) }
                                                 })
-                                            }} className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card px-2 py-1 text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-foreground">
+                                            }} className="rounded-lg border-2 border-slate-200 dark:border-border bg-white dark:bg-card px-2 py-1 font-title text-[10px] tracking-wide text-slate-700 dark:text-foreground">
                                                 <option value="user">User</option>
                                                 <option value="admin">Admin</option>
                                                 <option value="superadmin">Superadmin</option>
                                             </select>
                                             <button type="button" onClick={() => updateUserRow(account.id, { is_active: !account.is_active })}
-                                                className="rounded-lg bg-slate-700 dark:bg-slate-600 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-slate-600">
+                                                className="rounded-lg bg-slate-700 dark:bg-slate-600 px-2 py-1 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-slate-600">
                                                 {account.is_active ? 'Disattiva' : 'Riattiva'}
                                             </button>
                                             <button type="button" onClick={() => handleResetPassword(account)} disabled={resettingPasswords[account.id]}
-                                                className="rounded-lg bg-amber-500 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-amber-400 disabled:opacity-60">
+                                                className="rounded-lg bg-amber-500 px-2 py-1 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-amber-400 disabled:opacity-60">
                                                 {resettingPasswords[account.id] ? '...' : <Key size={11} />}
                                                 <span className="ml-1">{resettingPasswords[account.id] ? 'Reset...' : 'Reset pw'}</span>
                                             </button>
                                             <button type="button" onClick={() => handleShowTempPasswords(account)}
-                                                className="rounded-lg bg-indigo-500 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-indigo-400">
+                                                className="rounded-lg bg-indigo-500 px-2 py-1 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-indigo-400">
                                                 <Clock size={11} />
                                                 <span className="ml-1">Storico pw</span>
                                             </button>
                                             <button type="button" onClick={() => setConfirmModal({ open: true, title: 'Elimina utente', message: `Eliminare "${account.username}"?`, confirmText: 'Elimina', confirmVariant: 'danger',
                                                 onConfirm: () => { deleteUser(account.id, account.username); setConfirmModal(p => ({ ...p, open: false })) }
-                                            })} className="rounded-lg bg-rose-600 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-rose-500">
+                                            })} className="rounded-lg bg-rose-600 px-2 py-1 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-rose-500">
                                                 <Trash2 size={11} />
                                             </button>
                                         </div>
@@ -835,22 +835,22 @@ export default function SuperAdminPanel() {
                                 onClick={() => setShowCreateModal(false)}>
                                 <div className="flex min-h-full items-center justify-center"
                                     onClick={(e) => e.stopPropagation()}>
-                                <div className="w-full max-w-md rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-6 shadow-2xl animate-scale-in">
+                                <div className="w-full max-w-md rounded-3xl border-2 border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-6 animate-scale-in" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                                     <div className="flex items-start justify-between gap-4 mb-5">
                                         <div>
-                                            <p className="text-xs font-black uppercase tracking-[0.35em] text-emerald-600 dark:text-emerald-400">Nuovo accesso</p>
+                                            <p className="font-title text-xs tracking-wide text-emerald-600 dark:text-emerald-400">Nuovo accesso</p>
                                             <h2 className="mt-1 text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white">Crea account</h2>
                                         </div>
                                         <button type="button" onClick={() => setShowCreateModal(false)}
-                                            className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-2 text-slate-400 transition hover:text-slate-700 dark:hover:text-white">
+                                            className="rounded-xl border-2 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-2 text-slate-400 transition hover:text-slate-700 dark:hover:text-white">
                                             <X size={16} />
                                         </button>
                                     </div>
                                     <form onSubmit={handleCreateUser} className="space-y-4">
                                         <label className="block space-y-1.5">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Ruolo</span>
+                                            <span className="font-title text-[10px] tracking-wide text-slate-500 dark:text-slate-400">Ruolo</span>
                                             <select name="role" value={userForm.role} onChange={handleUserFormChange}
-                                                className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 transition">
+                                                className="w-full rounded-xl border-2 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 transition">
                                                 <option value="user">User</option>
                                                 <option value="admin">Admin</option>
                                                 <option value="superadmin">Superadmin</option>
@@ -858,9 +858,9 @@ export default function SuperAdminPanel() {
                                         </label>
                                         {userForm.role !== 'superadmin' ? (
                                             <label className="block space-y-1.5">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Giocatore</span>
+                                                <span className="font-title text-[10px] tracking-wide text-slate-500 dark:text-slate-400">Giocatore</span>
                                                 <select name="player_id" value={userForm.player_id} onChange={handleUserFormChange} required
-                                                    className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 transition">
+                                                    className="w-full rounded-xl border-2 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 transition">
                                                     <option value="">Seleziona giocatore…</option>
                                                     {players.map(p => {
                                                         const linked = users.some(u => u.player_id === p.id)
@@ -870,18 +870,18 @@ export default function SuperAdminPanel() {
                                             </label>
                                         ) : (
                                             <label className="block space-y-1.5">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Username</span>
+                                                <span className="font-title text-[10px] tracking-wide text-slate-500 dark:text-slate-400">Username</span>
                                                 <input name="username" value={userForm.username} onChange={handleUserFormChange} required
-                                                    className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:border-emerald-500 transition" />
+                                                    className="w-full rounded-xl border-2 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:border-emerald-500 transition" />
                                             </label>
                                         )}
                                         <div className="flex gap-3 pt-1">
                                             <button type="button" onClick={() => setShowCreateModal(false)}
-                                                className="flex-1 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-200 transition hover:bg-slate-100 dark:hover:bg-white/10">
+                                                className="flex-1 rounded-2xl border-2 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-200 transition active:translate-y-px hover:bg-slate-100 dark:hover:bg-white/10">
                                                 Annulla
                                             </button>
                                             <button type="submit" disabled={userSaving}
-                                                className="flex-1 rounded-2xl bg-emerald-600 px-4 py-2.5 text-sm font-black uppercase tracking-widest text-white transition hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed">
+                                                className="flex-1 rounded-2xl bg-emerald-600 px-4 py-2.5 font-title text-[11px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed">
                                                 {userSaving ? 'Creazione...' : 'Crea account'}
                                             </button>
                                         </div>
@@ -897,14 +897,14 @@ export default function SuperAdminPanel() {
                                 onClick={() => setTempPwModal(p => ({ ...p, open: false }))}>
                                 <div className="flex min-h-full items-center justify-center"
                                     onClick={(e) => e.stopPropagation()}>
-                                <div className="w-full max-w-lg rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-6 shadow-2xl animate-scale-in max-h-[80vh] flex flex-col">
+                                <div className="w-full max-w-lg rounded-3xl border-2 border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-6 animate-scale-in max-h-[80vh] flex flex-col" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                                     <div className="flex items-start justify-between gap-4 mb-5 shrink-0">
                                         <div>
-                                            <p className="text-xs font-black uppercase tracking-[0.35em] text-indigo-600 dark:text-indigo-400">Storico password</p>
+                                            <p className="font-title text-xs tracking-wide text-indigo-600 dark:text-indigo-400">Storico password</p>
                                             <h2 className="mt-1 text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white">{tempPwModal.username}</h2>
                                         </div>
                                         <button type="button" onClick={() => setTempPwModal(p => ({ ...p, open: false }))}
-                                            className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-2 text-slate-400 transition hover:text-slate-700 dark:hover:text-white">
+                                            className="rounded-xl border-2 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-2 text-slate-400 transition hover:text-slate-700 dark:hover:text-white">
                                             <X size={16} />
                                         </button>
                                     </div>
@@ -919,7 +919,7 @@ export default function SuperAdminPanel() {
                                                 const expires = new Date(pw.expires_at)
                                                 const isExpired = expires < new Date()
                                                 return (
-                                                    <div key={pw.id} className={`rounded-xl border px-3 py-2.5 ${isExpired ? 'border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-800/50' : 'border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10'}`}>
+                                                    <div key={pw.id} className={`rounded-xl border-2 px-3 py-2.5 ${isExpired ? 'border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-800/50' : 'border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10'}`}>
                                                         <div className="flex items-center justify-between gap-2 mb-1">
                                                             <code className="text-sm font-mono font-black tracking-widest text-slate-800 dark:text-slate-100 select-all">{pw.temp_password}</code>
                                                             <button type="button" onClick={() => { navigator.clipboard.writeText(pw.temp_password); toast.success('Copiata!') }}
@@ -949,20 +949,20 @@ export default function SuperAdminPanel() {
                 {activeTab === 'tornei' && (
                     <div className="space-y-4">
                         <div className="flex flex-wrap items-center gap-2">
-                            <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground mr-2">Filtra:</p>
+                            <p className="font-title text-[10px] tracking-wide text-slate-500 dark:text-muted-foreground mr-2">Filtra:</p>
                             {[['all', 'Tutti'], ['da_svolgere', 'In attesa'], ['in_corso', 'In corso'], ['finito', 'Finito'], ['concluso', 'Concluso']].map(([val, label]) => (
                                 <button key={val} type="button" onClick={() => setTournamentFilter(val)}
-                                    className={`rounded-xl px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition ${tournamentFilter === val ? 'bg-amber-500 text-white' : 'border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-foreground'}`}>
+                                    className={`rounded-xl px-3 py-1.5 font-title text-[10px] tracking-wide transition active:translate-y-px ${tournamentFilter === val ? 'bg-amber-500 text-white' : 'border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-foreground'}`}>
                                     {label}
                                 </button>
                             ))}
                             <button type="button" onClick={() => { refresh(); toast.success('Aggiornato') }}
-                                className="ml-auto flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 transition hover:text-slate-900 dark:hover:text-foreground">
+                                className="ml-auto flex items-center gap-1.5 rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-1.5 font-title text-[10px] tracking-wide text-slate-600 dark:text-slate-400 transition active:translate-y-px hover:text-slate-900 dark:hover:text-foreground">
                                 <RefreshCw size={11} /> Aggiorna
                             </button>
                         </div>
 
-                        <div className="rounded-[2rem] border border-slate-200 dark:border-border bg-white dark:bg-card shadow-xl overflow-hidden">
+                        <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                             {filteredTournaments.length === 0 ? (
                                 <p className="py-10 text-center text-sm text-slate-400">Nessun torneo trovato per questo filtro.</p>
                             ) : (
@@ -975,7 +975,7 @@ export default function SuperAdminPanel() {
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex items-center gap-2">
                                                         <p className="text-sm font-black text-slate-900 dark:text-foreground truncate">{t.name}</p>
-                                                        <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${STATUS_COLOR[t.status] ?? STATUS_COLOR.da_svolgere}`}>
+                                                        <span className={`shrink-0 rounded-full px-2.5 py-0.5 font-title text-[9px] tracking-wide ${STATUS_COLOR[t.status] ?? STATUS_COLOR.da_svolgere}`}>
                                                             {STATUS_LABEL[t.status] ?? t.status}
                                                         </span>
                                                     </div>
@@ -985,40 +985,40 @@ export default function SuperAdminPanel() {
                                                 </div>
                                                 <div className="flex flex-wrap items-center gap-1.5 shrink-0">
                                                     <Link to={`/tournaments/${t.id}`}
-                                                        className="flex items-center gap-1 rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-2.5 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 transition hover:text-slate-900 dark:hover:text-foreground">
+                                                        className="flex items-center gap-1 rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-2.5 py-1.5 font-title text-[10px] tracking-wide text-slate-600 dark:text-slate-400 transition active:translate-y-px hover:text-slate-900 dark:hover:text-foreground">
                                                         <ExternalLink size={11} /> Apri
                                                     </Link>
                                                     {t.status === 'da_svolgere' && (
                                                         <button type="button" disabled={isUpdating} onClick={() => activateLive(t.id)}
-                                                            className="flex items-center gap-1 rounded-xl bg-emerald-600 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-emerald-500 disabled:opacity-60">
+                                                            className="flex items-center gap-1 rounded-xl bg-emerald-600 px-2.5 py-1.5 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-500 disabled:opacity-60">
                                                             <Play size={11} /> Attiva Live
                                                         </button>
                                                     )}
                                                     {t.status === 'in_corso' && (
                                                         <button type="button" disabled={isUpdating} onClick={() => setConfirmModal({ open: true, title: 'Chiudi torneo', message: `Impostare "${t.name}" come Finito?`, confirmText: 'Chiudi', confirmVariant: 'warning',
                                                             onConfirm: () => { updateTournamentStatus(t.id, 'finito'); setConfirmModal(p => ({ ...p, open: false })) }
-                                                        })} className="flex items-center gap-1 rounded-xl bg-blue-600 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-blue-500 disabled:opacity-60">
+                                                        })} className="flex items-center gap-1 rounded-xl bg-blue-600 px-2.5 py-1.5 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-blue-500 disabled:opacity-60">
                                                             <Square size={11} /> Chiudi
                                                         </button>
                                                     )}
                                                     {(t.status === 'in_corso' || t.status === 'finito') && (
                                                         <button type="button" disabled={isSettling} onClick={() => setConfirmModal({ open: true, title: 'Liquida schedine', message: `Liquidare le schedine per "${t.name}"? Questa azione assegnerà i premi.`, confirmText: 'Liquida', confirmVariant: 'warning',
                                                             onConfirm: () => { settleSchedine(t.id, t.name); setConfirmModal(p => ({ ...p, open: false })) }
-                                                        })} className="flex items-center gap-1 rounded-xl bg-purple-600 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-purple-500 disabled:opacity-60">
+                                                        })} className="flex items-center gap-1 rounded-xl bg-purple-600 px-2.5 py-1.5 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-purple-500 disabled:opacity-60">
                                                             <Check size={11} /> Schedine
                                                         </button>
                                                     )}
                                                     {t.status === 'finito' && (
                                                         <button type="button" disabled={isUpdating} onClick={() => setConfirmModal({ open: true, title: 'Concludi torneo', message: `Impostare "${t.name}" come Concluso?`, confirmText: 'Concludi', confirmVariant: 'warning',
                                                             onConfirm: () => { updateTournamentStatus(t.id, 'concluso'); setConfirmModal(p => ({ ...p, open: false })) }
-                                                        })} className="flex items-center gap-1 rounded-xl bg-slate-700 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-slate-600 disabled:opacity-60">
+                                                        })} className="flex items-center gap-1 rounded-xl bg-slate-700 px-2.5 py-1.5 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-slate-600 disabled:opacity-60">
                                                             <Flag size={11} /> Concludi
                                                         </button>
                                                     )}
                                                     {t.status === 'concluso' && (
                                                         <button type="button" onClick={() => setConfirmModal({ open: true, title: 'Elimina torneo', message: `Eliminare permanentemente "${t.name}"? I dati collegati potrebbero essere persi.`, confirmText: 'Elimina', confirmVariant: 'danger',
                                                             onConfirm: () => { deleteTournament(t.id, t.name); setConfirmModal(p => ({ ...p, open: false })) }
-                                                        })} className="flex items-center gap-1 rounded-xl bg-rose-600 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-rose-500">
+                                                        })} className="flex items-center gap-1 rounded-xl bg-rose-600 px-2.5 py-1.5 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-rose-500">
                                                             <Trash2 size={11} /> Elimina
                                                         </button>
                                                     )}
@@ -1035,22 +1035,22 @@ export default function SuperAdminPanel() {
                 {/* ── TAB: CARTE ── */}
                 {activeTab === 'carte' && (
                     <div className="space-y-6">
-                        <div className="rounded-[2rem] border border-amber-200 dark:border-amber-500/30 bg-white dark:bg-card p-5 shadow-xl">
+                        <div className="rounded-[2rem] border-2 border-amber-200 dark:border-amber-500/30 bg-white dark:bg-card p-5" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow">
                                     <Zap size={16} />
                                 </div>
                                 <div>
-                                    <p className="text-xs font-black uppercase tracking-[0.35em] text-amber-600 dark:text-amber-400">Assegnazione manuale</p>
+                                    <p className="font-title text-xs tracking-wide text-amber-600 dark:text-amber-400">Assegnazione manuale</p>
                                     <h2 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-foreground">Carte Potere</h2>
                                 </div>
                             </div>
                             <p className="text-xs text-slate-500 dark:text-muted-foreground mb-4">Assegna manualmente le Carte Potere ai giocatori come eccezione alla logica automatica delle schedine.</p>
                             <div className="flex flex-wrap items-end gap-3">
                                 <label className="flex-1 min-w-40 space-y-1.5">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Giocatore</span>
+                                    <span className="font-title text-[10px] tracking-wide text-slate-500 dark:text-muted-foreground">Giocatore</span>
                                     <select value={cardTargetPlayerId} onChange={e => setCardTargetPlayerId(e.target.value)}
-                                        className="w-full rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5 text-sm text-slate-900 dark:text-foreground outline-none focus:border-amber-500 transition">
+                                        className="w-full rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5 text-sm text-slate-900 dark:text-foreground outline-none focus:border-amber-500 transition">
                                         <option value="">Seleziona giocatore...</option>
                                         {players.map(p => {
                                             const linked = users.some(u => u.player_id === p.id)
@@ -1059,17 +1059,17 @@ export default function SuperAdminPanel() {
                                     </select>
                                 </label>
                                 <label className="min-w-36 space-y-1.5">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Carta</span>
+                                    <span className="font-title text-[10px] tracking-wide text-slate-500 dark:text-muted-foreground">Carta</span>
                                     <select value={cardType} onChange={e => setCardType(e.target.value)}
-                                        className="w-full rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5 text-sm text-slate-900 dark:text-foreground outline-none focus:border-amber-500 transition">
+                                        className="w-full rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5 text-sm text-slate-900 dark:text-foreground outline-none focus:border-amber-500 transition">
                                         <option value="master">★ Carta Master</option>
                                         <option value="blue_shell">⚡ Guscio Blu</option>
                                     </select>
                                 </label>
                                 <label className="min-w-36 space-y-1.5">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Gioco</span>
+                                    <span className="font-title text-[10px] tracking-wide text-slate-500 dark:text-muted-foreground">Gioco</span>
                                     <select value={cardGameId} onChange={e => setCardGameId(e.target.value)}
-                                        className="w-full rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5 text-sm text-slate-900 dark:text-foreground outline-none focus:border-amber-500 transition">
+                                        className="w-full rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5 text-sm text-slate-900 dark:text-foreground outline-none focus:border-amber-500 transition">
                                         <option value="">Seleziona gioco...</option>
                                         {games.map(g => (
                                             <option key={g.id} value={g.id}>{g.name}</option>
@@ -1079,22 +1079,22 @@ export default function SuperAdminPanel() {
                             </div>
                             <div className="mt-3">
                                 <label className="space-y-1.5">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Nota * (obbligatoria — spiega perché viene assegnata)</span>
+                                    <span className="font-title text-[10px] tracking-wide text-slate-500 dark:text-muted-foreground">Nota * (obbligatoria — spiega perché viene assegnata)</span>
                                     <textarea value={cardNote} onChange={e => setCardNote(e.target.value)}
-                                        className="w-full rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5 text-sm text-slate-900 dark:text-foreground outline-none focus:border-amber-500 transition resize-none"
+                                        className="w-full rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5 text-sm text-slate-900 dark:text-foreground outline-none focus:border-amber-500 transition resize-none"
                                         rows={2} placeholder="Es: premio speciale per il torneo X, sostituzione carta persa, ..." />
                                 </label>
                             </div>
                             <div className="mt-3 flex justify-end">
                                 <button type="button" onClick={handleGrantCard} disabled={!cardTargetPlayerId || !cardGameId || !cardNote.trim() || cardGranting}
-                                    className="rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-amber-400 disabled:opacity-60 disabled:cursor-not-allowed">
+                                    className="rounded-xl bg-amber-500 px-4 py-2.5 font-title text-[10px] tracking-wide text-white transition-all active:translate-y-px hover:bg-amber-400 disabled:opacity-60 disabled:cursor-not-allowed">
                                     {cardGranting ? 'Assegnando...' : 'Assegna Carta'}
                                 </button>
                             </div>
                         </div>
 
-                        <div className="rounded-[2rem] border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-xl">
-                            <p className="text-xs font-black uppercase tracking-[0.35em] text-slate-500 dark:text-muted-foreground mb-1">Informazioni</p>
+                        <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-5" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
+                            <p className="font-title text-xs tracking-wide text-slate-500 dark:text-muted-foreground mb-1">Informazioni</p>
                             <p className="text-sm text-slate-600 dark:text-muted-foreground">
                                 Le carte vengono normalmente assegnate automaticamente al termine dei tornei tramite il sistema di schedine. Usa questo strumento solo per correzioni manuali o eccezioni. Ogni assegnazione è tracciata nell'Audit Log.
                             </p>
@@ -1114,14 +1114,14 @@ export default function SuperAdminPanel() {
 
                 {/* ── TAB: AUDIT LOG ── */}
                 {activeTab === 'log' && (
-                    <div className="rounded-[2rem] border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-xl">
+                    <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-5" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                         <div className="flex items-center justify-between gap-3 mb-4">
                             <div>
-                                <p className="text-xs font-black uppercase tracking-[0.35em] text-slate-500 dark:text-muted-foreground">Tracciamento azioni</p>
+                                <p className="font-title text-xs tracking-wide text-slate-500 dark:text-muted-foreground">Tracciamento azioni</p>
                                 <h2 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-foreground">Audit Log</h2>
                             </div>
                             <button type="button" onClick={loadAuditLogs}
-                                className="flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2 text-xs font-black uppercase tracking-widest text-slate-700 dark:text-foreground">
+                                className="flex items-center gap-1.5 rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2 font-title text-[10px] tracking-wide text-slate-700 dark:text-foreground transition active:translate-y-px">
                                 <RefreshCw size={12} /> Aggiorna
                             </button>
                         </div>
@@ -1129,7 +1129,7 @@ export default function SuperAdminPanel() {
                         {/* Legend */}
                         <div className="flex flex-wrap gap-2 mb-4">
                             {Object.entries(ACTION_COLOR).map(([action, cls]) => (
-                                <span key={action} className={`rounded-lg px-2 py-0.5 text-[9px] font-black uppercase tracking-widest ${cls}`}>
+                                <span key={action} className={`rounded-lg px-2 py-0.5 font-title text-[9px] tracking-wide ${cls}`}>
                                     {action.replace(/_/g, ' ')}
                                 </span>
                             ))}
@@ -1146,7 +1146,7 @@ export default function SuperAdminPanel() {
                                     const tsStr = ts.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: '2-digit' }) + ' ' + ts.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
                                     return (
                                         <div key={log.id} className="flex items-start gap-3 rounded-xl border border-slate-100 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5">
-                                            <span className={`mt-0.5 shrink-0 rounded-lg px-2 py-0.5 text-[9px] font-black uppercase tracking-widest ${ACTION_COLOR[log.action] ?? 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}>
+                                            <span className={`mt-0.5 shrink-0 rounded-lg px-2 py-0.5 font-title text-[9px] tracking-wide ${ACTION_COLOR[log.action] ?? 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}>
                                                 {log.action.replace(/_/g, ' ')}
                                             </span>
                                             <div className="flex-1 min-w-0">
