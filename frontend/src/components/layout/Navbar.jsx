@@ -145,15 +145,15 @@ export default function Navbar() {
                   </button>
                   {torneiOpen && (
                     <div
-                      className="absolute left-0 top-full mt-1.5 min-w-44 rounded-2xl border p-1.5 shadow-2xl backdrop-blur-xl"
-                      style={{ background: 'var(--mk-navbar-bg)', borderColor: 'var(--mk-border)' }}
+                      className="absolute left-0 top-full mt-1.5 min-w-44 rounded-xl border-2 p-1.5 backdrop-blur-xl"
+                      style={{ background: 'var(--mk-navbar-bg)', borderColor: 'var(--mk-border)', boxShadow: 'var(--circuit-shadow-md)' }}
                     >
                       {torneiSubItems.map((sub) => (
                         <Link
                           key={sub.path}
                           to={sub.path}
                           onClick={() => setTorneiOpen(false)}
-                          className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-black uppercase tracking-wider transition hover:bg-white/8"
+                          className="font-title flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide transition hover:bg-white/8"
                           style={{ color: isActive(sub.path) ? 'var(--mk-primary)' : 'rgb(203 213 225)' }}
                         >
                           {sub.icon}
@@ -179,10 +179,10 @@ export default function Navbar() {
                 type="button"
                 onClick={() => setAdminOpen((v) => !v)}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-black uppercase tracking-wider transition-all",
+                  "font-title flex items-center gap-1.5 rounded-lg border-2 px-3 py-1.5 text-[10px] tracking-wide transition-all",
                   adminOpen
-                    ? "border-white/20 bg-white/10 text-white"
-                    : "border-white/8 text-slate-400 hover:border-white/15 hover:text-white"
+                    ? "border-white/25 bg-white/10 text-white"
+                    : "border-white/15 text-slate-400 hover:border-white/25 hover:text-white"
                 )}
               >
                 <Shield size={13} />
@@ -192,24 +192,24 @@ export default function Navbar() {
 
               {adminOpen && (
                 <div
-                  className="absolute right-0 top-full mt-1.5 min-w-52 rounded-2xl border p-1.5 shadow-2xl backdrop-blur-xl"
-                  style={{ background: 'var(--mk-navbar-bg)', borderColor: 'var(--mk-border)' }}
+                  className="absolute right-0 top-full mt-1.5 min-w-52 rounded-xl border-2 p-1.5 backdrop-blur-xl"
+                  style={{ background: 'var(--mk-navbar-bg)', borderColor: 'var(--mk-border)', boxShadow: 'var(--circuit-shadow-md)' }}
                 >
                   {isSuperadmin ? (
                     /* Versione semplificata per SuperAdmin */
                     <>
-                      <p className="px-3 py-1 text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Azioni rapide</p>
+                      <p className="font-title px-3 py-1 text-[8px] tracking-wide text-slate-500">Azioni rapide</p>
                       <Link
                         to="/tournaments/new"
                         onClick={() => setAdminOpen(false)}
-                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-black uppercase tracking-wider text-slate-300 transition hover:bg-white/8 hover:text-white"
+                        className="font-title flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide text-slate-300 transition hover:bg-white/8 hover:text-white"
                       >
                         <Plus size={13} /> Crea Torneo
                       </Link>
                       <Link
                         to="/admin/players"
                         onClick={() => setAdminOpen(false)}
-                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-black uppercase tracking-wider text-slate-300 transition hover:bg-white/8 hover:text-white"
+                        className="font-title flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide text-slate-300 transition hover:bg-white/8 hover:text-white"
                       >
                         <Users size={13} /> Gestisci Giocatori
                       </Link>
@@ -217,7 +217,7 @@ export default function Navbar() {
                       <Link
                         to="/superadmin"
                         onClick={() => setAdminOpen(false)}
-                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-black uppercase tracking-wider text-amber-300 transition hover:bg-amber-500/10 hover:text-amber-200"
+                        className="font-title flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide text-amber-300 transition hover:bg-amber-500/10 hover:text-amber-200"
                       >
                         <Shield size={13} /> Pannello SuperAdmin
                       </Link>
@@ -225,13 +225,13 @@ export default function Navbar() {
                   ) : (
                     /* Menu completo per admin standard */
                     <>
-                      <p className="px-3 py-1 text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Strumenti admin</p>
+                      <p className="font-title px-3 py-1 text-[8px] tracking-wide text-slate-500">Strumenti admin</p>
                       {adminItems.map((item) => (
                         <Link
                           key={item.path}
                           to={item.path}
                           onClick={() => setAdminOpen(false)}
-                          className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-black uppercase tracking-wider text-slate-300 transition hover:bg-white/8 hover:text-white"
+                          className="font-title flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide text-slate-300 transition hover:bg-white/8 hover:text-white"
                         >
                           {item.icon}
                           {item.name}
@@ -263,7 +263,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setProfileOpen((v) => !v)}
-                className="relative flex cursor-pointer items-center gap-2 rounded-xl border px-2 py-1 transition"
+                className="relative flex cursor-pointer items-center gap-2 rounded-lg border-2 px-2 py-1 transition"
                 style={{
                   borderColor: profileOpen ? 'var(--mk-primary)' : 'var(--mk-border)',
                   background: profileOpen ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)',
@@ -281,7 +281,7 @@ export default function Navbar() {
                   )}
                 </div>
                 <div className="hidden xl:block text-left leading-none">
-                  <p className={`text-[9px] font-black uppercase tracking-[0.3em] ${theme.tailwind.text}`}>{theme.teamName}</p>
+                  <p className={`font-title text-[8px] tracking-wide ${theme.tailwind.text}`}>{theme.teamName}</p>
                   <p className="mt-0.5 text-xs font-black text-white">{player?.nickname || user?.username}</p>
                 </div>
                 <ChevronDown size={12} className={`text-slate-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
@@ -289,11 +289,11 @@ export default function Navbar() {
 
               {profileOpen && (
                 <div
-                  className="absolute right-0 top-full mt-1.5 w-52 rounded-2xl border p-1.5 shadow-2xl backdrop-blur-xl"
-                  style={{ background: 'var(--mk-navbar-bg)', borderColor: 'var(--mk-border)' }}
+                  className="absolute right-0 top-full mt-1.5 w-52 rounded-xl border-2 p-1.5 backdrop-blur-xl"
+                  style={{ background: 'var(--mk-navbar-bg)', borderColor: 'var(--mk-border)', boxShadow: 'var(--circuit-shadow-md)' }}
                 >
                   {/* Header profilo */}
-                  <div className="mb-1 flex items-center gap-2.5 rounded-xl px-3 py-2" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                  <div className="mb-1 flex items-center gap-2.5 rounded-lg px-3 py-2" style={{ background: 'rgba(255,255,255,0.05)' }}>
                     <div className="h-9 w-9 overflow-hidden rounded-lg border border-white/10 shrink-0">
                       {favoriteCharacter?.img_url ? (
                         <img src={favoriteCharacter.img_url} alt={favoriteCharacter.name} className="h-full w-full object-cover" />
@@ -305,13 +305,13 @@ export default function Navbar() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs font-black text-white truncate">{player?.nickname || user?.username}</p>
-                      <p className={`text-[9px] uppercase tracking-wider truncate ${theme.tailwind.text}`}>{theme.teamName}</p>
+                      <p className={`font-title text-[8px] tracking-wide truncate ${theme.tailwind.text}`}>{theme.teamName}</p>
                     </div>
                   </div>
 
                   {/* ACCOUNT */}
-                  <p className="px-3 py-1 text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Account</p>
-                  <Link to="/dashboard" className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-black uppercase tracking-wider text-slate-300 transition hover:bg-white/8 hover:text-white">
+                  <p className="font-title px-3 py-1 text-[8px] tracking-wide text-slate-500">Account</p>
+                  <Link to="/dashboard" className="font-title flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide text-slate-300 transition hover:bg-white/8 hover:text-white">
                     <User size={13} /> Il mio Profilo
                   </Link>
 
@@ -319,8 +319,8 @@ export default function Navbar() {
                   {isPrivileged && !isSuperadmin && (
                     <>
                       <div className="my-1 border-t" style={{ borderColor: 'var(--mk-border)' }} />
-                      <p className="px-3 py-1 text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Admin</p>
-                      <Link to="/admin" className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-black uppercase tracking-wider text-slate-300 transition hover:bg-white/8 hover:text-white">
+                      <p className="font-title px-3 py-1 text-[8px] tracking-wide text-slate-500">Admin</p>
+                      <Link to="/admin" className="font-title flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide text-slate-300 transition hover:bg-white/8 hover:text-white">
                         <LayoutDashboard size={13} /> Dashboard Admin
                       </Link>
                     </>
@@ -330,7 +330,7 @@ export default function Navbar() {
                   {isSuperadmin && (
                     <>
                       <div className="my-1 border-t" style={{ borderColor: 'var(--mk-border)' }} />
-                      <Link to="/superadmin" className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-black uppercase tracking-wider text-amber-300 transition hover:bg-amber-500/10 hover:text-amber-200">
+                      <Link to="/superadmin" className="font-title flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide text-amber-300 transition hover:bg-amber-500/10 hover:text-amber-200">
                         <Shield size={13} /> Pannello SuperAdmin
                       </Link>
                     </>
@@ -340,7 +340,7 @@ export default function Navbar() {
                   <button
                     type="button"
                     onClick={() => { setProfileOpen(false); logout() }}
-                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black uppercase tracking-wider text-rose-400 transition hover:bg-rose-500/10 hover:text-rose-300"
+                    className="font-title flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide text-rose-400 transition hover:bg-rose-500/10 hover:text-rose-300"
                   >
                     <LogOut size={13} /> Logout
                   </button>
