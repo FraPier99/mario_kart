@@ -38,8 +38,8 @@ const Header = () => {
                     <span className="inline-flex skew-x-12">{isSuperadmin ? `⚡ ${user?.username} · Superadmin` : player ? `Benvenuto, ${player.nickname ?? user?.username}` : 'Benvenuto alla Lega Kart!'}</span>
                 </span>
 
-                <div className="mt-5 flex flex-wrap items-center gap-4 rounded-[2rem] border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
-                    <div className="h-20 w-20 overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/10 shadow-xl">
+                <div className="mt-5 flex flex-wrap items-center gap-4 rounded-[2rem] border-2 border-white/20 bg-white/5 p-4 backdrop-blur-xl" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
+                    <div className="h-20 w-20 overflow-hidden rounded-[1.5rem] border-2 border-white/20 bg-white/10">
                         {player?.img_url ? (
                             <img src={player.img_url} alt={player.nickname} className="h-full w-full object-cover" />
                         ) : (
@@ -49,7 +49,7 @@ const Header = () => {
                         )}
                     </div>
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.35em] text-emerald-200">
+                        <p className="font-title text-[9px] tracking-wide text-emerald-200">
                             {theme.teamName}
                         </p>
                         <h1 className="mt-1 text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none [text-shadow:3px_3px_0px_#000] drop-shadow-xl">
@@ -68,8 +68,8 @@ const Header = () => {
                 <div className="flex flex-wrap gap-4 items-center mt-8 -skew-x-10">
                     <Link
                         to={tournamentLink}
-                        className="inline-flex items-center gap-2 px-8 py-3.5 text-white font-black uppercase tracking-wider text-sm rounded-xl shadow-lg transition-all duration-200 active:scale-95 group"
-                        style={{ background: `linear-gradient(135deg, ${theme.accent}, ${theme.accentStrong})`, boxShadow: `0 18px 50px ${theme.accentSoft}` }}
+                        className="inline-flex items-center gap-2 px-8 py-3.5 text-white font-black uppercase tracking-wider text-sm rounded-xl border-2 border-white/20 transition-all duration-200 active:scale-95 group"
+                        style={{ background: `linear-gradient(135deg, ${theme.accent}, ${theme.accentStrong})`, boxShadow: `var(--circuit-shadow-sm), 0 18px 50px ${theme.accentSoft}` }}
                     >
                         <span className="inline-flex items-center gap-2 skew-x-10">
                             <Zap className="w-4 h-4 text-white group-hover:animate-bounce" />
@@ -79,7 +79,8 @@ const Header = () => {
 
                     <Link
                         to="/stats"
-                        className="inline-flex items-center gap-2 px-8 py-3.5 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-black uppercase tracking-wider text-sm rounded-xl border border-white/20 shadow-md transition-all duration-200 active:scale-95"
+                        className="font-title inline-flex items-center gap-2 px-8 py-3.5 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white text-[11px] tracking-wide rounded-xl border-2 border-white/20 transition-all duration-200 active:scale-95"
+                        style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
                     >
                         <span className="inline-flex items-center gap-2 skew-x-10">
                             <Users className="w-4 h-4 text-white/80" />
