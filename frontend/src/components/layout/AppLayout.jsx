@@ -20,10 +20,10 @@ const AppLayout  =({children})=>{
             className="relative min-h-screen flex flex-col overflow-hidden"
             style={{ backgroundImage: 'var(--mk-page-bg)' }}
         >
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="pointer-events-none fixed inset-0 overflow-hidden">
                 <img src={sfondo} alt="" className="h-full w-full object-cover opacity-35 blur-[2px] dark:opacity-20" />
             </div>
-            <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'var(--mk-page-overlay)' }} />
+            <div className="pointer-events-none fixed inset-0" style={{ backgroundImage: 'var(--mk-page-overlay)' }} />
             <div className="relative z-10 flex min-h-screen flex-col">
                 <Navbar />
                 <main className="grow animate-fade-in">
