@@ -37,6 +37,13 @@ const OverallClassificaCard = ({ tournament, playerMap, highlightPlayerId = null
 
     if (loading || order.length === 0) return null
 
+    // Il podio mostra già i primi 3 — la lista sotto parte dal 4° posto
+    // per non ripeterli (nessun dato statistico extra disponibile qui,
+    // solo posizione/nickname/avatar, quindi niente stats sul podio).
+    const showPodium = tournament.status === 'concluso' && order.length >= 3
+    const listOrder = showPodium ? order.slice(3) : order
+    const listStartIndex = showPodium ? 3 : 0
+
     return (
         <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-white dark:bg-card shadow-sm overflow-hidden">
             <div className="flex items-center justify-between gap-2 border-b border-amber-200/50 dark:border-amber-500/20 bg-amber-50/60 dark:bg-amber-900/10 px-5 py-3.5">
@@ -46,7 +53,7 @@ const OverallClassificaCard = ({ tournament, playerMap, highlightPlayerId = null
                 </div>
                 <RefreshButton onClick={handleRefresh} loading={refreshing} />
             </div>
-            {tournament.status === 'concluso' && (
+            {showPodium && (
                 <div className="p-5 pb-0">
                     <PodiumSteps
                         players={order.slice(0, 3).map((playerId) => {
@@ -57,10 +64,10 @@ const OverallClassificaCard = ({ tournament, playerMap, highlightPlayerId = null
                 </div>
             )}
             <div className="divide-y divide-slate-100 dark:divide-border">
-                {order.map((playerId, idx) => {
+                {listOrder.map((playerId, idx) => {
                     const player = playerMap.get(playerId)
                     if (!player) return null
-                    const position = idx + 1
+                    const position = listStartIndex + idx + 1
                     const isFirst = position === 1
                     const isMe = highlightPlayerId != null && playerId === highlightPlayerId
                     const isConsolation = position > FINALS_SLOTS

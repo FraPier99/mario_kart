@@ -1,6 +1,6 @@
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
 
-const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = null, theme = null, highlightPlayerId = null, isSuperadmin = false, onPlayerClick = null }) => {
+const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = null, theme = null, highlightPlayerId = null, isSuperadmin = false, onPlayerClick = null, startIndex = 0 }) => {
     if (!rows.length) {
         return (
             <div className="rounded-3xl border border-dashed border-slate-200 dark:border-border bg-white dark:bg-card p-6 text-sm text-slate-500 dark:text-muted-foreground">
@@ -124,15 +124,16 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
         >
             <div className="divide-y divide-slate-100 dark:border-border md:hidden">
                 {rows.map((row, index) => {
+                    const absoluteIndex = startIndex + index
                     const charactersUsed = resolveUsedCharacters(row)
                     const firstCharacter = charactersUsed[0] ?? null
                     const firstCharacterName = firstCharacter?.name
                     const isCurrentUser = !isSuperadmin && highlightPlayerId != null && row.playerId === highlightPlayerId
 
                     return (
-                        <div key={row.playerId} className={`px-4 py-4 space-y-2 ${isCurrentUser ? `${theme?.tailwind?.bgSoft ?? 'bg-amber-500/10'} border-l-4 ${theme?.tailwind?.border ?? 'border-amber-500'}` : podiumBgMobile(index)}`}>
+                        <div key={row.playerId} className={`px-4 py-4 space-y-2 ${isCurrentUser ? `${theme?.tailwind?.bgSoft ?? 'bg-amber-500/10'} border-l-4 ${theme?.tailwind?.border ?? 'border-amber-500'}` : podiumBgMobile(absoluteIndex)}`}>
                             <div className="flex items-center justify-between gap-2">
-                                <PositionBadge index={index} size="lg" />
+                                <PositionBadge index={absoluteIndex} size="lg" />
                                 {showTournamentWins && (
                                     <span className="rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-xs font-black text-amber-700 dark:text-amber-400">
                                         {row.tournamentWins} vinti / {row.tournamentsPlayed} fatti
@@ -152,13 +153,13 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                                 <div className="ml-auto flex flex-col items-end gap-0.5">
                                     {showTournamentWins ? (
                                         <>
-                                            <span className={`text-sm font-black ${placementTextColor(index)}`}>{row.placementIndex ?? 0}%</span>
+                                            <span className={`text-sm font-black ${placementTextColor(absoluteIndex)}`}>{row.placementIndex ?? 0}%</span>
                                             <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">placement</span>
                                             <span className="text-[10px] text-slate-400 dark:text-slate-500">{row.points} pt</span>
                                         </>
                                     ) : (
                                         <>
-                                            <span className={`text-sm font-black ${placementTextColor(index)}`}>{row.points} pt</span>
+                                            <span className={`text-sm font-black ${placementTextColor(absoluteIndex)}`}>{row.points} pt</span>
                                             <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">punti</span>
                                         </>
                                     )}
@@ -197,13 +198,14 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                     </thead>
                     <tbody>
                         {rows.map((row, index) => {
+                            const absoluteIndex = startIndex + index
                             const charactersUsed = resolveUsedCharacters(row)
                             const isCurrentUser = !isSuperadmin && highlightPlayerId != null && row.playerId === highlightPlayerId
 
                             return (
-                                <tr key={row.playerId} className={`border-b border-slate-100/80 dark:border-slate-800/50 ${isCurrentUser ? `${theme?.tailwind?.bgSoft ?? 'bg-amber-500/10'} border-l-4 ${theme?.tailwind?.border ?? 'border-amber-500'}` : podiumBg(index)}`}>
+                                <tr key={row.playerId} className={`border-b border-slate-100/80 dark:border-slate-800/50 ${isCurrentUser ? `${theme?.tailwind?.bgSoft ?? 'bg-amber-500/10'} border-l-4 ${theme?.tailwind?.border ?? 'border-amber-500'}` : podiumBg(absoluteIndex)}`}>
                                     <td className="px-5 py-4 align-middle">
-                                        <PositionBadge index={index} size="lg" />
+                                        <PositionBadge index={absoluteIndex} size="lg" />
                                     </td>
                                     <td className="px-5 py-4 align-middle w-[35%]">
                                         <PlayerCell row={row} charactersUsed={charactersUsed} onPlayerClick={onPlayerClick} />
@@ -211,11 +213,11 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                                     <td className="px-5 py-4 text-center align-middle">
                                         {showTournamentWins ? (
                                             <>
-                                                <span className={`text-lg font-black ${placementTextColor(index)}`}>{row.placementIndex ?? 0}%</span>
+                                                <span className={`text-lg font-black ${placementTextColor(absoluteIndex)}`}>{row.placementIndex ?? 0}%</span>
                                                 <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-tight">{row.points} pt</div>
                                             </>
                                         ) : (
-                                            <span className={`text-lg font-black ${placementTextColor(index)}`}>{row.points} pt</span>
+                                            <span className={`text-lg font-black ${placementTextColor(absoluteIndex)}`}>{row.points} pt</span>
                                         )}
                                     </td>
                                     {showTournamentWins && (

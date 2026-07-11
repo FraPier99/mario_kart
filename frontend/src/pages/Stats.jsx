@@ -80,7 +80,7 @@ const ScoreLegend = () => {
 }
 
 const Stats = () => {
-    const { leaderboardRows, homeMetrics, loading, errorMessage, refresh, charactersById, games, getLeaderboardByGame, getHomeMetricsByGame, players } = useAppData()
+    const { leaderboardRows, loading, errorMessage, refresh, charactersById, games, getLeaderboardByGame, players } = useAppData()
     const { user, isSuperadmin } = useAuth()
     const navigate = useNavigate()
     const [selectedGameId, setSelectedGameId] = useState('')
@@ -107,17 +107,29 @@ const Stats = () => {
         return base.filter(row => !superadminPlayerIds.has(row.playerId))
     }, [selectedGameId, leaderboardRows, getLeaderboardByGame, superadminPlayerIds])
 
-    const metrics = useMemo(() => {
-        if (!selectedGameId) return homeMetrics
-        return getHomeMetricsByGame(selectedGameId)
-    }, [selectedGameId, homeMetrics, getHomeMetricsByGame])
-
     const selectedGame = selectedGameId ? games.find((g) => g.id === Number(selectedGameId)) : null
     // getLeaderboardByGame ritorna sempre una riga per giocatore (con stats
     // a zero come fallback), mai un array vuoto — quindi "nessun torneo per
     // questo gioco" si verifica controllando che nessuno abbia mai giocato
     // un torneo per quel gioco, non la lunghezza dell'array.
     const hasGameActivity = !selectedGameId || filteredRows.some((r) => (r.tournamentsPlayed ?? 0) > 0)
+
+    // Il podio mostra già i dati dei primi 3 (con le stesse metriche della
+    // tabella, stile arcade) — la tabella sotto parte dal 4° posto per non
+    // ripeterli.
+    const showPodium = filteredRows.length >= 3
+    const podiumPlayers = showPodium
+        ? filteredRows.slice(0, 3).map((r) => ({
+            ...r,
+            stats: [
+                { label: 'Tornei', value: r.tournamentWins },
+                { label: 'Placement', value: `${r.placementIndex ?? 0}%` },
+                { label: 'Vittorie', value: r.raceWins },
+                { label: 'Podi', value: r.podiums },
+            ],
+        }))
+        : []
+    const tableRows = showPodium ? filteredRows.slice(3) : filteredRows
 
     const handlePlayerClick = (row) => {
         const user = users.find(u => u.player_id === row.playerId)
@@ -190,21 +202,6 @@ const Stats = () => {
                     ) : null}
                 />
 
-                <div className="mb-8 grid gap-4 md:grid-cols-3">
-                    <div className="rounded-2xl border-2 border-slate-900/15 dark:border-white/15 bg-white dark:bg-card p-5" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                        <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Giocatori attivi</p>
-                        <p className="font-title mt-2 text-3xl text-slate-900 dark:text-foreground">{metrics.activePlayers}</p>
-                    </div>
-                    <div className="rounded-2xl border-2 border-slate-900/15 dark:border-white/15 bg-white dark:bg-card p-5" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                        <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Gare completate</p>
-                        <p className="font-title mt-2 text-3xl text-slate-900 dark:text-foreground">{metrics.completedRaces}</p>
-                    </div>
-                    <div className="rounded-2xl border-2 border-slate-900/15 dark:border-white/15 bg-white dark:bg-card p-5" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                        <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Trofei vinti</p>
-                        <p className="font-title mt-2 text-3xl text-slate-900 dark:text-foreground">{metrics.trophiesWon}</p>
-                    </div>
-                </div>
-
                 <ScoreLegend />
 
                 {loading ? (
@@ -235,9 +232,10 @@ const Stats = () => {
                     </div>
                 ) : (
                     <>
-                        <PodiumSteps players={filteredRows.slice(0, 3)} />
+                        <PodiumSteps players={podiumPlayers} />
                         <LeaderboardTable
-                            rows={filteredRows}
+                            rows={tableRows}
+                            startIndex={showPodium ? 3 : 0}
                             charactersById={charactersById}
                             highlightPlayerId={user?.player_id ?? user?.player?.id ?? null}
                             isSuperadmin={isSuperadmin}

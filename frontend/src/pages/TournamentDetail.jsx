@@ -203,6 +203,23 @@ const TournamentDetail = () => {
     const tournamentStatus = tournament?.status ?? (tournament?.winner_id ? 'concluso' : 'in_corso')
     const isTournamentLocked = tournamentStatus !== 'in_corso'
 
+    // Il podio (classic, tab Classifica) mostra già i dati dei primi 3 con
+    // le stesse metriche della tabella, stile arcade — la tabella sotto
+    // parte dal 4° posto per non ripeterli. Visibile solo a torneo concluso.
+    const showClassicPodium = tournamentStatus === 'concluso' && (tournament?.standings?.length ?? 0) >= 3
+    const classicPodiumPlayers = useMemo(() => {
+        if (!showClassicPodium) return []
+        return (tournament?.standings ?? []).slice(0, 3).map((s) => ({
+            ...s,
+            stats: [
+                { label: 'Punti', value: s.points },
+                { label: 'Vittorie', value: s.raceWins },
+                { label: 'Podi', value: s.podiums },
+            ],
+        }))
+    }, [showClassicPodium, tournament?.standings])
+    const classicTableRows = showClassicPodium ? (tournament?.standings ?? []).slice(3) : (tournament?.standings ?? [])
+
     // Un Admin che è anche partecipante al torneo vede di default la vista
     // giocatore (schedina/classifica/proprio girone) e può passare alla vista
     // gestionale con il toggle "Modalità Admin". Il SuperAdmin non partecipa
@@ -528,13 +545,14 @@ const TournamentDetail = () => {
                                         <p className="text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Classifica</p>
                                         <RefreshButton onClick={refresh} loading={loading} />
                                     </div>
-                                    {tournamentStatus === 'concluso' && (
+                                    {showClassicPodium && (
                                         <div className="p-5 pb-0">
-                                            <PodiumSteps players={tournament.standings.slice(0, 3)} />
+                                            <PodiumSteps players={classicPodiumPlayers} />
                                         </div>
                                     )}
                                     <LeaderboardTable
-                                        rows={tournament.standings}
+                                        rows={classicTableRows}
+                                        startIndex={showClassicPodium ? 3 : 0}
                                         showTournamentWins={false}
                                         charactersById={charactersById}
                                         highlightPlayerId={user?.player?.id ?? null}

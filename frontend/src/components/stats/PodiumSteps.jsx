@@ -37,6 +37,16 @@ const PodiumSteps = ({ players = [] }) => {
                             <p className="mt-1.5 max-w-20 sm:max-w-24 truncate text-[10px] sm:text-xs font-black uppercase tracking-wide text-slate-800 dark:text-foreground">
                                 {player.nickname}
                             </p>
+                            {player.stats?.length > 0 && (
+                                <div className="mt-1.5 grid grid-cols-2 gap-x-2 gap-y-1 w-20 sm:w-24">
+                                    {player.stats.map((stat) => (
+                                        <div key={stat.label} className="flex flex-col items-center">
+                                            <span className="font-title text-[11px] sm:text-xs text-slate-800 dark:text-foreground">{stat.value}</span>
+                                            <span className="text-[7px] sm:text-[8px] font-bold uppercase tracking-wide text-slate-400 dark:text-muted-foreground">{stat.label}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                         <div
                             className={`w-20 sm:w-28 origin-bottom ${HEIGHTS[position]} rounded-t-2xl flex items-center justify-center relative overflow-hidden`}
