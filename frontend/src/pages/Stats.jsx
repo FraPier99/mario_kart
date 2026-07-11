@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Download, HelpCircle, ChevronDown } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import LeaderboardTable from '@/components/stats/LeaderboardTable'
+import PodiumSteps from '@/components/stats/PodiumSteps'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import ApiBanner from '@/components/common/ApiBanner'
@@ -110,6 +111,13 @@ const Stats = () => {
         if (!selectedGameId) return homeMetrics
         return getHomeMetricsByGame(selectedGameId)
     }, [selectedGameId, homeMetrics, getHomeMetricsByGame])
+
+    const selectedGame = selectedGameId ? games.find((g) => g.id === Number(selectedGameId)) : null
+    // getLeaderboardByGame ritorna sempre una riga per giocatore (con stats
+    // a zero come fallback), mai un array vuoto — quindi "nessun torneo per
+    // questo gioco" si verifica controllando che nessuno abbia mai giocato
+    // un torneo per quel gioco, non la lunghezza dell'array.
+    const hasGameActivity = !selectedGameId || filteredRows.some((r) => (r.tournamentsPlayed ?? 0) > 0)
 
     const handlePlayerClick = (row) => {
         const user = users.find(u => u.player_id === row.playerId)
@@ -221,14 +229,21 @@ const Stats = () => {
                             </div>
                         ))}
                     </div>
+                ) : selectedGame && !hasGameActivity ? (
+                    <div className="rounded-3xl border border-dashed border-slate-200 dark:border-border bg-white dark:bg-card p-8 text-center text-sm text-slate-500 dark:text-muted-foreground">
+                        Nessun torneo ancora svolto per {selectedGame.name}.
+                    </div>
                 ) : (
-                    <LeaderboardTable
-                        rows={filteredRows}
-                        charactersById={charactersById}
-                        highlightPlayerId={user?.player_id ?? user?.player?.id ?? null}
-                        isSuperadmin={isSuperadmin}
-                        onPlayerClick={handlePlayerClick}
-                    />
+                    <>
+                        <PodiumSteps players={filteredRows.slice(0, 3)} />
+                        <LeaderboardTable
+                            rows={filteredRows}
+                            charactersById={charactersById}
+                            highlightPlayerId={user?.player_id ?? user?.player?.id ?? null}
+                            isSuperadmin={isSuperadmin}
+                            onPlayerClick={handlePlayerClick}
+                        />
+                    </>
                 )}
             </section>
         </AppLayout>

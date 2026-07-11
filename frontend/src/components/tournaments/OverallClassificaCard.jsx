@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Crown, Medal, Trophy } from 'lucide-react'
 import { tournamentsApi } from '@/services/apiClient'
 import RefreshButton from '@/components/common/RefreshButton'
+import PodiumSteps from '@/components/stats/PodiumSteps'
 
 const POSITION_ICON = ['🥇', '🥈', '🥉']
 const FINALS_SLOTS = 4
@@ -45,6 +46,16 @@ const OverallClassificaCard = ({ tournament, playerMap, highlightPlayerId = null
                 </div>
                 <RefreshButton onClick={handleRefresh} loading={refreshing} />
             </div>
+            {tournament.status === 'concluso' && (
+                <div className="p-5 pb-0">
+                    <PodiumSteps
+                        players={order.slice(0, 3).map((playerId) => {
+                            const player = playerMap.get(playerId)
+                            return player ? { playerId, nickname: player.nickname, img_url: player.img_url } : null
+                        }).filter(Boolean)}
+                    />
+                </div>
+            )}
             <div className="divide-y divide-slate-100 dark:divide-border">
                 {order.map((playerId, idx) => {
                     const player = playerMap.get(playerId)

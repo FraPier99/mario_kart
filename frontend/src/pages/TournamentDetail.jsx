@@ -5,6 +5,7 @@ import AppLayout from '@/components/layout/AppLayout'
 import PortalSelect from '@/components/common/PortalSelect'
 import RefreshButton from '@/components/common/RefreshButton'
 import LeaderboardTable from '@/components/stats/LeaderboardTable'
+import PodiumSteps from '@/components/stats/PodiumSteps'
 import ModalPlayer from '@/components/ModalPlayer'
 import { useCelebration } from '@/context/CelebrationContext'
 import RaceList from '@/components/tournaments/RaceList'
@@ -527,6 +528,11 @@ const TournamentDetail = () => {
                                         <p className="text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Classifica</p>
                                         <RefreshButton onClick={refresh} loading={loading} />
                                     </div>
+                                    {tournamentStatus === 'concluso' && (
+                                        <div className="p-5 pb-0">
+                                            <PodiumSteps players={tournament.standings.slice(0, 3)} />
+                                        </div>
+                                    )}
                                     <LeaderboardTable
                                         rows={tournament.standings}
                                         showTournamentWins={false}
