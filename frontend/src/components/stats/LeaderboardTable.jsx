@@ -122,7 +122,7 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
             className="h-full overflow-hidden rounded-2xl border-2 border-slate-900 dark:border-white/20 bg-white dark:bg-card flex flex-col"
             style={{ boxShadow: 'var(--circuit-shadow-md)' }}
         >
-            <div className="divide-y divide-slate-100 dark:border-border md:hidden">
+            <div className="divide-y divide-slate-200 dark:divide-border md:hidden">
                 {rows.map((row, index) => {
                     const absoluteIndex = startIndex + index
                     const charactersUsed = resolveUsedCharacters(row)
@@ -203,7 +203,7 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                             const isCurrentUser = !isSuperadmin && highlightPlayerId != null && row.playerId === highlightPlayerId
 
                             return (
-                                <tr key={row.playerId} className={`border-b border-slate-100/80 dark:border-slate-800/50 ${isCurrentUser ? `${theme?.tailwind?.bgSoft ?? 'bg-amber-500/10'} border-l-4 ${theme?.tailwind?.border ?? 'border-amber-500'}` : podiumBg(absoluteIndex)}`}>
+                                <tr key={row.playerId} className={`border-b border-slate-200 dark:border-slate-800/50 ${isCurrentUser ? `${theme?.tailwind?.bgSoft ?? 'bg-amber-500/10'} border-l-4 ${theme?.tailwind?.border ?? 'border-amber-500'}` : podiumBg(absoluteIndex)}`}>
                                     <td className="px-5 py-4 align-middle">
                                         <PositionBadge index={absoluteIndex} size="lg" />
                                     </td>

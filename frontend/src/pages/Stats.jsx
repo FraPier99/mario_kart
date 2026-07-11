@@ -12,11 +12,26 @@ import { downloadCSV } from '@/lib/utils'
 
 const ScoreLegend = () => {
     const [open, setOpen] = useState(false)
+
+    if (!open) {
+        return (
+            <button
+                type="button"
+                onClick={() => setOpen(true)}
+                className="mb-6 inline-flex items-center gap-1.5 rounded-full border border-slate-300 dark:border-border bg-white dark:bg-card px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground transition hover:bg-slate-50 dark:hover:bg-white/5"
+            >
+                <HelpCircle size={12} className="text-emerald-500" />
+                Come funziona la classifica?
+                <ChevronDown size={11} className="shrink-0" />
+            </button>
+        )
+    }
+
     return (
         <div className="mb-6 overflow-hidden rounded-2xl border-2 border-slate-300 dark:border-border bg-white dark:bg-card">
             <button
                 type="button"
-                onClick={() => setOpen((v) => !v)}
+                onClick={() => setOpen(false)}
                 className="flex w-full items-center justify-between px-5 py-3 text-left transition hover:bg-slate-50 dark:hover:bg-white/3"
             >
                 <div className="flex items-center gap-2">
@@ -25,10 +40,9 @@ const ScoreLegend = () => {
                         Come funziona la classifica?
                     </span>
                 </div>
-                <ChevronDown size={13} className={`shrink-0 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+                <ChevronDown size={13} className="shrink-0 text-slate-400 rotate-180" />
             </button>
-            {open && (
-                <div className="grid gap-5 border-t border-slate-100 dark:border-border px-5 py-4 sm:grid-cols-2">
+            <div className="grid gap-5 border-t border-slate-100 dark:border-border px-5 py-4 sm:grid-cols-2">
                     <div>
                         <p className="mb-2 text-[9px] font-black uppercase tracking-[0.25em] text-slate-400">Criteri di ordinamento (globale)</p>
                         <ol className="space-y-2 text-xs text-slate-600 dark:text-muted-foreground">
@@ -74,7 +88,6 @@ const ScoreLegend = () => {
                         </ul>
                     </div>
                 </div>
-            )}
         </div>
     )
 }

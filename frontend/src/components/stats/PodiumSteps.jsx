@@ -13,11 +13,6 @@ const MEDAL_CLASSES = {
 }
 const RING_COLORS = { 1: '#f59e0b', 2: '#94a3b8', 3: '#cd7f32' }
 const CARD_BORDER = { 1: 'border-amber-400/70 dark:border-amber-500/50', 2: 'border-slate-300/70 dark:border-slate-500/50', 3: 'border-orange-400/70 dark:border-orange-500/50' }
-const CARD_BG = {
-    1: 'linear-gradient(180deg, rgba(245,158,11,0.16) 0%, rgba(245,158,11,0.04) 100%)',
-    2: 'linear-gradient(180deg, rgba(148,163,184,0.14) 0%, rgba(148,163,184,0.03) 100%)',
-    3: 'linear-gradient(180deg, rgba(205,127,50,0.14) 0%, rgba(205,127,50,0.03) 100%)',
-}
 
 const PodiumSteps = ({ players = [] }) => {
     if (players.length < 3) return null
@@ -26,16 +21,15 @@ const PodiumSteps = ({ players = [] }) => {
     const order = [players[1], players[0], players[2]]
 
     return (
-        <div className="flex items-end justify-center gap-1.5 sm:gap-4 mb-6">
+        <div className="flex items-end justify-center gap-1.5 sm:gap-4 pt-4 sm:pt-6 mb-6">
             {order.map((player, i) => {
                 const position = i === 0 ? 2 : i === 1 ? 1 : 3
                 const isFirst = position === 1
                 return (
                     <div
                         key={player.playerId}
-                        className={`relative flex w-28 sm:w-52 flex-col items-center rounded-2xl border-2 pt-6 sm:pt-7 pb-3 sm:pb-4 px-1.5 sm:px-2 ${CARD_BORDER[position]} ${isFirst ? '-translate-y-4 sm:-translate-y-6' : ''}`}
+                        className={`relative flex w-28 sm:w-52 flex-col items-center rounded-2xl border-2 bg-white dark:bg-card pt-6 sm:pt-7 pb-3 sm:pb-4 px-1.5 sm:px-2 ${CARD_BORDER[position]} ${isFirst ? '-translate-y-4 sm:-translate-y-6' : ''}`}
                         style={{
-                            background: CARD_BG[position],
                             boxShadow: isFirst
                                 ? '0 0 30px rgba(245,158,11,0.25), inset 0 0 20px rgba(245,158,11,0.08)'
                                 : `0 0 14px ${RING_COLORS[position]}22`,
