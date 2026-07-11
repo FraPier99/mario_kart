@@ -1,69 +1,76 @@
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
 
-// Podio a gradini statico — stessa estetica del podio animato di
-// GlobalCelebrationOverlay.jsx (colonne di altezza diversa, medaglia,
-// bordo/gradiente oro-argento-bronzo), ma senza la coreografia di reveal
-// progressivo/roulette: qui i tre giocatori sono già noti e visibili da
-// subito, con solo un'animazione di ingresso una tantum al mount.
-const HEIGHTS = { 1: 'h-32', 2: 'h-24', 3: 'h-20' }
-const MEDALS = { 1: '🥇', 2: '🥈', 3: '🥉' }
-const MEDAL_LABELS = { 1: '1°', 2: '2°', 3: '3°' }
-const BG_COLORS = {
-    1: 'linear-gradient(180deg, rgba(245,158,11,0.5) 0%, rgba(245,158,11,0.15) 100%)',
-    2: 'linear-gradient(180deg, rgba(192,192,192,0.35) 0%, rgba(192,192,192,0.08) 100%)',
-    3: 'linear-gradient(180deg, rgba(205,127,50,0.3) 0%, rgba(205,127,50,0.08) 100%)',
+// Podio statico — card unica per posizione (non più avatar+contenuto sopra
+// un gradino colorato separato, che a schermi larghi finiva "sospeso" senza
+// nulla sotto): l'elevazione/altezza del div stesso comunica il piazzamento,
+// tutto il contenuto (badge posizione, avatar, nome, statistiche in riga)
+// vive dentro la stessa card. Badge posizione = stessi numeri cerchiati
+// oro/argento/bronzo di LeaderboardTable (PositionBadge), non medaglie emoji.
+const MEDAL_CLASSES = {
+    1: 'bg-circuit-gold text-circuit-ink border-circuit-ink',
+    2: 'bg-slate-300 text-slate-800 border-circuit-ink',
+    3: 'bg-orange-400 text-orange-950 border-circuit-ink',
 }
-const BORDER_COLORS = { 1: '#f59e0b', 2: '#94a3b8', 3: '#cd7f32' }
+const RING_COLORS = { 1: '#f59e0b', 2: '#94a3b8', 3: '#cd7f32' }
+const CARD_BORDER = { 1: 'border-amber-400/70 dark:border-amber-500/50', 2: 'border-slate-300/70 dark:border-slate-500/50', 3: 'border-orange-400/70 dark:border-orange-500/50' }
+const CARD_BG = {
+    1: 'linear-gradient(180deg, rgba(245,158,11,0.16) 0%, rgba(245,158,11,0.04) 100%)',
+    2: 'linear-gradient(180deg, rgba(148,163,184,0.14) 0%, rgba(148,163,184,0.03) 100%)',
+    3: 'linear-gradient(180deg, rgba(205,127,50,0.14) 0%, rgba(205,127,50,0.03) 100%)',
+}
 
 const PodiumSteps = ({ players = [] }) => {
     if (players.length < 3) return null
 
-    // Ordine visivo: 2°, 1°, 3° — stesso layout del podio dell'overlay.
+    // Ordine visivo: 2°, 1°, 3°.
     const order = [players[1], players[0], players[2]]
 
     return (
-        <div className="flex items-end justify-center gap-2 sm:gap-4 mb-6">
+        <div className="flex items-end justify-center gap-1.5 sm:gap-4 mb-6">
             {order.map((player, i) => {
                 const position = i === 0 ? 2 : i === 1 ? 1 : 3
+                const isFirst = position === 1
                 return (
-                    <div key={player.playerId} className="flex flex-col items-center gap-1.5" style={{ animation: 'fade-in 0.5s ease-out both' }}>
-                        <div className="flex flex-col items-center" style={{ animation: 'podium-pop-in 0.6s ease-out both' }}>
+                    <div
+                        key={player.playerId}
+                        className={`relative flex w-28 sm:w-52 flex-col items-center rounded-2xl border-2 pt-6 sm:pt-7 pb-3 sm:pb-4 px-1.5 sm:px-2 ${CARD_BORDER[position]} ${isFirst ? '-translate-y-4 sm:-translate-y-6' : ''}`}
+                        style={{
+                            background: CARD_BG[position],
+                            boxShadow: isFirst
+                                ? '0 0 30px rgba(245,158,11,0.25), inset 0 0 20px rgba(245,158,11,0.08)'
+                                : `0 0 14px ${RING_COLORS[position]}22`,
+                            animation: 'podium-pop-in 0.6s ease-out both',
+                            animationDelay: `${i * 0.1}s`,
+                        }}
+                    >
+                        <span className={`absolute top-2 left-2 sm:top-2.5 sm:left-2.5 inline-flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full font-title text-[10px] sm:text-xs border-2 ${MEDAL_CLASSES[position]}`}>
+                            {position}
+                        </span>
+
+                        <div className="relative shrink-0">
+                            <div className="absolute inset-0 rounded-full blur-md opacity-60" style={{ background: RING_COLORS[position] }} />
                             <img
                                 src={player.img_url || buildAvatarPlaceholder(player.nickname)}
                                 alt={player.nickname}
-                                className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl object-cover ring-2 shadow-lg"
-                                style={{ borderColor: BORDER_COLORS[position] }}
+                                className="relative h-12 w-12 sm:h-14 sm:w-14 rounded-full object-cover ring-2 shadow-lg"
+                                style={{ borderColor: RING_COLORS[position] }}
                             />
-                            <p className="mt-1.5 max-w-20 sm:max-w-24 truncate text-[10px] sm:text-xs font-black uppercase tracking-wide text-slate-800 dark:text-foreground">
-                                {player.nickname}
-                            </p>
-                            {player.stats?.length > 0 && (
-                                <div className="mt-1.5 grid grid-cols-2 gap-x-2 gap-y-1 w-20 sm:w-24">
-                                    {player.stats.map((stat) => (
-                                        <div key={stat.label} className="flex flex-col items-center">
-                                            <span className="font-title text-[11px] sm:text-xs text-slate-800 dark:text-foreground">{stat.value}</span>
-                                            <span className="text-[7px] sm:text-[8px] font-bold uppercase tracking-wide text-slate-400 dark:text-muted-foreground">{stat.label}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
                         </div>
-                        <div
-                            className={`w-20 sm:w-28 origin-bottom ${HEIGHTS[position]} rounded-t-2xl flex items-center justify-center relative overflow-hidden`}
-                            style={{
-                                borderTop: `3px solid ${BORDER_COLORS[position]}`,
-                                background: BG_COLORS[position],
-                                boxShadow: position === 1
-                                    ? '0 0 30px rgba(245,158,11,0.3), inset 0 0 20px rgba(245,158,11,0.1)'
-                                    : `0 0 14px ${BORDER_COLORS[position]}33, inset 0 0 10px ${BORDER_COLORS[position]}11`,
-                                animation: 'podium-column-grow 0.8s ease-out both',
-                            }}
-                        >
-                            <span className="relative z-10 text-2xl sm:text-3xl">{MEDALS[position]}</span>
-                        </div>
-                        <p className="text-xs sm:text-sm font-black" style={{ color: BORDER_COLORS[position] }}>
-                            {MEDAL_LABELS[position]}
+
+                        <p className="mt-1.5 sm:mt-2 w-full truncate text-center text-[10px] sm:text-sm font-black uppercase tracking-wide text-slate-800 dark:text-foreground">
+                            {player.nickname}
                         </p>
+
+                        {player.stats?.length > 0 && (
+                            <div className="mt-1.5 sm:mt-2 flex w-full flex-wrap items-start justify-center gap-x-1.5 gap-y-1 sm:flex-nowrap sm:gap-x-2.5">
+                                {player.stats.map((stat) => (
+                                    <div key={stat.label} className="flex flex-col items-center">
+                                        <span className="font-title text-[9px] sm:text-xs text-slate-800 dark:text-foreground">{stat.value}</span>
+                                        <span className="text-[6px] sm:text-[8px] font-bold uppercase tracking-wide text-slate-400 dark:text-muted-foreground">{stat.label}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )
             })}
