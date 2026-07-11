@@ -448,7 +448,8 @@ export default function AdminPlayers() {
 
     <AppLayout>
     <div className="px-4 py-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+      <div className="mx-auto max-w-7xl">
+        <div className="rounded-3xl border border-slate-200 dark:border-border bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 md:p-8 space-y-6">
         <Link
           to="/admin"
           className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 transition hover:text-emerald-500"
@@ -830,6 +831,7 @@ export default function AdminPlayers() {
               )}
             </div>
           </section>
+        </div>
         </div>
       </div>
     </div>

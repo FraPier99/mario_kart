@@ -201,7 +201,7 @@ const SchedinaBadge = () => {
     if (loading || !notifications.length) return null
 
     return (
-        <div className="rounded-[2rem] border-2 border-amber-200 bg-amber-50 p-6 dark:border-amber-500/30 dark:bg-amber-500/5" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
+        <div className="rounded-[2rem] border-2 border-amber-200 bg-amber-50 p-6 dark:border-amber-500/30 dark:bg-amber-500/15" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
             <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100 dark:bg-amber-500/20">
                     <AlertTriangle size={20} className="text-amber-600 dark:text-amber-400" />
@@ -506,6 +506,8 @@ const Dashboard = () => {
                         </div>
                     </div>
                 </div>
+
+                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 md:p-8">
 
                 {/* ── TAB: PANORAMICA ─────────────────────────────── */}
                 {profileTab === 'panoramica' && player && (() => {
@@ -920,6 +922,7 @@ const Dashboard = () => {
                     </div>
                 )}
 
+                </div>
 
             </section>
             <ConfirmModal

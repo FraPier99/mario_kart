@@ -493,14 +493,15 @@ export default function AdminDashboard() {
                             <div key={i} className="h-24 animate-shimmer rounded-2xl bg-linear-to-r from-slate-200 via-slate-300 to-slate-200 dark:from-slate-700 dark:via-slate-600 dark:to-slate-700" />
                         ))}
                     </div>
-                </section>
+            </section>
             </AppLayout>
         )
     }
 
     return (
         <AppLayout>
-            <section className="mx-auto max-w-7xl px-4 py-8 animate-fade-in space-y-6">
+            <section className="mx-auto max-w-7xl px-4 py-8 animate-fade-in">
+                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 md:p-8 space-y-6">
 
                 {/* Header + tab bar */}
                 <div className="rounded-[2rem] border-2 border-slate-900/20 dark:border-white/15 bg-white dark:bg-card overflow-hidden" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
@@ -554,6 +555,7 @@ export default function AdminDashboard() {
                 {activeTab === 'giocatori' && (
                     <GiocatoriTab players={players} />
                 )}
+                </div>
             </section>
         </AppLayout>
     )

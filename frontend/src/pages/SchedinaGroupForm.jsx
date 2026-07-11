@@ -363,14 +363,14 @@ const SchedinaGroupForm = () => {
     return (
         <AppLayout>
             <ApiBanner />
-            <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
+            <div className="mx-auto max-w-4xl space-y-6 px-4 py-8">
+                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 md:p-8 space-y-6">
 
-                {/* ── Header ─────────────────────────────────────────────────── */}
-                <div>
+                <div className="mb-6">
                     <p className="font-title text-[9px] tracking-wide text-violet-500">
                         Schedina Pronostici · A Gironi
                     </p>
-                    <h1 className="mt-2 text-3xl font-black text-slate-900 dark:text-foreground">
+                    <h1 className="mt-2 text-3xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground">
                         {tournament.name}
                     </h1>
                     {!existing && !loading && canSubmit && draftRestored && (
@@ -428,8 +428,7 @@ const SchedinaGroupForm = () => {
                 ) : (
                     <form onSubmit={handleSubmit} className="space-y-6">
 
-                        {/* Sezione 1: Classifica Gironi (la fase 1, prima di tutto:
-                            non si può sapere chi va in finale senza prima i gironi) */}
+                        {/* Sezione 1: Classifica Gironi */}
                         <div className="rounded-3xl border-2 border-sky-200 dark:border-sky-500/30 bg-white dark:bg-card p-5 space-y-4" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                             <div className="flex items-center gap-2">
                                 <Users size={14} className="text-sky-500 shrink-0" />
@@ -593,6 +592,7 @@ const SchedinaGroupForm = () => {
                         )}
                     </form>
                 )}
+                </div>
             </div>
         </AppLayout>
     )

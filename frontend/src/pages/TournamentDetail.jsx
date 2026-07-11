@@ -403,10 +403,16 @@ const TournamentDetail = () => {
         return (
             <AppLayout>
                 <section className="mx-auto max-w-5xl px-4 py-8 space-y-6 animate-fade-in">
-                    {/* Header */}
+                    {/* Back navigation — standalone, outside the card */}
+                    <button type="button" onClick={() => navigate('/history')}
+                        className="font-title inline-flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-slate-400 dark:text-muted-foreground transition hover:text-slate-600 dark:hover:text-foreground">
+                        <span className="text-sm">←</span> Storico tornei
+                    </button>
+
+                    {/* Header card */}
                     <div className="rounded-2xl border-2 border-slate-900/20 dark:border-white/15 bg-white dark:bg-card p-6" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                         <div className="flex flex-wrap items-start justify-between gap-4">
-                            <div>
+                            <div className="min-w-0 flex-1">
                                 <p className="font-title text-[10px] tracking-wide text-emerald-600 dark:text-emerald-400">Torneo #{getTournamentDisplayNumber(tournament.id)}</p>
                                 <h1 className="mt-1 text-3xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground">{tournament.name}</h1>
                                 <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-500 dark:text-muted-foreground">
@@ -431,31 +437,35 @@ const TournamentDetail = () => {
                                     </span>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <button type="button" onClick={() => navigate('/history')}
-                                    className="font-title rounded-xl border-2 border-slate-300 dark:border-border bg-slate-50 dark:bg-muted px-4 py-2 text-[10px] tracking-wide text-slate-600 dark:text-muted-foreground transition active:translate-y-px hover:border-slate-400 dark:hover:border-slate-500">
-                                    ← Storico
-                                </button>
-                                <button type="button" onClick={() => navigate(`/tournaments/${tournamentId}/stats`)}
-                                    className="font-title rounded-xl border-2 border-emerald-800/30 bg-emerald-600 px-4 py-2 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-500"
-                                    style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                                    Stats
-                                </button>
-                                <button type="button" onClick={() => navigate(`/schedina/${tournamentId}`, { state: { fromAdmin: adminModeOn } })}
-                                    className="font-title rounded-xl border-2 border-emerald-300 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-4 py-2 text-[10px] tracking-wide text-emerald-700 dark:text-emerald-300 transition active:translate-y-px hover:bg-emerald-100">
-                                    Schedina
-                                </button>
-                                {userHasPredicted !== null && (
-                                    <span className={`font-title flex items-center gap-1.5 rounded-xl px-3 py-2 text-[9px] tracking-wide ${userHasPredicted ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-2 border-emerald-300 dark:border-emerald-500/30' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-2 border-amber-300 dark:border-amber-500/30'}`}>
-                                        {userHasPredicted ? '✓ Hai compilato la schedina — esito a fine torneo' : '○ Non hai compilato la schedina'}
-                                    </span>
-                                )}
-                                {isParticipantAdmin && (
-                                    <button type="button" onClick={() => setAdminModeOn(true)}
-                                        className="font-title flex items-center gap-1.5 rounded-xl border-2 border-violet-300 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/10 px-4 py-2 text-[10px] tracking-wide text-violet-700 dark:text-violet-300 transition active:translate-y-px hover:bg-violet-100">
-                                        <Settings size={13} /> Modalità Admin
+
+                            {/* Action buttons — grouped by hierarchy */}
+                            <div className="flex flex-col items-end gap-2">
+                                {/* Primary CTAs */}
+                                <div className="flex items-center gap-2">
+                                    <button type="button" onClick={() => navigate(`/schedina/${tournamentId}`, { state: { fromAdmin: adminModeOn } })}
+                                        className="font-title rounded-xl border-2 border-emerald-800/30 bg-emerald-600 px-4 py-2.5 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-500"
+                                        style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+                                        Schedina
                                     </button>
-                                )}
+                                    <button type="button" onClick={() => navigate(`/tournaments/${tournamentId}/stats`)}
+                                        className="font-title rounded-xl border-2 border-slate-300 dark:border-border bg-slate-50 dark:bg-muted px-4 py-2.5 text-[10px] tracking-wide text-slate-700 dark:text-foreground transition active:translate-y-px hover:border-slate-400 dark:hover:border-slate-500">
+                                        Stats
+                                    </button>
+                                </div>
+                                {/* Informational badges + admin toggle */}
+                                <div className="flex flex-wrap items-center justify-end gap-2">
+                                    {userHasPredicted !== null && (
+                                        <span className={`font-title flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[9px] tracking-wide ${userHasPredicted ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20'}`}>
+                                            {userHasPredicted ? '✓ Schedina compilata' : '○ Schedina da compilare'}
+                                        </span>
+                                    )}
+                                    {isParticipantAdmin && (
+                                        <button type="button" onClick={() => setAdminModeOn(true)}
+                                            className="font-title flex items-center gap-1.5 rounded-lg border border-violet-200 dark:border-violet-500/20 bg-violet-50 dark:bg-violet-500/10 px-3 py-1 text-[9px] tracking-wide text-violet-600 dark:text-violet-300 transition active:translate-y-px hover:bg-violet-100">
+                                            <Settings size={11} /> Admin
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -897,9 +907,16 @@ const TournamentDetail = () => {
         )}
 
         <AppLayout>
-            <section className="mx-auto max-w-7xl px-4 py-12 space-y-10">
+            <section className="mx-auto max-w-7xl px-4 py-12 space-y-6">
                 <ApiBanner title="Errore caricamento torneo" message={errorMessage} />
-                <div className="rounded-2xl border-2 border-slate-900/20 dark:border-emerald-500/30 bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-emerald-950 p-8" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
+
+                {/* Back navigation — standalone */}
+                <button type="button" onClick={() => navigate('/history')}
+                    className="font-title inline-flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-slate-400 dark:text-muted-foreground transition hover:text-slate-600 dark:hover:text-foreground">
+                    <span className="text-sm">←</span> Storico tornei
+                </button>
+
+                <div className="rounded-2xl border-2 border-slate-900/20 dark:border-emerald-500/30 bg-white dark:bg-card p-8" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                     <div className="flex items-start gap-3 mb-4">
                         <div className="flex h-8 w-8 items-center justify-center rounded-xl border-2 border-emerald-800/30 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                             <Trophy size={16} />
@@ -909,7 +926,7 @@ const TournamentDetail = () => {
                         </p>
                     </div>
                     <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                             <h1 className="text-4xl font-black uppercase tracking-tight text-slate-900 dark:text-white">{tournament.name}</h1>
                             <div className="mt-4 flex flex-wrap gap-2 text-sm">
                                 <span className="rounded-full bg-slate-100 dark:bg-white/10 px-3 py-1 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-white/10">Data: {tournament.date}</span>
@@ -955,11 +972,11 @@ const TournamentDetail = () => {
                                 </div>
                             )}
                         </div>
-                        <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex flex-col items-end gap-2">
                             {isParticipantAdmin && (
                                 <button
                                     onClick={() => setAdminModeOn(false)}
-                                    className="font-title rounded-xl border-2 border-violet-300 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/10 px-4 py-3 text-[10px] tracking-wide text-violet-700 dark:text-violet-300 transition active:translate-y-px hover:bg-violet-100"
+                                    className="font-title rounded-xl border-2 border-violet-300 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/10 px-4 py-2.5 text-[10px] tracking-wide text-violet-700 dark:text-violet-300 transition active:translate-y-px hover:bg-violet-100"
                                 >
                                     <Settings size={13} className="inline -mt-0.5 me-1" />
                                     Esci da Modalità Admin
@@ -968,15 +985,16 @@ const TournamentDetail = () => {
                             <button
                                 onClick={() => setConfirmDeleteTournament(true)}
                                 disabled={deleting}
-                                className="font-title rounded-xl border-2 border-rose-900/30 bg-rose-600 px-5 py-3 text-[11px] tracking-wide text-white transition active:translate-y-px hover:bg-rose-500 disabled:opacity-60"
-                                style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
+                                className="font-title rounded-lg px-3 py-1.5 text-[9px] tracking-wide text-rose-400/80 dark:text-rose-400/60 transition hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 disabled:opacity-40"
                             >
-                                <Trash2 size={14} className="inline -mt-0.5 me-1" />
-                                Elimina
+                                <Trash2 size={11} className="inline -mt-0.5 me-1" />
+                                Elimina torneo
                             </button>
                         </div>
                     </div>
                 </div>
+
+                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white/90 dark:bg-card/90 backdrop-blur-sm p-6 md:p-8">
 
                 <TournamentInfoPanel tournament={tournament} isAdmin={isAdmin} isSuperadmin={isSuperadmin} />
 
@@ -1328,6 +1346,8 @@ const TournamentDetail = () => {
                         />
                     </div>
                 )}
+
+                </div>
 
             </section>
             {selectedPlayer && (

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Download, HelpCircle, ChevronDown } from 'lucide-react'
+import { HelpCircle, ChevronDown } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import LeaderboardTable from '@/components/stats/LeaderboardTable'
 import PodiumSteps from '@/components/stats/PodiumSteps'
@@ -8,7 +8,7 @@ import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import ApiBanner from '@/components/common/ApiBanner'
 import { authApi } from '@/services/apiClient'
-import { downloadCSV } from '@/lib/utils'
+
 
 const ScoreLegend = () => {
     const [open, setOpen] = useState(false)
@@ -156,20 +156,6 @@ const Stats = () => {
         }
     }
 
-    const handleExportCSV = () => {
-        const gameLabel = selectedGameId ? games.find((g) => g.id === Number(selectedGameId))?.name ?? 'game' : 'global'
-        downloadCSV(
-            ['Pos', 'Giocatore', 'Nome', 'Cognome', 'Tornei vinti', 'Tornei giocati', 'Placement Index %', 'Gare vinte', 'Podi', 'Punti totali', 'Efficienza Media %', 'Win Rate %', 'Podium Rate %', 'Gare giocate'],
-            filteredRows.map((r, idx) => [
-                idx + 1, r.nickname, r.first_name, r.last_name,
-                r.tournamentWins, r.tournamentsPlayed, r.placementIndex,
-                r.raceWins, r.podiums, r.points,
-                r.avgEfficiency, r.winRate, r.podiumRate, r.racesPlayed
-            ]),
-            `classifica-${gameLabel}.csv`
-        )
-    }
-
     return (
         <AppLayout>
             <section className="mx-auto max-w-7xl px-4 py-12">
@@ -179,7 +165,7 @@ const Stats = () => {
                     <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-500 dark:text-muted-foreground">
                         La classifica ordina i piloti per tornei vinti, placement index (media piazzamenti normalizzata) e podi rate. I punti assoluti sono solo informativi.
                     </p>
-                    <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+                    <div className="mt-4 flex justify-center">
                         <select
                             value={selectedGameId}
                             onChange={(e) => setSelectedGameId(e.target.value)}
@@ -190,16 +176,10 @@ const Stats = () => {
                                 <option key={g.id} value={g.id}>{g.name}</option>
                             ))}
                         </select>
-                        <button
-                            onClick={handleExportCSV}
-                            className="font-title flex cursor-pointer items-center gap-2 rounded-xl border-2 border-slate-900 bg-slate-900 px-4 py-2.5 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-slate-700"
-                            style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
-                        >
-                            <Download size={14} />
-                            CSV
-                        </button>
                     </div>
                 </div>
+
+                <div className="mt-8 rounded-3xl border border-slate-200 dark:border-border bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 md:p-8">
 
                 <ApiBanner
                     title="Errore classifica"
@@ -245,7 +225,9 @@ const Stats = () => {
                     </div>
                 ) : (
                     <>
-                        <PodiumSteps players={podiumPlayers} />
+                        <div className="mb-3">
+                            <PodiumSteps players={podiumPlayers} />
+                        </div>
                         <LeaderboardTable
                             rows={tableRows}
                             startIndex={showPodium ? 3 : 0}
@@ -256,6 +238,7 @@ const Stats = () => {
                         />
                     </>
                 )}
+                </div>
             </section>
         </AppLayout>
     )

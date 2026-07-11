@@ -482,6 +482,7 @@ export default function SuperAdminPanel() {
     return (
         <AppLayout>
             <section className="mx-auto max-w-7xl px-4 py-8 animate-fade-in">
+                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 md:p-8 space-y-6">
 
                 {/* Header */}
                 <div className="mb-6 rounded-[2rem] border-2 border-circuit-ink bg-linear-to-br from-amber-100/90 via-amber-50/60 to-amber-100/80 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60 overflow-hidden" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
@@ -1163,6 +1164,7 @@ export default function SuperAdminPanel() {
                         )}
                     </div>
                 )}
+                </div>
             </section>
 
             <ConfirmModal

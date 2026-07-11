@@ -412,6 +412,7 @@ const Schedina = () => {
     return (
         <AppLayout>
             <section className="mx-auto max-w-7xl px-4 py-8 animate-fade-in">
+                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 md:p-8">
 
                 {/* ── PENDING BANNER — Da compilare (schedine ancora aperte) ── */}
                 {pendingSchedine.some((n) => !n.schedine_locked) && !tournamentId && (
@@ -1291,6 +1292,7 @@ const Schedina = () => {
                     </>
                 )}
 
+                </div>
             </section>
         </AppLayout>
     )

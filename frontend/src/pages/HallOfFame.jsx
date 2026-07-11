@@ -303,6 +303,7 @@ const HallOfFame = () => {
         </div>
 
         {/* ── Stats bar ── */}
+        <div className="mt-8 rounded-3xl border border-slate-200 dark:border-border bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 md:p-8">
         <div className="mb-8 grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl border-2 border-amber-400/50 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-center" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
             <p className="font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">Campioni</p>
@@ -379,6 +380,7 @@ const HallOfFame = () => {
             </Link>
           </div>
         )}
+        </div>
       </section>
     </AppLayout>
   )

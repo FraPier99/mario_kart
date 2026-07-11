@@ -332,7 +332,9 @@ const SchedinaForm = () => {
 
     return (
         <AppLayout>
-            <section className="mx-auto max-w-4xl px-4 py-8 animate-fade-in">
+            <section className="mx-auto max-w-5xl px-4 py-8 animate-fade-in">
+                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 md:p-8 space-y-6">
+
                 <div className="mb-6">
                     <p className={`font-title text-[10px] tracking-wide ${theme.tailwind.text}`}>Compila schedina</p>
                     <h1 className="mt-2 text-3xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground md:text-4xl">
@@ -535,12 +537,15 @@ const SchedinaForm = () => {
                         >
                             {submitting ? 'Invio in corso...' : 'Invia schedina'}
                         </button>
+
                     </form>
                 )}
 
                 {hasSchedinaFeature && loading && (
                     <div className="h-60 animate-shimmer rounded-3xl bg-linear-to-r from-slate-200 via-slate-300 to-slate-200 bg-size-[200%_100%] dark:from-slate-700 dark:via-slate-600 dark:to-slate-700" />
                 )}
+
+                </div>
             </section>
         </AppLayout>
     )
