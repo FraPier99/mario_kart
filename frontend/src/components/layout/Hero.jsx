@@ -154,8 +154,8 @@ const Hero = () => {
                                     <p className="text-[9px] font-black uppercase tracking-widest text-amber-600/70 dark:text-amber-400/60">Podio</p>
                                     <div className="mt-1.5 grid grid-cols-1 gap-2 sm:grid-cols-3">
                                         {lastChampionPodium.map((standing, idx) => (
-                                            <div key={standing.playerId} className="flex items-center gap-2 rounded-xl bg-white/30 dark:bg-black/15 px-2.5 py-1.5">
-                                                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-black ${idx === 0 ? 'bg-amber-400 text-amber-950' : idx === 1 ? 'bg-slate-300 text-slate-700' : 'bg-orange-400 text-orange-950'}`}>
+                                            <div key={standing.playerId} className="flex items-center gap-2.5 rounded-xl bg-white/30 dark:bg-black/15 px-3 py-2.5">
+                                                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-black ${idx === 0 ? 'bg-amber-400 text-amber-950' : idx === 1 ? 'bg-slate-300 text-slate-700' : 'bg-orange-400 text-orange-950'}`}>
                                                     {idx + 1}
                                                 </span>
                                                 <img
@@ -163,11 +163,11 @@ const Hero = () => {
                                                     alt={standing.nickname}
                                                     loading="lazy"
                                                     decoding="async"
-                                                    className="h-5 w-5 shrink-0 rounded-full object-cover"
+                                                    className="h-9 w-9 shrink-0 rounded-full object-cover"
                                                 />
-                                                <span className="min-w-0 flex-1 truncate text-[11px] font-bold capitalize text-slate-800 dark:text-foreground">{standing.nickname}</span>
+                                                <span className="min-w-0 flex-1 truncate text-sm font-bold capitalize text-slate-800 dark:text-foreground">{standing.nickname}</span>
                                                 {standing.points != null && (
-                                                    <span className="text-[10px] font-black text-amber-600/80 dark:text-amber-400/70">{standing.points}pt</span>
+                                                    <span className="text-xs font-black text-amber-600/80 dark:text-amber-400/70">{standing.points}pt</span>
                                                 )}
                                             </div>
                                         ))}

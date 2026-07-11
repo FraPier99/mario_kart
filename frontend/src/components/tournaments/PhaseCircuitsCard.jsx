@@ -1,82 +1,85 @@
 /**
- * PhaseCircuitsCard — Mostra i circuiti disponibili e quelli già utilizzati
- * per una determinata fase/girone (o per l'intero torneo in modalità classic).
+ * PhaseCircuitsCard — Mostra a colpo d'occhio, in un'unica griglia, quali
+ * circuiti sono già stati usati e quali sono ancora liberi per una
+ * determinata fase/girone (o per l'intero torneo in modalità classic).
  *
  * Un circuito è "utilizzato" solo se compare in una gara già presente in
  * `races` (cioè con un risultato registrato). Le gare di spareggio
  * (is_duello, circuito sorteggiato) sono evidenziate con un badge dedicato.
+ * Prima erano due liste separate (chip compatti per i liberi, un elenco
+ * verticale a riga piena per gli usati) — con molte gare la seconda lista
+ * diventava altissima e costringeva a scorrere parecchio; ora è un'unica
+ * griglia di tessere, tutte con lo stesso ingombro, dove lo stato si legge
+ * dal colore/opacità senza dover scorrere una lista lunga.
  */
 import { useMemo } from 'react'
-import { MapPin, Shuffle } from 'lucide-react'
+import { MapPin, Check, Shuffle } from 'lucide-react'
 import CircuitThumbnail from '@/components/common/CircuitThumbnail'
 
 const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti' }) => {
-    const usedEntries = useMemo(
-        () => races
-            .map((race) => ({ race, circuit: circuits.find((c) => c.id === race.circuit_id) }))
-            .filter((entry) => entry.circuit)
-            .sort((a, b) => (a.race.race_order ?? 0) - (b.race.race_order ?? 0)),
-        [races, circuits]
-    )
+    const usedByCircuitId = useMemo(() => {
+        const map = new Map()
+        races
+            .slice()
+            .sort((a, b) => (a.race_order ?? 0) - (b.race_order ?? 0))
+            .forEach((race) => {
+                if (race.circuit_id != null && !map.has(race.circuit_id)) {
+                    map.set(race.circuit_id, race)
+                }
+            })
+        return map
+    }, [races])
 
-    const availableCircuits = useMemo(() => {
-        const usedIds = new Set(usedEntries.map((entry) => entry.circuit.id))
-        return circuits.filter((c) => !usedIds.has(c.id))
-    }, [circuits, usedEntries])
+    const availableCount = circuits.length - usedByCircuitId.size
 
     if (circuits.length === 0) return null
 
     return (
         <div className="rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card p-4 space-y-3">
-            <div className="flex items-center gap-2 text-slate-500 dark:text-muted-foreground">
-                <MapPin size={14} />
-                <p className="text-xs font-black uppercase tracking-[0.3em]">{title}</p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-slate-500 dark:text-muted-foreground">
+                    <MapPin size={14} />
+                    <p className="text-xs font-black uppercase tracking-[0.3em]">{title}</p>
+                </div>
+                <div className="flex items-center gap-3 text-[10px] font-bold">
+                    <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500" /> {availableCount} libere
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-slate-400 dark:text-muted-foreground">
+                        <span className="h-2 w-2 rounded-full bg-slate-400 dark:bg-slate-600" /> {usedByCircuitId.size} usate
+                    </span>
+                </div>
             </div>
 
-            <div className="space-y-1.5">
-                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-                    Disponibili ({availableCircuits.length})
-                </p>
-                {availableCircuits.length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5">
-                        {availableCircuits.map((c) => (
-                            <span key={c.id} className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
-                                <CircuitThumbnail circuit={c} size="xs" />
-                                {c.name}
-                            </span>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="text-xs text-slate-400 dark:text-muted-foreground">Tutti i circuiti disponibili sono già stati usati.</p>
-                )}
-            </div>
-
-            <div className="space-y-1.5">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">
-                    Utilizzati ({usedEntries.length})
-                </p>
-                {usedEntries.length > 0 ? (
-                    <ul className="space-y-1">
-                        {usedEntries.map(({ race, circuit }) => (
-                            <li key={race.id} className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 dark:bg-muted px-3 py-1.5 text-xs">
-                                <span className="flex items-center gap-1.5 truncate">
-                                    <CircuitThumbnail circuit={circuit} size="sm" />
-                                    <span className="font-semibold text-slate-700 dark:text-slate-300 truncate">{circuit.name}</span>
-                                </span>
-                                <span className="flex items-center gap-1.5 shrink-0">
-                                    {race.is_duello && (
-                                        <span title="Circuito sorteggiato per spareggio" className="flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-black uppercase text-amber-600 dark:text-amber-400">
-                                            <Shuffle size={9} /> Random
-                                        </span>
-                                    )}
-                                    <span className="text-[10px] text-slate-400 dark:text-muted-foreground">{race.name ?? `Gara ${race.race_order ?? ''}`}</span>
-                                </span>
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p className="text-xs text-slate-400 dark:text-muted-foreground">Nessun circuito ancora utilizzato.</p>
-                )}
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                {circuits.map((circuit) => {
+                    const race = usedByCircuitId.get(circuit.id)
+                    const isUsed = !!race
+                    return (
+                        <div
+                            key={circuit.id}
+                            className={`flex items-center gap-2 rounded-xl border px-2 py-2 ${isUsed
+                                ? 'border-slate-200 dark:border-border bg-slate-50 dark:bg-muted opacity-60'
+                                : 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10'}`}
+                        >
+                            <CircuitThumbnail circuit={circuit} size="sm" />
+                            <div className="min-w-0 flex-1">
+                                <p className={`truncate text-[11px] font-bold ${isUsed ? 'text-slate-500 dark:text-muted-foreground line-through' : 'text-emerald-700 dark:text-emerald-300'}`}>
+                                    {circuit.name}
+                                </p>
+                                {isUsed ? (
+                                    <span className="flex items-center gap-1 text-[9px] font-black uppercase text-slate-400 dark:text-muted-foreground">
+                                        <Check size={9} />
+                                        {race.name ?? `Gara ${race.race_order ?? ''}`}
+                                        {race.is_duello && <Shuffle size={9} className="text-amber-500" title="Circuito sorteggiato per spareggio" />}
+                                    </span>
+                                ) : (
+                                    <span className="text-[9px] font-black uppercase text-emerald-600/70 dark:text-emerald-400/60">Libera</span>
+                                )}
+                            </div>
+                        </div>
+                    )
+                })}
             </div>
         </div>
     )
