@@ -120,8 +120,8 @@ export default function Navbar() {
               LEGA
             </span>
             <span
-              className="font-title text-[9px] tracking-[0.3em]"
-              style={{ color: 'var(--mk-primary-soft)' }}
+              className="font-title text-[9px] tracking-[0.3em] opacity-70"
+              style={{ color: 'var(--mk-primary)' }}
             >
               KART
             </span>
