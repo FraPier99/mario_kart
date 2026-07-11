@@ -5,6 +5,7 @@ import { useCelebration } from '@/context/CelebrationContext'
 import { useProfileTheme } from '@/hooks/useProfileTheme'
 import { useTheme } from '@/context/ThemeContext'
 import GlobalCelebrationOverlay from '@/components/common/GlobalCelebrationOverlay'
+import sfondo from '@/assets/sfondo.jpg'
 
 
 const AppLayout  =({children})=>{
@@ -19,6 +20,9 @@ const AppLayout  =({children})=>{
             className="relative min-h-screen flex flex-col overflow-hidden"
             style={{ backgroundImage: 'var(--mk-page-bg)' }}
         >
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                <img src={sfondo} alt="" className="h-full w-full object-cover opacity-35 blur-[2px] dark:opacity-20" />
+            </div>
             <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'var(--mk-page-overlay)' }} />
             <div className="relative z-10 flex min-h-screen flex-col">
                 <Navbar />
