@@ -138,6 +138,7 @@ export const inventoryApi = {
     tournamentAvailable: (tournamentId) => _get(`/inventory/tournament/${tournamentId}/available`),
     tournamentHolders: (tournamentId) => _get(`/inventory/tournament/${tournamentId}/holders`),
     tournamentHistory: (tournamentId) => _get(`/inventory/tournament/${tournamentId}/history`),
+    tournamentAwards: (tournamentId) => _get(`/inventory/tournament/${tournamentId}/awards`),
     use: (itemId, payload) => _post(`/inventory/${itemId}/use`, payload ?? {}),
     adminUse: (payload) => _post('/inventory/admin/use', payload),
     adminGrant: (payload) => _post('/inventory/admin/grant', payload),

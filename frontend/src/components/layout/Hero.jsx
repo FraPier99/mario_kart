@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { getProfileTheme } from '@/lib/profileTheme'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
+import TournamentAwardsPanel from '@/components/layout/TournamentAwardsPanel'
 
 const formatChampionDate = (value) => {
     if (!value) return null
@@ -98,6 +99,8 @@ const Hero = () => {
                                 : 'linear-gradient(to bottom right, rgba(254,243,199,0.92), rgba(255,251,235,0.70), rgba(254,243,199,0.88))',
                             boxShadow: 'var(--circuit-shadow-sm)' }}>
 
+                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
+                            <div>
                             {/* ── 1. Torneo ── */}
                             <p className="line-clamp-2 text-2xl md:text-3xl font-black capitalize text-slate-900 dark:text-foreground leading-tight [text-shadow:0_1px_0_rgba(255,255,255,0.3)] dark:text-shadow-none">{lastChampionTournament.name}</p>
 
@@ -208,6 +211,14 @@ const Hero = () => {
                             >
                                 Vai al torneo →
                             </Link>
+                            </div>
+
+                            <TournamentAwardsPanel
+                                tournamentId={lastChampionTournament.id}
+                                tournamentFormat={lastChampionTournament.tournament_format}
+                                standings={lastChampionTournament.standings}
+                            />
+                            </div>
                         </div>
                     ) : (
                         <div className="flex flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-600 p-5 py-8 text-center"

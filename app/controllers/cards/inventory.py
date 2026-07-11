@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.core.db import get_db
 from app.core.media import to_image_url
 from app.core.security import get_current_user, require_roles
-from app.services.cards.inventory import consume_inventory_item, get_inventory
+from app.services.cards.inventory import consume_inventory_item, get_inventory, get_tournament_awards
 from app.models import Player, Race, Tournament, TournamentPlayer, User, UserInventory
 from app.controllers.cards.schemas.inventory import UserInventoryResponse
 
@@ -181,6 +181,20 @@ def get_tournament_card_holders(
                 }
             )
     return result
+
+
+@router.get("/tournament/{tournament_id}/awards")
+def get_tournament_awards_endpoint(
+    tournament_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Chi ha vinto la Carta Master (schedina) e il Guscio Blu per questo
+    torneo — pensato per la card pubblica "Ultimo torneo" della Home,
+    quindi aperto a qualunque utente autenticato (non solo admin)."""
+    if not db.query(Tournament).filter(Tournament.id == tournament_id).first():
+        raise HTTPException(status_code=404, detail="Tournament not found")
+    return get_tournament_awards(db, tournament_id)
 
 
 @router.get("/tournament/{tournament_id}/history")

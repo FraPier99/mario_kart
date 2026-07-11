@@ -52,6 +52,52 @@ def grant_card(
     return item
 
 
+def get_tournament_awards(db: Session, tournament_id: int) -> dict:
+    """Chi ha vinto la Carta Master (schedina) e il Guscio Blu per un torneo,
+    a prescindere dal fatto che la carta sia già stata consumata o meno —
+    a differenza degli endpoint /holders (solo carte non consumate, non
+    filtrate per torneo sorgente) e /history (solo carte già usate in gara),
+    nessuno dei due adatto a rispondere "chi ha vinto la card X da questo
+    torneo"."""
+    from app.models import Player, User
+
+    items = (
+        db.query(UserInventory)
+        .filter(
+            UserInventory.source_tournament_id == tournament_id,
+            UserInventory.card_type.in_(["master", "blue_shell"]),
+        )
+        .order_by(UserInventory.id.asc())
+        .all()
+    )
+    if not items:
+        return {"master_winners": [], "blue_shell_winners": []}
+
+    user_ids = {item.user_id for item in items}
+    players_by_user_id = {
+        u.id: u.player
+        for u in db.query(User).filter(User.id.in_(user_ids)).all()
+        if u.player
+    }
+
+    result = {"master_winners": [], "blue_shell_winners": []}
+    seen = set()
+    for item in items:
+        player = players_by_user_id.get(item.user_id)
+        if not player or (item.card_type, player.id) in seen:
+            continue
+        seen.add((item.card_type, player.id))
+        key = "master_winners" if item.card_type == "master" else "blue_shell_winners"
+        result[key].append(
+            {
+                "player_id": player.id,
+                "nickname": player.nickname,
+                "img_url": player.img_url,
+            }
+        )
+    return result
+
+
 def get_inventory(db: Session, user_id: int | None = None):
     query = db.query(UserInventory).options(joinedload(UserInventory.source_tournament))
     if user_id is not None:
