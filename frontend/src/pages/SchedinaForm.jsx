@@ -507,19 +507,21 @@ const SchedinaForm = () => {
                                 </span>
                                 <h3 className="mt-1 text-sm font-black uppercase tracking-tight text-slate-900 dark:text-foreground">Punti di distacco</h3>
                                 <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">Usato solo come criterio di spareggio in caso di parità nel punteggio finale.</p>
-                                <label className="mt-3 flex items-center gap-3">
-                                    <span className="font-title text-xs tracking-wide text-slate-500 dark:text-muted-foreground shrink-0">Distanza 1°-2°:</span>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max={spareggioMaxGap}
-                                        value={form.spareggio_punti_vincitore}
-                                        onChange={handleChange('spareggio_punti_vincitore')}
-                                        required
-                                        placeholder={spareggioPlaceholder}
-                                        className="w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-emerald-500 dark:border-border dark:bg-muted dark:text-foreground"
-                                    />
-                                    <span className="text-xs font-black text-slate-400">pt</span>
+                                <label className="mt-3 block">
+                                    <span className="font-title text-xs tracking-wide text-slate-500 dark:text-muted-foreground">Distanza 1°-2°:</span>
+                                    <div className="mt-1.5 flex items-center gap-2">
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max={spareggioMaxGap}
+                                            value={form.spareggio_punti_vincitore}
+                                            onChange={handleChange('spareggio_punti_vincitore')}
+                                            required
+                                            placeholder={spareggioPlaceholder}
+                                            className="min-w-0 flex-1 rounded-xl border-2 border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-emerald-500 dark:border-border dark:bg-muted dark:text-foreground"
+                                        />
+                                        <span className="text-xs font-black text-slate-400 shrink-0">pt</span>
+                                    </div>
                                 </label>
                                 <p className="mt-1.5 text-[10px] text-slate-400 dark:text-slate-500">Massimo teorico per questo torneo: {spareggioMaxGap} pt.</p>
                             </div>
