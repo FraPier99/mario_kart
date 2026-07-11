@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import {
   Home, Trophy, BarChart3, Users, Menu, X, Sun, Moon,
-  Flag, LogOut, User, ChevronDown, PenLine,
+  LogOut, User, ChevronDown, PenLine,
   Plus, Shield, LayoutDashboard, Crown, BookOpen, Zap
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
@@ -11,6 +11,7 @@ import { useTheme } from '@/context/ThemeContext'
 import { useAppData } from '@/context/AppDataContext'
 import { getProfileTheme } from '@/lib/profileTheme'
 import NotificationBell from '@/components/common/NotificationBell'
+import LogoMark from '@/components/common/LogoMark'
 
 export default function Navbar() {
   const location = useLocation()
@@ -106,16 +107,24 @@ export default function Navbar() {
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 gap-3">
 
         {/* LOGO */}
-        <Link to='/' className="flex shrink-0 items-center gap-2 select-none">
-          <Flag
-            size={20}
-            style={{ color: 'var(--mk-primary)', filter: 'drop-shadow(0 0 6px var(--mk-primary-glow))' }}
+        <Link to='/' className="flex shrink-0 items-center gap-1.5 select-none">
+          <LogoMark
+            className="h-8 w-8"
+            style={{ filter: 'drop-shadow(0 0 6px var(--mk-primary-glow))' }}
           />
-          <span
-            className="font-title text-base font-black"
-            style={{ color: 'var(--mk-primary)', textShadow: '0 0 10px var(--mk-primary-soft)' }}
-          >
-            MK
+          <span className="flex flex-col leading-none">
+            <span
+              className="font-title text-base font-black"
+              style={{ color: 'var(--mk-primary)', textShadow: '0 0 10px var(--mk-primary-soft)' }}
+            >
+              LEGA
+            </span>
+            <span
+              className="font-title text-[9px] tracking-[0.3em]"
+              style={{ color: 'var(--mk-primary-soft)' }}
+            >
+              KART
+            </span>
           </span>
         </Link>
 
