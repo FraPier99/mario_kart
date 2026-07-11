@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+  <defs>
+    <style>
+      .outline{fill:none;stroke:#F5F7FA;stroke-width:18;stroke-linecap:round;stroke-linejoin:round}
+      .road{fill:none;stroke:#2F343C;stroke-width:42;stroke-linecap:round;stroke-linejoin:round}
+      .lane{fill:none;stroke:#F5F7FA;stroke-width:6;stroke-linecap:round;stroke-dasharray:10 14}
+      .title{font-family:Arial,Helvetica,sans-serif;font-size:78px;font-weight:700;letter-spacing:10px;fill:#F5F7FA}
+      .subtitle{font-family:Arial,Helvetica,sans-serif;font-size:28px;font-weight:700;letter-spacing:8px;fill:#AEB6C2}
+    </style>
+  </defs>
+
+  <!-- Hexagon -->
+  <path class="outline"
+        d="M320 72
+           L465 155
+           L465 323
+           L320 406
+           L175 323
+           L175 155
+           Z"/>
+
+  <!-- Road -->
+  <path class="road"
+        d="M320 126
+           L320 250
+           C320 286 342 302 380 302
+           L412 302
+           C444 302 462 322 462 350
+           C462 381 438 402 406 402
+           L282 402"/>
+
+  <!-- Lane markings -->
+  <path class="lane"
+        d="M320 134
+           L320 248
+           C320 286 342 302 380 302
+           L412 302
+           C444 302 462 322 462 350
+           C462 381 438 402 406 402
+           L290 402"/>
+
+  <text x="320" y="525" text-anchor="middle" class="title">LEGA</text>
+  <text x="320" y="570" text-anchor="middle" class="subtitle">KART</text>
+</svg>
