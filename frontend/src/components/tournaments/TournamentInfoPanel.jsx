@@ -4,7 +4,7 @@
  * avanzamento e cronologia (creazione, attività recenti).
  */
 import { useState, useEffect } from 'react'
-import { Info, History } from 'lucide-react'
+import { Info, History, ChevronDown } from 'lucide-react'
 import { tournamentsApi } from '@/services/apiClient'
 
 const STATUS_BADGE = {
@@ -69,9 +69,10 @@ const Timeline = ({ steps }) => (
     </div>
 )
 
-const TournamentInfoPanel = ({ tournament, isAdmin, isSuperadmin }) => {
+const TournamentInfoPanel = ({ tournament, isAdmin, isSuperadmin, collapsible = false, defaultOpen = true }) => {
     const [overview, setOverview] = useState(null)
     const [audit, setAudit] = useState(null)
+    const [open, setOpen] = useState(defaultOpen)
 
     useEffect(() => {
         let active = true
@@ -100,59 +101,84 @@ const TournamentInfoPanel = ({ tournament, isAdmin, isSuperadmin }) => {
         { label: 'Schedine', value: `${overview.schedine_count} · ${overview.schedina_status_label}` },
     ]
 
-    return (
-        <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                    <Info size={16} className="text-emerald-500 shrink-0" />
-                    <h3 className="text-lg font-black text-slate-900 dark:text-foreground">Informazioni torneo</h3>
-                </div>
+    const headerContent = (
+        <>
+            <div className="flex items-center gap-2">
+                <Info size={16} className="text-emerald-500 shrink-0" />
+                <h3 className="text-lg font-black text-slate-900 dark:text-foreground">Informazioni torneo</h3>
+            </div>
+            <div className="flex items-center gap-2">
                 <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest ${STATUS_BADGE[overview.status_label] ?? 'bg-slate-500 text-white'}`}>
                     {overview.status_label}
                 </span>
+                {collapsible && (
+                    <ChevronDown size={16} className={`text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+                )}
             </div>
+        </>
+    )
 
-            <Timeline steps={overview.timeline} />
+    return (
+        <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm space-y-4">
+            {collapsible ? (
+                <button
+                    type="button"
+                    onClick={() => setOpen((o) => !o)}
+                    className="flex w-full flex-wrap items-center justify-between gap-3 text-left transition hover:opacity-80"
+                >
+                    {headerContent}
+                </button>
+            ) : (
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    {headerContent}
+                </div>
+            )}
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {infoItems.map((item) => (
-                    <InfoItem key={item.label} label={item.label} value={item.value} />
-                ))}
-            </div>
+            {(!collapsible || open) && (
+                <>
+                    <Timeline steps={overview.timeline} />
 
-            {audit && (
-                <div className="rounded-2xl border border-slate-200 dark:border-border bg-slate-50/60 dark:bg-muted/30 p-4 space-y-3">
-                    <div className="flex items-center gap-2 text-slate-500 dark:text-muted-foreground">
-                        <History size={14} />
-                        <p className="text-xs font-black uppercase tracking-[0.3em]">Cronologia torneo</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {infoItems.map((item) => (
+                            <InfoItem key={item.label} label={item.label} value={item.value} />
+                        ))}
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-600 dark:text-muted-foreground">
-                        <p>
-                            <span className="font-black text-slate-900 dark:text-foreground">Creato da:</span>{' '}
-                            {audit.created_by?.username ?? '—'} il {formatDateTime(audit.created_at)}
-                        </p>
-                        <p>
-                            <span className="font-black text-slate-900 dark:text-foreground">Ultimo avanzamento fase:</span>{' '}
-                            {audit.last_phase_change_at
-                                ? `${formatDateTime(audit.last_phase_change_at)}${audit.last_phase_change_by ? ` (${audit.last_phase_change_by.username})` : ''}`
-                                : '—'}
-                        </p>
-                    </div>
-                    {audit.recent_activity.length > 0 && (
-                        <div className="space-y-1.5">
-                            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Attività recenti</p>
-                            <ul className="space-y-1">
-                                {audit.recent_activity.map((entry, i) => (
-                                    <li key={i} className="text-xs text-slate-600 dark:text-muted-foreground">
-                                        <span className="font-black text-slate-900 dark:text-foreground">{formatDateTime(entry.created_at)}</span>
-                                        {' — '}{entry.description}
-                                        {entry.actor_username ? ` (${entry.actor_username})` : ''}
-                                    </li>
-                                ))}
-                            </ul>
+
+                    {audit && (
+                        <div className="rounded-2xl border border-slate-200 dark:border-border bg-slate-50/60 dark:bg-muted/30 p-4 space-y-3">
+                            <div className="flex items-center gap-2 text-slate-500 dark:text-muted-foreground">
+                                <History size={14} />
+                                <p className="text-xs font-black uppercase tracking-[0.3em]">Cronologia torneo</p>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-600 dark:text-muted-foreground">
+                                <p>
+                                    <span className="font-black text-slate-900 dark:text-foreground">Creato da:</span>{' '}
+                                    {audit.created_by?.username ?? '—'} il {formatDateTime(audit.created_at)}
+                                </p>
+                                <p>
+                                    <span className="font-black text-slate-900 dark:text-foreground">Ultimo avanzamento fase:</span>{' '}
+                                    {audit.last_phase_change_at
+                                        ? `${formatDateTime(audit.last_phase_change_at)}${audit.last_phase_change_by ? ` (${audit.last_phase_change_by.username})` : ''}`
+                                        : '—'}
+                                </p>
+                            </div>
+                            {audit.recent_activity.length > 0 && (
+                                <div className="space-y-1.5">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Attività recenti</p>
+                                    <ul className="space-y-1">
+                                        {audit.recent_activity.map((entry, i) => (
+                                            <li key={i} className="text-xs text-slate-600 dark:text-muted-foreground">
+                                                <span className="font-black text-slate-900 dark:text-foreground">{formatDateTime(entry.created_at)}</span>
+                                                {' — '}{entry.description}
+                                                {entry.actor_username ? ` (${entry.actor_username})` : ''}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                         </div>
                     )}
-                </div>
+                </>
             )}
         </div>
     )

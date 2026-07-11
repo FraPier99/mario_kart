@@ -481,7 +481,7 @@ const TournamentDetail = () => {
                     {/* ── TAB: Riepilogo ── */}
                     {userTab === 'riepilogo' && (
                         <div className="space-y-6">
-                            <TournamentInfoPanel tournament={tournament} isAdmin={isAdmin} isSuperadmin={isSuperadmin} />
+                            <TournamentInfoPanel tournament={tournament} isAdmin={isAdmin} isSuperadmin={isSuperadmin} collapsible defaultOpen />
 
                             {tournamentStatus === 'in_corso' && (
                                 <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 p-5 flex items-center gap-3 shadow-sm">
@@ -495,7 +495,7 @@ const TournamentDetail = () => {
 
                             {/* Circuiti — solo classic: nei gironi sono nella tab della fase, non nel Riepilogo */}
                             {!isGroupStageView && myCircuitsView && (
-                                <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} />
+                                <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} collapsible defaultOpen />
                             )}
 
                             {/* Se non ci sono classifiche/gare, mostra lo stesso placeholder */}
