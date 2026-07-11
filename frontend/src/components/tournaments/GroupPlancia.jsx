@@ -21,6 +21,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Crown, Medal, Shield, Trophy } from 'lucide-react'
 import { consolationHeatKeysFromFormatData, groupColor, groupKeysFromFormatData, groupLabel, semifinalKeysFromFormatData } from '@/lib/groupStage'
 import OverallClassificaCard from '@/components/tournaments/OverallClassificaCard'
+import RefreshButton from '@/components/common/RefreshButton'
 import { tournamentsApi } from '@/services/apiClient'
 
 const GROUP_ICON = { top: Trophy, bottom: Medal }
@@ -85,7 +86,7 @@ function computeGroupStandings(racesByGroup, results, playerMap) {
 }
 
 // Singola card di classifica per un gruppo (esportata per riuso, es. sezione "Classifica Finale")
-export const GroupCard = ({ groupKey, races, results, playerMap, seedPlayerIds = [], highlightPlayerId = null, resolvedOrder = null }) => {
+export const GroupCard = ({ groupKey, races, results, playerMap, seedPlayerIds = [], highlightPlayerId = null, resolvedOrder = null, onRefresh = null, refreshing = false }) => {
     const label = groupLabel(groupKey)
     const color = groupColor(groupKey)
     const col = COLOR_CLASSES[color] ?? COLOR_CLASSES.slate
@@ -121,6 +122,7 @@ export const GroupCard = ({ groupKey, races, results, playerMap, seedPlayerIds =
                     <span className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-widest ${col.badge}`}>
                         {races.length} gare
                     </span>
+                    {onRefresh && <RefreshButton onClick={onRefresh} loading={refreshing} />}
                 </div>
             </div>
 

@@ -4,9 +4,10 @@
  * un'unica lista ordinata. L'ordine arriva già risolto dal backend
  * (vedi GET /tournaments/{id}/group-stage/overall-classifica).
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Crown, Medal, Trophy } from 'lucide-react'
 import { tournamentsApi } from '@/services/apiClient'
+import RefreshButton from '@/components/common/RefreshButton'
 
 const POSITION_ICON = ['🥇', '🥈', '🥉']
 const FINALS_SLOTS = 4
@@ -14,23 +15,35 @@ const FINALS_SLOTS = 4
 const OverallClassificaCard = ({ tournament, playerMap, highlightPlayerId = null }) => {
     const [order, setOrder] = useState([])
     const [loading, setLoading] = useState(true)
+    const [refreshing, setRefreshing] = useState(false)
+    const mountedRef = useRef(true)
+    useEffect(() => () => { mountedRef.current = false }, [])
 
     useEffect(() => {
-        let active = true
         tournamentsApi.overallClassifica(tournament.id)
-            .then((res) => { if (active) setOrder(res.data?.order ?? []) })
-            .catch(() => { if (active) setOrder([]) })
-            .finally(() => { if (active) setLoading(false) })
-        return () => { active = false }
+            .then((res) => { if (mountedRef.current) setOrder(res.data?.order ?? []) })
+            .catch(() => { if (mountedRef.current) setOrder([]) })
+            .finally(() => { if (mountedRef.current) setLoading(false) })
     }, [tournament.id, tournament.races, tournament.winner_id])
+
+    const handleRefresh = () => {
+        setRefreshing(true)
+        tournamentsApi.overallClassifica(tournament.id)
+            .then((res) => { if (mountedRef.current) setOrder(res.data?.order ?? []) })
+            .catch(() => { if (mountedRef.current) setOrder([]) })
+            .finally(() => { if (mountedRef.current) setRefreshing(false) })
+    }
 
     if (loading || order.length === 0) return null
 
     return (
         <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-white dark:bg-card shadow-sm overflow-hidden">
-            <div className="flex items-center gap-2 border-b border-amber-200/50 dark:border-amber-500/20 bg-amber-50/60 dark:bg-amber-900/10 px-5 py-3.5">
-                <Trophy size={14} className="text-amber-600 shrink-0" />
-                <p className="text-xs font-black uppercase tracking-[0.3em] text-amber-600">Classifica Generale</p>
+            <div className="flex items-center justify-between gap-2 border-b border-amber-200/50 dark:border-amber-500/20 bg-amber-50/60 dark:bg-amber-900/10 px-5 py-3.5">
+                <div className="flex items-center gap-2">
+                    <Trophy size={14} className="text-amber-600 shrink-0" />
+                    <p className="text-xs font-black uppercase tracking-[0.3em] text-amber-600">Classifica Generale</p>
+                </div>
+                <RefreshButton onClick={handleRefresh} loading={refreshing} />
             </div>
             <div className="divide-y divide-slate-100 dark:divide-border">
                 {order.map((playerId, idx) => {

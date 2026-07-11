@@ -1,8 +1,9 @@
 ﻿import { useMemo, useState, useEffect, useCallback } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { Crown, Trophy, Trash2, Shield, Ban, Zap, AlertCircle, Settings, Users, Flag, Swords, Clock, LayoutDashboard, BarChart3, ListChecks, RefreshCw } from 'lucide-react'
+import { Crown, Trophy, Trash2, Shield, Ban, Zap, AlertCircle, Settings, Users, Flag, Swords, Clock, LayoutDashboard, BarChart3, ListChecks } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import PortalSelect from '@/components/common/PortalSelect'
+import RefreshButton from '@/components/common/RefreshButton'
 import LeaderboardTable from '@/components/stats/LeaderboardTable'
 import ModalPlayer from '@/components/ModalPlayer'
 import { useCelebration } from '@/context/CelebrationContext'
@@ -495,7 +496,7 @@ const TournamentDetail = () => {
 
                             {/* Circuiti — solo classic: nei gironi sono nella tab della fase, non nel Riepilogo */}
                             {!isGroupStageView && myCircuitsView && (
-                                <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} collapsible defaultOpen />
+                                <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} collapsible defaultOpen onRefresh={refresh} refreshing={loading} />
                             )}
 
                             {/* Se non ci sono classifiche/gare, mostra lo stesso placeholder */}
@@ -524,14 +525,7 @@ const TournamentDetail = () => {
                                 <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden shadow-sm">
                                     <div className="px-5 py-4 border-b border-slate-100 dark:border-border flex items-center justify-between">
                                         <p className="text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Classifica</p>
-                                        <button
-                                            onClick={refresh}
-                                            disabled={loading}
-                                            className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
-                                        >
-                                            <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
-                                            Aggiorna
-                                        </button>
+                                        <RefreshButton onClick={refresh} loading={loading} />
                                     </div>
                                     <LeaderboardTable
                                         rows={tournament.standings}
@@ -568,10 +562,12 @@ const TournamentDetail = () => {
                                 seedPlayerIds={(myGroup.phase === 'group' ? tournament.format_data?.groups?.[myGroup.groupName] : tournament.format_data?.semifinals?.[myGroup.groupName]) ?? []}
                                 highlightPlayerId={myPlayerId}
                                 resolvedOrder={(myGroup.phase === 'group' ? resolvedClassifiche.group?.[myGroup.groupName] : resolvedClassifiche.semifinal?.[myGroup.groupName])}
+                                onRefresh={refresh}
+                                refreshing={loading}
                             />
                             <TournamentResolutionNotes tournament={tournament} phaseFilter={myGroup.phase} />
                             {myCircuitsView && (
-                                <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} />
+                                <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} onRefresh={refresh} refreshing={loading} />
                             )}
                         </div>
                     )}
@@ -607,9 +603,11 @@ const TournamentDetail = () => {
                                     playerMap={playerMapById}
                                     seedPlayerIds={tournament.format_data?.finals?.[myGroup.groupName] ?? []}
                                     highlightPlayerId={myPlayerId}
+                                    onRefresh={refresh}
+                                    refreshing={loading}
                                 />
                                 {myCircuitsView && (
-                                    <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} />
+                                    <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} onRefresh={refresh} refreshing={loading} />
                                 )}
                                 <SpareggioEsitiList
                                     duelloGroups={bracketDuelloGroups}
@@ -652,7 +650,7 @@ const TournamentDetail = () => {
                             )}
 
                             {myCircuitsView && (
-                                <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} />
+                                <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} onRefresh={refresh} refreshing={loading} />
                             )}
                         </div>
                     )}
@@ -1037,7 +1035,7 @@ const TournamentDetail = () => {
                             /* ── Modalità Classic: flusso standard ── */
                             <>
                                 <CollapsibleSection title="Gare" icon={<Flag size={16} />} defaultOpen>
-                                    <PhaseCircuitsCard circuits={tournamentCircuits} races={(tournament.races ?? []).filter((r) => !r.is_duello)} title="Circuiti" />
+                                    <PhaseCircuitsCard circuits={tournamentCircuits} races={(tournament.races ?? []).filter((r) => !r.is_duello)} title="Circuiti" onRefresh={refresh} refreshing={loading} />
                                     <ResultEntryForm tournament={tournament} races={tournament.races} tournamentParticipants={activeTournamentParticipants} onCreated={refresh} disabled={isTournamentLocked} />
                                     <RaceCreator tournament={tournament} circuits={tournamentCircuits} loading={loading} onCreated={refresh} disabled={isTournamentLocked} results={results} tournamentParticipants={activeTournamentParticipants} />
                                 </CollapsibleSection>

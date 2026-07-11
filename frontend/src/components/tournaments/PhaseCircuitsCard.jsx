@@ -15,8 +15,9 @@
 import { useMemo, useState } from 'react'
 import { MapPin, Check, Shuffle, Info, ChevronDown } from 'lucide-react'
 import CircuitThumbnail from '@/components/common/CircuitThumbnail'
+import RefreshButton from '@/components/common/RefreshButton'
 
-const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', collapsible = false, defaultOpen = true }) => {
+const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', collapsible = false, defaultOpen = true, onRefresh = null, refreshing = false }) => {
     const [open, setOpen] = useState(defaultOpen)
     const usedByCircuitId = useMemo(() => {
         const map = new Map()
@@ -35,41 +36,45 @@ const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', coll
 
     if (circuits.length === 0) return null
 
-    const headerContent = (
-        <>
-            <div className="flex items-center gap-2 text-slate-500 dark:text-muted-foreground">
-                <MapPin size={14} />
-                <p className="text-xs font-black uppercase tracking-[0.3em]">{title}</p>
-            </div>
-            <div className="flex items-center gap-3 text-[10px] font-bold">
-                <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500" /> {availableCount} libere
-                </span>
-                <span className="inline-flex items-center gap-1.5 text-slate-400 dark:text-muted-foreground">
-                    <span className="h-2 w-2 rounded-full bg-slate-400 dark:bg-slate-600" /> {usedByCircuitId.size} usate
-                </span>
-                {collapsible && (
-                    <ChevronDown size={16} className={`text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
-                )}
-            </div>
-        </>
+    const titleBlock = (
+        <div className="flex items-center gap-2 text-slate-500 dark:text-muted-foreground">
+            <MapPin size={14} />
+            <p className="text-xs font-black uppercase tracking-[0.3em]">{title}</p>
+        </div>
     )
 
     return (
         <div className="rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card p-4 space-y-3">
-            {collapsible ? (
-                <button
-                    type="button"
-                    onClick={() => setOpen((o) => !o)}
-                    className="flex w-full flex-wrap items-center justify-between gap-2 text-left transition hover:opacity-80"
-                >
-                    {headerContent}
-                </button>
-            ) : (
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                    {headerContent}
+            <div className="flex w-full flex-wrap items-center justify-between gap-2">
+                {collapsible ? (
+                    <button
+                        type="button"
+                        onClick={() => setOpen((o) => !o)}
+                        className="flex items-center gap-2 text-left transition hover:opacity-80"
+                    >
+                        {titleBlock}
+                    </button>
+                ) : titleBlock}
+
+                <div className="flex items-center gap-3 text-[10px] font-bold">
+                    <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500" /> {availableCount} libere
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-slate-400 dark:text-muted-foreground">
+                        <span className="h-2 w-2 rounded-full bg-slate-400 dark:bg-slate-600" /> {usedByCircuitId.size} usate
+                    </span>
+                    {onRefresh && <RefreshButton onClick={onRefresh} loading={refreshing} />}
+                    {collapsible && (
+                        <button
+                            type="button"
+                            onClick={() => setOpen((o) => !o)}
+                            className="rounded-lg p-1 transition hover:bg-slate-100 dark:hover:bg-slate-800"
+                        >
+                            <ChevronDown size={16} className={`text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+                        </button>
+                    )}
                 </div>
-            )}
+            </div>
 
             {(!collapsible || open) && (
                 <>
