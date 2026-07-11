@@ -1,95 +1,116 @@
 import { Link } from "react-router-dom";
-import { Users, Zap } from "lucide-react";
+import { Users, Flag, Trophy, Crown, ArrowRight, User } from "lucide-react";
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { getProfileTheme } from '@/lib/profileTheme'
 
 const Header = () => {
-    const { latestTournament, charactersById } = useAppData()
+    const { detailedTournaments, charactersById, statsByPlayerId } = useAppData()
     const { user, isSuperadmin } = useAuth()
     const { dark } = useTheme()
     const theme = getProfileTheme(user, charactersById, dark)
     const player = user?.player ?? null
-    const favoriteCharacter = player?.favorite_character_id ? charactersById.get(player.favorite_character_id) : null
-    const isFinished = latestTournament && (latestTournament.status === 'concluso' || Boolean(latestTournament.winner_id))
-    const isScheduled = latestTournament?.status === 'da_svolgere'
-    const tournamentLabel = latestTournament
-        ? isFinished
-            ? `Torneo concluso: ${latestTournament.name}`
-            : isScheduled
-                ? `Torneo da svolgere: ${latestTournament.name}`
-                : `Torneo in corso: ${latestTournament.name}`
-        : 'Crea il primo torneo'
-    const tournamentLink = latestTournament ? `/tournaments/${latestTournament.id}` : '/tournaments/new'
+    const playerStats = player ? (statsByPlayerId.get(player.id) ?? null) : null
+    const isChampion = (playerStats?.tournamentWins ?? 0) > 0
+
+    // Il nome/avatar è cliccabile solo per chi ha un profilo da raggiungere
+    // (giocatore o superadmin) — sostituisce la vecchia "Profile card" di
+    // Hero.jsx, rimossa perché duplicava questa stessa identità.
+    const identityLink = (player || isSuperadmin) ? '/dashboard' : null
+    const IdentityTag = identityLink ? Link : 'div'
+    const identityProps = identityLink ? { to: identityLink } : {}
+
+    // "Continua torneo": il primo torneo NON concluso (in corso o da svolgere)
+    // nell'elenco ordinato per data desc. Se il più recente è già concluso (o
+    // non esistono tornei) non c'è nulla da "continuare" — si passa alle CTA
+    // di fallback (Classifica/Profilo).
+    const activeTournament = detailedTournaments.find((t) => t.status !== 'concluso' && !t.winner_id) ?? null
+    const isScheduled = activeTournament?.status === 'da_svolgere'
+    const tournamentLink = activeTournament ? `/tournaments/${activeTournament.id}` : null
 
     return (
-        <header className="relative min-h-112.5 w-full overflow-hidden bg-slate-950 md:min-h-[60vh]">
-            <img
-                src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwallpapercave.com%2Fwp%2Fwp15388117.jpg&f=1&nofb=1&ipt=288f0aff30d04642323f69162b760f41dace645e342a640fe03d39519ea7a980"
-                alt="Mario Kart"
-                className="absolute inset-0 w-full h-full object-cover opacity-60 blur-[2px] scale-105"
-            />
-
-            <div className="absolute inset-0 z-10" style={{ backgroundImage: `linear-gradient(90deg, rgba(0,0,0,0.82), rgba(0,0,0,0.36) 60%, transparent), ${theme.pageOverlay}` }} />
-
-            <div className="max-w-7xl relative z-20 mx-auto px-6 py-10 flex flex-col items-start justify-center text-white md:h-full">
-                <span className="inline-flex items-center gap-1.5 text-white text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-sm shadow-md -skew-x-12" style={{ background: theme.accentStrong, boxShadow: `0 0 30px ${theme.accentGlow}` }}>
-                    <span className="inline-flex skew-x-12">{isSuperadmin ? `⚡ ${user?.username} · Superadmin` : player ? `Benvenuto, ${player.nickname ?? user?.username}` : 'Benvenuto alla Lega Kart!'}</span>
-                </span>
-
-                <div className="mt-5 flex flex-wrap items-center gap-4 rounded-[2rem] border-2 border-white/20 bg-white/5 p-4 backdrop-blur-xl" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
-                    <div className="h-20 w-20 overflow-hidden rounded-[1.5rem] border-2 border-white/20 bg-white/10">
-                        {player?.img_url ? (
-                            <img src={player.img_url} alt={player.nickname} className="h-full w-full object-cover" />
-                        ) : (
-                            <div className="flex h-full w-full items-center justify-center text-3xl font-black text-white/80">
-                                {(player?.nickname ?? user?.username ?? '?').charAt(0).toUpperCase()}
+        <section className="mx-auto max-w-7xl px-4 pt-8">
+            {/* Card compatta "Chi sono io" — sfumatura tema leggera al posto della foto/blur/texture di sfondo */}
+            <div
+                className="overflow-hidden rounded-[2rem] border-2 border-slate-900/70 dark:border-white/20 backdrop-blur-xl"
+                style={{ background: theme.cardBackground, boxShadow: 'var(--circuit-shadow-lg)' }}
+            >
+                <div className="flex flex-col gap-5 p-5 md:flex-row md:items-center md:justify-between md:p-6">
+                    {/* Identità: avatar + eyebrow + nickname/team + badge campione */}
+                    <IdentityTag
+                        {...identityProps}
+                        className="flex min-w-0 flex-1 items-center gap-4"
+                    >
+                        <div className="relative shrink-0">
+                            <div className="relative h-18 w-18 overflow-hidden rounded-2xl border-2 border-slate-900/70 dark:border-white/20 bg-white/40 dark:bg-black/20 md:h-20 md:w-20" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+                                {player?.img_url ? (
+                                    <img src={player.img_url} alt={player.nickname} className="h-full w-full object-cover" />
+                                ) : (
+                                    <div className={`flex h-full w-full items-center justify-center text-3xl font-black ${theme.tailwind.textStrong}`}>
+                                        {(player?.nickname ?? user?.username ?? '?').charAt(0).toUpperCase()}
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
-                    <div>
-                        <p className="font-title text-[9px] tracking-wide text-emerald-200">
-                            {theme.teamName}
-                        </p>
-                        <h1 className="mt-1 text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none [text-shadow:3px_3px_0px_#000] drop-shadow-xl">
-                            {isSuperadmin ? user?.username : player ? player.nickname ?? 'Area personale' : 'Mario Kart'}
-                        </h1>
-                        <p className="mt-2 max-w-2xl text-sm text-slate-200 md:text-base">
-                            {isSuperadmin
-                                ? 'Account di supervisione: gestisci tornei, utenti e schedine della lega.'
-                                : favoriteCharacter
-                                    ? `Il tuo profilo è legato a ${favoriteCharacter.name}. La home cambia colore e stile in base al tuo personaggio.`
-                                    : 'Completa il profilo per attivare avatar, tema personale e personaggio preferito.'}
-                        </p>
-                    </div>
-                </div>
+                            {isChampion && (
+                                <div className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white dark:border-card bg-amber-400 shadow-lg shadow-amber-400/40">
+                                    <Crown size={12} className="text-amber-950" />
+                                </div>
+                            )}
+                        </div>
+                        <div className="min-w-0">
+                            <p className={`font-title text-[9px] tracking-[0.3em] ${theme.tailwind.textStrong}`}>
+                                {isSuperadmin
+                                    ? `⚡ Bentornato, ${user?.username}`
+                                    : player
+                                        ? `Bentornato · ${theme.teamName}`
+                                        : 'Benvenuto alla Lega Kart'}
+                            </p>
+                            <h1 className="mt-0.5 truncate text-3xl font-black uppercase tracking-tighter leading-none text-slate-900 dark:text-foreground md:text-4xl">
+                                {isSuperadmin ? user?.username : player ? player.nickname ?? 'Area personale' : 'Mario Kart'}
+                            </h1>
+                            {isChampion && (
+                                <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-black text-amber-600 dark:text-amber-400">
+                                    <Trophy size={13} /> {playerStats.tournamentWins} {playerStats.tournamentWins === 1 ? 'torneo vinto' : 'tornei vinti'}
+                                </p>
+                            )}
+                        </div>
+                    </IdentityTag>
 
-                <div className="flex flex-wrap gap-4 items-center mt-8 -skew-x-10">
-                    <Link
-                        to={tournamentLink}
-                        className="inline-flex items-center gap-2 px-8 py-3.5 text-white font-black uppercase tracking-wider text-sm rounded-xl border-2 border-white/20 transition-all duration-200 active:scale-95 group"
-                        style={{ background: `linear-gradient(135deg, ${theme.accent}, ${theme.accentStrong})`, boxShadow: `var(--circuit-shadow-sm), 0 18px 50px ${theme.accentSoft}` }}
-                    >
-                        <span className="inline-flex items-center gap-2 skew-x-10">
-                            <Zap className="w-4 h-4 text-white group-hover:animate-bounce" />
-                            {tournamentLabel}
-                        </span>
-                    </Link>
-
-                    <Link
-                        to="/stats"
-                        className="font-title inline-flex items-center gap-2 px-8 py-3.5 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white text-[11px] tracking-wide rounded-xl border-2 border-white/20 transition-all duration-200 active:scale-95"
-                        style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
-                    >
-                        <span className="inline-flex items-center gap-2 skew-x-10">
-                            <Users className="w-4 h-4 text-white/80" />
-                            Classifica
-                        </span>
-                    </Link>
+                    {/* Azioni: bottone primario filled se c'è un torneo da continuare, altrimenti CTA secondarie */}
+                    {activeTournament ? (
+                        <Link
+                            to={tournamentLink}
+                            className="font-title inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border-2 border-transparent px-5 py-3.5 text-[10px] tracking-wide text-white transition active:translate-y-px hover:opacity-90"
+                            style={{ background: theme.accent, boxShadow: 'var(--circuit-shadow-sm)' }}
+                        >
+                            <Flag size={14} />
+                            {isScheduled ? 'Inizia' : 'Continua'}: {activeTournament.name}
+                            <ArrowRight size={14} />
+                        </Link>
+                    ) : (
+                        <div className="flex shrink-0 flex-wrap gap-3">
+                            <Link
+                                to="/stats"
+                                className="font-title inline-flex items-center gap-2 rounded-xl border-2 border-slate-900 dark:border-white/20 bg-white px-4 py-3 text-[10px] tracking-wide text-slate-700 transition active:translate-y-px hover:border-slate-700 dark:bg-card dark:text-foreground"
+                                style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
+                            >
+                                <Users size={14} /> Classifica
+                            </Link>
+                            {identityLink && (
+                                <Link
+                                    to={identityLink}
+                                    className="font-title inline-flex items-center gap-2 rounded-xl border-2 border-slate-900 dark:border-white/20 bg-white px-4 py-3 text-[10px] tracking-wide text-slate-700 transition active:translate-y-px hover:border-slate-700 dark:bg-card dark:text-foreground"
+                                    style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
+                                >
+                                    <User size={14} /> {player ? 'Il mio profilo' : 'Dashboard'}
+                                </Link>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
-        </header>
+        </section>
     )
 }
 
