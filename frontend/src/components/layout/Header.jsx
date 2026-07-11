@@ -4,6 +4,7 @@ import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { getProfileTheme } from '@/lib/profileTheme'
+import { getTimeGreeting } from '@/lib/greeting'
 
 const Header = () => {
     const { detailedTournaments, charactersById, statsByPlayerId } = useAppData()
@@ -28,6 +29,7 @@ const Header = () => {
     const activeTournament = detailedTournaments.find((t) => t.status !== 'concluso' && !t.winner_id) ?? null
     const isScheduled = activeTournament?.status === 'da_svolgere'
     const tournamentLink = activeTournament ? `/tournaments/${activeTournament.id}` : null
+    const greeting = getTimeGreeting()
 
     return (
         <section className="mx-auto max-w-7xl px-4 pt-8">
@@ -43,6 +45,7 @@ const Header = () => {
                         className="flex min-w-0 flex-1 items-center gap-4"
                     >
                         <div className="relative shrink-0">
+                            <div className="absolute -inset-0.5 rounded-2xl opacity-60 animate-pulse" style={{ background: theme.accent }} />
                             <div className="relative h-18 w-18 overflow-hidden rounded-2xl border-2 border-slate-900/70 dark:border-white/20 bg-white/40 dark:bg-black/20 md:h-20 md:w-20" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                 {player?.img_url ? (
                                     <img src={player.img_url} alt={player.nickname} className="h-full w-full object-cover" />
@@ -61,9 +64,9 @@ const Header = () => {
                         <div className="min-w-0">
                             <p className={`font-title text-[9px] tracking-[0.3em] ${theme.tailwind.textStrong}`}>
                                 {isSuperadmin
-                                    ? `⚡ Bentornato, ${user?.username}`
+                                    ? `⚡ ${greeting}, ${user?.username}`
                                     : player
-                                        ? `Bentornato · ${theme.teamName}`
+                                        ? `${greeting} · ${theme.teamName}`
                                         : 'Benvenuto alla Lega Kart'}
                             </p>
                             <h1 className="mt-0.5 truncate text-3xl font-black uppercase tracking-tighter leading-none text-slate-900 dark:text-foreground md:text-4xl">
