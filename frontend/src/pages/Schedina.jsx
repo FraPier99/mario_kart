@@ -8,11 +8,24 @@ import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { getProfileTheme } from '@/lib/profileTheme'
 import { schedineApi, schedineDeluxeApi } from '@/services/apiClient'
+import { buildAvatarPlaceholder } from '@/lib/placeholders'
 
 const formatDate = (value) => {
     if (!value) return 'data non disponibile'
     return new Date(value).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
 }
+
+// Avatar giocatore: stesso fallback (buildAvatarPlaceholder) usato nel resto
+// dell'app (HallOfFame, LeaderboardTable, Hero) invece di uno stile a parte.
+const PlayerAvatar = ({ img, nickname, size = 'h-8 w-8', className = '' }) => (
+    <img
+        src={img || buildAvatarPlaceholder(nickname)}
+        alt={nickname}
+        loading="lazy"
+        decoding="async"
+        className={`${size} shrink-0 rounded-full object-cover ${className}`}
+    />
+)
 
 const ALL_TABS = [
     { key: 'storico', label: 'Storico Vincitori', icon: <Trophy size={16} /> },
@@ -287,13 +300,7 @@ const Schedina = () => {
                 : 'text-slate-800 dark:text-foreground font-bold'
         return (
             <div className="flex items-center gap-1.5 min-w-0">
-                {img ? (
-                    <img src={img} alt={nickname} className={`h-5 w-5 shrink-0 rounded-full object-cover ring-1 ${ringColor}`} />
-                ) : (
-                    <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-[8px] font-black text-slate-500 dark:text-slate-400`}>
-                        {(nickname ?? '?').charAt(0).toUpperCase()}
-                    </div>
-                )}
+                <PlayerAvatar img={img} nickname={nickname} size="h-5 w-5" textSize="text-[8px]" className={`ring-1 ${ringColor}`} />
                 <span className={`truncate text-xs ${textColor}`}>{nickname}</span>
                 {correct === true && <span className="text-emerald-500 text-[9px]">✓</span>}
                 {correct === false && <span className="text-rose-400 text-[9px]">✗</span>}
@@ -309,7 +316,7 @@ const Schedina = () => {
         return (
             <div className="flex items-center gap-2 rounded-xl bg-slate-50 dark:bg-muted px-3 py-1.5">
                 <span className="w-6 shrink-0 text-center text-xs font-black text-slate-400">{position}</span>
-                {img ? <img src={img} alt={nick} className="h-5 w-5 shrink-0 rounded-full object-cover" /> : <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-[8px] font-black text-slate-500">{(nick ?? '?').charAt(0).toUpperCase()}</div>}
+                <PlayerAvatar img={img} nickname={nick} size="h-5 w-5" textSize="text-[8px]" />
                 <span className="truncate text-xs font-bold text-slate-900 dark:text-foreground">{nick ?? `#${playerId}`}</span>
             </div>
         )
@@ -611,8 +618,7 @@ const Schedina = () => {
                                                     <button type="button" onClick={() => toggleSchedinaExpand(entry.schedina_id)} className="flex w-full items-center justify-between gap-3 text-left">
                                                         <div className="flex items-center gap-2.5">
                                                             <span className={`text-sm font-black ${isWinner ? 'text-amber-500' : 'text-slate-400 dark:text-muted-foreground'}`}>#{index + 1}</span>
-                                                            {img ? <img src={img} alt={nick} className="h-8 w-8 rounded-full object-cover ring-2 ring-white dark:ring-slate-700" />
-                                                                : <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-xs font-black text-slate-500">{(nick ?? '?').charAt(0).toUpperCase()}</div>}
+                                                            <PlayerAvatar img={img} nickname={nick} size="h-8 w-8" className="ring-2 ring-white dark:ring-slate-700" />
                                                             <div>
                                                                 <p className={`text-sm font-black ${isWinner ? 'text-amber-700 dark:text-amber-300' : isMe ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-900 dark:text-foreground'}`}>
                                                                     {nick} {isMe && <span className="text-[8px] text-emerald-500 font-black">(tu)</span>}
@@ -684,19 +690,19 @@ const Schedina = () => {
                                     {/* Desktop: table */}
                                     <div className="hidden md:block overflow-hidden rounded-2xl border border-slate-200 dark:border-border">
                                         <div className="overflow-x-auto">
-                                            <table className="min-w-full divide-y divide-slate-100 dark:divide-border">
+                                            <table className="w-full table-fixed divide-y divide-slate-100 dark:divide-border">
                                                 <thead className="bg-slate-50 dark:bg-muted">
                                                     <tr>
-                                                        <th className="w-10 px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">#</th>
-                                                        <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Giocatore</th>
-                                                        <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Pt</th>
-                                                        <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Dist.</th>
-                                                        <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">1°</th>
-                                                        {showSecond && <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">2°</th>}
-                                                        {showThird && <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">3°</th>}
-                                                        {showUltimoSeparate && <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Ultimo</th>}
-                                                        <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Streak</th>
-                                                        {hasAnyDuel && <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Duello</th>}
+                                                        <th className="w-8 px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">#</th>
+                                                        <th className="w-44 px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Giocatore</th>
+                                                        <th className="w-12 px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Pt</th>
+                                                        <th className="w-14 px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Dist.</th>
+                                                        <th className="w-28 px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">1°</th>
+                                                        {showSecond && <th className="w-28 px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">2°</th>}
+                                                        {showThird && <th className="w-28 px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">3°</th>}
+                                                        {showUltimoSeparate && <th className="w-28 px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Ultimo</th>}
+                                                        <th className="w-28 px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Streak</th>
+                                                        {hasAnyDuel && <th className="w-28 px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Duello</th>}
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100 dark:divide-border bg-white dark:bg-card">
@@ -719,13 +725,7 @@ const Schedina = () => {
                                                                     </td>
                                                                     <td className="px-3 py-3">
                                                                         <div className="flex items-center gap-2.5 min-w-0">
-                                                                            {img ? (
-                                                                                <img src={img} alt={nick} className="h-8 w-8 shrink-0 rounded-full object-cover ring-2 ring-white dark:ring-slate-700 shadow-sm" />
-                                                                            ) : (
-                                                                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-xs font-black text-slate-500 dark:text-slate-400">
-                                                                                    {(nick ?? '?').charAt(0).toUpperCase()}
-                                                                                </div>
-                                                                            )}
+                                                                            <PlayerAvatar img={img} nickname={nick} size="h-8 w-8" className="ring-2 ring-white dark:ring-slate-700 shadow-sm" />
                                                                             <div className="min-w-0">
                                                                                 <p className={`text-sm font-black truncate ${isWinner ? 'text-amber-700 dark:text-amber-300' : isMe ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-900 dark:text-foreground'}`}>
                                                                                     {nick}{isMe && <span className="ml-1.5 text-[8px] text-emerald-500 font-black">(tu)</span>}
@@ -829,8 +829,7 @@ const Schedina = () => {
                                                     <button type="button" onClick={() => toggleSchedinaExpand(entry.schedina_id)} className="flex w-full items-center justify-between gap-3 text-left">
                                                         <div className="flex items-center gap-2.5 min-w-0">
                                                             <span className={`text-sm font-black shrink-0 ${isWinner ? 'text-amber-500' : 'text-slate-400 dark:text-muted-foreground'}`}>#{index + 1}</span>
-                                                            {img ? <img src={img} alt={nick} className="h-8 w-8 shrink-0 rounded-full object-cover ring-2 ring-white dark:ring-slate-700" />
-                                                                : <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-xs font-black text-slate-500">{(nick ?? '?').charAt(0).toUpperCase()}</div>}
+                                                            <PlayerAvatar img={img} nickname={nick} size="h-8 w-8" className="ring-2 ring-white dark:ring-slate-700" />
                                                             <div className="min-w-0">
                                                                 <p className={`text-sm font-black truncate ${isWinner ? 'text-amber-700 dark:text-amber-300' : isMe ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-900 dark:text-foreground'}`}>
                                                                     {nick} {isMe && <span className="text-[8px] text-emerald-500 font-black">(tu)</span>}
@@ -952,12 +951,7 @@ const Schedina = () => {
                                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                                     {participantsStatus.map((p) => (
                                         <div key={p.user_id} className="flex items-center gap-2.5 rounded-xl bg-white dark:bg-slate-800 px-3 py-2.5 shadow-sm">
-                                            {(() => {
-                                                const img = getPlayerImg(p.nickname)
-                                                return img
-                                                    ? <img src={img} alt={p.nickname} className="h-7 w-7 shrink-0 rounded-full object-cover" />
-                                                    : <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-[10px] font-black text-slate-500">{(p.nickname ?? '?').charAt(0).toUpperCase()}</div>
-                                            })()}
+                                            <PlayerAvatar img={getPlayerImg(p.nickname)} nickname={p.nickname} size="h-7 w-7" textSize="text-[10px]" />
                                             <div className="min-w-0 flex-1">
                                                 <p className="truncate text-xs font-bold text-slate-900 dark:text-white">{p.nickname || p.username}</p>
                                                 {p.compiled_at && (
@@ -1022,7 +1016,8 @@ const Schedina = () => {
                                     key={tab.key}
                                     type="button"
                                     onClick={() => setActiveTab(tab.key)}
-                                    className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-widest transition whitespace-nowrap ${activeTab === tab.key ? `text-white shadow-md ${theme.tailwind.bg}` : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-white'}`}
+                                    className={`font-title inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[10px] tracking-wide transition whitespace-nowrap ${activeTab === tab.key ? `text-white ${theme.tailwind.bg}` : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-white'}`}
+                                    style={activeTab === tab.key ? { boxShadow: 'var(--circuit-shadow-sm)' } : undefined}
                                 >
                                     {tab.icon}
                                     {tab.label}
@@ -1034,7 +1029,7 @@ const Schedina = () => {
 
                         {/* TAB: STORICO */}
                         {activeTab === 'storico' && (
-                            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl dark:border-border dark:bg-card">
+                            <div className="rounded-[2rem] border-2 border-slate-200 bg-white p-6 dark:border-border dark:bg-card" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                     <div>
                                         <p className={`text-xs font-black uppercase tracking-[0.35em] ${theme.tailwind.text}`}>Storico schedine</p>
@@ -1092,7 +1087,7 @@ const Schedina = () => {
 
                         {/* TAB: STORICO SCHEDINE */}
                         {activeTab === 'storico-schedine' && (
-                            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl dark:border-border dark:bg-card">
+                            <div className="rounded-[2rem] border-2 border-slate-200 bg-white p-6 dark:border-border dark:bg-card" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                     <div>
                                         <p className={`text-xs font-black uppercase tracking-[0.35em] ${theme.tailwind.text}`}>Storico Schedine</p>
@@ -1113,27 +1108,21 @@ const Schedina = () => {
                                 </div>
                                 <div className="mt-5 overflow-hidden rounded-3xl border border-slate-200 dark:border-border">
                                     <div className="overflow-x-auto">
-                                        <table className="min-w-full divide-y divide-slate-200 dark:divide-border">
+                                        <table className="w-full table-fixed divide-y divide-slate-200 dark:divide-border">
                                             <thead className="bg-slate-50 dark:bg-muted">
                                                 <tr>
-                                                    <th className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Utente</th>
-                                                    <th className="px-4 py-3 text-center text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Compilate</th>
-                                                    <th className="px-4 py-3 text-center text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Vinte</th>
+                                                    <th className="w-1/3 px-4 py-3 text-left text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Utente</th>
+                                                    <th className="w-1/3 px-4 py-3 text-center text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Compilate</th>
+                                                    <th className="w-1/3 px-4 py-3 text-center text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Vinte</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-200 bg-white dark:divide-border dark:bg-card">
                                                 {(overview?.usage ?? []).map((row) => (
                                                     <tr key={row.user_id}>
                                                         <td className="px-4 py-3">
-                                                            <div className="flex items-center gap-2.5">
-                                                                {row.img_url ? (
-                                                                    <img src={row.img_url} alt={row.nickname ?? row.username} className="h-7 w-7 shrink-0 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-700" />
-                                                                ) : (
-                                                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-[9px] font-black text-slate-500 dark:text-slate-400">
-                                                                        {(row.nickname ?? row.username ?? '?').charAt(0).toUpperCase()}
-                                                                    </div>
-                                                                )}
-                                                                <p className="text-sm font-black text-slate-900 dark:text-foreground">{row.nickname ?? row.username}</p>
+                                                            <div className="flex items-center gap-2.5 min-w-0">
+                                                                <PlayerAvatar img={row.img_url} nickname={row.nickname ?? row.username} size="h-7 w-7" textSize="text-[9px]" className="ring-1 ring-slate-200 dark:ring-slate-700" />
+                                                                <p className="truncate text-sm font-black text-slate-900 dark:text-foreground">{row.nickname ?? row.username}</p>
                                                             </div>
                                                         </td>
                                                         <td className="px-4 py-3 text-center text-sm font-bold text-slate-700 dark:text-foreground">{row.schedine_compiled}</td>
@@ -1201,7 +1190,7 @@ const Schedina = () => {
                                 {isSuperadmin ? (
                                     allByTournament && allByTournament.length > 0 ? (
                                         allByTournament.map((entry) => (
-                                            <div key={entry.tournament_id} className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-xl dark:border-border dark:bg-card">
+                                            <div key={entry.tournament_id} className="rounded-[2rem] border-2 border-slate-200 bg-white p-5 dark:border-border dark:bg-card" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                                                 <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
                                                     <div>
                                                         <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Torneo #{getTournamentDisplayNumber(entry.tournament_id)}</p>
@@ -1216,12 +1205,7 @@ const Schedina = () => {
                                                     {entry.schedine.map((s) => (
                                                         <div key={s.schedina_id} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 dark:bg-muted px-4 py-2.5">
                                                             <div className="flex items-center gap-2.5 min-w-0">
-                                                                {(() => {
-                                                                    const img = getPlayerImg(s.nickname)
-                                                                    return img
-                                                                        ? <img src={img} alt={s.nickname} className="h-7 w-7 shrink-0 rounded-full object-cover" />
-                                                                        : <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-[9px] font-black text-slate-500">{(s.nickname ?? s.username ?? '?').charAt(0).toUpperCase()}</div>
-                                                                })()}
+                                                                <PlayerAvatar img={getPlayerImg(s.nickname)} nickname={s.nickname ?? s.username} size="h-7 w-7" textSize="text-[9px]" />
                                                                 <p className="text-sm font-black text-slate-900 dark:text-foreground truncate">{s.nickname ?? s.username}</p>
                                                             </div>
                                                             <div className="flex items-center gap-2 shrink-0">
@@ -1256,7 +1240,7 @@ const Schedina = () => {
                                             const key = `${s.format}-${s.id}`
                                             const open = expandedSchedine.has(key)
                                             return (
-                                                <div key={key} className={`rounded-[2rem] border bg-white p-5 shadow-xl dark:bg-card ${isWon ? 'border-amber-200 dark:border-amber-500/30' : 'border-slate-200 dark:border-border'}`}>
+                                                <div key={key} className={`rounded-[2rem] border-2 bg-white p-5 dark:bg-card ${isWon ? 'border-amber-200 dark:border-amber-500/30' : 'border-slate-200 dark:border-border'}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                                                     <div className="flex flex-wrap items-start justify-between gap-3">
                                                         <div>
                                                             <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">

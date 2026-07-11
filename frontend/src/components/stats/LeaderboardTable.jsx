@@ -88,7 +88,7 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                     alt={row.nickname}
                     loading="lazy"
                     decoding="async"
-                    className="h-12 w-12 rounded-full object-cover shrink-0"
+                    className="h-14 w-14 rounded-full object-cover shrink-0"
                 />
             </div>
             <div className="min-w-0">

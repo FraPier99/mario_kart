@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Crown, Flag, Trophy, Star, BarChart3, UserCircle2, Sparkles, Shield } from 'lucide-react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { ArrowLeft, Crown, Flag, Trophy, Star, BarChart3, UserCircle2, Shield } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import { authApi, getApiErrorMessage } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 
 const CommunityUserPage = () => {
     const { userId } = useParams()
+    const navigate = useNavigate()
     const { statsByPlayerId, charactersById, games, getLeaderboardByGame } = useAppData()
     const [communityUser, setCommunityUser] = useState(null)
     const [loading, setLoading] = useState(true)
@@ -98,42 +99,63 @@ const CommunityUserPage = () => {
     return (
         <AppLayout>
             <section className="mx-auto max-w-3xl px-4 py-8 animate-fade-in space-y-6">
-                {/* Back link */}
-                <Link to="/" className="font-title inline-flex items-center gap-2 text-[10px] tracking-wide text-slate-400 transition hover:text-emerald-600">
-                    <ArrowLeft size={14} /> Home
-                </Link>
+                {/* Back link — torna alla pagina di provenienza (es. /players) invece di forzare sempre la Home */}
+                <button
+                    type="button"
+                    onClick={() => navigate(-1)}
+                    className="font-title inline-flex items-center gap-2 text-[10px] tracking-wide text-slate-400 transition hover:text-emerald-600"
+                >
+                    <ArrowLeft size={14} /> Indietro
+                </button>
 
-                {/* Profile card */}
-                <div className={`rounded-2xl border-2 p-6 ${isChampion ? 'border-amber-400/60 dark:border-amber-500/30 bg-linear-to-br from-amber-100/90 via-amber-50/60 to-amber-100/80 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60' : 'border-slate-200 dark:border-border bg-white dark:bg-card'}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
-                    <div className="flex flex-col items-center gap-4 text-center">
-                        <div className="relative">
-                            <div className="absolute inset-0 rounded-full bg-emerald-400/20 blur-xl scale-150 pointer-events-none" />
-                            <div className={`relative flex h-24 w-24 items-center justify-center rounded-full border-[2.5px] overflow-hidden bg-gradient-to-br from-emerald-400 to-green-500 shadow-lg shadow-emerald-400/20 ${isChampion ? 'border-amber-400' : 'border-emerald-400'}`}>
-                                {player?.img_url || communityUser?.img_url
-                                    ? <img src={player?.img_url || communityUser?.img_url} alt={player?.nickname ?? communityUser?.username} className="h-full w-full object-cover" />
-                                    : <UserCircle2 size={36} className="text-white" />}
+                {/* Profile card — composizione editoriale asimmetrica: colonna avatar fissa + colonna contenuto fluida, niente centratura */}
+                <div className={`rounded-2xl border-2 p-6 md:p-8 ${isChampion ? 'border-amber-400/60 dark:border-amber-500/30 bg-linear-to-br from-amber-100/90 via-amber-50/60 to-amber-100/80 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60' : 'border-slate-200 dark:border-border bg-white dark:bg-card'}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
+                    <div className="grid gap-6 md:grid-cols-[auto_1fr] items-start">
+                        {/* Colonna sinistra: avatar + ruolo */}
+                        <div className="flex flex-row items-center gap-3 md:flex-col md:items-start">
+                            <div className="relative shrink-0">
+                                <div className="absolute inset-0 rounded-2xl bg-emerald-400/20 blur-xl scale-125 pointer-events-none" />
+                                <div className={`relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-2xl border-[2.5px] bg-gradient-to-br from-emerald-400 to-green-500 shadow-lg shadow-emerald-400/20 ${isChampion ? 'border-amber-400' : 'border-emerald-400'}`}>
+                                    {player?.img_url || communityUser?.img_url
+                                        ? <img src={player?.img_url || communityUser?.img_url} alt={player?.nickname ?? communityUser?.username} className="h-full w-full object-cover" />
+                                        : <UserCircle2 size={40} className="text-white" />}
+                                </div>
+                                {isChampion && (
+                                    <span className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white dark:border-card bg-amber-400 shadow-md">
+                                        <Crown size={13} className="text-amber-950" />
+                                    </span>
+                                )}
                             </div>
-                            {isChampion && (
-                                <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white dark:border-card bg-amber-400 shadow-md">
-                                    <Crown size={12} className="text-amber-950" />
-                                </span>
+                            <span className="font-title inline-flex items-center rounded-full border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-1 text-[9px] tracking-wide text-emerald-600 dark:text-emerald-400">
+                                {communityUser.role === 'superadmin' ? 'Superadmin' : communityUser.role === 'admin' ? 'Admin' : 'Giocatore'}
+                            </span>
+                        </div>
+
+                        {/* Colonna destra: identità allineata a sinistra + badge in fondo */}
+                        <div className="min-w-0 text-left">
+                            <h1 className="text-3xl font-black text-slate-900 dark:text-foreground">{player?.nickname ?? communityUser.username}</h1>
+                            {player && <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">{player.first_name} {player.last_name}</p>}
+                            {player?.bio && <p className="mt-3 max-w-xl text-sm text-slate-600 dark:text-muted-foreground leading-relaxed whitespace-pre-wrap">{player.bio}</p>}
+
+                            {(favoriteCharacter || isChampion) && (
+                                <div className="mt-4 flex flex-wrap items-center gap-2">
+                                    {isChampion && (
+                                        <div className="flex items-center gap-1.5 rounded-xl border-2 border-amber-300 dark:border-amber-500/40 bg-amber-100/70 dark:bg-amber-500/15 px-3 py-1.5">
+                                            <Trophy size={13} className="text-amber-600 dark:text-amber-400" />
+                                            <span className="text-xs font-black text-amber-700 dark:text-amber-300">
+                                                {playerStats.tournamentWins} {playerStats.tournamentWins === 1 ? 'torneo vinto' : 'tornei vinti'}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {favoriteCharacter && (
+                                        <div className="flex items-center gap-2 rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-1.5">
+                                            {favoriteCharacter.img_url && <img src={favoriteCharacter.img_url} alt={favoriteCharacter.name} className="h-5 w-5 rounded-full object-cover" />}
+                                            <span className="text-xs font-black text-slate-600 dark:text-foreground">{favoriteCharacter.name}</span>
+                                        </div>
+                                    )}
+                                </div>
                             )}
                         </div>
-                        <div>
-                            <p className="font-title text-[9px] tracking-wide text-emerald-600 dark:text-emerald-400">
-                                {communityUser.role === 'superadmin' ? 'Superadmin' : communityUser.role === 'admin' ? 'Admin' : 'Giocatore'}
-                            </p>
-                            <h1 className="mt-1 text-2xl font-black text-slate-900 dark:text-foreground">{player?.nickname ?? communityUser.username}</h1>
-                            {player && <p className="text-sm text-slate-500 dark:text-muted-foreground">{player.first_name} {player.last_name}</p>}
-                            {player?.bio && <p className="mt-2 max-w-md text-xs text-slate-500 dark:text-muted-foreground leading-relaxed whitespace-pre-wrap">{player.bio}</p>}
-                        </div>
-                        {favoriteCharacter && (
-                            <div className="flex items-center gap-2 rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-2">
-                                {favoriteCharacter.img_url && <img src={favoriteCharacter.img_url} alt={favoriteCharacter.name} className="h-5 w-5 rounded-full object-cover" />}
-                                <span className="text-xs font-black text-slate-600 dark:text-foreground">{favoriteCharacter.name}</span>
-                                <Sparkles size={12} className="text-amber-500" />
-                            </div>
-                        )}
                     </div>
                 </div>
 

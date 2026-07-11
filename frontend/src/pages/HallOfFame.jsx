@@ -1,12 +1,8 @@
-import { useMemo, useRef, useState } from 'react'
-import { Crown, Trophy, Flag, Sparkles, Filter, Calendar, Upload, X } from 'lucide-react'
-import { toast } from 'sonner'
+import { useMemo, useState } from 'react'
+import { Crown, Trophy, Flag, Sparkles, Filter, Calendar, ChevronDown, ChevronUp } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import { useAppData } from '@/context/AppDataContext'
-import { useAuth } from '@/context/AuthContext'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
-import { compressImage } from '@/lib/imageCompression'
-import { playersApi, getApiErrorMessage } from '@/services/apiClient'
 import { Link } from 'react-router-dom'
 
 const CONFETTI_COLORS = ['#f59e0b', '#d97706', '#b45309', '#fbbf24', '#fcd34d', '#fef3c7']
@@ -48,7 +44,8 @@ const formatDate = (d) => {
   return new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-const ChampionCard = ({ player, wins, gamesWon, tournaments, index, onEntryClick }) => {
+const ChampionCard = ({ player, wins, gamesWon, tournaments, index }) => {
+  const [expanded, setExpanded] = useState(false)
   const particles = useMemo(() =>
     Array.from({ length: PARTICLE_COUNT }, (_, i) => ({
       id: i,
@@ -129,12 +126,12 @@ const ChampionCard = ({ player, wins, gamesWon, tournaments, index, onEntryClick
           )}
         </div>
 
-        {/* Last 2 tournaments preview */}
+        {/* Tornei vinti: 2 in preview, espandibili inline se più di 2 (niente modale) */}
         {tournaments && tournaments.length > 0 && (
           <div className="mt-3 space-y-1">
-            {tournaments.slice(0, 2).map((t) => (
+            {(expanded ? tournaments : tournaments.slice(0, 2)).map((t) => (
               <div key={t.id} className="flex items-center justify-between rounded-lg bg-amber-200/30 dark:bg-amber-900/30 px-2.5 py-1">
-                <span className="text-[9px] font-black text-slate-600 dark:text-amber-200 truncate max-w-[140px]">{t.name}</span>
+                <span className="text-[9px] font-black text-slate-600 dark:text-amber-200 truncate max-w-35">{t.name}</span>
                 <div className="flex items-center gap-1">
                   <Calendar size={8} className="text-amber-500" />
                   <span className="text-[8px] text-slate-500 dark:text-amber-300/70">{formatDate(t.date)}</span>
@@ -142,7 +139,17 @@ const ChampionCard = ({ player, wins, gamesWon, tournaments, index, onEntryClick
               </div>
             ))}
             {tournaments.length > 2 && (
-              <p className="text-[8px] font-black text-amber-600/60 dark:text-amber-400/60">+{tournaments.length - 2} altri</p>
+              <button
+                type="button"
+                onClick={() => setExpanded((v) => !v)}
+                className="flex w-full cursor-pointer items-center justify-center gap-1 pt-1 text-[8px] font-black uppercase tracking-wider text-amber-600/80 dark:text-amber-400/80 transition hover:text-amber-700 dark:hover:text-amber-300"
+              >
+                {expanded ? (
+                  <>Mostra meno <ChevronUp size={11} /></>
+                ) : (
+                  <>Mostra tutti ({tournaments.length}) <ChevronDown size={11} /></>
+                )}
+              </button>
             )}
           </div>
         )}
@@ -158,126 +165,6 @@ const ChampionCard = ({ player, wins, gamesWon, tournaments, index, onEntryClick
             />
           ))}
         </div>
-
-        <button
-          type="button"
-          onClick={() => onEntryClick({ player, wins, tournaments })}
-          className="font-title mt-4 w-full cursor-pointer rounded-xl border-2 border-amber-800/30 bg-amber-600 py-2 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-amber-500"
-          style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
-        >
-          Vedi dettagli
-        </button>
-      </div>
-    </div>
-  )
-}
-
-const ChampionModal = ({ entry, games, onClose, isSuperadmin, onPhotoUploaded }) => {
-  const { player, tournaments, wins } = entry
-  const [uploading, setUploading] = useState(false)
-  const fileInputRef = useRef(null)
-
-  const handleFileChange = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (!file.type.startsWith('image/')) { toast.error('Carica un file immagine valido'); return }
-    setUploading(true)
-    try {
-      const data = await compressImage(file, { maxDimension: 1000, quality: 0.85 })
-      await playersApi.uploadChampionPhoto(player.id, data)
-      toast.success('Foto campione caricata!')
-      onPhotoUploaded?.(player.id, data)
-    } catch (err) {
-      toast.error('Caricamento fallito', { description: getApiErrorMessage(err) })
-    } finally {
-      setUploading(false)
-      if (e.target) e.target.value = ''
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm p-4 overflow-y-auto" onClick={onClose}>
-      <div className="flex min-h-full items-center justify-center" onClick={(e) => e.stopPropagation()}>
-      <div className="relative w-full max-w-lg rounded-2xl border-2 border-amber-400/60 dark:border-amber-500/30 bg-white dark:bg-card animate-scale-in" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
-        {/* Photo area */}
-        <div className="relative h-56 bg-gradient-to-br from-amber-100 to-amber-300 dark:from-amber-950 dark:to-amber-800 flex items-center justify-center overflow-hidden">
-          {player.champion_photo ? (
-            <img src={player.champion_photo} alt="Campione" className="absolute inset-0 h-full w-full object-cover" />
-          ) : (
-            <div className="text-center">
-              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-amber-200/70 dark:bg-amber-900/50">
-                <Trophy size={40} className="text-amber-600 dark:text-amber-300" />
-              </div>
-              <p className="mt-3 text-xs font-black uppercase tracking-widest text-amber-800 dark:text-amber-200">Foto del vincitore</p>
-              <p className="text-[10px] text-amber-700/70 dark:text-amber-300/70 italic">In attesa della foto ufficiale</p>
-            </div>
-          )}
-          <button type="button" onClick={onClose} className="absolute top-3 right-3 rounded-full bg-black/20 p-1.5 text-white backdrop-blur-sm hover:bg-black/40 transition">
-            <X size={16} />
-          </button>
-        </div>
-
-        {/* Player info */}
-        <div className="px-6 py-5 text-center border-b border-amber-100 dark:border-amber-500/20">
-          <div className="relative inline-flex mb-3">
-            <img
-              src={player.champion_photo || player.img_url || buildAvatarPlaceholder(player.nickname)}
-              alt={player.nickname}
-              className="h-16 w-16 rounded-2xl object-cover ring-2 ring-amber-400/50 shadow-lg"
-            />
-          </div>
-          <span className="inline-block rounded-full bg-amber-500/20 px-3 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-300">
-            {player.nickname}
-          </span>
-          <h2 className="mt-2 text-2xl font-black uppercase tracking-tight text-slate-800 dark:text-foreground">
-            {player.first_name} {player.last_name}
-          </h2>
-          <div className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-amber-400/20 dark:bg-amber-500/15 px-3 py-1.5">
-            <Crown size={14} className="text-amber-600 dark:text-amber-400" />
-            <span className="text-sm font-black text-amber-700 dark:text-amber-300">{wins} {wins === 1 ? 'titolo' : 'titoli'}</span>
-          </div>
-        </div>
-
-        {/* Tournament list */}
-        <div className="px-6 py-5">
-          <p className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground mb-3 flex items-center gap-1.5">
-            <Trophy size={12} /> Tornei vinti
-          </p>
-          <div className="space-y-2 max-h-52 overflow-y-auto">
-            {tournaments.map((t) => {
-              const game = games.find((g) => g.id === t.game_id)
-              return (
-                <div key={t.id} className="flex items-center justify-between rounded-xl border border-amber-100 dark:border-amber-500/20 bg-amber-50/50 dark:bg-amber-950/20 px-4 py-2.5">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Trophy size={13} className="shrink-0 text-amber-500" />
-                    <span className="text-sm font-black text-slate-700 dark:text-foreground truncate">{t.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {game && <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">{game.name}</span>}
-                    <div className="flex items-center gap-1">
-                      <Calendar size={10} className="text-slate-400 dark:text-slate-500" />
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500">{formatDate(t.date)}</span>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Upload button (superadmin) */}
-        {isSuperadmin && (
-          <div className="border-t border-amber-100 dark:border-amber-500/20 px-6 py-4">
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-            <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
-              className="font-title flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-amber-300 dark:border-amber-500/30 py-3 text-[10px] tracking-wide text-amber-500 dark:text-amber-400 transition hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 disabled:opacity-60"
-            >
-              <Upload size={14} />
-              {uploading ? 'Caricamento...' : player.champion_photo ? 'Cambia foto vincitore' : 'Carica foto vincitore'}
-            </button>
-          </div>
-        )}
-      </div>
       </div>
     </div>
   )
@@ -285,9 +172,7 @@ const ChampionModal = ({ entry, games, onClose, isSuperadmin, onPhotoUploaded })
 
 const HallOfFame = () => {
   const { detailedTournaments, playersById, games, loading } = useAppData()
-  const { isSuperadmin } = useAuth()
   const [selectedGameId, setSelectedGameId] = useState('')
-  const [selectedEntry, setSelectedEntry] = useState(null)
 
   const [heroConfetti] = useState(() => Array.from({ length: 15 }).map((_, i) => ({
     key: i,
@@ -357,17 +242,6 @@ const HallOfFame = () => {
   const totalChampions = champions.length
   const totalWins = champions.reduce((s, c) => s + c.wins, 0)
   const uniqueGames = new Set(detailedTournaments.filter((t) => t.winner_id).map((t) => t.game_id)).size
-
-  const handleEntryClick = (entry) => {
-    setSelectedEntry(entry)
-  }
-
-  const handlePhotoUploaded = (playerId, imageData) => {
-    setSelectedEntry((prev) => {
-      if (!prev || prev.player.id !== playerId) return prev
-      return { ...prev, player: { ...prev.player, champion_photo: imageData } }
-    })
-  }
 
   return (
     <AppLayout>
@@ -483,7 +357,6 @@ const HallOfFame = () => {
                 gamesWon={gamesWonByPlayer.get(entry.player.id) ?? 0}
                 tournaments={entry.tournaments}
                 index={idx}
-                onEntryClick={handleEntryClick}
               />
             ))}
           </div>
@@ -507,16 +380,6 @@ const HallOfFame = () => {
           </div>
         )}
       </section>
-
-      {selectedEntry && (
-        <ChampionModal
-          entry={selectedEntry}
-          games={games}
-          isSuperadmin={isSuperadmin}
-          onClose={() => setSelectedEntry(null)}
-          onPhotoUploaded={handlePhotoUploaded}
-        />
-      )}
     </AppLayout>
   )
 }

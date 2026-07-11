@@ -29,17 +29,19 @@ const FavoriteCharacterPicker = ({ value, onChange, characters }) => {
         return characters.filter((character) => character.name?.toLowerCase().includes(needle))
     }, [characters, query])
 
-    // Precarica i versi di tutti i personaggi appena si apre il menu, invece
-    // di fare fetch+decode dell'audio solo al click: prima il primo verso di
-    // ogni personaggio partiva con un ritardo percepibile (a volte il menu
-    // si chiudeva prima ancora che il suono iniziasse).
-    useEffect(() => {
-        if (!open) return
-        characters.forEach((character) => {
-            if (character.game_id === 2) preloadMk8dCharacterVoice(character.name)
-            else preloadMkdsCharacterVoiceByName(character.name)
-        })
-    }, [open, characters])
+    // Precaricare TUTTI i personaggi in blocco all'apertura del menu (~40+
+    // fetch+decodeAudioData in parallelo) saturava la decodifica audio: il
+    // verso del personaggio cliccato restava in coda dietro gli altri, con
+    // un ritardo percepibile e, se si cliccava più volte durante l'attesa,
+    // versi diversi che partivano tutti insieme non appena le decodifiche
+    // in coda finivano. Si precarica invece un solo personaggio alla volta,
+    // al passaggio del mouse/focus sulla sua card — per come si usa il
+    // picker (si passa sopra prima di cliccare) il verso è quasi sempre
+    // già pronto al click, senza saturare nulla.
+    const preloadVoiceFor = (character) => {
+        if (character.game_id === 2) preloadMk8dCharacterVoice(character.name)
+        else preloadMkdsCharacterVoiceByName(character.name)
+    }
 
     useEffect(() => {
         const handleOutsideClick = (event) => {
@@ -137,6 +139,8 @@ const FavoriteCharacterPicker = ({ value, onChange, characters }) => {
                                     <button
                                         key={character.id}
                                         type="button"
+                                        onMouseEnter={() => preloadVoiceFor(character)}
+                                        onFocus={() => preloadVoiceFor(character)}
                                         onClick={() => {
                                             onChange(String(character.id))
                                             if (character.game_id === 2) {
@@ -443,7 +447,7 @@ const Dashboard = () => {
                             <div className="flex items-center gap-4">
                                 {/* Avatar */}
                                 <div className="relative shrink-0">
-                                    <div className={`h-20 w-20 overflow-hidden rounded-2xl border-2 bg-slate-100 dark:bg-muted shadow-md ${isChampion ? 'border-amber-400 shadow-amber-400/20' : 'border-slate-200 dark:border-border'}`}>
+                                    <div className={`h-24 w-24 overflow-hidden rounded-2xl border-2 bg-slate-100 dark:bg-muted shadow-md ${isChampion ? 'border-amber-400 shadow-amber-400/20' : 'border-slate-200 dark:border-border'}`}>
                                         {form.img_url || player?.img_url ? (
                                             <img src={form.img_url || player?.img_url} alt={form.nickname || player?.nickname} className="h-full w-full object-cover" />
                                         ) : (
