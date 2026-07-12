@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { toast } from 'sonner'
 import { Clock, Play, Trophy, ChevronRight, AlertTriangle, Shield, X, Lock } from 'lucide-react'
 import { getApiErrorMessage, tournamentsApi } from '@/services/apiClient'
@@ -59,7 +60,6 @@ const buildWarnings = (tournament, targetStatus) => {
     if (targetStatus === 'in_corso') {
         const now = new Date()
         const tournamentDate = tournament.date ? new Date(tournament.date) : null
-        const deadlineLock = tournament.deadline_lock ? new Date(tournament.deadline_lock) : null
         const raceCount = tournament.raceCount ?? tournament.races?.length ?? 0
         const nRaces = tournament.n_races ?? 0
 
@@ -69,15 +69,6 @@ const buildWarnings = (tournament, targetStatus) => {
                 icon: '📅',
                 title: 'Torneo non ancora alla data',
                 body: `Il torneo è previsto per il ${tournamentDate.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })}. Stai avanzando prima della data programmata.`,
-            })
-        }
-
-        if (deadlineLock && deadlineLock > now) {
-            warnings.push({
-                level: 'critical',
-                icon: '⏰',
-                title: 'Scadenza schedine non ancora passata',
-                body: `La deadline per le schedine scade il ${deadlineLock.toLocaleString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}. Se avanzi ora, gli utenti non potranno più compilare la schedina.`,
             })
         }
 
@@ -228,13 +219,14 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated }) =>
 
     return (
         <>
-            {pendingTarget && (
+            {pendingTarget && createPortal(
                 <SafetyModal
                     warnings={pendingTarget.warnings}
                     targetLabel={pendingTarget.label}
                     onConfirm={() => { setPendingTarget(null); doSetStatus(pendingTarget.value) }}
                     onCancel={() => setPendingTarget(null)}
-                />
+                />,
+                document.body
             )}
 
             <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm space-y-5">

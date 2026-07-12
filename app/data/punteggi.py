@@ -18,7 +18,12 @@ def _compute_punteggi(n: int) -> list[int]:
 
 
 def _compute_gare(n: int) -> int:
-    return n * 4
+    # Regola (docs/REGOLAMENTO.md §2a): max 20 gare totali, ogni
+    # partecipante sceglie ceil(20 / n) circuiti — es. 7 giocatori → 21 gare.
+    import math
+
+    race_per_player = math.ceil(20 / n)
+    return race_per_player * n
 
 
 PUNTEGGI_CONFIG = {n: _compute_punteggi(n) for n in range(2, 13)}

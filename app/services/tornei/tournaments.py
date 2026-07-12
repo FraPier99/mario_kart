@@ -52,6 +52,8 @@ def _compute_group_stage_n_races(n_players: int) -> int:
 MAX_GROUP_SIZE = 4
 # Numero minimo di partecipanti per il formato a gironi (= 2 gironi pieni).
 MIN_GROUP_STAGE_PLAYERS = 8
+# Numero massimo di partecipanti per il formato a classifica unica.
+MAX_CLASSIC_PLAYERS = 8
 
 
 def compute_group_layout(n_players: int) -> list[int]:
@@ -213,6 +215,10 @@ def create_tournament(
         if tmentData.n_players < 2:
             raise ValueError(
                 "Il formato a classifica unica richiede almeno 2 giocatori"
+            )
+        if tmentData.n_players > MAX_CLASSIC_PLAYERS:
+            raise ValueError(
+                f"Il formato a classifica unica supporta al massimo {MAX_CLASSIC_PLAYERS} giocatori"
             )
         config = setUpTournament(tmentData.n_players)
 

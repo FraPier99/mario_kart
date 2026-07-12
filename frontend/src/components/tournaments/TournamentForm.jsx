@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, CalendarDays, Check, Gamepad2, Users } from 'lucide-react'
 
-const todayIso = () => new Date().toISOString().slice(0, 10)
+const todayIso = () => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 const emptyForm = {
     name: '',
@@ -98,6 +101,10 @@ const TournamentForm = ({
         const isGroupStage = formState.tournament_format === 'group_stage'
         if (isGroupStage && selectedPlayerIds.length < 8) {
             setErrors((e) => ({ ...e, tournament_format: 'La modalità a gironi richiede almeno 8 partecipanti.' }))
+            return
+        }
+        if (!isGroupStage && selectedPlayerIds.length > 8) {
+            setErrors((e) => ({ ...e, tournament_format: 'La modalità a classifica unica supporta al massimo 8 partecipanti.' }))
             return
         }
         const nRaces = !isGroupStage && formState.n_races
