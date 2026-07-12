@@ -8,11 +8,11 @@
  * i pareggi lato client dalle standings.
  */
 import { useState, useEffect, useMemo } from 'react'
-import { Swords, Dices, Trophy, ChevronDown } from 'lucide-react'
+import { Swords, Dices, Trophy, ChevronDown, AlertTriangle } from 'lucide-react'
 import CircuitThumbnail from '@/components/common/CircuitThumbnail'
 import GroupRaceForm from '@/components/tournaments/GroupRaceForm'
 
-const DuelBlock = ({ title, tie, groupName, phase, playerMap, races, isOpen, onToggle, bestOfThree, children, circuits, characters }) => {
+const DuelBlock = ({ title, tie, groupName, phase, playerMap, races, isOpen, onToggle, bestOfThree, children, circuits, characters, isConcluded }) => {
     const tiedPlayers = tie.tied.map((id) => playerMap.get(id)).filter(Boolean)
     const duelRaces = (races ?? []).filter((r) => r.is_duello && r.phase === phase && r.group_name === groupName)
 
@@ -133,6 +133,11 @@ const DuelBlock = ({ title, tie, groupName, phase, playerMap, races, isOpen, onT
                         </div>
                     )}
                 </>
+            ) : isConcluded ? (
+                <p className="flex items-center gap-2 text-sm font-bold text-slate-500 dark:text-muted-foreground">
+                    <AlertTriangle size={14} className="shrink-0 text-amber-500" />
+                    Torneo concluso — spareggio non risolto, non è più possibile generare altre gare.
+                </p>
             ) : (
                 <>
                     <button
@@ -252,6 +257,7 @@ const PodiumDuelCard = ({
     // il torneo si conclude.
     if (tournament.status === 'da_svolgere') return null
 
+    const isConcluded = tournament.status === 'concluso'
     const mergedOthers = mergedTies?.others ?? []
     if (!mergedTies?.top2 && !mergedTies?.top4 && mergedOthers.length === 0) return null
 
@@ -309,6 +315,7 @@ const PodiumDuelCard = ({
                         bestOfThree={isBestOfThree}
                         isOpen={activeKey === effectiveGroupName}
                         onToggle={() => setActiveKey((k) => (k === effectiveGroupName ? null : effectiveGroupName))}
+                        isConcluded={isConcluded}
                     >
                         <GroupRaceForm
                             tournament={tournament}

@@ -75,6 +75,12 @@ def insert_race(
                 detail="Il torneo è 'In Attesa': avvia il torneo (stato 'In Corso') prima di inserire gare.",
             )
 
+        if tournament.status == "concluso":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Il torneo è concluso: non è più possibile aggiungere gare.",
+            )
+
         # I circuiti usati sono tracciati separatamente per fase/girone: lo stesso
         # circuito può essere riutilizzato in gironi diversi, e ogni nuova fase
         # (semifinali, finale) riparte con un pool di circuiti vuoto.

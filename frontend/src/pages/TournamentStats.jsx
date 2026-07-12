@@ -53,7 +53,10 @@ const TournamentStats = () => {
     const chartData = useMemo(() => {
         if (!tournament) return {}
 
-        const sortedRaces = [...tournament.races].sort((a, b) => (a.race_order ?? 0) - (b.race_order ?? 0))
+        // Le gare di spareggio (is_duello) non assegnano punti e vanno escluse
+        // da progressione punti e distribuzione posizioni — coerente con
+        // tournament.standings, già filtrato a monte in AppDataContext.jsx.
+        const sortedRaces = [...tournament.races].filter((r) => !r.is_duello).sort((a, b) => (a.race_order ?? 0) - (b.race_order ?? 0))
 
         const cumulativePoints = {}
         tournament.standings.forEach((s) => { cumulativePoints[s.playerId] = 0 })
@@ -184,11 +187,10 @@ const TournamentStats = () => {
                     </button>
                 </div>
 
-                <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <InfoCard icon={BarChart3} label="Gare" value={`${tournament.raceCount}/${tournament.n_races}`} color="bg-emerald-500" />
                     <InfoCard icon={Users} label="Giocatori" value={tournament.n_players} color="bg-blue-500" />
                     <InfoCard icon={Trophy} label="Vincitore" value={tournament.winner?.nickname ?? 'N/D'} color="bg-amber-500" />
-                    <InfoCard icon={TrendingUp} label="Media punti" value={(tournament.standings.reduce((a, s) => a + s.points, 0) / tournament.standings.length || 0).toFixed(1)} color="bg-purple-500" />
                 </div>
 
                 <div className="grid gap-6 lg:grid-cols-2">
@@ -302,7 +304,7 @@ const TournamentStats = () => {
                                     const resultMap = {}
                                     race.results.forEach((r) => { resultMap[r.player_id] = r })
                                     return [
-                                        `Gara ${race.race_order}`,
+                                        `Gara ${race.race_order}${race.is_duello ? ' (Spareggio)' : ''}`,
                                         circuitsById?.get(race.circuit_id)?.name ?? '',
                                         ...tournament.standings.map((s) => {
                                             const res = resultMap[s.playerId]
@@ -336,7 +338,10 @@ const TournamentStats = () => {
                                     race.results.forEach((r) => { resultMap[r.player_id] = r })
                                     return (
                                         <tr key={race.id} className={`border-b border-slate-100 dark:border-border transition hover:bg-slate-50 dark:hover:bg-muted ${rIdx % 2 === 0 ? 'bg-white dark:bg-card' : 'bg-slate-50/50 dark:bg-muted/50'}`}>
-                                            <td className="px-4 py-3 font-bold text-slate-800 dark:text-foreground">Gara {race.race_order}</td>
+                                            <td className="px-4 py-3 font-bold text-slate-800 dark:text-foreground">
+                                                Gara {race.race_order}
+                                                {race.is_duello && <span className="ms-1.5 text-[9px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">(Spareggio)</span>}
+                                            </td>
                                             <td className="px-4 py-3 text-xs font-medium text-slate-500 dark:text-muted-foreground">
                                                 <span className="rounded-full bg-slate-100 dark:bg-muted px-2.5 py-1">
                                                     {circuitsById?.get(race.circuit_id)?.name ?? `Circuito #${race.circuit_id}`}
