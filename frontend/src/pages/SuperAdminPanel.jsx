@@ -2,13 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
     Activity, Award, BarChart3, Check, Clock, Database,
-    ExternalLink, Key, LayoutDashboard, Play, Plus, RefreshCw,
+    ExternalLink, Key, LayoutDashboard, MapPin, Play, Plus, RefreshCw,
     Search, Shield, Trophy, Users, X, Zap, Trash2, Square, Flag, AlertTriangle, Copy
 } from 'lucide-react'
 import { toast } from 'sonner'
 import AppLayout from '@/components/layout/AppLayout'
 import ConfirmModal from '@/components/common/ConfirmModal'
 import DatabaseTab from '@/components/superadmin/DatabaseTab'
+import CircuitsTab from '@/components/superadmin/CircuitsTab'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { authApi, auditApi, inventoryApi, schedineApi, tournamentsApi, getApiErrorMessage } from '@/services/apiClient'
@@ -35,6 +36,7 @@ const TABS = [
     { key: 'utenti',     label: 'Utenti',     icon: Users },
     { key: 'tornei',     label: 'Tornei',     icon: Trophy },
     { key: 'carte',      label: 'Carte',      icon: Zap },
+    { key: 'circuiti',   label: 'Circuiti',   icon: MapPin },
     { key: 'database',   label: 'Database',   icon: Database },
     { key: 'log',        label: 'Audit Log',  icon: Activity },
 ]
@@ -254,7 +256,7 @@ const TournamentTimeline = ({ tournament }) => {
 // ── component ────────────────────────────────────────────────────────
 export default function SuperAdminPanel() {
     const { user } = useAuth()
-    const { tournaments, players, games, refresh, homeMetrics, charactersById } = useAppData()
+    const { tournaments, players, games, circuits, refresh, homeMetrics, charactersById } = useAppData()
     const [activeTab, setActiveTab] = useState('panoramica')
 
     // Users
@@ -1101,6 +1103,11 @@ export default function SuperAdminPanel() {
                             </p>
                         </div>
                     </div>
+                )}
+
+                {/* ── TAB: CIRCUITI ── */}
+                {activeTab === 'circuiti' && (
+                    <CircuitsTab circuits={circuits} games={games} onRefresh={refresh} />
                 )}
 
                 {/* ── TAB: DATABASE ── */}

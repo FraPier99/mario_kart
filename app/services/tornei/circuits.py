@@ -1,10 +1,25 @@
 from typing import Optional
 from sqlalchemy.orm import Session
 from app.models import Circuit
+from app.controllers.tornei.schemas.circuits import UpdateCircuit
 
 
 def get_circuit_by_id(db: Session, circuit_id: int):
     return db.query(Circuit).filter(Circuit.id == int(circuit_id)).first()
+
+
+def update_circuit(db: Session, circuit_data: UpdateCircuit, circuit_id: int):
+    circuit = db.query(Circuit).filter(Circuit.id == circuit_id).first()
+    if not circuit:
+        return None
+
+    update_data = circuit_data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(circuit, key, value)
+
+    db.commit()
+    db.refresh(circuit)
+    return circuit
 
 
 def get_all_circuits(db: Session, game_id: Optional[int] = None):
