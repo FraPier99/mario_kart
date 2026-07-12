@@ -488,7 +488,7 @@ export default function AdminPlayers() {
 
         {errorMessage ? <ApiBanner title="Errore" message={errorMessage} action={<button type="button" onClick={refresh} className="font-title rounded-lg border-2 border-slate-900 bg-slate-900 px-3 py-1.5 text-[9px] tracking-wide text-white">Riprova</button>} /> : null}
 
-        <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
+        <div className="grid items-start gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
           <section
             className="flex flex-col rounded-2xl border-2 border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-4"
             style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
@@ -635,7 +635,7 @@ export default function AdminPlayers() {
               ) : (
                 <div className="overflow-hidden rounded-xl border-2 border-slate-200 dark:border-white/10">
                   {/* Vista mobile: cards */}
-                  <div className="max-h-105 overflow-y-auto divide-y divide-slate-100 dark:divide-white/10 md:hidden">
+                  <div className="divide-y divide-slate-100 dark:divide-white/10 md:hidden">
                     {sortedPlayers.map((player) => {
                       const preferredCharacter = charactersById.get(player.favorite_character_id)
 
@@ -791,20 +791,20 @@ export default function AdminPlayers() {
                 </div>
               ) : (
                 <>
-                  <div className="mt-4 grid max-h-105 gap-2 overflow-y-auto sm:grid-cols-3 xl:grid-cols-4">
+                  <div className="mt-4 grid gap-2 overflow-visible sm:grid-cols-3 md:max-h-105 md:overflow-y-auto xl:grid-cols-4">
                     {visibleCatalogCharacters.map((character) => (
-                      <div key={character.id} className="flex flex-col border-2 border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 p-2.5 hover-lift hover:border-amber-500/40 rounded-xl">
+                      <div key={character.id} className="flex flex-col overflow-hidden border-2 border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 p-2.5 hover-lift hover:border-amber-500/40 rounded-xl">
                         <img
                           src={resolveCharacterImage(character)}
                           alt={character.name}
                           className="mb-2 h-20 w-full shrink-0 object-contain bg-slate-100 dark:bg-slate-800"
                         />
                         <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className="text-base font-black text-slate-900 dark:text-white uppercase">{character.name}</p>
+                          <div className="min-w-0">
+                            <p className="truncate text-base font-black text-slate-900 dark:text-white uppercase">{character.name}</p>
                             <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">ID {character.id}</p>
                           </div>
-                          <div className="shrink-0 rounded-xl bg-emerald-500/10 dark:bg-emerald-400/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
+                          <div className="max-w-[45%] shrink-0 truncate rounded-xl bg-emerald-500/10 dark:bg-emerald-400/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
                             {gamesById?.get(character.game_id)?.name ?? `game ${character.game_id}`}
                           </div>
                         </div>
