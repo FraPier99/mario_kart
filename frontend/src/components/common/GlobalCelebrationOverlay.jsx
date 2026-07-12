@@ -52,7 +52,18 @@
         const ItemSprite = useCallback(({ itemKey, className, style }) => {
             const bg = getItemBackground(itemKey)
             if (!bg) return null
-            return <div className={className} style={{ background: bg, backgroundRepeat: 'no-repeat', ...style }} />
+            // items.gif ha 18 frame per una larghezza totale di 643px: 35.7px a
+            // frame, non divisibile in pixel interi. Con background-size al
+            // 1800% l'upscaling introduce una leggera sfumatura (bleeding) dai
+            // frame adiacenti visibile ai bordi orizzontali di ogni icona.
+            // L'elemento interno è leggermente più largo del box visibile
+            // (overflow-hidden lo ritaglia) così si mostra solo la parte
+            // centrale "sicura" del frame, senza sconfinare in quello a fianco.
+            return (
+                <div className={`${className ?? ''} relative overflow-hidden`} style={style}>
+                    <div className="absolute inset-x-[-8%] inset-y-[-1%]" style={{ background: bg, backgroundRepeat: 'no-repeat' }} />
+                </div>
+            )
         }, [])
 
 

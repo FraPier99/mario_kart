@@ -1,39 +1,34 @@
 import itemsGif from './items/items.gif'
 
 const ITEMS_SPRITE = itemsGif
-const TOTAL_ITEMS = 18
-const ITEM_PERCENT = 100 / TOTAL_ITEMS
+const SHEET_WIDTH = 643
 
-const ITEM_OFFSETS = {
-  mushroom: 0,
-  tripleMushroom: 1,
-  greenShell: 2,
-  tripleGreenShells: 3,
-  redShell: 4,
-  tripleRedShells: 5,
-  banana: 6,
-  tripleBananas: 7,
-  itemBox: 8,
-  blooper: 9,
-  bobomb: 10,
-  megaMushroom: 11,
-  spinyShell: 12,
-  bulletBill: 13,
-  thunderCloud: 14,
-  star: 15,
-  goldenMushroom: 16,
-  chainChomp: 17,
+// Rettangolo esatto in pixel di ciascuna icona nello sprite sheet
+// items.gif, misurato analizzando i bordi neri tra le icone: le icone NON
+// sono tutte larghe uguale (la maggior parte è 32px, ma alcune sono 16/28/36/
+// 54/64px), quindi dividere lo sheet in fette percentuali fisse (100/18)
+// ritagliava la posizione sbagliata per praticamente ogni voce dopo la
+// prima — mostrando l'icona di un altro oggetto (o un frame vuoto/rotto)
+// invece di quella richiesta. Qui ci sono solo le 3 chiavi effettivamente
+// usate nell'app (le altre 15 definite in precedenza non erano mai
+// referenziate da nessun componente ed erano comunque mappate a offset
+// sbagliati).
+const ITEM_RECTS = {
+  itemBox: { x: 34, width: 32 },
+  star: { x: 315, width: 32 },
+  spinyShell: { x: 479, width: 32 },
 }
 
 const getItemBackground = (itemKey) => {
-  const offset = ITEM_OFFSETS[itemKey]
-  if (offset === undefined) return null
-  const xPos = offset * ITEM_PERCENT
+  const rect = ITEM_RECTS[itemKey]
+  if (!rect) return null
+  const sizePct = (SHEET_WIDTH / rect.width) * 100
+  const posPct = (rect.x / (SHEET_WIDTH - rect.width)) * 100
   // url(...) è obbligatorio: una stringa nuda nella shorthand "background"
   // non è un valore CSS valido per l'immagine, viene scartata in silenzio e
   // il div risulta vuoto (nessun errore in console, nessun img rotta visibile).
-  return `url(${ITEMS_SPRITE}) ${xPos}% 0% / ${TOTAL_ITEMS * 100}% 100%`
+  return `url(${ITEMS_SPRITE}) ${posPct}% 0% / ${sizePct}% 100%`
 }
 
-export { ITEMS_SPRITE, ITEM_OFFSETS, getItemBackground }
+export { ITEMS_SPRITE, ITEM_RECTS, getItemBackground }
 export default ITEMS_SPRITE
