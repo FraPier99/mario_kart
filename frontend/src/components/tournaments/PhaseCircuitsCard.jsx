@@ -34,6 +34,18 @@ const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', coll
 
     const availableCount = circuits.length - usedByCircuitId.size
 
+    // Raggruppa per trofeo (circuit.description), preservando l'ordine di
+    // comparizione nell'array — i circuiti arrivano già ordinati per trofeo.
+    const groups = useMemo(() => {
+        const map = new Map()
+        circuits.forEach((circuit) => {
+            const key = circuit.description || 'Altri circuiti'
+            if (!map.has(key)) map.set(key, [])
+            map.get(key).push(circuit)
+        })
+        return Array.from(map.entries()).map(([trophy, items]) => ({ trophy, items }))
+    }, [circuits])
+
     if (circuits.length === 0) return null
 
     const titleBlock = (
@@ -78,35 +90,42 @@ const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', coll
 
             {(!collapsible || open) && (
                 <>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                        {circuits.map((circuit) => {
-                            const race = usedByCircuitId.get(circuit.id)
-                            const isUsed = !!race
-                            return (
-                                <div
-                                    key={circuit.id}
-                                    className={`flex items-center gap-2 rounded-xl border px-2 py-2 ${isUsed
-                                        ? 'border-slate-200 dark:border-border bg-slate-50 dark:bg-muted opacity-60'
-                                        : 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10'}`}
-                                >
-                                    <CircuitThumbnail circuit={circuit} size="md" />
-                                    <div className="min-w-0 flex-1">
-                                        <p className={`truncate capitalize text-sm font-bold ${isUsed ? 'text-slate-500 dark:text-muted-foreground line-through' : 'text-emerald-700 dark:text-emerald-300'}`}>
-                                            {circuit.name}
-                                        </p>
-                                        {isUsed ? (
-                                            <span className="flex items-center gap-1 text-[10px] font-black uppercase text-slate-400 dark:text-muted-foreground">
-                                                <Check size={9} />
-                                                {race.name ?? `Gara ${race.race_order ?? ''}`}
-                                                {race.is_duello && <Shuffle size={9} className="text-amber-500" title="Circuito sorteggiato per spareggio" />}
-                                            </span>
-                                        ) : (
-                                            <span className="text-[10px] font-black uppercase text-emerald-600/70 dark:text-emerald-400/60">Libera</span>
-                                        )}
-                                    </div>
+                    <div className="space-y-4">
+                        {groups.map(({ trophy, items }) => (
+                            <div key={trophy} className="space-y-2">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">{trophy}</p>
+                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                                    {items.map((circuit) => {
+                                        const race = usedByCircuitId.get(circuit.id)
+                                        const isUsed = !!race
+                                        return (
+                                            <div
+                                                key={circuit.id}
+                                                className={`flex items-center gap-2 rounded-xl border px-2 py-2 ${isUsed
+                                                    ? 'border-slate-200 dark:border-border bg-slate-50 dark:bg-muted opacity-60'
+                                                    : 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10'}`}
+                                            >
+                                                <CircuitThumbnail circuit={circuit} size="md" />
+                                                <div className="min-w-0 flex-1">
+                                                    <p className={`truncate capitalize text-sm font-bold ${isUsed ? 'text-slate-500 dark:text-muted-foreground line-through' : 'text-emerald-700 dark:text-emerald-300'}`}>
+                                                        {circuit.name}
+                                                    </p>
+                                                    {isUsed ? (
+                                                        <span className="flex items-center gap-1 text-[10px] font-black uppercase text-slate-400 dark:text-muted-foreground">
+                                                            <Check size={9} />
+                                                            {race.name ?? `Gara ${race.race_order ?? ''}`}
+                                                            {race.is_duello && <Shuffle size={9} className="text-amber-500" title="Circuito sorteggiato per spareggio" />}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-[10px] font-black uppercase text-emerald-600/70 dark:text-emerald-400/60">Libera</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
                                 </div>
-                            )
-                        })}
+                            </div>
+                        ))}
                     </div>
 
                     <div className="rounded-xl border border-slate-200 dark:border-border bg-slate-50/60 dark:bg-muted/30 p-3 text-xs text-slate-500 dark:text-muted-foreground flex items-start gap-2">

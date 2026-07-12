@@ -11,7 +11,7 @@ def get_all_circuits(db: Session, game_id: Optional[int] = None):
     q = db.query(Circuit)
     if game_id is not None:
         q = q.filter(Circuit.game_id == game_id)
-    return q.all()
+    return q.order_by(Circuit.id).all()
 
 
 def create_circuit(db: Session, circuit_payload: dict):
