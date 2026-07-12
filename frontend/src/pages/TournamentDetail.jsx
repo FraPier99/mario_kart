@@ -928,17 +928,17 @@ const TournamentDetail = () => {
                             {tournamentStatus === 'concluso' ? 'Torneo concluso' : 'Gestione torneo'}
                         </p>
                     </div>
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div className="min-w-0 flex-1">
+                    <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-start sm:justify-between gap-4">
+                        <div className="min-w-0 sm:flex-1">
                             <h1 className="text-4xl font-black uppercase tracking-tight text-slate-900 dark:text-white">{tournament.name}</h1>
                             <div className="mt-4 flex flex-wrap gap-2 text-sm">
-                                <span className="rounded-full bg-slate-100 dark:bg-white/10 px-3 py-1 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-white/10">Data: {tournament.date}</span>
-                                <span className="rounded-full bg-slate-100 dark:bg-white/10 px-3 py-1 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-white/10">Gioco: {games.find((game) => game.id === tournament.game_id)?.name ?? `#${tournament.game_id}`}</span>
-                                <span className="rounded-full bg-slate-100 dark:bg-white/10 px-3 py-1 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-white/10">Gare: {tournament.raceCount}/{tournament.n_races}</span>
-                                <span className={`font-title rounded-full px-3 py-1 text-[10px] tracking-wide border-2 ${getTournamentStatusBadge(tournamentStatus)}`}>
+                                <span className="whitespace-nowrap rounded-full bg-slate-100 dark:bg-white/10 px-3 py-1 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-white/10">Data: {tournament.date}</span>
+                                <span className="whitespace-nowrap rounded-full bg-slate-100 dark:bg-white/10 px-3 py-1 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-white/10">Gioco: {games.find((game) => game.id === tournament.game_id)?.name ?? `#${tournament.game_id}`}</span>
+                                <span className="whitespace-nowrap rounded-full bg-slate-100 dark:bg-white/10 px-3 py-1 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-white/10">Gare: {tournament.raceCount}/{tournament.n_races}</span>
+                                <span className={`font-title whitespace-nowrap rounded-full px-3 py-1 text-[10px] tracking-wide border-2 ${getTournamentStatusBadge(tournamentStatus)}`}>
                                     Stato: {getTournamentStatusLabel(tournamentStatus)}
                                 </span>
-                                <span className="rounded-full bg-amber-50 dark:bg-amber-400/20 px-3 py-1 font-black text-amber-700 dark:text-amber-300 border-2 border-amber-300 dark:border-amber-500/20">
+                                <span className="whitespace-nowrap rounded-full bg-amber-50 dark:bg-amber-400/20 px-3 py-1 font-black text-amber-700 dark:text-amber-300 border-2 border-amber-300 dark:border-amber-500/20">
                                     <Crown size={14} className="-mt-0.5 me-1 inline" />
                                     Vincitore: {tournament.winner?.nickname ?? '—'}
                                 </span>
@@ -975,7 +975,7 @@ const TournamentDetail = () => {
                                 </div>
                             )}
                         </div>
-                        <div className="flex flex-col items-end gap-2">
+                        <div className="flex flex-col items-start sm:items-end gap-2">
                             {isParticipantAdmin && (
                                 <button
                                     onClick={() => setAdminModeOn(false)}
