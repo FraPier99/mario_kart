@@ -61,6 +61,7 @@ const Hero = () => {
             standings: lastChampionTournament.standings ?? [],
             statsByPlayerId,
             detailedTournaments,
+            gameName: lastChampionGame?.name,
         })
         : []
 
