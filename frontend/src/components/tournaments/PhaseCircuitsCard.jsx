@@ -111,7 +111,7 @@ const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', coll
 
                     <div className="rounded-xl border border-slate-200 dark:border-border bg-slate-50/60 dark:bg-muted/30 p-3 text-xs text-slate-500 dark:text-muted-foreground flex items-start gap-2">
                         <Info size={14} className="shrink-0" />
-                        <span>I nomi dei circuiti sono quelli ufficiali del gioco, in inglese. Se un nome o un&apos;immagine non ti è chiaro, segnalalo pure all&apos;organizzatore.</span>
+                        <span>Se un nome o un&apos;immagine non ti è chiaro, segnalalo pure all&apos;organizzatore.</span>
                     </div>
                 </>
             )}

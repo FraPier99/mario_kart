@@ -3,6 +3,8 @@
 CDN_BASE = "https://textures.spriters-resource.com/media/asset_icons"
 
 # circuit_name -> (folder, asset_id) from The Textures Resource asset pages
+# Chiavi in inglese: sono solo l'identificativo usato per il lookup delle
+# texture (invariato), non il nome mostrato in UI (vedi "name" sotto).
 CIRCUIT_TEXTURES = {
     "Figure-8 Circuit": (365, 368004),
     "Yoshi Falls": (365, 368006),
@@ -48,203 +50,203 @@ def _cdn_url(circuit_name):
 
 
 all_circuits = [
-    # MUSHROOM CUP (Nitro)
+    # TROFEO FUNGO (Nitro)
     {
-        "name": "Figure-8 Circuit",
-        "description": "Mushroom Cup",
+        "name": "Ottotornante",
+        "description": "Trofeo Fungo",
         "game_id": 1,
         "image_url": _cdn_url("Figure-8 Circuit"),
     },
     {
-        "name": "Yoshi Falls",
-        "description": "Mushroom Cup",
+        "name": "Cascate di Yoshi",
+        "description": "Trofeo Fungo",
         "game_id": 1,
         "image_url": _cdn_url("Yoshi Falls"),
     },
     {
-        "name": "Cheep Cheep Beach",
-        "description": "Mushroom Cup",
+        "name": "Spiaggia Smack",
+        "description": "Trofeo Fungo",
         "game_id": 1,
         "image_url": _cdn_url("Cheep Cheep Beach"),
     },
     {
-        "name": "Luigi's Mansion",
-        "description": "Mushroom Cup",
+        "name": "Palazzo di Luigi",
+        "description": "Trofeo Fungo",
         "game_id": 1,
         "image_url": _cdn_url("Luigi's Mansion"),
     },
-    # FLOWER CUP (Nitro)
+    # TROFEO FIORE (Nitro)
     {
-        "name": "Desert Hills",
-        "description": "Flower Cup",
+        "name": "Colli Desertici",
+        "description": "Trofeo Fiore",
         "game_id": 1,
         "image_url": _cdn_url("Desert Hills"),
     },
     {
-        "name": "Delfino Square",
-        "description": "Flower Cup",
+        "name": "Borgo Delfino",
+        "description": "Trofeo Fiore",
         "game_id": 1,
         "image_url": _cdn_url("Delfino Square"),
     },
     {
-        "name": "Waluigi Pinball",
-        "description": "Flower Cup",
+        "name": "Flipper di Waluigi",
+        "description": "Trofeo Fiore",
         "game_id": 1,
         "image_url": _cdn_url("Waluigi Pinball"),
     },
     {
-        "name": "Shroom Ridge",
-        "description": "Flower Cup",
+        "name": "Colli Fungo",
+        "description": "Trofeo Fiore",
         "game_id": 1,
         "image_url": _cdn_url("Shroom Ridge"),
     },
-    # STAR CUP (Nitro)
+    # TROFEO STELLA (Nitro)
     {
-        "name": "DK Pass",
-        "description": "Star Cup",
+        "name": "Vette di DK",
+        "description": "Trofeo Stella",
         "game_id": 1,
         "image_url": _cdn_url("DK Pass"),
     },
     {
-        "name": "Tick-Tock Clock",
-        "description": "Star Cup",
+        "name": "Orologio Tic-toc",
+        "description": "Trofeo Stella",
         "game_id": 1,
         "image_url": _cdn_url("Tick-Tock Clock"),
     },
     {
-        "name": "Mario Circuit",
-        "description": "Star Cup",
+        "name": "Circuito di Mario",
+        "description": "Trofeo Stella",
         "game_id": 1,
         "image_url": _cdn_url("Mario Circuit"),
     },
     {
-        "name": "Airship Fortress",
-        "description": "Star Cup",
+        "name": "Fortezza Volante",
+        "description": "Trofeo Stella",
         "game_id": 1,
         "image_url": _cdn_url("Airship Fortress"),
     },
-    # SPECIAL CUP (Nitro)
+    # TROFEO SPECIALE (Nitro)
     {
-        "name": "Wario Stadium",
-        "description": "Special Cup",
+        "name": "Stadio di Wario",
+        "description": "Trofeo Speciale",
         "game_id": 1,
         "image_url": _cdn_url("Wario Stadium"),
     },
     {
-        "name": "Peach Gardens",
-        "description": "Special Cup",
+        "name": "Giardino di Peach",
+        "description": "Trofeo Speciale",
         "game_id": 1,
         "image_url": _cdn_url("Peach Gardens"),
     },
     {
-        "name": "Bowser Castle",
-        "description": "Special Cup",
+        "name": "Castello di Bowser",
+        "description": "Trofeo Speciale",
         "game_id": 1,
         "image_url": _cdn_url("Bowser Castle"),
     },
     {
-        "name": "Rainbow Road",
-        "description": "Special Cup",
+        "name": "Pista Arcobaleno",
+        "description": "Trofeo Speciale",
         "game_id": 1,
         "image_url": _cdn_url("Rainbow Road"),
     },
-    # SHELL CUP (Retro)
+    # TROFEO GUSCIO (Retro)
     {
-        "name": "Mario Circuit 1",
-        "description": "Shell Cup (SNES)",
+        "name": "SNES Circuito di Mario 1",
+        "description": "Trofeo Guscio",
         "game_id": 1,
         "image_url": _cdn_url("Mario Circuit 1"),
     },
     {
-        "name": "Moo Moo Farm",
-        "description": "Shell Cup (N64)",
+        "name": "N64 Fattoria Muu Muu",
+        "description": "Trofeo Guscio",
         "game_id": 1,
         "image_url": _cdn_url("Moo Moo Farm"),
     },
     {
-        "name": "Peach Circuit",
-        "description": "Shell Cup (GBA)",
+        "name": "GBA Circuito di Peach",
+        "description": "Trofeo Guscio",
         "game_id": 1,
         "image_url": _cdn_url("Peach Circuit"),
     },
     {
-        "name": "Luigi Circuit (GCN)",
-        "description": "Shell Cup",
+        "name": "GCN Circuito di Luigi",
+        "description": "Trofeo Guscio",
         "game_id": 1,
         "image_url": _cdn_url("Luigi Circuit (GCN)"),
     },
-    # BANANA CUP (Retro)
+    # TROFEO BANANA (Retro)
     {
-        "name": "Donut Plains 1",
-        "description": "Banana Cup (SNES)",
+        "name": "SNES Pianura Ciambella 1",
+        "description": "Trofeo Banana",
         "game_id": 1,
         "image_url": _cdn_url("Donut Plains 1"),
     },
     {
-        "name": "Frappe Snowland",
-        "description": "Banana Cup (N64)",
+        "name": "N64 Innevata Frappè",
+        "description": "Trofeo Banana",
         "game_id": 1,
         "image_url": _cdn_url("Frappe Snowland"),
     },
     {
-        "name": "Bowser Castle 2",
-        "description": "Banana Cup (GBA)",
+        "name": "GBA Castello di Bowser 2",
+        "description": "Trofeo Banana",
         "game_id": 1,
         "image_url": _cdn_url("Bowser Castle 2"),
     },
     {
-        "name": "Baby Park",
-        "description": "Banana Cup (GCN)",
+        "name": "GCN Parco Baby",
+        "description": "Trofeo Banana",
         "game_id": 1,
         "image_url": _cdn_url("Baby Park"),
     },
-    # LEAF CUP (Retro)
+    # TROFEO FOGLIA (Retro)
     {
-        "name": "Koopa Beach 2",
-        "description": "Leaf Cup (SNES)",
+        "name": "SNES Spiaggia di Koopa 2",
+        "description": "Trofeo Foglia",
         "game_id": 1,
         "image_url": _cdn_url("Koopa Beach 2"),
     },
     {
-        "name": "Choco Mountain",
-        "description": "Leaf Cup (N64)",
+        "name": "N64 Monte Cioccolato",
+        "description": "Trofeo Foglia",
         "game_id": 1,
         "image_url": _cdn_url("Choco Mountain"),
     },
     {
-        "name": "Luigi Circuit (GBA)",
-        "description": "Leaf Cup",
+        "name": "GBA Circuito di Luigi",
+        "description": "Trofeo Foglia",
         "game_id": 1,
         "image_url": _cdn_url("Luigi Circuit (GBA)"),
     },
     {
-        "name": "Mushroom Bridge",
-        "description": "Leaf Cup (GCN)",
+        "name": "GCN Ponte Fungo",
+        "description": "Trofeo Foglia",
         "game_id": 1,
         "image_url": _cdn_url("Mushroom Bridge"),
     },
-    # LIGHTNING CUP (Retro)
+    # TROFEO FULMINE (Retro)
     {
-        "name": "Choco Island 2",
-        "description": "Lightning Cup (SNES)",
+        "name": "SNES Cioccoisola 2",
+        "description": "Trofeo Fulmine",
         "game_id": 1,
         "image_url": _cdn_url("Choco Island 2"),
     },
     {
-        "name": "Banshee Boardwalk",
-        "description": "Lightning Cup (N64)",
+        "name": "N64 Pontile Spettrale",
+        "description": "Trofeo Fulmine",
         "game_id": 1,
         "image_url": _cdn_url("Banshee Boardwalk"),
     },
     {
-        "name": "Sky Garden",
-        "description": "Lightning Cup (GBA)",
+        "name": "GBA Giardino Volante",
+        "description": "Trofeo Fulmine",
         "game_id": 1,
         "image_url": _cdn_url("Sky Garden"),
     },
     {
-        "name": "Yoshi Circuit",
-        "description": "Lightning Cup (GCN)",
+        "name": "GCN Circuito di Yoshi",
+        "description": "Trofeo Fulmine",
         "game_id": 1,
         "image_url": _cdn_url("Yoshi Circuit"),
     },

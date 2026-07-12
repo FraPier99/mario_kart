@@ -120,6 +120,73 @@ def seed_mk8d_data():
             print(f"[BOOTSTRAP] MK8D circuits already present ({count} found)")
 
 
+# Vecchio nome inglese -> nuovo nome italiano, circuiti MKDS (game_id=1).
+# Migrazione idempotente: dopo il primo rename, i vecchi nomi non esistono
+# più quindi le query successive non trovano righe da aggiornare.
+MKDS_ITALIAN_CIRCUIT_NAMES = {
+    "Figure-8 Circuit": "Ottotornante",
+    "Yoshi Falls": "Cascate di Yoshi",
+    "Cheep Cheep Beach": "Spiaggia Smack",
+    "Luigi's Mansion": "Palazzo di Luigi",
+    "Desert Hills": "Colli Desertici",
+    "Delfino Square": "Borgo Delfino",
+    "Waluigi Pinball": "Flipper di Waluigi",
+    "Shroom Ridge": "Colli Fungo",
+    "DK Pass": "Vette di DK",
+    "Tick-Tock Clock": "Orologio Tic-toc",
+    "Mario Circuit": "Circuito di Mario",
+    "Airship Fortress": "Fortezza Volante",
+    "Wario Stadium": "Stadio di Wario",
+    "Peach Gardens": "Giardino di Peach",
+    "Bowser Castle": "Castello di Bowser",
+    "Rainbow Road": "Pista Arcobaleno",
+    "Mario Circuit 1": "SNES Circuito di Mario 1",
+    "Moo Moo Farm": "N64 Fattoria Muu Muu",
+    "Peach Circuit": "GBA Circuito di Peach",
+    "Luigi Circuit (GCN)": "GCN Circuito di Luigi",
+    "Donut Plains 1": "SNES Pianura Ciambella 1",
+    "Frappe Snowland": "N64 Innevata Frappè",
+    "Bowser Castle 2": "GBA Castello di Bowser 2",
+    "Baby Park": "GCN Parco Baby",
+    "Koopa Beach 2": "SNES Spiaggia di Koopa 2",
+    "Choco Mountain": "N64 Monte Cioccolato",
+    "Luigi Circuit (GBA)": "GBA Circuito di Luigi",
+    "Mushroom Bridge": "GCN Ponte Fungo",
+    "Choco Island 2": "SNES Cioccoisola 2",
+    "Banshee Boardwalk": "N64 Pontile Spettrale",
+    "Sky Garden": "GBA Giardino Volante",
+    "Yoshi Circuit": "GCN Circuito di Yoshi",
+}
+
+
+def rename_mkds_circuits_to_italian():
+    """Rinomina i 32 circuiti MKDS (game_id=1) da inglese a italiano.
+
+    Aggiorna solo il campo name (l'id resta invariato, quindi le gare/
+    schedine che referenziano circuit_id non sono impattate).
+    """
+    with engine.begin() as connection:
+        for old_name, new_name in MKDS_ITALIAN_CIRCUIT_NAMES.items():
+            connection.execute(
+                text(
+                    "UPDATE circuits SET name = :new_name, description = :description"
+                    " WHERE name = :old_name AND game_id = 1"
+                ),
+                {
+                    "old_name": old_name,
+                    "new_name": new_name,
+                    "description": next(
+                        (
+                            c["description"]
+                            for c in SEED_CIRCUITS
+                            if c["name"] == new_name
+                        ),
+                        None,
+                    ),
+                },
+            )
+
+
 def backfill_circuit_image_urls():
     """Aggiorna image_url per i circuiti esistenti (MKDS game_id=1 e MK8D game_id=2)."""
     with engine.begin() as connection:
@@ -748,6 +815,7 @@ def bootstrap_database():
     ensure_tournament_audit_columns()
     # seed_circuits()
     seed_mk8d_data()
+    rename_mkds_circuits_to_italian()
     backfill_circuit_image_urls()
     ensure_default_superadmin()
 
