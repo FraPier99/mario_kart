@@ -606,13 +606,16 @@ const ResultEntryForm = ({ tournament, races, tournamentParticipants, onCreated,
 
     return (
         <form onSubmit={handleSubmit} className={`space-y-4 rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-6 shadow-lg shadow-slate-200/60 dark:shadow-black/20 ${disabled ? 'opacity-60' : ''}`}>
-            <div>
-                <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 dark:text-foreground">Inserisci risultato</h3>
-                {disabled ? (
-                    <p className="mt-1 text-sm font-medium text-amber-600 dark:text-amber-400">Torneo completato — non è possibile inserire nuovi risultati.</p>
-                ) : (
-                    <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">Seleziona la gara e il pilota, poi inserisci posizione e personaggio.</p>
-                )}
+            <div className="flex items-start gap-2.5">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-800 dark:bg-slate-200 text-xs font-black text-white dark:text-slate-900">2</span>
+                <div>
+                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 dark:text-foreground">Inserisci risultato</h3>
+                    {disabled ? (
+                        <p className="mt-1 text-sm font-medium text-amber-600 dark:text-amber-400">Torneo completato — non è possibile inserire nuovi risultati.</p>
+                    ) : (
+                        <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">Seleziona la gara e il pilota, poi inserisci posizione e personaggio.</p>
+                    )}
+                </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

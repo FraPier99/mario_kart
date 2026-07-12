@@ -271,49 +271,51 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated }) =>
                     })}
                 </div>
 
-                {/* STATO CORRENTE */}
-                <div className={`rounded-2xl p-3 text-sm ${
-                    rawStatus === 'da_svolgere' ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300' :
-                    rawStatus === 'in_corso' ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300' :
-                    'bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300'
-                }`}>
-                    <p className="font-black uppercase tracking-wider text-[10px] mb-0.5 opacity-70">Stato attuale</p>
-                    <p className="font-bold">{currentStep?.description}</p>
-                    {rawStatus === 'finito' && (
-                        <p className="mt-1 text-[10px] opacity-60 italic">Stato legacy "finito" — clicca sulla pipeline per aggiornare.</p>
-                    )}
-                </div>
-
-                {/* SCHEDINE */}
-                <div className={`flex items-center justify-between gap-3 rounded-2xl p-3 text-sm ${
-                    tournament?.schedine_locked
-                        ? 'bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-300'
-                        : 'bg-sky-50 dark:bg-sky-950/20 text-sky-700 dark:text-sky-300'
-                }`}>
-                    <div className="min-w-0 flex items-center gap-2">
-                        <Lock size={14} className="shrink-0" />
-                        <div>
-                            <p className="font-black uppercase tracking-wider text-[10px] opacity-70">Schedine</p>
-                            <p className="font-bold">
-                                {tournament?.schedine_locked ? 'Chiuse — nessun nuovo pronostico ammesso' : 'Aperte alla compilazione'}
-                            </p>
-                        </div>
+                {/* STATO ATTUALE + SCHEDINE — due fatti "pari grado", affiancati invece che impilati */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                    <div className={`rounded-2xl p-3 text-sm ${
+                        rawStatus === 'da_svolgere' ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300' :
+                        rawStatus === 'in_corso' ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300' :
+                        'bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300'
+                    }`}>
+                        <p className="font-black uppercase tracking-wider text-[10px] mb-0.5 opacity-70">Stato attuale</p>
+                        <p className="font-bold">{currentStep?.description}</p>
+                        {rawStatus === 'finito' && (
+                            <p className="mt-1 text-[10px] opacity-60 italic">Stato legacy "finito" — clicca sulla pipeline per aggiornare.</p>
+                        )}
                     </div>
-                    {!tournament?.schedine_locked && !disabled && rawStatus === 'da_svolgere' && (
-                        <button
-                            type="button"
-                            onClick={handleCloseSchedine}
-                            disabled={closingSchedine}
-                            className="shrink-0 flex items-center gap-1.5 rounded-2xl bg-rose-500 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white transition hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
-                        >
-                            {closingSchedine ? 'Chiusura...' : (
-                                <>
-                                    <Lock size={12} />
-                                    Chiudi Schedine
-                                </>
-                            )}
-                        </button>
-                    )}
+
+                    {/* SCHEDINE */}
+                    <div className={`flex flex-wrap items-start sm:items-center justify-between gap-3 rounded-2xl p-3 text-sm ${
+                        tournament?.schedine_locked
+                            ? 'bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-300'
+                            : 'bg-sky-50 dark:bg-sky-950/20 text-sky-700 dark:text-sky-300'
+                    }`}>
+                        <div className="min-w-0 flex items-center gap-2">
+                            <Lock size={14} className="shrink-0" />
+                            <div>
+                                <p className="font-black uppercase tracking-wider text-[10px] opacity-70">Schedine</p>
+                                <p className="font-bold">
+                                    {tournament?.schedine_locked ? 'Chiuse — nessun nuovo pronostico ammesso' : 'Aperte alla compilazione'}
+                                </p>
+                            </div>
+                        </div>
+                        {!tournament?.schedine_locked && !disabled && rawStatus === 'da_svolgere' && (
+                            <button
+                                type="button"
+                                onClick={handleCloseSchedine}
+                                disabled={closingSchedine}
+                                className="w-full sm:w-auto shrink-0 flex items-center justify-center gap-1.5 rounded-2xl bg-rose-500 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white transition hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                {closingSchedine ? 'Chiusura...' : (
+                                    <>
+                                        <Lock size={12} />
+                                        Chiudi Schedine
+                                    </>
+                                )}
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* AVANZA — solo per da_svolgere → in_corso. La conclusione NON
@@ -322,17 +324,17 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated }) =>
                     verso "concluso" sarebbe fuorviante e, senza vincitore,
                     imposterebbe solo lo stato legacy "finito". */}
                 {nextStep && nextStep.value !== 'concluso' && !isConcluded && !disabled && (
-                    <div className="flex items-center justify-between gap-3 rounded-2xl border border-dashed border-slate-200 dark:border-border p-3">
+                    <div className="flex flex-wrap items-start sm:items-center justify-between gap-3 rounded-2xl border-2 border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 p-3">
                         <div className="min-w-0">
-                            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Prossimo step</p>
-                            <p className="text-sm font-black text-slate-700 dark:text-slate-300 mt-0.5">{nextStep.label}</p>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{nextStep.description}</p>
+                            <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700/70 dark:text-emerald-400/70">Prossimo step</p>
+                            <p className="text-sm font-black text-emerald-900 dark:text-emerald-200 mt-0.5">{nextStep.label}</p>
+                            <p className="text-[10px] text-emerald-700/70 dark:text-emerald-400/60 mt-0.5">{nextStep.description}</p>
                         </div>
                         <button
                             type="button"
                             onClick={handleAdvance}
                             disabled={saving}
-                            className={`shrink-0 flex items-center gap-1.5 rounded-2xl px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white transition ${nextStep.activeBg} hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed`}
+                            className={`w-full sm:w-auto shrink-0 flex items-center justify-center gap-1.5 rounded-2xl px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white transition ${nextStep.activeBg} hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed`}
                         >
                             {saving ? 'Salvataggio...' : (
                                 <>

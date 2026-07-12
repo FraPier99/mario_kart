@@ -1040,7 +1040,7 @@ const TournamentDetail = () => {
 
                 {isAdmin && activeSection === 'management' && (
                     <div className="space-y-4">
-                        <CollapsibleSection title="Informazioni torneo" icon={<Settings size={16} />} defaultOpen>
+                        <CollapsibleSection title="Stato torneo" icon={<Settings size={16} />} defaultOpen>
                             <TournamentStatusManager tournament={tournament} disabled={!isAdmin} onUpdated={refresh} />
                         </CollapsibleSection>
 
@@ -1081,8 +1081,8 @@ const TournamentDetail = () => {
                             <>
                                 <CollapsibleSection title="Gare" icon={<Flag size={16} />} defaultOpen>
                                     <PhaseCircuitsCard circuits={tournamentCircuits} races={(tournament.races ?? []).filter((r) => !r.is_duello)} title="Circuiti" onRefresh={refresh} refreshing={loading} />
+                                    <RaceCreator tournament={tournament} circuits={tournamentCircuits} loading={loading} onCreated={refresh} disabled={isTournamentLocked} results={results} tournamentParticipants={activeTournamentParticipants} onRefresh={refresh} refreshing={loading} />
                                     <ResultEntryForm tournament={tournament} races={tournament.races} tournamentParticipants={activeTournamentParticipants} onCreated={refresh} disabled={isTournamentLocked} />
-                                    <RaceCreator tournament={tournament} circuits={tournamentCircuits} loading={loading} onCreated={refresh} disabled={isTournamentLocked} results={results} tournamentParticipants={activeTournamentParticipants} />
                                 </CollapsibleSection>
 
                                 <CollapsibleSection title="Duelli spareggio" subtitle="Spareggi automatici per pareggi in classifica — risolvono le posizioni a pari merito indipendentemente dal podio. Non assegnano punti in classifica." icon={<Swords size={16} />}>
