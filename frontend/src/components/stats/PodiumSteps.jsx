@@ -35,7 +35,7 @@ const PodiumSteps = ({ players = [] }) => {
                 return (
                     <div
                         key={player.playerId}
-                        className={`relative flex flex-col items-center rounded-2xl border-2 bg-white dark:bg-card ${CARD_BORDER[position]} ${isFirst ? 'w-24 sm:w-48 md:w-64 pt-6 pb-2.5 px-1.5 sm:pt-8 sm:pb-5 sm:px-4 md:px-5 -translate-y-2 sm:-translate-y-3 md:-translate-y-5' : 'w-20 sm:w-40 md:w-52 pt-5 pb-2 px-1 sm:pt-7 sm:pb-4 sm:px-3 md:px-4'}`}
+                        className={`relative flex w-20 sm:w-40 md:w-52 flex-col items-center rounded-2xl border-2 bg-white dark:bg-card ${CARD_BORDER[position]} ${isFirst ? 'pt-6 pb-2.5 px-1.5 sm:pt-8 sm:pb-5 sm:px-4 md:px-5 -translate-y-2 sm:-translate-y-3 md:-translate-y-5' : 'pt-5 pb-2 px-1 sm:pt-7 sm:pb-4 sm:px-3 md:px-4'}`}
                         style={{
                             boxShadow: isFirst
                                 ? '0 8px 30px rgba(245,158,11,0.25), 0 0 60px rgba(245,158,11,0.08)'
