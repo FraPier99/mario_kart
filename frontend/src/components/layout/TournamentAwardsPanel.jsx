@@ -18,21 +18,21 @@ const computeRetroactiveBlueShell = (standings) => {
 }
 
 const AwardRow = ({ nickname, img_url }) => (
-    <div className="flex items-center gap-2 rounded-xl bg-white/30 dark:bg-black/15 px-2.5 py-1.5">
+    <div className="flex items-center gap-2 rounded-xl bg-white/30 dark:bg-black/15 px-2 py-1">
         <img
             src={img_url || buildAvatarPlaceholder(nickname)}
             alt={nickname}
             loading="lazy"
             decoding="async"
-            className="h-7 w-7 shrink-0 rounded-full object-cover"
+            className="h-6 w-6 shrink-0 rounded-full object-cover"
         />
-        <span className="min-w-0 flex-1 truncate text-sm font-bold capitalize text-slate-800 dark:text-foreground">{nickname}</span>
+        <span className="min-w-0 flex-1 truncate text-xs font-bold capitalize text-slate-800 dark:text-foreground">{nickname}</span>
     </div>
 )
 
 const AwardNote = ({ children }) => (
-    <div className="flex items-start gap-1.5 rounded-xl bg-white/20 dark:bg-black/10 px-2.5 py-2 text-[10px] text-slate-500 dark:text-muted-foreground">
-        <Info size={12} className="mt-0.5 shrink-0" />
+    <div className="flex items-start gap-1.5 rounded-xl bg-white/20 dark:bg-black/10 px-2 py-1.5 text-[9px] text-slate-500 dark:text-muted-foreground">
+        <Info size={11} className="mt-0.5 shrink-0" />
         <span>{children}</span>
     </div>
 )
@@ -57,14 +57,14 @@ const TournamentAwardsPanel = ({ tournamentId, tournamentFormat, standings }) =>
     const blueShellIsRetroactive = awards.blue_shell_winners.length === 0 && blueShellWinners.length > 0
 
     return (
-        <div className="flex h-full flex-col gap-4 rounded-2xl border-2 border-amber-400/40 dark:border-amber-500/20 p-4">
+        <div className="flex flex-col gap-3 rounded-2xl border-2 border-amber-400/40 dark:border-amber-500/20 p-3">
             <p className="text-[9px] font-black uppercase tracking-[0.3em] text-amber-600/70 dark:text-amber-400/60">Premi torneo</p>
 
             {/* ── Vincitore Schedina (Carta Master) ── */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
                 <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
-                    <Shield size={12} />
-                    <p className="text-[10px] font-black uppercase tracking-widest">Vincitore Schedina</p>
+                    <Shield size={11} />
+                    <p className="text-[9px] font-black uppercase tracking-widest">Vincitore Schedina</p>
                 </div>
                 {masterWinners.length > 0 ? (
                     <div className="space-y-1">
@@ -76,10 +76,10 @@ const TournamentAwardsPanel = ({ tournamentId, tournamentFormat, standings }) =>
             </div>
 
             {/* ── Guscio Blu ── */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
                 <div className="flex items-center gap-1.5 text-cyan-600 dark:text-cyan-400">
-                    <Ban size={12} />
-                    <p className="text-[10px] font-black uppercase tracking-widest">Guscio Blu</p>
+                    <Ban size={11} />
+                    <p className="text-[9px] font-black uppercase tracking-widest">Guscio Blu</p>
                 </div>
                 {blueShellWinners.length > 0 ? (
                     <div className="space-y-1">

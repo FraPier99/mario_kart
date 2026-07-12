@@ -6,6 +6,8 @@ import { useTheme } from '@/context/ThemeContext'
 import { getProfileTheme } from '@/lib/profileTheme'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import TournamentAwardsPanel from '@/components/layout/TournamentAwardsPanel'
+import TournamentMilestonesPanel from '@/components/layout/TournamentMilestonesPanel'
+import { detectTournamentMilestones } from '@/lib/milestones'
 
 const formatChampionDate = (value) => {
     if (!value) return null
@@ -52,6 +54,14 @@ const Hero = () => {
     // mostrare un ordine scorretto.
     const lastChampionPodium = lastChampionTournament && lastChampionTournament.tournament_format !== 'group_stage'
         ? (lastChampionTournament.standings ?? []).slice(0, 3)
+        : []
+    const lastChampionMilestones = lastChampionTournament
+        ? detectTournamentMilestones({
+            tournament: lastChampionTournament,
+            standings: lastChampionTournament.standings ?? [],
+            statsByPlayerId,
+            detailedTournaments,
+        })
         : []
 
     return (
@@ -218,11 +228,14 @@ const Hero = () => {
                             </div>
                             </div>
 
-                            <TournamentAwardsPanel
-                                tournamentId={lastChampionTournament.id}
-                                tournamentFormat={lastChampionTournament.tournament_format}
-                                standings={lastChampionTournament.standings}
-                            />
+                            <div className="flex flex-col gap-4">
+                                <TournamentAwardsPanel
+                                    tournamentId={lastChampionTournament.id}
+                                    tournamentFormat={lastChampionTournament.tournament_format}
+                                    standings={lastChampionTournament.standings}
+                                />
+                                <TournamentMilestonesPanel milestones={lastChampionMilestones} />
+                            </div>
                             </div>
                         </div>
                     ) : (
