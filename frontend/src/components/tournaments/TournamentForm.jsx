@@ -201,13 +201,12 @@ const TournamentForm = ({
                             type="number"
                             min="8"
                             max="32"
-                            step="2"
                             value={formState.n_races}
                             onChange={handleChange}
                             className="w-full rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3 text-slate-900 dark:text-foreground outline-none transition focus:border-emerald-500"
-                            placeholder="8-32, numeri pari"
+                            placeholder="Default 20 se lasciato vuoto"
                         />
-                        <p className="text-[10px] text-slate-400 dark:text-muted-foreground">Minimo 8, massimo 32 — solo numeri pari. Modificabile in seguito.</p>
+                        <p className="text-[10px] text-slate-400 dark:text-muted-foreground">Minimo 8, massimo 32 — qualunque numero, anche dispari. Modificabile in seguito.</p>
                     </label>
                 )}
 
