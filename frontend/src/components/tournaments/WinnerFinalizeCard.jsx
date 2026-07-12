@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { toast } from 'sonner'
 import { Sparkles } from 'lucide-react'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
@@ -122,9 +123,16 @@ const WinnerFinalizeCard = ({ tournament, leader, onFinalized, onReplayCelebrati
             ? (api.top4.order == null ? api.top4 : null)
             : (client?.top4?.order == null ? client.top4 : null)
 
-        const apiOthers = (api?.others ?? []).filter(unresolved)
+        const apiOthersAll = api?.others ?? []
+        const apiOthers = apiOthersAll.filter(unresolved)
         const clientOthers = (client?.others ?? []).filter(unresolved)
-        const apiKeys = new Set(apiOthers.map(t => `${t.start_position}-${t.end_position}`))
+        // Chiavi da TUTTI i pareggi noti all'API (anche quelli già risolti):
+        // se costruite solo da apiOthers (già filtrato agli irrisolti), un
+        // duello appena risolto sparisce dalle chiavi e il fallback
+        // client-side (che non sa mai se un duello è risolto, dato che i
+        // punti restano identici anche a spareggio concluso) lo reintroduce
+        // come se fosse ancora da risolvere.
+        const apiKeys = new Set(apiOthersAll.map(t => `${t.start_position}-${t.end_position}`))
         const mergedOthers = [
             ...apiOthers,
             ...clientOthers.filter(t => !apiKeys.has(`${t.start_position}-${t.end_position}`)),
@@ -231,7 +239,7 @@ const WinnerFinalizeCard = ({ tournament, leader, onFinalized, onReplayCelebrati
                 </div>
             </div>
 
-            {showConfirmModal && (
+            {showConfirmModal && createPortal(
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-sm p-4"
                     onClick={() => setShowConfirmModal(false)}
@@ -312,7 +320,8 @@ const WinnerFinalizeCard = ({ tournament, leader, onFinalized, onReplayCelebrati
                             )}
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     )
