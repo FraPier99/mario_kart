@@ -72,9 +72,16 @@ const PodiumSteps = ({ players = [] }) => {
                             </span>
                         )}
 
-                        {/* Stats as mini KPIs */}
+                        {/* Stats as mini KPIs — griglia con colonne fisse (non un flex-wrap che
+                            si spezza su 2 righe solo sulle card più strette): altrimenti a
+                            parità di numero di statistiche la card del 1° posto (più larga)
+                            resta su una riga mentre 2°/3° vanno a capo, rendendole più alte
+                            di quella centrale invece che il contrario. */}
                         {player.stats?.length > 0 && (
-                            <div className={`mt-1.5 sm:mt-3 flex w-full flex-wrap items-center justify-center ${isFirst ? 'gap-1.5 sm:gap-5' : 'gap-1 sm:gap-4'}`}>
+                            <div
+                                className={`mt-1.5 sm:mt-3 grid w-full items-start justify-items-center ${isFirst ? 'gap-x-1.5 gap-y-1 sm:gap-x-5' : 'gap-x-1 gap-y-1 sm:gap-x-4'}`}
+                                style={{ gridTemplateColumns: `repeat(${player.stats.length > 3 ? 2 : player.stats.length}, minmax(0, 1fr))` }}
+                            >
                                 {player.stats.map((stat) => {
                                     const Icon = STAT_ICONS[stat.label]
                                     const isPlacement = stat.label === 'Placement'

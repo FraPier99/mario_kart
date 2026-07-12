@@ -126,8 +126,6 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                 {rows.map((row, index) => {
                     const absoluteIndex = startIndex + index
                     const charactersUsed = resolveUsedCharacters(row)
-                    const firstCharacter = charactersUsed[0] ?? null
-                    const firstCharacterName = firstCharacter?.name
                     const isCurrentUser = !isSuperadmin && highlightPlayerId != null && row.playerId === highlightPlayerId
 
                     return (
@@ -141,16 +139,8 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                                 )}
                             </div>
                             <PlayerCell row={row} charactersUsed={charactersUsed} onPlayerClick={onPlayerClick} />
-                            <div className="flex items-center gap-3 text-sm">
-                                {firstCharacterName ? (
-                                    <div className="flex items-center gap-1.5 text-slate-600 dark:text-muted-foreground">
-                                        <img src={charImage(firstCharacter)} alt={firstCharacterName} loading="lazy" decoding="async" className="h-6 w-6 rounded-full object-cover shrink-0" />
-                                        <span className="text-xs font-medium">{firstCharacterName}</span>
-                                    </div>
-                                ) : (
-                                    <span className="text-xs text-slate-300 dark:text-muted-foreground">—</span>
-                                )}
-                                <div className="ml-auto flex flex-col items-end gap-0.5">
+                            <div className="flex items-center justify-between gap-3 text-sm">
+                                <div className="flex flex-col gap-0.5">
                                     {showTournamentWins ? (
                                         <>
                                             <span className={`text-sm font-black ${placementTextColor(absoluteIndex)}`}>{row.placementIndex ?? 0}%</span>
