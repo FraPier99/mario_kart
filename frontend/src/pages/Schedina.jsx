@@ -1108,13 +1108,29 @@ const Schedina = () => {
                                     </div>
                                 </div>
                                 <div className="mt-5 overflow-hidden rounded-3xl border border-slate-200 dark:border-border">
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full table-fixed divide-y divide-slate-200 dark:divide-border">
+                                    {/* Vista mobile: card (una tabella con colonna "Utente" compressa
+                                        troncava il nickname quasi subito su schermi stretti) */}
+                                    <div className="divide-y divide-slate-200 bg-white dark:divide-border dark:bg-card md:hidden">
+                                        {(overview?.usage ?? []).map((row) => (
+                                            <div key={row.user_id} className="flex items-center gap-3 p-4">
+                                                <PlayerAvatar img={row.img_url} nickname={row.nickname ?? row.username} size="h-10 w-10" textSize="text-sm" className="ring-1 ring-slate-200 dark:ring-slate-700 shrink-0" />
+                                                <p className="min-w-0 flex-1 truncate text-sm font-black text-slate-900 dark:text-foreground">{row.nickname ?? row.username}</p>
+                                                <div className="shrink-0 text-center">
+                                                    <p className="text-sm font-bold text-slate-700 dark:text-foreground">{row.schedine_compiled}<span className="text-slate-300 dark:text-slate-600">/</span>{row.schedine_won}</p>
+                                                    <p className="text-[8px] font-black uppercase tracking-wide text-slate-400">Comp./Vinte</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Vista desktop: tabella */}
+                                    <div className="hidden overflow-x-auto md:block">
+                                        <table className="w-full divide-y divide-slate-200 dark:divide-border">
                                             <thead className="bg-slate-50 dark:bg-muted">
                                                 <tr>
-                                                    <th className="w-1/3 px-4 py-3 text-left text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Utente</th>
-                                                    <th className="w-1/3 px-4 py-3 text-center text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Compilate</th>
-                                                    <th className="w-1/3 px-4 py-3 text-center text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Vinte</th>
+                                                    <th className="w-1/2 px-4 py-3 text-left text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Utente</th>
+                                                    <th className="w-1/4 px-4 py-3 text-center text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Compilate</th>
+                                                    <th className="w-1/4 px-4 py-3 text-center text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Vinte</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-200 bg-white dark:divide-border dark:bg-card">
@@ -1122,7 +1138,7 @@ const Schedina = () => {
                                                     <tr key={row.user_id}>
                                                         <td className="px-4 py-3">
                                                             <div className="flex items-center gap-2.5 min-w-0">
-                                                                <PlayerAvatar img={row.img_url} nickname={row.nickname ?? row.username} size="h-7 w-7" textSize="text-[9px]" className="ring-1 ring-slate-200 dark:ring-slate-700" />
+                                                                <PlayerAvatar img={row.img_url} nickname={row.nickname ?? row.username} size="h-9 w-9" textSize="text-xs" className="ring-1 ring-slate-200 dark:ring-slate-700 shrink-0" />
                                                                 <p className="truncate text-sm font-black text-slate-900 dark:text-foreground">{row.nickname ?? row.username}</p>
                                                             </div>
                                                         </td>
