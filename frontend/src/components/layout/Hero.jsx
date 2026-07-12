@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Trophy, Crown, Gamepad2, Users2, Calendar } from 'lucide-react'
+import { Trophy, Crown, Gamepad2, Users2, Calendar, ArrowRight } from 'lucide-react'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
@@ -181,7 +181,7 @@ const Hero = () => {
                             {/* ── 5. Personaggi usati — chip compatti a riga singola ── */}
                             {lastChampionCharacters.length > 0 && (
                                 <div className="mt-4">
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-amber-600/70 dark:text-amber-400/60">Personaggi usati</p>
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-amber-600/70 dark:text-amber-400/60">Personaggi usati dal vincitore</p>
                                     <div className="mt-1.5 flex flex-wrap gap-2">
                                         {lastChampionCharacters.slice(0, 8).map((character) => (
                                             <div key={character.id} className="flex items-center gap-1.5 rounded-full bg-white/30 dark:bg-black/15 py-1 pl-1 pr-3">
@@ -204,13 +204,18 @@ const Hero = () => {
                                 </div>
                             )}
 
-                            {/* ── 6. CTA ── */}
-                            <Link
-                                to={`/tournaments/${lastChampionTournament.id}`}
-                                className="font-title mt-4 inline-flex items-center gap-1 text-[10px] tracking-wide text-amber-700 dark:text-amber-300 transition hover:text-amber-900 dark:hover:text-amber-100"
-                            >
-                                Vai al torneo →
-                            </Link>
+                            {/* ── 6. CTA — bottone pieno con separatore sopra, cosi' su mobile
+                                (dove le due colonne si impilano) si legge chiaramente come
+                                azione finale di questa colonna e non come divisore tra le
+                                due card. ── */}
+                            <div className="mt-4 border-t border-amber-400/20 dark:border-amber-500/15 pt-4">
+                                <Link
+                                    to={`/tournaments/${lastChampionTournament.id}`}
+                                    className="font-title flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-600/40 dark:border-amber-400/30 bg-white/40 dark:bg-black/20 px-4 py-3 text-[10px] tracking-wide text-amber-800 dark:text-amber-200 transition active:translate-y-px hover:bg-white/60 dark:hover:bg-black/30"
+                                >
+                                    Vai al torneo <ArrowRight size={14} />
+                                </Link>
+                            </div>
                             </div>
 
                             <TournamentAwardsPanel

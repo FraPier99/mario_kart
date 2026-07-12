@@ -62,11 +62,11 @@ const Header = () => {
                             )}
                         </div>
                         <div className="min-w-0">
-                            <p className={`font-title text-[9px] tracking-[0.3em] ${theme.tailwind.textStrong}`}>
+                            <p className={`font-title text-xs tracking-[0.3em] ${theme.tailwind.textStrong}`}>
                                 {isSuperadmin
                                     ? `⚡ ${greeting}, ${user?.username}`
                                     : player
-                                        ? `${greeting} · ${theme.teamName}`
+                                        ? greeting
                                         : 'Benvenuto alla Lega Kart'}
                             </p>
                             <h1 className="mt-0.5 truncate text-3xl font-black uppercase tracking-tighter leading-none text-slate-900 dark:text-foreground md:text-4xl">
