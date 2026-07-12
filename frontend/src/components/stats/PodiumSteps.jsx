@@ -35,7 +35,7 @@ const PodiumSteps = ({ players = [] }) => {
                 return (
                     <div
                         key={player.playerId}
-                        className={`relative flex w-20 sm:w-40 md:w-52 flex-col items-center rounded-2xl border-2 bg-white dark:bg-card ${CARD_BORDER[position]} ${isFirst ? 'pt-6 pb-2.5 px-1.5 sm:pt-8 sm:pb-5 sm:px-4 md:px-5 -translate-y-2 sm:-translate-y-3 md:-translate-y-5' : 'pt-5 pb-2 px-1 sm:pt-7 sm:pb-4 sm:px-3 md:px-4'}`}
+                        className={`relative flex w-24 sm:w-48 md:w-64 flex-col items-center rounded-2xl border-2 bg-white dark:bg-card ${CARD_BORDER[position]} ${isFirst ? 'pt-6 pb-2.5 px-1.5 sm:pt-8 sm:pb-5 sm:px-4 md:px-5 -translate-y-2 sm:-translate-y-3 md:-translate-y-5' : 'pt-5 pb-2 px-1 sm:pt-7 sm:pb-4 sm:px-3 md:px-4'}`}
                         style={{
                             boxShadow: isFirst
                                 ? '0 8px 30px rgba(245,158,11,0.25), 0 0 60px rgba(245,158,11,0.08)'
@@ -64,6 +64,26 @@ const PodiumSteps = ({ players = [] }) => {
                         <p className={`mt-1 sm:mt-2.5 md:mt-3 w-full truncate text-center font-black uppercase tracking-wide text-slate-800 dark:text-foreground ${isFirst ? 'text-[9px] sm:text-sm md:text-base' : 'text-[8px] sm:text-xs md:text-sm'}`}>
                             {player.nickname}
                         </p>
+
+                        {/* Personaggi usati nel torneo */}
+                        {player.characters?.length > 0 && (
+                            <div className="mt-1 flex items-center justify-center gap-1">
+                                {player.characters.slice(0, 4).map((character) => (
+                                    <img
+                                        key={character.id}
+                                        src={character.img_url || buildAvatarPlaceholder(character.name)}
+                                        alt={character.name}
+                                        title={character.name}
+                                        loading="lazy"
+                                        decoding="async"
+                                        className={`rounded-full border border-white dark:border-card object-cover shrink-0 ${isFirst ? 'h-4 w-4 sm:h-6 sm:w-6' : 'h-3.5 w-3.5 sm:h-5 sm:w-5'}`}
+                                    />
+                                ))}
+                                {player.characters.length > 4 && (
+                                    <span className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-muted-foreground">+{player.characters.length - 4}</span>
+                                )}
+                            </div>
+                        )}
 
                         {/* Campione badge — only for 1st place, nascosto sotto sm perché non c'è spazio */}
                         {isFirst && (

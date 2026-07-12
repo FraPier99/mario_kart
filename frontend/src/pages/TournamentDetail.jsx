@@ -216,8 +216,11 @@ const TournamentDetail = () => {
                 { label: 'Vittorie', value: s.raceWins },
                 { label: 'Podi', value: s.podiums },
             ],
+            characters: (s.usedCharacterIds ?? [])
+                .map((id) => charactersById.get(id))
+                .filter(Boolean),
         }))
-    }, [showClassicPodium, tournament?.standings])
+    }, [showClassicPodium, tournament?.standings, charactersById])
     const classicTableRows = showClassicPodium ? (tournament?.standings ?? []).slice(3) : (tournament?.standings ?? [])
 
     // Un Admin che è anche partecipante al torneo vede di default la vista
