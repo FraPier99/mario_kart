@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useMemo, useState } from 'react'
 import { HelpCircle, ChevronDown } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import LeaderboardTable from '@/components/stats/LeaderboardTable'
 import PodiumSteps from '@/components/stats/PodiumSteps'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
+import { useCommunityUserNav } from '@/hooks/useCommunityUserNav'
 import ApiBanner from '@/components/common/ApiBanner'
-import { authApi } from '@/services/apiClient'
 
 
 const ScoreLegend = () => {
@@ -93,21 +92,10 @@ const ScoreLegend = () => {
 }
 
 const Stats = () => {
-    const { leaderboardRows, loading, errorMessage, refresh, charactersById, games, getLeaderboardByGame, players } = useAppData()
+    const { leaderboardRows, loading, errorMessage, refresh, charactersById, games, getLeaderboardByGame } = useAppData()
     const { user, isSuperadmin } = useAuth()
-    const navigate = useNavigate()
+    const { users, goToPlayerProfile } = useCommunityUserNav()
     const [selectedGameId, setSelectedGameId] = useState('')
-    const [users, setUsers] = useState([])
-
-    // listUsers() (/auth/users) è riservato al superadmin: un utente normale
-    // riceveva un 403 silenzioso (.catch vuoto), restava con users=[] per
-    // sempre e il click sul nickname in classifica non trovava mai lo user_id
-    // a cui navigare — sembrava "non fare nulla". listCommunityUsers()
-    // (/auth/community/users) è pubblico (solo autenticazione) e basta per
-    // questa mappatura playerId → user.id.
-    useEffect(() => {
-        authApi.listCommunityUsers().then(res => setUsers(res.data ?? [])).catch(() => {})
-    }, [])
 
     const superadminPlayerIds = useMemo(() => {
         return new Set(
@@ -145,15 +133,7 @@ const Stats = () => {
     const tableRows = showPodium ? filteredRows.slice(3) : filteredRows
 
     const handlePlayerClick = (row) => {
-        const user = users.find(u => u.player_id === row.playerId)
-        if (user) {
-            navigate(`/community/user/${user.id}`)
-        } else {
-            const player = players.find((p) => p.id === row.playerId)
-            if (player?.user_id) {
-                navigate(`/community/user/${player.user_id}`)
-            }
-        }
+        goToPlayerProfile(row.playerId)
     }
 
     return (
@@ -226,7 +206,7 @@ const Stats = () => {
                 ) : (
                     <>
                         <div className="mb-3">
-                            <PodiumSteps players={podiumPlayers} />
+                            <PodiumSteps players={podiumPlayers} onPlayerClick={handlePlayerClick} />
                         </div>
                         <LeaderboardTable
                             rows={tableRows}

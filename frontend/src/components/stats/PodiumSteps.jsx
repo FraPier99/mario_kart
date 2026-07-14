@@ -21,7 +21,7 @@ const CARD_BORDER = {
     3: 'border-orange-400/70 dark:border-orange-500/40',
 }
 
-const PodiumSteps = ({ players = [] }) => {
+const PodiumSteps = ({ players = [], onPlayerClick = null }) => {
     if (players.length < 3) return null
 
     const order = [players[1], players[0], players[2]]
@@ -31,11 +31,16 @@ const PodiumSteps = ({ players = [] }) => {
             {order.map((player, i) => {
                 const position = i === 0 ? 2 : i === 1 ? 1 : 3
                 const isFirst = position === 1
+                const clickable = Boolean(onPlayerClick)
 
                 return (
                     <div
                         key={player.playerId}
-                        className={`relative flex w-24 sm:w-48 md:w-64 flex-col items-center rounded-2xl border-2 bg-white dark:bg-card ${CARD_BORDER[position]} ${isFirst ? 'pt-6 pb-2.5 px-1.5 sm:pt-8 sm:pb-5 sm:px-4 md:px-5 -translate-y-2 sm:-translate-y-3 md:-translate-y-5' : 'pt-5 pb-2 px-1 sm:pt-7 sm:pb-4 sm:px-3 md:px-4'}`}
+                        role={clickable ? 'button' : undefined}
+                        tabIndex={clickable ? 0 : undefined}
+                        onClick={clickable ? () => onPlayerClick(player) : undefined}
+                        onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onPlayerClick(player) } } : undefined}
+                        className={`relative flex w-24 sm:w-48 md:w-64 flex-col items-center rounded-2xl border-2 bg-white dark:bg-card ${CARD_BORDER[position]} ${clickable ? 'cursor-pointer transition-transform hover:-translate-y-1' : ''} ${isFirst ? 'pt-6 pb-2.5 px-1.5 sm:pt-8 sm:pb-5 sm:px-4 md:px-5 -translate-y-2 sm:-translate-y-3 md:-translate-y-5' : 'pt-5 pb-2 px-1 sm:pt-7 sm:pb-4 sm:px-3 md:px-4'}`}
                         style={{
                             boxShadow: isFirst
                                 ? '0 8px 30px rgba(245,158,11,0.25), 0 0 60px rgba(245,158,11,0.08)'

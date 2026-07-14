@@ -8,6 +8,7 @@ import { playMkdsCharacterVoice, preloadMkdsCharacterVoiceByName } from '@/lib/m
 import { playMk8dCharacterVoice, preloadCharacterVoice as preloadMk8dCharacterVoice } from '@/lib/mk8dSounds'
 import AppLayout from '@/components/layout/AppLayout'
 import ConfirmModal from '@/components/common/ConfirmModal'
+import PlayerTournamentHistory from '@/components/community/PlayerTournamentHistory'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { authApi, schedineApi, inventoryApi, getApiErrorMessage } from '@/services/apiClient'
@@ -823,6 +824,8 @@ const Dashboard = () => {
                                 <p className="text-xs text-slate-400">Seleziona un gioco per vedere le statistiche.</p>
                             )}
                         </div>
+
+                        {player && <PlayerTournamentHistory playerId={player.id} />}
 
                         {!playerStats && (
                             <div className="rounded-2xl border-2 border-dashed border-slate-200 dark:border-border p-5 text-center text-sm text-slate-500 dark:text-muted-foreground">

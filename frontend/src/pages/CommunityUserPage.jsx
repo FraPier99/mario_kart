@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Crown, Flag, Trophy, Star, BarChart3, UserCircle2, Shield } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
+import PlayerTournamentHistory from '@/components/community/PlayerTournamentHistory'
 import { authApi, getApiErrorMessage } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
 import { toast } from 'sonner'
@@ -228,6 +229,8 @@ const CommunityUserPage = () => {
                         )}
                     </div>
                 )}
+
+                {player && <PlayerTournamentHistory playerId={player.id} />}
             </section>
         </AppLayout>
     )

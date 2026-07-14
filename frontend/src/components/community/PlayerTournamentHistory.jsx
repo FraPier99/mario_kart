@@ -1,0 +1,141 @@
+/**
+ * PlayerTournamentHistory — Elenco dei tornei a cui un giocatore ha
+ * partecipato, con la posizione raggiunta e statistiche semplici (punti,
+ * gare vinte, podi) — non il dettaglio gara-per-gara. Usato sia nel
+ * profilo personale sia in /community/user/:id.
+ *
+ * Posizione: per i tornei classic si legge direttamente dall'indice in
+ * tournament.standings (già la classifica ufficiale per questo formato).
+ * Per i tornei a gironi, tournament.standings NON è affidabile come
+ * classifica finale (vedi gotcha in CLAUDE.md) — la posizione reale va
+ * presa da GET /tournaments/{id}/group-stage/overall-classifica, quindi
+ * richiede una chiamata per ciascun torneo a gironi concluso in lista.
+ */
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Calendar, MapPin, Trophy } from 'lucide-react'
+import { useAppData } from '@/context/AppDataContext'
+import { tournamentsApi } from '@/services/apiClient'
+
+const FORMAT_LABEL = { classic: 'Classifica unica', group_stage: 'A gironi' }
+
+const POSITION_BADGE = {
+    1: 'bg-circuit-gold text-circuit-ink border-circuit-ink',
+    2: 'bg-slate-300 text-slate-800 border-circuit-ink',
+    3: 'bg-orange-400 text-orange-950 border-circuit-ink',
+}
+const DEFAULT_BADGE = 'bg-slate-100 dark:bg-muted text-slate-500 dark:text-muted-foreground border-transparent'
+
+const PlayerTournamentHistory = ({ playerId }) => {
+    const { detailedTournaments, games } = useAppData()
+    const [selectedGameId, setSelectedGameId] = useState('')
+    const [groupStagePositions, setGroupStagePositions] = useState({})
+
+    const myTournaments = useMemo(
+        () => (detailedTournaments ?? []).filter((t) => (t.standings ?? []).some((s) => s.playerId === playerId)),
+        [detailedTournaments, playerId]
+    )
+
+    const filteredTournaments = useMemo(() => {
+        if (!selectedGameId) return myTournaments
+        return myTournaments.filter((t) => t.game_id === Number(selectedGameId))
+    }, [myTournaments, selectedGameId])
+
+    // Posizione reale per i tornei a gironi conclusi: una chiamata a
+    // testa (numero contenuto, solo quelli effettivamente in lista).
+    useEffect(() => {
+        const toFetch = filteredTournaments.filter((t) => t.tournament_format === 'group_stage' && t.status === 'concluso' && groupStagePositions[t.id] === undefined)
+        if (toFetch.length === 0) return
+        let active = true
+        Promise.all(toFetch.map((t) => tournamentsApi.overallClassifica(t.id).then((res) => [t.id, res.data?.order ?? []]).catch(() => [t.id, []])))
+            .then((entries) => {
+                if (!active) return
+                setGroupStagePositions((prev) => {
+                    const next = { ...prev }
+                    entries.forEach(([id, order]) => { next[id] = order })
+                    return next
+                })
+            })
+        return () => { active = false }
+    }, [filteredTournaments, groupStagePositions])
+
+    if (myTournaments.length === 0) return null
+
+    return (
+        <div className="rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-4 sm:p-5" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                    <Trophy size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <h3 className="font-title text-xs tracking-wide text-slate-700 dark:text-muted-foreground">Tornei disputati</h3>
+                </div>
+                <select
+                    value={selectedGameId}
+                    onChange={(e) => setSelectedGameId(e.target.value)}
+                    className="rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2 text-xs font-black uppercase tracking-widest outline-none focus:border-emerald-500"
+                >
+                    <option value="">Tutti i giochi</option>
+                    {games.map((g) => (
+                        <option key={g.id} value={g.id}>{g.name}</option>
+                    ))}
+                </select>
+            </div>
+
+            {filteredTournaments.length === 0 ? (
+                <p className="py-6 text-center text-sm text-slate-400 dark:text-muted-foreground">Nessun torneo per questo gioco.</p>
+            ) : (
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                    {filteredTournaments.map((t) => {
+                        const standing = t.standings.find((s) => s.playerId === playerId)
+                        const isGroupStage = t.tournament_format === 'group_stage'
+                        let position = null
+                        if (isGroupStage) {
+                            const order = groupStagePositions[t.id]
+                            if (order) {
+                                const idx = order.indexOf(playerId)
+                                position = idx === -1 ? null : idx + 1
+                            }
+                        } else {
+                            const idx = t.standings.findIndex((s) => s.playerId === playerId)
+                            position = idx === -1 ? null : idx + 1
+                        }
+                        const badgeClass = position != null && POSITION_BADGE[position] ? POSITION_BADGE[position] : DEFAULT_BADGE
+                        const gameName = games.find((g) => g.id === t.game_id)?.name
+
+                        return (
+                            <Link
+                                key={t.id}
+                                to={`/tournaments/${t.id}`}
+                                className="flex flex-col gap-2.5 rounded-xl border border-slate-200 dark:border-border bg-slate-50/60 dark:bg-muted/30 p-3.5 transition hover:border-emerald-400 dark:hover:border-emerald-500/50 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10"
+                            >
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                        <p className="truncate text-sm font-black text-slate-900 dark:text-foreground">{t.name}</p>
+                                        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-slate-500 dark:text-muted-foreground">
+                                            <span className="flex items-center gap-1"><Calendar size={10} />{t.date}</span>
+                                            {gameName && <span className="flex items-center gap-1"><MapPin size={10} />{gameName}</span>}
+                                        </div>
+                                    </div>
+                                    <span className={`shrink-0 inline-flex h-7 w-7 items-center justify-center rounded-full border-2 font-title text-[11px] ${badgeClass}`}>
+                                        {position ?? '—'}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">
+                                    <span>{FORMAT_LABEL[t.tournament_format] ?? t.tournament_format}</span>
+                                </div>
+                                {standing && (
+                                    <div className="flex items-center gap-3 border-t border-slate-200 dark:border-border pt-2 text-xs">
+                                        <span className="font-black text-slate-700 dark:text-slate-300">{standing.points} pt</span>
+                                        <span className="text-slate-400 dark:text-muted-foreground">{standing.raceWins} vittorie</span>
+                                        <span className="text-slate-400 dark:text-muted-foreground">{standing.podiums} podi</span>
+                                    </div>
+                                )}
+                            </Link>
+                        )
+                    })}
+                </div>
+            )}
+        </div>
+    )
+}
+
+export default PlayerTournamentHistory

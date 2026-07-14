@@ -9,6 +9,7 @@ import { Crown, Medal, Trophy } from 'lucide-react'
 import { tournamentsApi } from '@/services/apiClient'
 import RefreshButton from '@/components/common/RefreshButton'
 import PodiumSteps from '@/components/stats/PodiumSteps'
+import { useCommunityUserNav } from '@/hooks/useCommunityUserNav'
 
 const POSITION_ICON = ['🥇', '🥈', '🥉']
 const FINALS_SLOTS = 4
@@ -19,6 +20,7 @@ const OverallClassificaCard = ({ tournament, playerMap, highlightPlayerId = null
     const [refreshing, setRefreshing] = useState(false)
     const mountedRef = useRef(true)
     useEffect(() => () => { mountedRef.current = false }, [])
+    const { goToPlayerProfile } = useCommunityUserNav()
 
     useEffect(() => {
         tournamentsApi.overallClassifica(tournament.id)
@@ -60,6 +62,7 @@ const OverallClassificaCard = ({ tournament, playerMap, highlightPlayerId = null
                             const player = playerMap.get(playerId)
                             return player ? { playerId, nickname: player.nickname, img_url: player.img_url } : null
                         }).filter(Boolean)}
+                        onPlayerClick={(p) => goToPlayerProfile(p.playerId)}
                     />
                 </div>
             )}

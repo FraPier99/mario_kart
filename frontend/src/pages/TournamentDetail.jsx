@@ -6,7 +6,7 @@ import PortalSelect from '@/components/common/PortalSelect'
 import RefreshButton from '@/components/common/RefreshButton'
 import LeaderboardTable from '@/components/stats/LeaderboardTable'
 import PodiumSteps from '@/components/stats/PodiumSteps'
-import ModalPlayer from '@/components/ModalPlayer'
+import { useCommunityUserNav } from '@/hooks/useCommunityUserNav'
 import { useCelebration } from '@/context/CelebrationContext'
 import RaceList from '@/components/tournaments/RaceList'
 import { useAppData } from '@/context/AppDataContext'
@@ -56,7 +56,7 @@ const getTournamentStatusBadge = (status) => {
 const TournamentDetail = () => {
     const { tournamentId } = useParams()
     const navigate = useNavigate()
-    const { getTournamentById, getTournamentDisplayNumber, players, games, refresh, loading, errorMessage, circuitsById, circuitsByGameId, charactersById, charactersByGameId, results, statsByPlayerId } = useAppData()
+    const { getTournamentById, getTournamentDisplayNumber, players, games, refresh, loading, errorMessage, circuitsById, circuitsByGameId, charactersById, charactersByGameId, results } = useAppData()
     const { user, isAdmin, isSuperadmin } = useAuth()
     const { triggerCelebration } = useCelebration()
 
@@ -240,8 +240,8 @@ const TournamentDetail = () => {
     const [userHasPredicted, setUserHasPredicted] = useState(null)
     const [userTab, setUserTab] = useState('riepilogo')
     const [expandedDuelGroups, setExpandedDuelGroups] = useState(new Set())
-    const [selectedPlayer, setSelectedPlayer] = useState(null)
     const [superadminPlayerIds, setSuperadminPlayerIds] = useState([])
+    const { goToPlayerProfile } = useCommunityUserNav()
 
     const {
         inventory, localCardLog, showCardModal, setShowCardModal, selectedCard,
@@ -299,8 +299,7 @@ const TournamentDetail = () => {
     }, [tournamentStatus, refresh])
 
     const handlePlayerClick = (row) => {
-        const player = tournamentParticipants.find((p) => p.id === row.playerId) ?? players.find((p) => p.id === row.playerId)
-        if (player) setSelectedPlayer(player)
+        goToPlayerProfile(row.playerId)
     }
 
 
@@ -560,7 +559,7 @@ const TournamentDetail = () => {
                                     </div>
                                     {showClassicPodium && (
                                         <div className="p-5 pb-0">
-                                            <PodiumSteps players={classicPodiumPlayers} />
+                                            <PodiumSteps players={classicPodiumPlayers} onPlayerClick={(p) => goToPlayerProfile(p.playerId)} />
                                         </div>
                                     )}
                                     <LeaderboardTable
@@ -725,9 +724,6 @@ const TournamentDetail = () => {
                         </div>
                     )}
                 </section>
-            {selectedPlayer && (
-                <ModalPlayer player={selectedPlayer} stats={statsByPlayerId.get(selectedPlayer.id)} onClose={() => setSelectedPlayer(null)} />
-            )}
             </AppLayout>
         )
     }
@@ -1353,9 +1349,6 @@ const TournamentDetail = () => {
                 </div>
 
             </section>
-            {selectedPlayer && (
-                <ModalPlayer player={selectedPlayer} stats={statsByPlayerId.get(selectedPlayer.id)} onClose={() => setSelectedPlayer(null)} />
-            )}
         </AppLayout>
         </>
     )
