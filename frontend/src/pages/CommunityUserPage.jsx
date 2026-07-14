@@ -159,6 +159,7 @@ const CommunityUserPage = () => {
                         </div>
                     </div>
                 </div>
+                  {player && <PlayerTournamentHistory playerId={player.id} />}
 
                 {/* Superadmin sees fun game-master banner */}
                 {viewedUserIsSuperadmin ? (
@@ -193,12 +194,14 @@ const CommunityUserPage = () => {
                                 onChange={e => setSelectedGameId(e.target.value)}
                                 className="font-title rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2 text-[10px] tracking-wide text-slate-700 dark:text-foreground outline-none focus:border-emerald-400"
                             >
-                                <option value="">Tutti i giochi</option>
+                                <option value="">Tutti i giochi </option>
                                 {games.map((g) => (
                                     <option key={g.id} value={g.id}>{g.name}</option>
                                 ))}
                             </select>
                         </div>
+
+                        
 
                         {/* Stats grid */}
                         {activeStats ? (
@@ -230,7 +233,7 @@ const CommunityUserPage = () => {
                     </div>
                 )}
 
-                {player && <PlayerTournamentHistory playerId={player.id} />}
+              
             </section>
         </AppLayout>
     )
