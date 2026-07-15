@@ -16,7 +16,7 @@ const formatChampionDate = (value) => {
 }
 
 const Hero = () => {
-    const { statsByPlayerId, charactersById, tournaments, players: allPlayers, detailedTournaments, games, loading } = useAppData()
+    const { statsByPlayerId, charactersById, detailedTournaments, games } = useAppData()
     const { user, isSuperadmin } = useAuth()
     const { dark } = useTheme()
     const theme = getProfileTheme(user, charactersById, dark)
@@ -27,9 +27,6 @@ const Hero = () => {
     const goldBackground = dark
         ? 'linear-gradient(to bottom right, rgba(67,20,7,0.60), rgba(120,53,15,0.30), rgba(67,20,7,0.60))'
         : 'linear-gradient(to bottom right, rgba(254,243,199,0.92), rgba(255,251,235,0.70), rgba(254,243,199,0.88))'
-    const totalTournaments = tournaments?.length ?? 0
-    const totalPlayers = allPlayers?.length ?? 0
-    const activeTournaments = tournaments?.filter(t => t.status === 'in_corso').length ?? 0
 
     // "Ultimo campione": non usare lastWinner/lastWinnerStats del context — quelli
     // valgono solo se il torneo più recente in assoluto è concluso, quindi sono
@@ -75,35 +72,12 @@ const Hero = () => {
                 {/* ── Zone 3 "Chi rappresenti": niente più identità qui (già raccontata dalla Hero in cima) ── */}
                 <div className="px-6 pt-5">
                     <p className={`text-[10px] font-black uppercase tracking-[0.4em] ${theme.tailwind.textStrong}`}>
-                        {isSuperadmin ? 'Panoramica lega' : '🏁 Ultimo torneo'}
+                        🏁 Ultimo torneo
                     </p>
                 </div>
 
                 <div className="p-6 pt-3">
-                    {isSuperadmin ? (
-                        <div className="rounded-3xl border-2 border-slate-900/40 dark:border-white/15 p-4"
-                            style={{ background: isChampion
-                                ? (dark ? 'linear-gradient(to bottom right, rgba(67,20,7,0.60), rgba(120,53,15,0.30), rgba(67,20,7,0.60))' : 'linear-gradient(to bottom right, rgba(254,243,199,0.92), rgba(255,251,235,0.70), rgba(254,243,199,0.88))')
-                                : (dark ? 'rgba(30,41,59,0.7)' : 'rgba(255,255,255,0.7)'),
-                            boxShadow: 'var(--circuit-shadow-sm)' }}>
-                            <div className="grid gap-3">
-                                <div className="rounded-xl border border-slate-900/10 dark:border-white/10 bg-white/70 dark:bg-slate-700/50 p-3">
-                                    <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Tornei totali</p>
-                                    <p className="font-title mt-1 text-xl text-slate-900 dark:text-foreground">{loading ? '—' : totalTournaments}</p>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="rounded-xl border border-slate-900/10 dark:border-white/10 bg-white/70 dark:bg-slate-700/50 p-3">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Giocatori</p>
-                                        <p className="font-title mt-1 text-lg text-slate-900 dark:text-foreground">{loading ? '—' : totalPlayers}</p>
-                                    </div>
-                                    <div className="rounded-xl border border-slate-900/10 dark:border-white/10 bg-white/70 dark:bg-slate-700/50 p-3">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Tornei attivi</p>
-                                        <p className="font-title mt-1 text-lg text-slate-900 dark:text-foreground">{loading ? '—' : activeTournaments}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ) : lastChampion ? (
+                    {lastChampion ? (
                         <div className="rounded-3xl border-2 border-amber-400/50 dark:border-amber-500/30 p-5 md:p-6"
                             style={{ background: dark
                                 ? 'linear-gradient(to bottom right, rgba(67,20,7,0.60), rgba(120,53,15,0.30), rgba(67,20,7,0.60))'

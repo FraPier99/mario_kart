@@ -56,6 +56,7 @@ class User(Base):
     virtual_coins = Column(Integer, nullable=False, default=100)
     must_change_password = Column(Boolean, nullable=False, default=True)
     img_url = Column(Text, nullable=True)
+    ownership_declared_at = Column(DateTime, nullable=True)
 
     player_id = Column(Integer, ForeignKey("players.id"), nullable=True, unique=True)
 
@@ -86,6 +87,15 @@ class User(Base):
         back_populates="receiver",
         foreign_keys="Challenge.receiver_user_id",
         cascade="all, delete-orphan",
+    )
+    game_ownerships = relationship(
+        "UserGameOwnership", back_populates="user", cascade="all, delete-orphan"
+    )
+    console_ownerships = relationship(
+        "UserConsoleOwnership", back_populates="user", cascade="all, delete-orphan"
+    )
+    r4_devices = relationship(
+        "UserR4Device", back_populates="user", cascade="all, delete-orphan"
     )
 
 
@@ -198,3 +208,62 @@ class TempPassword(Base):
     expires_at = Column(DateTime, nullable=False)
 
     user = relationship("User", foreign_keys=[user_id])
+
+
+# -------------------
+# GAME / CONSOLE OWNERSHIP (auto-dichiarato dall'utente)
+# -------------------
+class UserGameOwnership(Base):
+    __tablename__ = "user_game_ownership"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    game_id = Column(Integer, ForeignKey("games.id"), nullable=False)
+    # Numero di copie fisiche possedute (0 = non posseduto). Sostituisce il
+    # vecchio campo booleano `owned` (colonna DB rimasta ma non più letta/scritta).
+    quantity = Column(Integer, nullable=False, default=0)
+    updated_at = Column(DateTime, nullable=False, default=now_rome, onupdate=now_rome)
+
+    user = relationship("User", back_populates="game_ownerships")
+    game = relationship("Game")
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "game_id", name="unique_user_game_ownership"),
+    )
+
+
+class UserConsoleOwnership(Base):
+    __tablename__ = "user_console_ownership"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    # Chiave stabile da app.data.consoles.CONSOLE_KEYS, validata a livello di
+    # servizio (nessun CHECK/enum a DB, coerente con Tournament.status ecc.)
+    console_key = Column(String, nullable=False)
+    quantity = Column(Integer, nullable=False, default=1)
+    created_at = Column(DateTime, nullable=False, default=now_rome)
+
+    user = relationship("User", back_populates="console_ownerships")
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "console_key", name="unique_user_console"),
+    )
+
+
+class UserR4Device(Base):
+    __tablename__ = "user_r4_devices"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    # Sottoinsieme famiglia DS da app.data.consoles.R4_DEVICE_KEYS. Consentito
+    # solo se l'utente possiede Mario Kart DS (game_id=1), applicato a livello
+    # di servizio, non a DB.
+    device_type = Column(String, nullable=False)
+    quantity = Column(Integer, nullable=False, default=1)
+    created_at = Column(DateTime, nullable=False, default=now_rome)
+
+    user = relationship("User", back_populates="r4_devices")
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "device_type", name="unique_user_r4_device"),
+    )

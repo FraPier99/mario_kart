@@ -25,6 +25,13 @@ const apiRequest = (method, url, data) => {
 }
 
 export const getApiErrorMessage = (error, fallbackMessage = 'Errore durante la chiamata al server') => {
+    // Nessuna risposta dal server (backend spento, CORS bloccato, offline):
+    // axios in questo caso valorizza solo error.message con un generico
+    // "Network Error", che confonde l'utente — diamo un messaggio più chiaro.
+    if (!error?.response && (error?.code === 'ERR_NETWORK' || error?.message === 'Network Error')) {
+        return 'Impossibile contattare il server. Controlla la connessione e riprova.'
+    }
+
     const detail = error?.response?.data?.detail
     const message = error?.response?.data?.message || error?.message
 
@@ -205,6 +212,12 @@ export const auditApi = {
     list: () => _get('/audit-log'),
     resetPassword: (userId) => _post(`/audit-log/users/${userId}/reset-password`),
     tempPasswords: (userId) => _get(`/audit-log/users/${userId}/temp-passwords`),
+}
+
+export const ownershipApi = {
+    me: () => _get('/ownership/me'),
+    updateMe: (payload) => _put('/ownership/me', payload),
+    all: () => _get('/ownership/all'),
 }
 
 export const authStorage = {

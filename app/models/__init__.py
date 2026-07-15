@@ -18,6 +18,9 @@ from app.models.utenti.models import (
     Challenge,
     AuditLog,
     TempPassword,
+    UserGameOwnership,
+    UserConsoleOwnership,
+    UserR4Device,
 )
 from app.models.tornei.models import (
     Game,
@@ -60,4 +63,7 @@ __all__ = [
     "SchedinaTorneoGroupStage",
     "PremioTorneo",
     "UserInventory",
+    "UserGameOwnership",
+    "UserConsoleOwnership",
+    "UserR4Device",
 ]

@@ -23,6 +23,7 @@ from app.controllers.utenti.gallery import router as gallery_router
 from app.controllers.utenti.notifications import router as notifications_router
 from app.controllers.utenti.audit_log import router as audit_log_router
 from app.controllers.schedine.schedine_deluxe import router as schedine_deluxe_router
+from app.controllers.utenti.ownership import router as ownership_router
 
 
 tags_metadata = [
@@ -47,6 +48,10 @@ tags_metadata = [
         "name": "SchedineDeluxe",
         "description": "Schedine per tornei Mario Kart 8 Deluxe (gironi 4v4).",
     },
+    {
+        "name": "Ownership",
+        "description": "Possesso giochi/console e dispositivi R4 dichiarati dall'utente.",
+    },
 ]
 
 
@@ -69,7 +74,11 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
     ],
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    # In dev il frontend a volte parte su una porta diversa da 5173 (es. se
+    # quella predefinita risulta già occupata): senza questa regex qualunque
+    # porta non elencata sopra viene bloccata dal CORS e ogni chiamata fallisce
+    # lato browser con un generico "Network Error", anche se il backend è su.
+    allow_origin_regex=r"(https://.*\.vercel\.app)|(https?://(localhost|127\.0\.0\.1):\d+)",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -105,6 +114,7 @@ app.include_router(inventory_router)
 app.include_router(notifications_router)
 app.include_router(audit_log_router)
 app.include_router(schedine_deluxe_router)
+app.include_router(ownership_router)
 
 # Combined ASGI app: Socket.IO on /socket.io/, everything else → FastAPI
 socket_app = socketio.ASGIApp(sio, other_asgi_app=app)

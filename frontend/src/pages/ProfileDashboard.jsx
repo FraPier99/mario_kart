@@ -8,11 +8,13 @@ import { playMkdsCharacterVoice, preloadMkdsCharacterVoiceByName } from '@/lib/m
 import { playMk8dCharacterVoice, preloadCharacterVoice as preloadMk8dCharacterVoice } from '@/lib/mk8dSounds'
 import AppLayout from '@/components/layout/AppLayout'
 import ConfirmModal from '@/components/common/ConfirmModal'
+import ApiBanner from '@/components/common/ApiBanner'
 import PlayerTournamentHistory from '@/components/community/PlayerTournamentHistory'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
-import { authApi, schedineApi, inventoryApi, getApiErrorMessage } from '@/services/apiClient'
+import { authApi, schedineApi, inventoryApi, ownershipApi, getApiErrorMessage } from '@/services/apiClient'
 import { compressImage } from '@/lib/imageCompression'
+import { CONSOLE_LIST, R4_DEVICE_LIST, MKDS_GAME_ID } from '@/lib/consoles'
 
 const FavoriteCharacterPicker = ({ value, onChange, characters }) => {
     const [open, setOpen] = useState(false)
@@ -259,6 +261,33 @@ const SchedinaBadge = () => {
     )
 }
 
+const QuantityRow = ({ label, value, onChange, accent = 'emerald' }) => {
+    const accentText = accent === 'amber' ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'
+    return (
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-2.5">
+            <span className="min-w-0 flex-1 truncate text-sm font-bold text-slate-900 dark:text-foreground">{label}</span>
+            <div className="flex shrink-0 items-center gap-2">
+                <button
+                    type="button"
+                    onClick={() => onChange(Math.max(0, value - 1))}
+                    disabled={value <= 0}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-slate-300 dark:border-border text-slate-600 dark:text-muted-foreground transition active:translate-y-px hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                    −
+                </button>
+                <span className={`w-6 shrink-0 text-center text-sm font-black ${value > 0 ? accentText : 'text-slate-400'}`}>{value}</span>
+                <button
+                    type="button"
+                    onClick={() => onChange(value + 1)}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-slate-300 dark:border-border text-slate-600 dark:text-muted-foreground transition active:translate-y-px hover:border-slate-400"
+                >
+                    +
+                </button>
+            </div>
+        </div>
+    )
+}
+
 const Dashboard = () => {
     const { user, isAdmin, isSuperadmin, refreshMe, logout, isAuthenticated } = useAuth()
     const { charactersById, statsByPlayerId, refresh, getTournamentById, games, getLeaderboardByGame } = useAppData()
@@ -385,6 +414,112 @@ const Dashboard = () => {
         if (isAuthenticated) loadInventory()
     }, [isAuthenticated])
 
+    const [ownership, setOwnership] = useState({ games: [], consoles: [], r4_devices: [], has_declared: false })
+    const [ownershipLoading, setOwnershipLoading] = useState(false)
+    const [ownershipSaving, setOwnershipSaving] = useState(false)
+    const [ownershipDraft, setOwnershipDraft] = useState({ gamesById: {}, consolesByKey: {}, r4DevicesByKey: {}, hasR4: false })
+
+    const draftFromOwnership = (data) => {
+        const r4DevicesByKey = Object.fromEntries((data.r4_devices ?? []).map((d) => [d.key, d.quantity]))
+        return {
+            gamesById: Object.fromEntries(data.games.map((g) => [g.game_id, g.quantity])),
+            consolesByKey: Object.fromEntries((data.consoles ?? []).map((c) => [c.key, c.quantity])),
+            r4DevicesByKey,
+            hasR4: Object.values(r4DevicesByKey).some((q) => q > 0),
+        }
+    }
+
+    const loadOwnership = async () => {
+        setOwnershipLoading(true)
+        try {
+            const res = await ownershipApi.me()
+            const data = res.data ?? { games: [], consoles: [], r4_devices: [], has_declared: false }
+            setOwnership(data)
+            setOwnershipDraft(draftFromOwnership(data))
+        } catch {
+            // lascia i valori di default
+        } finally {
+            setOwnershipLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (isAuthenticated && !isSuperadmin) loadOwnership()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAuthenticated, isSuperadmin])
+
+    const mkdsQuantityInDraft = ownershipDraft.gamesById[MKDS_GAME_ID] ?? 0
+
+    const setGameQuantity = (gameId, quantity) => {
+        const nextQuantity = Math.max(0, quantity)
+        setOwnershipDraft((current) => {
+            const nextGamesById = { ...current.gamesById, [gameId]: nextQuantity }
+            const mkdsCleared = gameId === MKDS_GAME_ID && nextQuantity === 0
+            return {
+                ...current,
+                gamesById: nextGamesById,
+                r4DevicesByKey: mkdsCleared ? {} : current.r4DevicesByKey,
+                hasR4: mkdsCleared ? false : current.hasR4,
+            }
+        })
+    }
+
+    const toggleHasR4 = () => {
+        setOwnershipDraft((current) => ({
+            ...current,
+            hasR4: !current.hasR4,
+            r4DevicesByKey: current.hasR4 ? {} : current.r4DevicesByKey,
+        }))
+    }
+
+    const setConsoleQuantity = (key, quantity) => {
+        const nextQuantity = Math.max(0, quantity)
+        setOwnershipDraft((current) => ({
+            ...current,
+            consolesByKey: { ...current.consolesByKey, [key]: nextQuantity },
+        }))
+    }
+
+    const setR4DeviceQuantity = (key, quantity) => {
+        const nextQuantity = Math.max(0, quantity)
+        setOwnershipDraft((current) => ({
+            ...current,
+            r4DevicesByKey: { ...current.r4DevicesByKey, [key]: nextQuantity },
+        }))
+    }
+
+    const handleSaveOwnership = async (event) => {
+        event.preventDefault()
+
+        const hasAtLeastOneConsole = Object.values(ownershipDraft.consolesByKey).some((q) => q > 0)
+        if (!hasAtLeastOneConsole) {
+            toast.error('Seleziona almeno una console che possiedi')
+            return
+        }
+
+        setOwnershipSaving(true)
+        try {
+            const res = await ownershipApi.updateMe({
+                games: ownershipDraft.gamesById,
+                consoles: ownershipDraft.consolesByKey,
+                r4_devices: ownershipDraft.hasR4 ? ownershipDraft.r4DevicesByKey : {},
+            })
+            const data = res.data ?? { games: [], consoles: [], r4_devices: [], has_declared: false }
+            setOwnership(data)
+            setOwnershipDraft(draftFromOwnership(data))
+            toast.success('Possessi aggiornati')
+        } catch (error) {
+            toast.error('Aggiornamento fallito', {
+                description: getApiErrorMessage(error, 'Impossibile salvare i possessi'),
+            })
+        } finally {
+            setOwnershipSaving(false)
+        }
+    }
+
+    const shouldNudgeOwnership = !ownershipLoading && !ownership.has_declared
+
     const handleUsePower = (item) => {
         setConfirmModal({
             open: true,
@@ -434,6 +569,7 @@ const Dashboard = () => {
         ...(!isSuperadmin ? [
             { key: 'statistiche', label: 'Statistiche' },
             { key: 'carte', label: 'Carte & Schedine' },
+            { key: 'possiedi', label: 'Possiedi' },
         ] : []),
     ]
 
@@ -507,6 +643,20 @@ const Dashboard = () => {
                         </div>
                     </div>
                 </div>
+
+                {!isSuperadmin && shouldNudgeOwnership && (
+                    <ApiBanner
+                        tone="info"
+                        title="Completa il tuo profilo gaming"
+                        message="Non hai ancora indicato quali giochi o console possiedi. Vai alla scheda “Possiedi” per aggiungerli."
+                        action={
+                            <button type="button" onClick={() => setProfileTab('possiedi')}
+                                className="rounded-2xl border-2 border-slate-900 dark:border-slate-600 bg-slate-900 dark:bg-slate-700 px-4 py-2 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-slate-700 dark:hover:bg-slate-600">
+                                Vai a Possiedi
+                            </button>
+                        }
+                    />
+                )}
 
                 <div className="rounded-3xl border border-slate-200 dark:border-border bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 md:p-8">
 
@@ -899,6 +1049,90 @@ const Dashboard = () => {
                             )}
                         </div>
 
+                    </div>
+                )}
+
+                {/* ── TAB: POSSIEDI ─────────────────────────────── */}
+                {profileTab === 'possiedi' && (
+                    <div className={`rounded-[2rem] border-2 p-6 gold-card-shimmer ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
+                        <p className="font-title text-[9px] tracking-wide text-emerald-600 dark:text-emerald-400">Possiedi</p>
+                        <h2 className="mt-1 text-lg font-black text-slate-900 dark:text-foreground">Giochi, console e R4</h2>
+                        <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">Indica quali giochi e console possiedi: aiuta a organizzare tornei e serate in base a chi ha cosa.</p>
+
+                        {ownershipLoading ? (
+                            <p className="mt-4 text-sm text-slate-500 dark:text-muted-foreground">Caricamento...</p>
+                        ) : (
+                            <form onSubmit={handleSaveOwnership} className="mt-6 space-y-6">
+                                <div className="space-y-3">
+                                    <span className="font-title text-[9px] tracking-wide text-slate-400">Giochi posseduti (numero di schede)</span>
+                                    <div className="grid gap-2 sm:grid-cols-2">
+                                        {ownership.games.map((g) => (
+                                            <QuantityRow
+                                                key={g.game_id}
+                                                label={g.game_name}
+                                                value={ownershipDraft.gamesById[g.game_id] ?? 0}
+                                                onChange={(next) => setGameQuantity(g.game_id, next)}
+                                            />
+                                        ))}
+                                        {ownership.games.length === 0 && (
+                                            <p className="text-xs text-slate-400">Nessun gioco disponibile.</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <span className="font-title text-[9px] tracking-wide text-slate-400">Console possedute (unità) <span className="text-rose-500">*</span></span>
+                                    <p className="text-[11px] text-slate-400">Seleziona almeno una console — è l'unico dato obbligatorio in questa scheda.</p>
+                                    <div className="grid gap-2 sm:grid-cols-2">
+                                        {CONSOLE_LIST.map((c) => (
+                                            <QuantityRow
+                                                key={c.key}
+                                                label={c.label}
+                                                value={ownershipDraft.consolesByKey[c.key] ?? 0}
+                                                onChange={(next) => setConsoleQuantity(c.key, next)}
+                                                accent="emerald"
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {mkdsQuantityInDraft > 0 && (
+                                    <div className="space-y-3">
+                                        <span className="font-title text-[9px] tracking-wide text-slate-400">R4 compatibile</span>
+                                        <label className="flex items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={ownershipDraft.hasR4}
+                                                onChange={toggleHasR4}
+                                                className="h-4 w-4 rounded accent-amber-500 shrink-0"
+                                            />
+                                            <span className="text-sm font-bold text-slate-900 dark:text-foreground">Possiedo una o più R4 compatibili con Mario Kart DS</span>
+                                        </label>
+
+                                        {ownershipDraft.hasR4 && (
+                                            <div className="space-y-2">
+                                                <p className="text-[11px] text-slate-400">Quante ne possiedi, per tipo di device?</p>
+                                                <div className="grid gap-2 sm:grid-cols-2">
+                                                    {R4_DEVICE_LIST.map((c) => (
+                                                        <QuantityRow
+                                                            key={c.key}
+                                                            label={c.label}
+                                                            value={ownershipDraft.r4DevicesByKey[c.key] ?? 0}
+                                                            onChange={(next) => setR4DeviceQuantity(c.key, next)}
+                                                            accent="amber"
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <button type="submit" disabled={ownershipSaving} className="rounded-2xl border-2 border-emerald-600 bg-emerald-600 px-5 py-3 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+                                    {ownershipSaving ? 'Salvataggio...' : 'Salva'}
+                                </button>
+                            </form>
+                        )}
                     </div>
                 )}
 

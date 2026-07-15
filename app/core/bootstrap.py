@@ -782,6 +782,90 @@ def ensure_schedina_deluxe_classifiche_gironi_column():
             )
 
 
+def ensure_user_game_ownership_quantity_column():
+    """Sostituisce il vecchio campo booleano 'owned' con una quantità (numero
+    di copie possedute). Backfill: chi aveva owned=true diventa quantity=1."""
+    inspector = inspect(engine)
+    if "user_game_ownership" not in inspector.get_table_names():
+        return
+    cols = {c["name"] for c in inspector.get_columns("user_game_ownership")}
+    if "quantity" not in cols:
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    "ALTER TABLE user_game_ownership ADD COLUMN quantity INTEGER NOT NULL DEFAULT 0"
+                )
+            )
+            connection.execute(
+                text(
+                    "UPDATE user_game_ownership SET quantity = 1 WHERE owned = true"
+                )
+            )
+
+
+def ensure_user_game_ownership_owned_default():
+    """La vecchia colonna 'owned' non viene più scritta dal codice (sostituita
+    da 'quantity'), ma resta NOT NULL a DB: senza un DEFAULT lì, ogni INSERT di
+    una riga nuova (utente che dichiara un gioco per la prima volta) fallisce
+    con NotNullViolation perché nessuno la valorizza più esplicitamente."""
+    inspector = inspect(engine)
+    if "user_game_ownership" not in inspector.get_table_names():
+        return
+    columns = {c["name"]: c for c in inspector.get_columns("user_game_ownership")}
+    owned_column = columns.get("owned")
+    if owned_column is not None and owned_column.get("default") is None:
+        with engine.begin() as connection:
+            connection.execute(
+                text("ALTER TABLE user_game_ownership ALTER COLUMN owned SET DEFAULT false")
+            )
+
+
+def ensure_user_console_ownership_quantity_column():
+    """Aggiunge la quantità di unità possedute per console (le righe esistenti,
+    che rappresentavano solo presenza, ottengono quantity=1 via DEFAULT)."""
+    inspector = inspect(engine)
+    if "user_console_ownership" not in inspector.get_table_names():
+        return
+    cols = {c["name"] for c in inspector.get_columns("user_console_ownership")}
+    if "quantity" not in cols:
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    "ALTER TABLE user_console_ownership ADD COLUMN quantity INTEGER NOT NULL DEFAULT 1"
+                )
+            )
+
+
+def ensure_user_r4_devices_quantity_column():
+    """Aggiunge la quantità di dispositivi R4 posseduti per tipo di device."""
+    inspector = inspect(engine)
+    if "user_r4_devices" not in inspector.get_table_names():
+        return
+    cols = {c["name"] for c in inspector.get_columns("user_r4_devices")}
+    if "quantity" not in cols:
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    "ALTER TABLE user_r4_devices ADD COLUMN quantity INTEGER NOT NULL DEFAULT 1"
+                )
+            )
+
+
+def ensure_user_ownership_declared_at_column():
+    """Traccia se l'utente ha mai salvato la sezione 'Possiedi' almeno una
+    volta, indipendentemente dal contenuto — usato per il banner di sollecito."""
+    inspector = inspect(engine)
+    user_columns = {
+        column_info["name"] for column_info in inspector.get_columns("users")
+    }
+
+    if "ownership_declared_at" not in user_columns:
+        with engine.begin() as connection:
+            connection.execute(
+                text("ALTER TABLE users ADD COLUMN ownership_declared_at TIMESTAMP")
+            )
+
+
 def bootstrap_database():
     create_tables()
     ensure_player_img_url_column()
@@ -813,6 +897,11 @@ def bootstrap_database():
     ensure_schedina_deluxe_vincitori_gironi_column()
     ensure_schedina_deluxe_classifiche_gironi_column()
     ensure_tournament_audit_columns()
+    ensure_user_game_ownership_quantity_column()
+    ensure_user_game_ownership_owned_default()
+    ensure_user_console_ownership_quantity_column()
+    ensure_user_r4_devices_quantity_column()
+    ensure_user_ownership_declared_at_column()
     # seed_circuits()
     seed_mk8d_data()
     rename_mkds_circuits_to_italian()

@@ -18,10 +18,18 @@ venga importato (cosa che fa `app/models/__init__.py`) prima di eseguire query.
 | `challenges` | `Challenge` | Sfide dirette fra utenti (mittente/destinatario, stato, messaggio). |
 | `audit_log` | `AuditLog` | Log delle azioni amministrative (chi ha fatto cosa, su quale entità). |
 | `temp_passwords` | `TempPassword` | Password temporanee generate dagli admin, con scadenza. |
+| `user_game_ownership` | `UserGameOwnership` | Quantità auto-dichiarata di copie possedute di un gioco (`quantity`, per `game_id`), modificabile in ogni momento dall'utente stesso. |
+| `user_console_ownership` | `UserConsoleOwnership` | Quantità di unità possedute per console, chiave fissa da un elenco Python (`app/data/consoles.py`, solo linea handheld Nintendo da DS a Switch 2). |
+| `user_r4_devices` | `UserR4Device` | Quantità di dispositivi R4 compatibili posseduti, per tipo di device (famiglia DS) — pertinente solo se l'utente possiede Mario Kart DS (`game_id=1`). |
 
 `User.player_id` è una FK opzionale e univoca verso `players.id`: un account può
 non essere collegato a un giocatore (es. superadmin) e un giocatore può non avere
 ancora un account.
+
+`User.ownership_declared_at` è `NULL` finché l'utente non ha mai salvato la
+sezione "Possiedi" del proprio profilo almeno una volta (anche con tutte le
+quantità a zero) — usato per decidere se mostrare il banner di sollecito, non per
+sapere se i dati sono vuoti.
 
 ## Dominio `tornei` — `app/models/tornei/models.py`
 
@@ -104,3 +112,6 @@ player may consume **at most 1 card in total per tournament** — enforced by
   dedicato — la query passa sempre da `tournament_id`).
 - `UserInventory.source_tournament` / `consumed_in_race` — collegano una carta al
   torneo di provenienza e alla gara in cui è stata consumata dal vivo.
+- `UserGameOwnership.game_id` referenzia `games.id` (dominio `tornei`), quindi
+  anche questa tabella — pur vivendo nel dominio `utenti` — è un collegamento
+  cross-dominio come `UserInventory`.
