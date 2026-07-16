@@ -52,6 +52,24 @@ def grant_card(
     return item
 
 
+def revoke_card(db: Session, item_id: int):
+    """Rimuove una carta assegnata per errore, controparte di grant_card.
+    Consentito solo per carte non ancora consumate: una carta già usata è un
+    evento di gioco già avvenuto, revocarla retroattivamente creerebbe
+    incongruenze con la cronologia."""
+    item = db.query(UserInventory).filter(UserInventory.id == item_id).first()
+    if not item:
+        raise ValueError(f"Carta con id {item_id} non trovata")
+    if item.is_consumed:
+        raise ValueError("Non è possibile revocare una carta già utilizzata")
+
+    user_id = item.user_id
+    card_type = item.card_type
+    db.delete(item)
+    db.flush()
+    return user_id, card_type
+
+
 def get_tournament_awards(db: Session, tournament_id: int) -> dict:
     """Chi ha vinto la Carta Master (schedina) e il Guscio Blu per un torneo,
     a prescindere dal fatto che la carta sia già stata consumata o meno —

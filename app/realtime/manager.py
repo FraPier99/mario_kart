@@ -114,7 +114,7 @@ async def connect(sid, environ, auth=None):
             )
             if notif:
                 is_stale = (
-                    now_rome().replace(tzinfo=None) - notif.created_at
+                    now_rome() - notif.created_at
                     > CELEBRATION_MAX_AGE
                 )
                 if is_stale:

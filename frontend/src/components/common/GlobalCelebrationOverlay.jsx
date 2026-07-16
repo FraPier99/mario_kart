@@ -14,8 +14,35 @@
     import { getCelebrationConfig } from '@/config/celebrationConfig'
     import { loadOverlayTexts } from '@/lib/overlayTexts'
     import { useAppData } from '@/context/AppDataContext'
-    import { getItemBackground } from '@/assets/images/mkds/items'
+    import { getTransparentItemImage } from '@/assets/images/mkds/items'
     import { MUGSHOTS_STRIP, CHARACTER_OFFSETS } from '@/assets/images/mkds/mugshots'
+
+    // Componente top-level (non ridefinito ad ogni render del genitore): carica
+    // la versione a sfondo trasparente (chroma key via canvas, vedi items.js)
+    // del frame richiesto la prima volta che appare un dato itemKey, poi la
+    // riusa dalla cache in memoria per le apparizioni successive.
+    const ItemSprite = ({ itemKey, className, style }) => {
+        const [transparentSrc, setTransparentSrc] = useState(null)
+
+        useEffect(() => {
+            let active = true
+            setTransparentSrc(null)
+            getTransparentItemImage(itemKey).then((dataUrl) => {
+                if (active) setTransparentSrc(dataUrl)
+            })
+            return () => { active = false }
+        }, [itemKey])
+
+        if (!transparentSrc) return null
+        return (
+            <div className={`${className ?? ''} relative overflow-hidden`} style={style}>
+                <div
+                    className="absolute inset-0"
+                    style={{ background: `url(${transparentSrc}) center / contain no-repeat` }}
+                />
+            </div>
+        )
+    }
 
     const GlobalCelebrationOverlay = ({ leader, standings, tournament, onClose, celebrationConfig: externalConfig }) => {
     const config = useMemo(
@@ -48,24 +75,6 @@
         const countdownVoiceRef = useRef(null)
         const prevPhaseRef = useRef(phase)
         const flashTimersRef = useRef([])
-
-        const ItemSprite = useCallback(({ itemKey, className, style }) => {
-            const bg = getItemBackground(itemKey)
-            if (!bg) return null
-            // items.gif ha 18 frame per una larghezza totale di 643px: 35.7px a
-            // frame, non divisibile in pixel interi. Con background-size al
-            // 1800% l'upscaling introduce una leggera sfumatura (bleeding) dai
-            // frame adiacenti visibile ai bordi orizzontali di ogni icona.
-            // L'elemento interno è leggermente più largo del box visibile
-            // (overflow-hidden lo ritaglia) così si mostra solo la parte
-            // centrale "sicura" del frame, senza sconfinare in quello a fianco.
-            return (
-                <div className={`${className ?? ''} relative overflow-hidden`} style={style}>
-                    <div className="absolute inset-x-[-8%] inset-y-[-1%]" style={{ background: bg, backgroundRepeat: 'no-repeat' }} />
-                </div>
-            )
-        }, [])
-
 
 
         // Static animation arrays

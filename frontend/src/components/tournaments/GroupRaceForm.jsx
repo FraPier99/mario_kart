@@ -201,24 +201,35 @@ const GroupRaceForm = ({
 
     // Reset slots when group/phase changes. Se randomizeCircuit è attivo (es.
     // Spareggio a gara secca o duello podio), preseleziona automaticamente una
-    // pista a caso tra quelle non ancora usate nel torneo.
+    // pista a caso tra quelle non ancora usate nel torneo — ma SOLO la prima
+    // volta per questo specifico duello (fase+girone+slot): senza questa
+    // guardia, il polling di refresh di TournamentDetail (ogni 20s mentre il
+    // torneo è in_corso) fa rieseguire l'effetto e ri-randomizza la pista da
+    // capo ad ogni ciclo, rischiando di salvare un risultato per una pista
+    // diversa da quella effettivamente mostrata/giocata dal vivo.
     const [noCircuitsLeft, setNoCircuitsLeft] = useState(false)
+    const autoPickKeyRef = useRef(null)
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setSlots(emptySlots())
         setErrors([])
-        if (randomizeCircuit) {
-            const available = circuits.filter((c) => !usedCircuitIds.has(c.id))
-            if (available.length === 0) {
-                setNoCircuitsLeft(true)
-                setCircuitId('')
-            } else {
-                setNoCircuitsLeft(false)
-                const pick = available[Math.floor(Math.random() * available.length)]
-                setCircuitId(pick ? String(pick.id) : '')
-            }
-        } else {
+        if (!randomizeCircuit) {
             setCircuitId('')
+            autoPickKeyRef.current = null
+            return
+        }
+        const key = `${phase}-${groupName}-${slotCount}`
+        if (autoPickKeyRef.current === key) return
+        autoPickKeyRef.current = key
+
+        const available = circuits.filter((c) => !usedCircuitIds.has(c.id))
+        if (available.length === 0) {
+            setNoCircuitsLeft(true)
+            setCircuitId('')
+        } else {
+            setNoCircuitsLeft(false)
+            const pick = available[Math.floor(Math.random() * available.length)]
+            setCircuitId(pick ? String(pick.id) : '')
         }
     }, [phase, groupName, slotCount, usedCircuitIds, circuits, tournament?.races])
 

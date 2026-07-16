@@ -1036,6 +1036,23 @@ const TournamentDetail = () => {
 
                 {isAdmin && activeSection === 'management' && (
                     <div className="space-y-4">
+                        <CollapsibleSection title="Classifica live" icon={<BarChart3 size={16} />}>
+                            {tournament.tournament_format === 'group_stage' ? (
+                                <GroupPlancia tournament={tournament} players={players} results={results} highlightPlayerId={myPlayerId} />
+                            ) : (
+                                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-1 shadow-sm max-h-120 overflow-hidden">
+                                    <LeaderboardTable
+                                        rows={tournament.standings}
+                                        showTournamentWins={false}
+                                        charactersById={charactersById}
+                                        highlightPlayerId={user?.player_id ?? user?.player?.id ?? null}
+                                        isSuperadmin={isSuperadmin}
+                                        onPlayerClick={handlePlayerClick}
+                                    />
+                                </div>
+                            )}
+                        </CollapsibleSection>
+
                         <CollapsibleSection title="Stato torneo" icon={<Settings size={16} />} defaultOpen>
                             <TournamentStatusManager tournament={tournament} disabled={!isAdmin} onUpdated={refresh} />
                         </CollapsibleSection>

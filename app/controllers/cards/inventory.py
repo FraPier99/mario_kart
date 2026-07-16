@@ -352,6 +352,38 @@ def admin_grant_inventory_item(
     return item
 
 
+class AdminRevokeItemRequest(BaseModel):
+    note: str | None = None
+
+
+@router.post("/admin/revoke/{item_id}")
+def admin_revoke_inventory_item(
+    item_id: int,
+    body: AdminRevokeItemRequest | None = None,
+    current_user=Depends(require_roles("admin", "superadmin")),
+    db: Session = Depends(get_db),
+):
+    from app.services.cards.inventory import revoke_card
+    from app.services.utenti.notifications import create_single_notification
+
+    try:
+        user_id, card_type = revoke_card(db, item_id)
+    except ValueError as error:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(error))
+
+    card_label = "Carta Master" if card_type == "master" else "Guscio Blu"
+    create_single_notification(
+        db,
+        user_id,
+        "card_revoked",
+        f"Un amministratore ti ha revocato {card_label}.",
+        source_user_id=current_user.id,
+    )
+    db.commit()
+    return {"message": "Carta revocata con successo"}
+
+
 class AdminUseItemRequest(BaseModel):
     player_id: int
     card_type: str
@@ -460,7 +492,7 @@ def get_public_inventory(
 
 @router.get("/all", response_model=list[UserInventoryResponse])
 def get_all_inventory(
-    current_user=Depends(require_roles("superadmin")),
+    current_user=Depends(require_roles("admin", "superadmin")),
     db: Session = Depends(get_db),
 ):
     items = (

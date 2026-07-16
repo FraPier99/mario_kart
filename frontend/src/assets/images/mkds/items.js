@@ -2,6 +2,7 @@ import itemsGif from './items/items.gif'
 
 const ITEMS_SPRITE = itemsGif
 const SHEET_WIDTH = 643
+const SHEET_HEIGHT = 66
 
 // Rettangolo esatto in pixel di ciascuna icona nello sprite sheet
 // items.gif, misurato analizzando i bordi neri tra le icone: le icone NON
@@ -30,5 +31,60 @@ const getItemBackground = (itemKey) => {
   return `url(${ITEMS_SPRITE}) ${posPct}% 0% / ${sizePct}% 100%`
 }
 
-export { ITEMS_SPRITE, ITEM_RECTS, getItemBackground }
+// Gli item nello sprite sheet originale (asset di gioco MKDS) hanno un
+// colore di sfondo bruciato nel frame (es. la stella su un riquadro blu, il
+// guscio su un riquadro rosso). Si ritaglia il singolo frame su un canvas
+// offscreen e si rende trasparente il colore dell'angolo (0,0) — quello di
+// sfondo — con una tolleranza per l'anti-aliasing del GIF indicizzato.
+// Risultato cachato in memoria: calcolato una sola volta per itemKey.
+const CHROMA_KEY_TOLERANCE = 40
+const transparentImageCache = new Map()
+let spriteImagePromise = null
+
+const loadSpriteImage = () => {
+  if (!spriteImagePromise) {
+    spriteImagePromise = new Promise((resolve, reject) => {
+      const img = new Image()
+      img.onload = () => resolve(img)
+      img.onerror = reject
+      img.src = ITEMS_SPRITE
+    })
+  }
+  return spriteImagePromise
+}
+
+const getTransparentItemImage = async (itemKey) => {
+  if (transparentImageCache.has(itemKey)) return transparentImageCache.get(itemKey)
+  const rect = ITEM_RECTS[itemKey]
+  if (!rect) return null
+
+  const img = await loadSpriteImage()
+  const canvas = document.createElement('canvas')
+  canvas.width = rect.width
+  canvas.height = SHEET_HEIGHT
+  const ctx = canvas.getContext('2d')
+  ctx.drawImage(img, rect.x, 0, rect.width, SHEET_HEIGHT, 0, 0, rect.width, SHEET_HEIGHT)
+
+  const imageData = ctx.getImageData(0, 0, rect.width, SHEET_HEIGHT)
+  const data = imageData.data
+  const bgR = data[0]
+  const bgG = data[1]
+  const bgB = data[2]
+  const toleranceSq = CHROMA_KEY_TOLERANCE * CHROMA_KEY_TOLERANCE
+  for (let i = 0; i < data.length; i += 4) {
+    const dr = data[i] - bgR
+    const dg = data[i + 1] - bgG
+    const db = data[i + 2] - bgB
+    if (dr * dr + dg * dg + db * db <= toleranceSq) {
+      data[i + 3] = 0
+    }
+  }
+  ctx.putImageData(imageData, 0, 0)
+
+  const dataUrl = canvas.toDataURL('image/png')
+  transparentImageCache.set(itemKey, dataUrl)
+  return dataUrl
+}
+
+export { ITEMS_SPRITE, ITEM_RECTS, getItemBackground, getTransparentItemImage }
 export default ITEMS_SPRITE

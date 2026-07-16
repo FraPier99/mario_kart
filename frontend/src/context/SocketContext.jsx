@@ -25,6 +25,27 @@ const CELEBRATION_MAX_AGE_MS = 2 * 24 * 60 * 60 * 1000
 const FALLBACK_POLL_DELAY_MS = 60000
 const FALLBACK_START_DELAY_MS = 5000
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+const STANDINGS_RETRY_DELAY_MS = 800
+
+// Una race condition di rete subito dopo la connessione socket (o un hiccup
+// transitorio) può far arrivare la classifica vuota/con un solo elemento al
+// primo tentativo — l'overlay allora anima correttamente l'unico dato
+// ricevuto, mostrando solo il vincitore invece di tutta la classifica. Si
+// ritenta una volta prima di accettare il risultato come definitivo.
+async function withRetryOnShortStandings(fetchOnce) {
+    const attempt = async () => {
+        try { return await fetchOnce() } catch { return { standings: [] } }
+    }
+    let result = await attempt()
+    if (result.standings.length <= 1) {
+        await sleep(STANDINGS_RETRY_DELAY_MS)
+        const retryResult = await attempt()
+        if (retryResult.standings.length > result.standings.length) return retryResult
+    }
+    return result
+}
+
 export function SocketProvider({ children }) {
     const { user, isAuthenticated } = useAuth()
     const { triggerCelebration } = useCelebration()
@@ -59,17 +80,17 @@ export function SocketProvider({ children }) {
 
                 let leader = { playerId: latest.winner_id, nickname: 'Campione' }
                 let standings = [leader]
-                try {
+                const { standings: lbData } = await withRetryOnShortStandings(async () => {
                     const lb = await tournamentsApi.leaderboard(latest.id)
-                    const lbData = lb.data ?? []
-                    if (lbData.length) {
-                        const w = lbData.find((p) => p.id === latest.winner_id) ?? lbData[0]
-                        leader.nickname = w.nickname
-                        standings = lbData.map((p) => ({
-                            playerId: p.id, nickname: p.nickname, points: p.total_point ?? 0,
-                        }))
-                    }
-                } catch { /* leaderboard not available */ }
+                    return { standings: lb.data ?? [] }
+                })
+                if (lbData.length) {
+                    const w = lbData.find((p) => p.id === latest.winner_id) ?? lbData[0]
+                    leader.nickname = w.nickname
+                    standings = lbData.map((p) => ({
+                        playerId: p.id, nickname: p.nickname, points: p.total_point ?? 0,
+                    }))
+                }
                 if (active) triggerRef.current(leader, standings, { id: latest.id, name: latest.name })
                 return true
             } catch { /* no concluded tournaments */ }
@@ -131,27 +152,24 @@ export function SocketProvider({ children }) {
                     img_url: data.winner_img_url ?? null,
                 }
 
-                try {
+                const { standings, tournament: t } = await withRetryOnShortStandings(async () => {
                     const [tournRes, lbRes] = await Promise.allSettled([
                         tournamentsApi.get(data.tournament_id),
                         tournamentsApi.leaderboard(data.tournament_id),
                     ])
-                    const t = tournRes.status === 'fulfilled' ? tournRes.value.data ?? {} : {}
-                    const standings = t.standings?.length ? t.standings
+                    const tournament = tournRes.status === 'fulfilled' ? tournRes.value.data ?? {} : {}
+                    const standings = tournament.standings?.length ? tournament.standings
                         : lbRes.status === 'fulfilled' && Array.isArray(lbRes.value.data) && lbRes.value.data.length
                             ? lbRes.value.data.map((p) => ({
                                 playerId: p.id, nickname: p.nickname,
                                 points: p.total_point ?? 0,
                             }))
-                            : [leader]
-                    triggerRef.current(leader, standings, {
-                        id: data.tournament_id, name: data.tournament_name, ...t,
-                    })
-                } catch {
-                    triggerRef.current(leader, [leader], {
-                        id: data.tournament_id, name: data.tournament_name,
-                    })
-                }
+                            : []
+                    return { standings, tournament }
+                })
+                triggerRef.current(leader, standings.length ? standings : [leader], {
+                    id: data.tournament_id, name: data.tournament_name, ...(t ?? {}),
+                })
             })
 
             socketRef.current = socket

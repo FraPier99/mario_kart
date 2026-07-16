@@ -20,6 +20,21 @@ apiClient.interceptors.request.use((config) => {
     return config
 })
 
+// Log dettagliato di ogni richiesta fallita (URL completo, metodo, status,
+// corpo della risposta) — così un errore è diagnosticabile leggendo la
+// console, senza dover andare a cercare la richiesta nel Network tab.
+apiClient.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        const { config, response } = error
+        console.error(
+            `[apiClient] ${config?.method?.toUpperCase() ?? '?'} ${config?.baseURL ?? ''}${config?.url ?? '?'} -> ${response?.status ?? 'no response'}`,
+            response?.data ?? error.message,
+        )
+        return Promise.reject(error)
+    },
+)
+
 const apiRequest = (method, url, data) => {
     return apiClient.request({ method, url, data })
 }
@@ -149,6 +164,7 @@ export const inventoryApi = {
     use: (itemId, payload) => _post(`/inventory/${itemId}/use`, payload ?? {}),
     adminUse: (payload) => _post('/inventory/admin/use', payload),
     adminGrant: (payload) => _post('/inventory/admin/grant', payload),
+    adminRevoke: (itemId, note) => _post(`/inventory/admin/revoke/${itemId}`, { note: note ?? null }),
 }
 
 // ── Local card-usage log (per-tournament, persisted in localStorage) ──────────

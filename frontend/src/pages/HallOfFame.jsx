@@ -57,7 +57,7 @@ const ChampionCard = ({ player, wins, gamesWon, tournaments, index }) => {
 
   return (
     <div
-      className="group relative overflow-hidden rounded-2xl border-2 border-amber-400/60 dark:border-amber-500/30 bg-linear-to-br from-amber-100/90 via-amber-50/60 to-amber-100/80 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60 transition-all duration-500 hover:scale-[1.02] gold-card-shimmer"
+      className="group relative overflow-hidden rounded-2xl border-2 border-amber-400/60 dark:border-amber-500/30 bg-linear-to-br from-amber-100/90 via-amber-50/60 to-amber-100/80 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60 transition-all duration-500 hover:scale-[1.02]"
       style={{ animation: `fade-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both`, animationDelay: `${index * 0.06}s`, boxShadow: 'var(--circuit-shadow-md)' }}
     >
       {/* Crown badge */}
@@ -91,7 +91,7 @@ const ChampionCard = ({ player, wins, gamesWon, tournaments, index }) => {
       <div className="relative flex justify-center pt-8 pb-4">
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-amber-200/40 dark:from-amber-800/20 to-transparent" />
         <div className="relative">
-          <div className="absolute -inset-1 rounded-2xl bg-amber-400/30 blur-md animate-pulse-glow" />
+          <div className="absolute -inset-1 rounded-2xl bg-amber-400/30 blur-md" />
           <img
             src={player.champion_photo || player.img_url || buildAvatarPlaceholder(player.nickname)}
             alt={player.nickname}
@@ -157,12 +157,7 @@ const ChampionCard = ({ player, wins, gamesWon, tournaments, index }) => {
         {/* Sparkles */}
         <div className="mt-3 flex justify-center gap-1">
           {[0, 1, 2].map((i) => (
-            <Sparkles
-              key={i}
-              size={11}
-              className="text-amber-400"
-              style={{ animation: `sparkle-explode 1.5s ease-out infinite`, animationDelay: `${i * 0.4}s` }}
-            />
+            <Sparkles key={i} size={11} className="text-amber-400" />
           ))}
         </div>
       </div>

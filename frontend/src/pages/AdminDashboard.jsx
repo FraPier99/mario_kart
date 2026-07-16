@@ -461,13 +461,19 @@ const GiocatoriTab = ({ players }) => {
 // ── main component ───────────────────────────────────────────────
 export default function AdminDashboard() {
     const { tournaments, players, loading, homeMetrics, charactersById } = useAppData()
-    const { user } = useAuth()
+    const { user, isSuperadmin } = useAuth()
     const [activeTab, setActiveTab] = useState('panoramica')
     const [users, setUsers] = useState([])
 
     useEffect(() => {
-        authApi.listUsers().then(res => setUsers(res.data ?? [])).catch(() => {})
-    }, [])
+        // GET /auth/users richiede il ruolo superadmin: un account admin (non
+        // superadmin) che visita questa pagina otterrebbe un 403 silenzioso
+        // (vedi commento in hooks/useCommunityUserNav.js per lo stesso bug
+        // pattern già risolto altrove).
+        if (isSuperadmin) {
+            authApi.listUsers().then(res => setUsers(res.data ?? [])).catch(() => {})
+        }
+    }, [isSuperadmin])
 
     const stats = useMemo(() => ({
         total:        tournaments.length,

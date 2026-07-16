@@ -79,7 +79,6 @@ export default function PowerCard({
   const { getTournamentDisplayNumber } = useAppData()
   const t = getTheme(type)
   const isMaster = type === 'master'
-  const isShell = !isMaster
   const IconComponent = isMaster ? Shield : Ban
 
   // Su mobile la card "flip" occupa quasi tutto lo schermo: con un click
@@ -144,40 +143,8 @@ export default function PowerCard({
         className={`relative overflow-hidden rounded-[2rem] border-2 p-0 transition-all hover:shadow-2xl ${consumed ? 'border-slate-200 dark:border-white/10 opacity-50' : t.borderClass}`}
         style={{
           background: consumed ? undefined : t.gradient,
-          animation: consumed ? undefined : `${t.glowAnim} 4s ease-in-out infinite`,
-          animationDelay: consumed ? undefined : (isMaster ? '0s' : '1s'),
         }}
       >
-        {!consumed && (
-          <>
-            <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[2rem]">
-              <div className="absolute top-0 h-full w-1/3"
-                style={{
-                  background: t.shineColor,
-                  animation: `${t.shineAnim} 5s ease-in-out infinite`,
-                }} />
-            </div>
-            {[isMaster ? [0, 120, 240] : [0, 180]].map((degs, gi) =>
-              degs.map((deg, i) => (
-                <div key={`${gi}-${i}`} className="pointer-events-none absolute left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2"
-                  style={{
-                    animation: `${isMaster ? 'mk-card-orbit' : 'mk-card-orbit-reverse'} ${isMaster ? 2.8 + i * 0.4 : 3.2 + i * 0.5}s linear infinite`,
-                    animationDelay: `${isMaster ? i * 0.35 : i * 0.6}s`,
-                  }}>
-                  <div className="h-2 w-2 rounded-full"
-                    style={{
-                      background: isMaster ? t.orbColors[i % 2] : t.orbColors[i % 2],
-                      boxShadow: isMaster ? '0 0 6px #f59e0b' : `0 0 8px ${i === 0 ? '#06b6d4' : '#6366f1'}`,
-                    }} />
-                </div>
-              ))
-            )}
-            {['top-2 left-3', 'top-2 right-3', 'bottom-2 left-3', 'bottom-2 right-3'].map((pos, i) => (
-              <span key={i} className={`pointer-events-none absolute ${pos} ${t.cornerColor} text-xs select-none`}
-                style={{ animation: 'mk-card-spark 2s ease-in-out infinite', animationDelay: `${i * 0.5}s` }}>{t.cornerIcon}</span>
-            ))}
-          </>
-        )}
         <div className="pointer-events-none absolute inset-0 rounded-[2rem]"
           style={{ boxShadow: `inset 0 0 0 1.5px ${t.borderColor}, inset 0 0 30px rgba(0,0,0,0.08)`, opacity: consumed ? 0 : 1 }} />
 
@@ -189,8 +156,7 @@ export default function PowerCard({
                   style={{ background: isMaster ? 'rgba(245,158,11,0.4)' : 'rgba(6,182,212,0.4)', transform: 'scale(1.2)' }} />
               )}
               <div className={`relative flex h-16 w-16 items-center justify-center rounded-2xl border text-white shadow-xl ${consumed ? 'bg-slate-300 dark:bg-slate-700 border-slate-200 dark:border-slate-600' : `bg-gradient-to-br ${isMaster ? 'from-amber-400 to-orange-600 border-amber-300/30' : 'from-cyan-400 to-blue-700 border-cyan-300/30'}`}`}>
-                <IconComponent size={30} className={consumed ? 'text-slate-400 dark:text-slate-500' : ''}
-                  style={consumed ? {} : { animation: `${t.iconAnim} 5s linear infinite` }} />
+                <IconComponent size={30} className={consumed ? 'text-slate-400 dark:text-slate-500' : ''} />
               </div>
             </div>
             <div className="flex-1 min-w-0">
@@ -257,49 +223,10 @@ export default function PowerCard({
     )
   }
 
-  const orbitalDegs = isShell ? [0, 180] : [0, 120, 240]
-  const orbitalParticles = orbitalDegs.map((deg, i) => (
-    <div key={deg} className="pointer-events-none absolute left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2"
-      style={{
-        animation: `${isShell ? 'mk-card-orbit-reverse' : 'mk-card-orbit'} ${isShell ? 3.2 + i * 0.5 : 2.8 + i * 0.4}s linear infinite`,
-        animationDelay: `${i * (isShell ? 0.6 : 0.35)}s`,
-      }}>
-      <div className="h-2 w-2 rounded-full"
-        style={{
-          background: isShell ? (i === 0 ? '#22d3ee' : '#818cf8') : (i === 1 ? '#fcd34d' : '#f59e0b'),
-          boxShadow: isShell ? `0 0 8px ${i === 0 ? '#06b6d4' : '#6366f1'}` : '0 0 6px #f59e0b',
-        }} />
-    </div>
-  ))
-
-  const cornerPositions = ['top-2 left-3', 'top-2 right-3', 'bottom-2 left-3', 'bottom-2 right-3']
-  const cornerIcons = cornerPositions.map((pos, i) => (
-    <span key={i} className={`pointer-events-none absolute ${pos} text-xs select-none ${isShell ? 'text-cyan-400/60' : 'text-amber-500/60'}`}
-      style={{ animation: 'mk-card-spark 2s ease-in-out infinite', animationDelay: `${i * 0.5}s` }}>
-      {isShell ? '⚡' : '★'}
-    </span>
-  ))
-
-  const shineSweep = (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
-      <div className="absolute top-0 h-full w-1/3"
-        style={{
-          background: isShell
-            ? 'linear-gradient(90deg, transparent, rgba(6,182,212,0.3), rgba(99,102,241,0.15), transparent)'
-            : 'linear-gradient(90deg, transparent, rgba(255,215,0,0.25), transparent)',
-          animation: `${isShell ? 'mk-card-shell-shine' : 'mk-card-master-shine'} ${isShell ? '3.8s' : '3.5s'} ease-in-out infinite`,
-          animationDelay: isShell ? '1.2s' : '0.5s',
-        }} />
-    </div>
-  )
-
   const dangerBar = (
     <div className="pointer-events-none absolute top-0 left-0 right-0 h-1.5 overflow-hidden rounded-t-2xl">
       <div className="h-full w-full"
-        style={{
-          background: 'repeating-linear-gradient(90deg, #06b6d4 0px, #06b6d4 8px, #1e1b4b 8px, #1e1b4b 16px)',
-          animation: 'mk-shell-bar-pulse 2s ease-in-out infinite',
-        }} />
+        style={{ background: 'repeating-linear-gradient(90deg, #06b6d4 0px, #06b6d4 8px, #1e1b4b 8px, #1e1b4b 16px)' }} />
     </div>
   )
 
@@ -318,8 +245,6 @@ export default function PowerCard({
         pointerEvents: flipped ? 'none' : 'auto',
         transition: 'opacity 0.2s linear',
         background: t.gradient,
-        animation: `${t.glowAnim} ${isMaster ? '3s' : '3.2s'} ease-in-out infinite`,
-        animationDelay: isMaster ? '0s' : '0.8s',
       }}
     >
       {isMaster ? (
@@ -332,11 +257,8 @@ export default function PowerCard({
           {dangerBar}
         </>
       )}
-      {shineSweep}
       <div className="pointer-events-none absolute inset-0 rounded-2xl"
         style={{ boxShadow: `inset 0 0 0 1.5px ${t.borderColor}, inset 0 0 30px rgba(0,0,0,0.08)` }} />
-      {orbitalParticles}
-      {cornerIcons}
       <div className="relative z-10 flex flex-col items-center justify-center h-full gap-5 px-6 text-center">
         <div className={`flex items-center gap-1.5 rounded-full border px-3 py-1 ${t.rarityClass}`}>
           <span className="text-[8px] font-black uppercase tracking-[0.3em]">{t.rarityLabel}</span>
@@ -345,7 +267,7 @@ export default function PowerCard({
           <div className="absolute inset-0 rounded-2xl blur-xl" style={{ background: isMaster ? 'rgba(245,158,11,0.4)' : 'rgba(6,182,212,0.4)', transform: 'scale(1.3)' }} />
           <div className="relative flex h-24 w-24 items-center justify-center rounded-2xl border"
             style={{ background: t.iconGrad, borderColor: isMaster ? 'rgba(245,158,11,0.3)' : 'rgba(6,182,212,0.3)' }}>
-            <IconComponent size={44} className="text-white drop-shadow-xl" style={{ animation: `${t.iconAnim} 4s linear infinite` }} />
+            <IconComponent size={44} className="text-white drop-shadow-xl" />
           </div>
         </div>
         <div>
@@ -353,7 +275,7 @@ export default function PowerCard({
             {customTitle || t.name}
           </p>
           <p className={`mt-1 text-[10px] font-black uppercase tracking-widest ${isMaster ? 'text-amber-600/70' : 'text-cyan-600/70'}`}>{t.subtitle}</p>
-          <p className="mt-3 text-[11px] text-slate-400" style={{ animation: 'mk-card-float 3s ease-in-out infinite' }}>
+          <p className="mt-3 text-[11px] text-slate-400">
             ✦ Clicca per rivelare ✦
           </p>
         </div>
@@ -374,16 +296,6 @@ export default function PowerCard({
         background: t.gradientBack,
       }}
     >
-      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
-        <div className="absolute top-0 h-full w-1/2"
-          style={{
-            background: isMaster
-              ? 'linear-gradient(90deg, transparent, rgba(255,215,0,0.06), transparent)'
-              : 'linear-gradient(90deg, transparent, rgba(6,182,212,0.07), transparent)',
-            animation: `${t.shineAnim} 6s ease-in-out infinite`,
-            animationDelay: isMaster ? '0s' : '1s',
-          }} />
-      </div>
       <div className="pointer-events-none absolute inset-0 rounded-2xl"
         style={{ boxShadow: `inset 0 0 0 1.5px ${isMaster ? 'rgba(245,158,11,0.35)' : 'rgba(6,182,212,0.3)'}, inset 0 0 40px rgba(0,0,0,0.06)` }} />
 
@@ -443,8 +355,7 @@ export default function PowerCard({
           </div>
         </div>
 
-        <p className={`shrink-0 pt-3 text-center text-[9px] ${isMaster ? 'text-amber-900/70' : 'text-sky-900/70'}`}
-          style={{ animation: 'mk-card-float 3s ease-in-out infinite' }}>
+        <p className={`shrink-0 pt-3 text-center text-[9px] ${isMaster ? 'text-amber-900/70' : 'text-sky-900/70'}`}>
           ✦ Clicca per girare ✦
         </p>
       </div>

@@ -1006,7 +1006,7 @@ const Dashboard = () => {
                                     {inventory.filter((item) => !item.is_consumed).length > 0 && (
                                         <>
                                             <p className="font-title text-[9px] tracking-wide text-slate-400">Disponibili ({inventory.filter((item) => !item.is_consumed).length})</p>
-                                            <div className="grid grid-cols-2 gap-3">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                 {inventory.filter((item) => !item.is_consumed).map((item) => (
                                                     <PowerCard
                                                         key={item.id}
