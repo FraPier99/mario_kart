@@ -236,6 +236,7 @@ const TournamentDetail = () => {
     const [confirmDeleteTournament, setConfirmDeleteTournament] = useState(false)
     const [deleting, setDeleting] = useState(false)
     const [activeSection, setActiveSection] = useState('management')
+    const [managementTab, setManagementTab] = useState('setup')
     const [participantsStatus, setParticipantsStatus] = useState([])
     const [userHasPredicted, setUserHasPredicted] = useState(null)
     const [userTab, setUserTab] = useState('riepilogo')
@@ -1036,84 +1037,101 @@ const TournamentDetail = () => {
 
                 {isAdmin && activeSection === 'management' && (
                     <div className="space-y-4">
-                        <CollapsibleSection title="Classifica live" icon={<BarChart3 size={16} />}>
-                            {tournament.tournament_format === 'group_stage' ? (
-                                <GroupPlancia tournament={tournament} players={players} results={results} highlightPlayerId={myPlayerId} />
-                            ) : (
-                                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-1 shadow-sm max-h-120 overflow-hidden">
-                                    <LeaderboardTable
-                                        rows={tournament.standings}
-                                        showTournamentWins={false}
-                                        charactersById={charactersById}
-                                        highlightPlayerId={user?.player_id ?? user?.player?.id ?? null}
-                                        isSuperadmin={isSuperadmin}
-                                        onPlayerClick={handlePlayerClick}
-                                    />
-                                </div>
-                            )}
-                        </CollapsibleSection>
+                        <div className="inline-flex flex-wrap rounded-xl bg-slate-100 dark:bg-muted p-1 gap-0.5 max-w-full overflow-x-auto">
+                            {(tournament.tournament_format === 'group_stage'
+                                ? [
+                                    { key: 'setup', label: 'Impostazioni', icon: <Settings size={14} /> },
+                                    { key: 'gironi', label: 'Gironi/Fasi', icon: <Flag size={14} /> },
+                                ]
+                                : [
+                                    { key: 'setup', label: 'Impostazioni', icon: <Settings size={14} /> },
+                                    { key: 'gare', label: 'Risultati', icon: <Flag size={14} /> },
+                                    { key: 'duelli', label: 'Duelli', icon: <Swords size={14} /> },
+                                    { key: 'finale', label: 'Finale', icon: <Crown size={14} /> },
+                                ]
+                            ).map(({ key, label, icon }) => (
+                                <button key={key} type="button" onClick={() => setManagementTab(key)}
+                                    className={`font-title flex items-center gap-1.5 rounded-lg px-3 py-2 text-[10px] tracking-wide whitespace-nowrap transition ${managementTab === key ? 'bg-slate-700 dark:bg-slate-600 text-white shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
+                                    {icon}
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
 
-                        <CollapsibleSection title="Stato torneo" icon={<Settings size={16} />} defaultOpen>
-                            <TournamentStatusManager tournament={tournament} disabled={!isAdmin} onUpdated={refresh} />
-                        </CollapsibleSection>
+                        {managementTab === 'setup' && (
+                            <div className="space-y-4">
+                                <CollapsibleSection title="Stato torneo" icon={<Settings size={16} />} defaultOpen>
+                                    <TournamentStatusManager tournament={tournament} disabled={!isAdmin} onUpdated={refresh} />
+                                </CollapsibleSection>
 
-                        <CollapsibleSection
-                            title="Partecipanti"
-                            icon={<Users size={16} />}
-                            badge={(
-                                <span className="rounded-full bg-slate-100 dark:bg-muted px-2.5 py-0.5 text-[10px] font-black text-slate-500 dark:text-muted-foreground">
-                                    {tournament.participant_ids?.length ?? 0}
-                                </span>
-                            )}
-                        >
-                            <TournamentParticipantsManager tournament={tournament} players={players} initialParticipantIds={tournament.participant_ids ?? []} disabled={Boolean(tournament.winner_id) || tournament.status === 'in_corso'} onUpdated={refresh} excludePlayerIds={superadminPlayerIds} />
+                                <CollapsibleSection
+                                    title="Partecipanti"
+                                    icon={<Users size={16} />}
+                                    badge={(
+                                        <span className="rounded-full bg-slate-100 dark:bg-muted px-2.5 py-0.5 text-[10px] font-black text-slate-500 dark:text-muted-foreground">
+                                            {tournament.participant_ids?.length ?? 0}
+                                        </span>
+                                    )}
+                                    defaultOpen
+                                >
+                                    <TournamentParticipantsManager tournament={tournament} players={players} initialParticipantIds={tournament.participant_ids ?? []} disabled={Boolean(tournament.winner_id) || tournament.status === 'in_corso'} onUpdated={refresh} excludePlayerIds={superadminPlayerIds} />
 
-                            {(tournament.status === 'in_corso' || tournament.status === 'da_svolgere') && (
-                                <WithdrawalManager tournament={tournament} players={players} disabled={!isAdmin} onUpdated={refresh} />
-                            )}
-                        </CollapsibleSection>
+                                    {(tournament.status === 'in_corso' || tournament.status === 'da_svolgere') && (
+                                        <WithdrawalManager tournament={tournament} players={players} disabled={!isAdmin} onUpdated={refresh} />
+                                    )}
+                                </CollapsibleSection>
+                            </div>
+                        )}
 
                         {tournament.tournament_format === 'group_stage' ? (
                             /* ── Modalità MK8 Deluxe: gironi, spareggi, semifinali e finale ──
                                GroupManagementSection rende già le proprie CollapsibleSection
                                per fase (Generale/Gironi/Semifinali/Finali/Classifica Finale) */
-                            <GroupManagementSection
-                                tournament={tournament}
-                                players={players}
-                                circuits={tournamentCircuits}
-                                characters={charactersByGameId.get(tournament?.game_id ?? 0) ?? []}
-                                results={results}
-                                isAdmin={isAdmin}
-                                onRefresh={refresh}
-                                leader={currentLeader}
-                                onFinalized={handleFinalized}
-                                onReplayCelebration={handleReplayCelebration}
-                            />
+                            managementTab === 'gironi' && (
+                                <GroupManagementSection
+                                    tournament={tournament}
+                                    players={players}
+                                    circuits={tournamentCircuits}
+                                    characters={charactersByGameId.get(tournament?.game_id ?? 0) ?? []}
+                                    results={results}
+                                    isAdmin={isAdmin}
+                                    onRefresh={refresh}
+                                    leader={currentLeader}
+                                    onFinalized={handleFinalized}
+                                    onReplayCelebration={handleReplayCelebration}
+                                />
+                            )
                         ) : (
                             /* ── Modalità Classic: flusso standard ── */
                             <>
-                                <CollapsibleSection title="Gare" icon={<Flag size={16} />} defaultOpen>
-                                    <PhaseCircuitsCard circuits={tournamentCircuits} races={(tournament.races ?? []).filter((r) => !r.is_duello)} title="Circuiti" onRefresh={refresh} refreshing={loading} />
-                                    <RaceCreator tournament={tournament} circuits={tournamentCircuits} loading={loading} onCreated={refresh} disabled={isTournamentLocked} results={results} tournamentParticipants={activeTournamentParticipants} onRefresh={refresh} refreshing={loading} />
-                                    <ResultEntryForm tournament={tournament} races={tournament.races} tournamentParticipants={activeTournamentParticipants} onCreated={refresh} disabled={isTournamentLocked} />
-                                </CollapsibleSection>
+                                {managementTab === 'gare' && (
+                                    <CollapsibleSection title="Risultati" icon={<Flag size={16} />} defaultOpen>
+                                        <PhaseCircuitsCard circuits={tournamentCircuits} races={(tournament.races ?? []).filter((r) => !r.is_duello)} title="Circuiti" onRefresh={refresh} refreshing={loading} />
+                                        <RaceCreator tournament={tournament} circuits={tournamentCircuits} loading={loading} onCreated={refresh} disabled={isTournamentLocked} results={results} tournamentParticipants={activeTournamentParticipants} onRefresh={refresh} refreshing={loading} />
+                                        <ResultEntryForm tournament={tournament} races={tournament.races} tournamentParticipants={activeTournamentParticipants} onCreated={refresh} disabled={isTournamentLocked} />
+                                    </CollapsibleSection>
+                                )}
 
-                                <CollapsibleSection title="Duelli spareggio" subtitle="Spareggi automatici per pareggi in classifica — risolvono le posizioni a pari merito indipendentemente dal podio. Non assegnano punti in classifica." icon={<Swords size={16} />}>
-                                    <ClassicPodiumDuelCard
-                                        tournament={tournament}
-                                        players={players}
-                                        circuits={tournamentCircuits}
-                                        characters={charactersByGameId.get(tournament?.game_id ?? 0) ?? []}
-                                        onRefresh={refresh}
-                                    />
-                                </CollapsibleSection>
+                                {managementTab === 'duelli' && (
+                                    <CollapsibleSection title="Duelli spareggio" subtitle="Spareggi automatici per pareggi in classifica — risolvono le posizioni a pari merito indipendentemente dal podio. Non assegnano punti in classifica." icon={<Swords size={16} />} defaultOpen>
+                                        <ClassicPodiumDuelCard
+                                            tournament={tournament}
+                                            players={players}
+                                            circuits={tournamentCircuits}
+                                            characters={charactersByGameId.get(tournament?.game_id ?? 0) ?? []}
+                                            onRefresh={refresh}
+                                        />
+                                    </CollapsibleSection>
+                                )}
 
-                                <CollapsibleSection title="Classifica finale" icon={<Crown size={16} />}>
-                                    <div className="space-y-4">
-                                        <WinnerFinalizeCard tournament={tournament} leader={currentLeader} onFinalized={handleFinalized} onReplayCelebration={handleReplayCelebration} />
-                                        <TournamentResolutionNotes tournament={tournament} />
-                                    </div>
-                                </CollapsibleSection>
+                                {managementTab === 'finale' && (
+                                    <CollapsibleSection title="Classifica finale" icon={<Crown size={16} />} defaultOpen>
+                                        <div className="space-y-4">
+                                            <WinnerFinalizeCard tournament={tournament} leader={currentLeader} onFinalized={handleFinalized} onReplayCelebration={handleReplayCelebration} />
+                                            <TournamentResolutionNotes tournament={tournament} />
+                                        </div>
+                                    </CollapsibleSection>
+                                )}
                             </>
                         )}
                     </div>

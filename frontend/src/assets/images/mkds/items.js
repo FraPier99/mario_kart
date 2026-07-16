@@ -33,11 +33,12 @@ const getItemBackground = (itemKey) => {
 
 // Gli item nello sprite sheet originale (asset di gioco MKDS) hanno un
 // colore di sfondo bruciato nel frame (es. la stella su un riquadro blu, il
-// guscio su un riquadro rosso). Si ritaglia il singolo frame su un canvas
-// offscreen e si rende trasparente il colore dell'angolo (0,0) — quello di
-// sfondo — con una tolleranza per l'anti-aliasing del GIF indicizzato.
-// Risultato cachato in memoria: calcolato una sola volta per itemKey.
-const CHROMA_KEY_TOLERANCE = 40
+// guscio su un riquadro rosso/magenta/giallo a seconda dell'item). Si
+// ritaglia il singolo frame su un canvas offscreen e si rende trasparente il
+// colore di sfondo, con una tolleranza per l'anti-aliasing/dithering del GIF
+// indicizzato. Risultato cachato in memoria: calcolato una sola volta per
+// itemKey.
+const CHROMA_KEY_TOLERANCE = 70
 const transparentImageCache = new Map()
 let spriteImagePromise = null
 
@@ -67,9 +68,22 @@ const getTransparentItemImage = async (itemKey) => {
 
   const imageData = ctx.getImageData(0, 0, rect.width, SHEET_HEIGHT)
   const data = imageData.data
-  const bgR = data[0]
-  const bgG = data[1]
-  const bgB = data[2]
+
+  // Il colore di sfondo si stima dalla media dei 4 angoli (invece del solo
+  // pixel (0,0)): un GIF indicizzato può avere un colore leggermente diverso
+  // fra un angolo e l'altro per via del dithering, e usarne uno solo
+  // rischiava di lasciare metà sfondo non rimosso.
+  const w = rect.width
+  const h = SHEET_HEIGHT
+  const cornerOffsets = [0, (w - 1) * 4, (h - 1) * w * 4, ((h - 1) * w + (w - 1)) * 4]
+  const bg = cornerOffsets.reduce(
+    (acc, off) => ({ r: acc.r + data[off], g: acc.g + data[off + 1], b: acc.b + data[off + 2] }),
+    { r: 0, g: 0, b: 0 },
+  )
+  const bgR = bg.r / cornerOffsets.length
+  const bgG = bg.g / cornerOffsets.length
+  const bgB = bg.b / cornerOffsets.length
+
   const toleranceSq = CHROMA_KEY_TOLERANCE * CHROMA_KEY_TOLERANCE
   for (let i = 0; i < data.length; i += 4) {
     const dr = data[i] - bgR

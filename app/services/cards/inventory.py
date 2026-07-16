@@ -25,19 +25,29 @@ def grant_card(
     *,
     source_tournament_id: int | None = None,
     source_schedina_id: int | None = None,
+    force_new: bool = False,
 ):
+    """force_new=True salta la deduplicazione e crea sempre una riga nuova
+    — usato dalle assegnazioni manuali dell'admin, dove
+    source_tournament_id è sempre None e senza questa opzione la seconda
+    assegnazione dello stesso card_type allo stesso utente restituirebbe
+    silenziosamente la carta già esistente invece di crearne una nuova. Il
+    percorso automatico (liquidazione schedine) non passa questo parametro:
+    resta idempotente com'era, per non rischiare doppie assegnazioni se la
+    liquidazione venisse eseguita due volte sullo stesso torneo."""
     meta = CARD_META[card_type]
-    existing = (
-        db.query(UserInventory)
-        .filter(
-            UserInventory.user_id == user_id,
-            UserInventory.card_type == card_type,
-            UserInventory.source_tournament_id == source_tournament_id,
+    if not force_new:
+        existing = (
+            db.query(UserInventory)
+            .filter(
+                UserInventory.user_id == user_id,
+                UserInventory.card_type == card_type,
+                UserInventory.source_tournament_id == source_tournament_id,
+            )
+            .first()
         )
-        .first()
-    )
-    if existing:
-        return existing
+        if existing:
+            return existing
 
     item = UserInventory(
         user_id=user_id,

@@ -918,19 +918,19 @@
                     <div className="relative z-20 flex flex-col items-center gap-6 text-center">
                         {/* Rubber stripe banners */}
                         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                            <div className="absolute top-1/4 -left-2 h-12 w-48 sm:h-16 sm:w-64 animate-rubber-stripe-1">
-                                <div className="h-full w-full bg-gradient-to-r from-amber-500/80 via-yellow-400/60 to-transparent flex items-center pl-4 sm:pl-6"
+                            <div className="absolute top-1/4 -left-2 h-10 w-36 sm:h-16 sm:w-64 animate-rubber-stripe-1">
+                                <div className="h-full w-full bg-gradient-to-r from-amber-500/80 via-yellow-400/60 to-transparent flex items-center pl-3 sm:pl-6"
                                     style={{ clipPath: 'polygon(0 0, 100% 0, 92% 100%, 0 100%)' }}>
-                                    <span className="text-xs sm:text-lg font-black uppercase tracking-wide sm:tracking-widest text-black drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] whitespace-nowrap">
-                                        <Sparkles size={14} className="inline mr-1.5 sm:mr-2" />CAMPIONE
+                                    <span className="text-[10px] sm:text-lg font-black uppercase tracking-wide sm:tracking-widest text-black drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] whitespace-nowrap">
+                                        <Sparkles className="inline mr-1 sm:mr-2 h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" />CAMPIONE
                                     </span>
                                 </div>
                             </div>
-                            <div className="absolute bottom-1/4 -right-2 h-12 w-48 sm:h-16 sm:w-64 animate-rubber-stripe-2">
-                                <div className="h-full w-full bg-gradient-to-l from-amber-500/80 via-yellow-400/60 to-transparent flex items-center justify-end pr-4 sm:pr-6"
+                            <div className="absolute bottom-1/4 -right-2 h-10 w-36 sm:h-16 sm:w-64 animate-rubber-stripe-2">
+                                <div className="h-full w-full bg-gradient-to-l from-amber-500/80 via-yellow-400/60 to-transparent flex items-center justify-end pr-3 sm:pr-6"
                                     style={{ clipPath: 'polygon(8% 0, 100% 0, 100% 100%, 0 100%)' }}>
-                                    <span className="text-xs sm:text-lg font-black uppercase tracking-wide sm:tracking-widest text-black drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] whitespace-nowrap">
-                                        VINCITORE <Sparkles size={14} className="inline ml-1.5 sm:ml-2" />
+                                    <span className="text-[10px] sm:text-lg font-black uppercase tracking-wide sm:tracking-widest text-black drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] whitespace-nowrap">
+                                        VINCITORE <Sparkles className="inline ml-1 sm:ml-2 h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" />
                                     </span>
                                 </div>
                             </div>
@@ -1032,11 +1032,11 @@
                                 style={{ animation: 'sparkle-explode 1.8s ease-out infinite', animationDelay: '0.3s' }} />
                         </div>
 
-                        <p className="text-2xl sm:text-4xl md:text-6xl font-black uppercase tracking-wide sm:tracking-[0.15em] text-amber-300 drop-shadow-[0_0_30px_rgba(245,158,11,0.6)] flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-4 text-center"
+                        <p className="text-lg sm:text-4xl md:text-6xl font-black uppercase tracking-wide sm:tracking-[0.15em] text-amber-300 drop-shadow-[0_0_30px_rgba(245,158,11,0.6)] flex flex-wrap items-center justify-center gap-1.5 sm:gap-3 px-4 text-center"
                             style={{ animation: 'text-neon-pulse 0.5s ease-in-out infinite alternate' }}>
-                            <ItemSprite itemKey="star" className="h-6 w-5 sm:h-8 sm:w-6 md:h-10 md:w-8 shrink-0" />
+                            <ItemSprite itemKey="star" className="h-4 w-3.5 sm:h-8 sm:w-6 md:h-10 md:w-8 shrink-0" />
                             {overlayTexts?.countdown?.labels?.campione ?? 'CAMPIONE!'}
-                            <ItemSprite itemKey="star" className="h-6 w-5 sm:h-8 sm:w-6 md:h-10 md:w-8 shrink-0" />
+                            <ItemSprite itemKey="star" className="h-4 w-3.5 sm:h-8 sm:w-6 md:h-10 md:w-8 shrink-0" />
                         </p>
                     </div>
                 )}
@@ -1059,12 +1059,6 @@
                                 )}
                             </div>
                         ))}
-
-                        {/* Crown drop animation — più dinamico */}
-                        <div className="absolute -top-4 z-30 pointer-events-none text-6xl"
-                            style={{ animation: 'crown-drop 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) both' }}>
-                            <span className="filter drop-shadow-[0_0_20px_rgba(245,158,11,0.8)]">👑</span>
-                        </div>
 
                         {/* Sparkle trail around winner */}
                         {winnerSparkleTrail.map((p) => (
@@ -1094,7 +1088,7 @@
                             <Star size={18} className="absolute top-0 -left-4 text-yellow-200"
                                 style={{ animation: 'sparkle-explode 1.8s ease-out infinite', animationDelay: '0.4s' }} />
                         </div>
-                        <p className="text-3xl sm:text-5xl md:text-7xl font-black uppercase tracking-wide sm:tracking-widest text-amber-300 drop-shadow-[0_4px_20px_rgba(245,158,11,0.6)] px-4 text-center"
+                        <p className="text-xl sm:text-5xl md:text-7xl font-black uppercase tracking-wide sm:tracking-widest text-amber-300 drop-shadow-[0_4px_20px_rgba(245,158,11,0.6)] px-4 text-center"
                             style={{ animation: 'text-glow-breathe 3.6s ease-in-out infinite' }}>
                             {overlayTexts?.countdown?.labels?.winner ?? 'CAMPIONE!'}
                         </p>

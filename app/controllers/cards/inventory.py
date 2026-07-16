@@ -329,6 +329,7 @@ def admin_grant_inventory_item(
         body.user_id,
         body.card_type,
         source_tournament_id=body.source_tournament_id,
+        force_new=True,
     )
     if not item:
         raise HTTPException(status_code=400, detail="Failed to grant card")
