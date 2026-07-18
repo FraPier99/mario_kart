@@ -184,23 +184,13 @@ export default function PowerCard({
           </div>
 
           {!consumed && (
-            <div className={`rounded-2xl border p-3 space-y-2 ${t.infoBorder}`} style={{ background: t.infoBg }}>
-              <div>
-                <p className={`text-[9px] font-black uppercase tracking-[0.3em] mb-1 ${isMaster ? 'text-amber-400' : 'text-cyan-400'}`}>Come si ottiene</p>
-                <p className="text-[11px] leading-relaxed text-slate-300">
-                  {isMaster
-                    ? 'Viene assegnata al vincitore assoluto della schedina di ogni torneo. È il premio più raro della competizione.'
-                    : "Viene assegnata all'ultimo classificato della classifica reale. Se il torneo ha 7 o più partecipanti, viene assegnata anche al penultimo."}
-                </p>
-              </div>
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.3em] mb-1 text-slate-400">Effetto</p>
-                <p className="text-[11px] leading-relaxed text-slate-300">
-                  {isMaster
-                    ? 'Scegli tra: annulla la pista di un avversario e imponi la tua, obbliga un player a usare un personaggio specifico, o aggiungi una gara extra a fine torneo.'
-                    : 'Scegli tra: impone agli avversari di fermarsi un giro, impone agli avversari di fermarsi X secondi, o impedisce a un avversario di usare item per 30s.'}
-                </p>
-              </div>
+            <div className={`rounded-2xl border p-3 ${t.infoBorder}`} style={{ background: t.infoBg }}>
+              <p className="text-[9px] font-black uppercase tracking-[0.3em] mb-1 text-slate-400">Effetto</p>
+              <p className="text-[11px] leading-relaxed text-slate-300">
+                {isMaster
+                  ? 'Scegli tra: annulla la pista di un avversario e imponi la tua, obbliga un player a usare un personaggio specifico, o aggiungi una gara extra a fine torneo.'
+                  : 'Scegli tra: impone agli avversari di fermarsi un giro, impone agli avversari di fermarsi X secondi, o impedisce a un avversario di usare item per 30s.'}
+              </p>
             </div>
           )}
 

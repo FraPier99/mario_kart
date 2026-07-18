@@ -397,6 +397,25 @@ const Dashboard = () => {
         }
     }
 
+    // Le carte disponibili si raggruppano per tipo (Master/Guscio Blu) e per
+    // gioco: prima erano mostrate tutte insieme in un'unica griglia, difficile
+    // da distinguere quando un utente ne ha diverse di tipi/giochi diversi.
+    const groupedAvailableCards = useMemo(() => {
+        const groups = new Map()
+        for (const item of inventory) {
+            if (item.is_consumed) continue
+            const key = `${item.card_type}__${item.game_id ?? 'none'}`
+            if (!groups.has(key)) {
+                groups.set(key, { cardType: item.card_type, gameName: item.source_game_name, items: [] })
+            }
+            groups.get(key).items.push(item)
+        }
+        return [...groups.values()].sort((a, b) => {
+            if (a.cardType !== b.cardType) return a.cardType === 'master' ? -1 : 1
+            return (a.gameName ?? '').localeCompare(b.gameName ?? '')
+        })
+    }, [inventory])
+
     const loadInventory = async () => {
         setInventoryLoading(true)
         try {
@@ -1003,21 +1022,30 @@ const Dashboard = () => {
                                 </div>
                             ) : (
                                 <div className="grid gap-3">
-                                    {inventory.filter((item) => !item.is_consumed).length > 0 && (
+                                    {groupedAvailableCards.length > 0 && (
                                         <>
-                                            <p className="font-title text-[9px] tracking-wide text-slate-400">Disponibili ({inventory.filter((item) => !item.is_consumed).length})</p>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                {inventory.filter((item) => !item.is_consumed).map((item) => (
-                                                    <PowerCard
-                                                        key={item.id}
-                                                        type={item.card_type}
-                                                        mode="card"
-                                                        customTitle={item.card_name}
-                                                        sourceTournamentId={item.source_tournament_id && getTournamentById(item.source_tournament_id) ? item.source_tournament_id : undefined}
-                                                        sourceTournamentName={item.source_tournament_name}
-                                                        sourceGameName={item.source_game_name}
-                                                        onUse={item.is_consumed ? undefined : () => handleUsePower(item)}
-                                                    />
+                                            <p className="font-title text-[9px] tracking-wide text-slate-400">Disponibili ({groupedAvailableCards.reduce((sum, g) => sum + g.items.length, 0)})</p>
+                                            <div className="space-y-4">
+                                                {groupedAvailableCards.map((group) => (
+                                                    <div key={`${group.cardType}-${group.gameName ?? 'none'}`}>
+                                                        <p className={`font-title text-[9px] tracking-wide mb-2 ${group.cardType === 'master' ? 'text-amber-500' : 'text-cyan-500'}`}>
+                                                            {group.cardType === 'master' ? 'Master' : 'Guscio Blu'} · {group.gameName ?? 'Gioco non specificato'} ({group.items.length})
+                                                        </p>
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                            {group.items.map((item) => (
+                                                                <PowerCard
+                                                                    key={item.id}
+                                                                    type={item.card_type}
+                                                                    mode="card"
+                                                                    customTitle={item.card_name}
+                                                                    sourceTournamentId={item.source_tournament_id && getTournamentById(item.source_tournament_id) ? item.source_tournament_id : undefined}
+                                                                    sourceTournamentName={item.source_tournament_name}
+                                                                    sourceGameName={item.source_game_name}
+                                                                    onUse={item.is_consumed ? undefined : () => handleUsePower(item)}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    </div>
                                                 ))}
                                             </div>
                                         </>
