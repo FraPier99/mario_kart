@@ -316,7 +316,12 @@ const TournamentDetail = () => {
 
     const handleReplayCelebration = useCallback(() => {
         const standingsSnap = groupStageStandingsOrdered ?? tournament?.standings ?? []
-        const winner = tournament?.winner ?? standingsSnap[0] ?? currentLeader
+        // standingsSnap[0] ha già i campi camelCase lastCharacterId/
+        // favoriteCharacterId che l'overlay si aspetta — tournament.winner è
+        // l'oggetto Player grezzo (favorite_character_id snake_case) e va
+        // usato solo come ultima risorsa, altrimenti la replica perde
+        // personaggio e verso.
+        const winner = standingsSnap[0] ?? tournament?.winner ?? currentLeader
         if (winner) {
             triggerCelebration(winner, standingsSnap, tournament)
         }

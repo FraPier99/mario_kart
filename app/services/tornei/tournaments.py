@@ -562,6 +562,7 @@ def update_tournament(db: Session, tmentData: UpdateTournament, tournament_id: i
                         "winner_id": t.winner_id,
                         "winner_nickname": winner_name,
                         "winner_img_url": winner_img,
+                        "winner_favorite_character_id": winner.favorite_character_id if winner else None,
                     },
                 )
             except Exception:
@@ -668,7 +669,7 @@ def set_tournament_playoff_winner(
         try:
             from app.realtime.manager import broadcast_tournament_winner_sync
 
-            winner_img = winner.img_url if winner else None
+            winner_img = to_image_url(f"/players/{winner.id}/avatar", winner.img_url) if winner else None
             broadcast_tournament_winner_sync(
                 db,
                 tournament_id,
@@ -678,6 +679,7 @@ def set_tournament_playoff_winner(
                     "winner_id": tournament.winner_id,
                     "winner_nickname": winner_name,
                     "winner_img_url": winner_img,
+                    "winner_favorite_character_id": winner.favorite_character_id if winner else None,
                 },
             )
         except Exception:

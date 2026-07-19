@@ -116,6 +116,7 @@ class SchedinaTournamentOverviewResponse(BaseModel):
     winner_nickname: Optional[str] = None
     winner_points: int = 0
     winner_tiebreak_distance: Optional[int] = None
+    winner_real_gap: Optional[int] = None
     premio: Optional[PremioTorneoResponse] = None
     standings: list[SchedinaStandingResponse]
 
@@ -128,6 +129,7 @@ class SchedinaSettlementResponse(BaseModel):
     winner_schedina_id: Optional[int] = None
     winner_points: int = 0
     winner_tiebreak_distance: Optional[int] = None
+    winner_real_gap: Optional[int] = None
     premio: Optional[PremioTorneoResponse] = None
     vincitore_schedina_id: Optional[int] = None
     vincitore_username: Optional[str] = None
@@ -193,6 +195,7 @@ class SchedinaTournamentDetailResponse(BaseModel):
     winner_nickname: Optional[str] = None
     winner_points: int = 0
     winner_tiebreak_distance: Optional[int] = None
+    winner_real_gap: Optional[int] = None
     premio: Optional[PremioTorneoResponse] = None
     schedine: list[SchedinaDetailEntry]
 

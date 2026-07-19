@@ -26,22 +26,26 @@ const FALLBACK_POLL_DELAY_MS = 60000
 const FALLBACK_START_DELAY_MS = 5000
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-const STANDINGS_RETRY_DELAY_MS = 800
+// Due tentativi di retry con backoff crescente invece di uno solo: un
+// hiccup di rete che dura più di 800ms (il singolo retry precedente)
+// poteva comunque far scattare il fallback a un solo giocatore.
+const STANDINGS_RETRY_DELAYS_MS = [800, 1500]
 
 // Una race condition di rete subito dopo la connessione socket (o un hiccup
 // transitorio) può far arrivare la classifica vuota/con un solo elemento al
 // primo tentativo — l'overlay allora anima correttamente l'unico dato
 // ricevuto, mostrando solo il vincitore invece di tutta la classifica. Si
-// ritenta una volta prima di accettare il risultato come definitivo.
+// ritenta più volte prima di accettare il risultato come definitivo.
 async function withRetryOnShortStandings(fetchOnce) {
     const attempt = async () => {
         try { return await fetchOnce() } catch { return { standings: [] } }
     }
     let result = await attempt()
-    if (result.standings.length <= 1) {
-        await sleep(STANDINGS_RETRY_DELAY_MS)
+    for (const delay of STANDINGS_RETRY_DELAYS_MS) {
+        if (result.standings.length > 1) break
+        await sleep(delay)
         const retryResult = await attempt()
-        if (retryResult.standings.length > result.standings.length) return retryResult
+        if (retryResult.standings.length > result.standings.length) result = retryResult
     }
     return result
 }
@@ -150,6 +154,7 @@ export function SocketProvider({ children }) {
                     playerId: data.winner_id,
                     nickname: data.winner_nickname,
                     img_url: data.winner_img_url ?? null,
+                    favoriteCharacterId: data.winner_favorite_character_id ?? null,
                 }
 
                 const { standings, tournament: t } = await withRetryOnShortStandings(async () => {

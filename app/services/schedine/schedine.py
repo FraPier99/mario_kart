@@ -322,14 +322,29 @@ def _build_tournament_schedina_snapshot(
     if winner_id is None:
         return tournament, None, [], None
 
+    # Punti totali per giocatore: servono al Duello (confronto a punti, con pareggio)
+    points_by_player = {row.player_id: int(row.total_points or 0) for row in leaderboard}
+
+    # Distacco reale fra 1° e 2° posto — questo, e non il punteggio assoluto
+    # del vincitore, è ciò che l'utente prevede nel campo "Distanza 1°-2°"
+    # della schedina. Usare winner_points al posto del vero distacco (bug
+    # precedente) rendeva il criterio di spareggio quasi sempre al contrario:
+    # chi prevedeva un numero più alto risultava "più vicino" solo perché più
+    # vicino al punteggio assoluto (tipicamente ~100), indipendentemente da
+    # quanto la previsione fosse vicina al distacco reale.
+    second_place_id = classifica_ordinata[1] if len(classifica_ordinata) > 1 else None
+    real_gap = (
+        winner_points - points_by_player.get(second_place_id, 0)
+        if second_place_id is not None
+        else winner_points
+    )
+
     actual = {
         "classifica_ordinata": classifica_ordinata,
         "winner_points": winner_points,
+        "real_gap": real_gap,
         "streak_winners": streak_winners,
-        # Punti totali per giocatore: servono al Duello (confronto a punti, con pareggio)
-        "points_by_player": {
-            row.player_id: int(row.total_points or 0) for row in leaderboard
-        },
+        "points_by_player": points_by_player,
     }
 
     prize = (
@@ -341,7 +356,7 @@ def _build_tournament_schedina_snapshot(
     snapshot_rows = []
     for schedina in schedine:
         total_points, _breakdown = _score_schedina(schedina, actual)
-        tie_breaker_distance = abs(schedina.spareggio_punti_vincitore - winner_points)
+        tie_breaker_distance = abs(schedina.spareggio_punti_vincitore - real_gap)
 
         if not include_details:
             schedina.classifica_ordinata = None
@@ -671,6 +686,7 @@ def settle_tournament_schedine(db: Session, tournament_id: int):
             "winner_schedina_id": None,
             "winner_points": 0,
             "winner_tiebreak_distance": None,
+            "winner_real_gap": None,
             "premio": existing_prize,
             "status": "already_settled",
         }
@@ -682,6 +698,7 @@ def settle_tournament_schedine(db: Session, tournament_id: int):
             "winner_schedina_id": None,
             "winner_points": 0,
             "winner_tiebreak_distance": None,
+            "winner_real_gap": None,
             "premio": None,
             "status": "no_schedine",
         }
@@ -693,6 +710,7 @@ def settle_tournament_schedine(db: Session, tournament_id: int):
             "winner_schedina_id": None,
             "winner_points": 0,
             "winner_tiebreak_distance": None,
+            "winner_real_gap": None,
             "premio": None,
             "status": "no_results",
         }
@@ -808,6 +826,7 @@ def settle_tournament_schedine(db: Session, tournament_id: int):
         "winner_schedina_id": winner_schedina.id,
         "winner_points": winner_schedina.total_points,
         "winner_tiebreak_distance": winner_schedina.tie_breaker_distance,
+        "winner_real_gap": actual["real_gap"],
         "premio": premio,
         "status": "ok",
         "vincitore_schedina_id": winner_schedina.user_id,
@@ -869,6 +888,7 @@ def get_public_tournament_schedina_overview(
                 "winner_nickname": None,
                 "winner_points": 0,
                 "winner_tiebreak_distance": None,
+                "winner_real_gap": None,
                 "premio": None,
                 "schedine": schedine_placeholder,
             }
@@ -883,6 +903,7 @@ def get_public_tournament_schedina_overview(
             "winner_nickname": None,
             "winner_points": 0,
             "winner_tiebreak_distance": None,
+            "winner_real_gap": None,
             "premio": None,
             "schedine": [],
         }
@@ -915,6 +936,7 @@ def get_public_tournament_schedina_overview(
             "winner_nickname": None,
             "winner_points": 0,
             "winner_tiebreak_distance": None,
+            "winner_real_gap": None,
             "premio": None,
             "schedine": [],
         }
@@ -997,6 +1019,7 @@ def get_public_tournament_schedina_overview(
         "winner_tiebreak_distance": winner_row["tie_breaker_distance"]
         if winner_row
         else None,
+        "winner_real_gap": actual["real_gap"],
         "premio": prize,
         "schedine": schedine,
     }

@@ -522,8 +522,11 @@ const Schedina = () => {
                                                         <h2 className="text-2xl font-black text-slate-900 dark:text-white">{winnerNick}</h2>
                                                         <p className="text-sm text-slate-500 dark:text-slate-300">
                                                             <span className="font-black text-amber-600 dark:text-amber-400">{tournamentDetail.winner_points} pt</span>
+                                                            {tournamentDetail.winner_real_gap != null && (
+                                                                <span className="text-slate-400"> · distacco reale 1°-2° {tournamentDetail.winner_real_gap}</span>
+                                                            )}
                                                             {tournamentDetail.winner_tiebreak_distance != null && (
-                                                                <span className="text-slate-400"> · spareggio {tournamentDetail.winner_tiebreak_distance}</span>
+                                                                <span className="text-slate-400"> · spareggio: distanza {tournamentDetail.winner_tiebreak_distance}</span>
                                                             )}
                                                         </p>
                                                     </div>
@@ -626,7 +629,9 @@ const Schedina = () => {
                                                                     {isWinner && <span className="ml-1 text-[9px] text-amber-500">🏆</span>}
                                                                 </p>
                                                                 <p className="text-[10px] text-slate-400">
-                                                                    {tournamentDetail?.winner_user_id ? `${entry.points} pt · dist. ${entry.tie_breaker_distance ?? '-'}` : 'In attesa'}
+                                                                    {tournamentDetail?.winner_user_id
+                                                                        ? `${entry.points} pt · previsto ${entry.spareggio_punti_vincitore ?? '-'} (scarto ${entry.tie_breaker_distance ?? '-'} dal reale)`
+                                                                        : 'In attesa'}
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -697,7 +702,7 @@ const Schedina = () => {
                                                         <th className="w-8 px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">#</th>
                                                         <th className="w-44 px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Giocatore</th>
                                                         <th className="w-12 px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Pt</th>
-                                                        <th className="w-14 px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Dist.</th>
+                                                        <th className="w-20 px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Distacco previsto</th>
                                                         <th className="w-28 px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">1°</th>
                                                         {showSecond && <th className="w-28 px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">2°</th>}
                                                         {showThird && <th className="w-28 px-3 py-3 text-left text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">3°</th>}
@@ -737,7 +742,18 @@ const Schedina = () => {
                                                                     <td className="px-3 py-3">
                                                                         <span className={`text-sm font-black ${isWinner ? 'text-amber-600 dark:text-amber-400' : 'text-slate-900 dark:text-foreground'}`}>{tournamentDetail?.winner_user_id ? entry.points : '—'}</span>
                                                                     </td>
-                                                                    <td className="px-3 py-3 text-sm text-slate-500 dark:text-muted-foreground">{entry.tie_breaker_distance ?? '—'}</td>
+                                                                    <td className="px-3 py-3">
+                                                                        <div className="flex flex-col leading-tight">
+                                                                            <span className="text-sm font-bold text-slate-700 dark:text-foreground">
+                                                                                {entry.spareggio_punti_vincitore ?? '—'}
+                                                                            </span>
+                                                                            {tournamentDetail?.winner_user_id && (
+                                                                                <span className="text-[9px] text-slate-400">
+                                                                                    Δ {entry.tie_breaker_distance ?? '—'} dal reale
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </td>
                                                                     <td className="px-3 py-3 max-w-28">{renderPick(entry.classifica_ordinata?.[0], null, getPositionCorrect(bd, 0))}</td>
                                                                     {showSecond && <td className="px-3 py-3 max-w-28">{renderPick(entry.classifica_ordinata?.[1], null, getPositionCorrect(bd, 1))}</td>}
                                                                     {showThird && <td className="px-3 py-3 max-w-28">{renderPick(entry.classifica_ordinata?.[2], null, getPositionCorrect(bd, 2))}</td>}

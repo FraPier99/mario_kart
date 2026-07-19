@@ -127,7 +127,14 @@ async def connect(sid, environ, auth=None):
                         .first()
                     )
                     if t and t.winner_id:
+                        from app.core.media import to_image_url
+
                         winner = _db.query(Player).filter(Player.id == t.winner_id).first()
+                        winner_img = (
+                            to_image_url(f"/players/{winner.id}/avatar", winner.img_url)
+                            if winner
+                            else None
+                        )
                         await _sio.emit(
                             "tournament:winner",
                             {
@@ -135,7 +142,8 @@ async def connect(sid, environ, auth=None):
                                 "tournament_name": t.name,
                                 "winner_id": t.winner_id,
                                 "winner_nickname": winner.nickname if winner else "—",
-                                "winner_img_url": winner.img_url if winner else None,
+                                "winner_img_url": winner_img,
+                                "winner_favorite_character_id": winner.favorite_character_id if winner else None,
                             },
                             room=sid,
                         )
