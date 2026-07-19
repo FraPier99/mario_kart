@@ -630,7 +630,7 @@ const Schedina = () => {
                                                                 </p>
                                                                 <p className="text-[10px] text-slate-400">
                                                                     {tournamentDetail?.winner_user_id
-                                                                        ? `${entry.points} pt · previsto ${entry.spareggio_punti_vincitore ?? '-'} (scarto ${entry.tie_breaker_distance ?? '-'} dal reale)`
+                                                                        ? `${entry.points} pt · previsto ${entry.spareggio_punti_vincitore ?? '-'} · reale ${tournamentDetail.winner_real_gap ?? '-'} (Δ${entry.tie_breaker_distance ?? '-'})`
                                                                         : 'In attesa'}
                                                                 </p>
                                                             </div>
@@ -749,7 +749,7 @@ const Schedina = () => {
                                                                             </span>
                                                                             {tournamentDetail?.winner_user_id && (
                                                                                 <span className="text-[9px] text-slate-400">
-                                                                                    Δ {entry.tie_breaker_distance ?? '—'} dal reale
+                                                                                    reale {tournamentDetail.winner_real_gap ?? '—'} · Δ{entry.tie_breaker_distance ?? '—'}
                                                                                 </span>
                                                                             )}
                                                                         </div>
