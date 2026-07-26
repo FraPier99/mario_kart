@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import {
   Home, Trophy, BarChart3, Users, Menu, X, Sun, Moon,
   LogOut, User, ChevronDown, PenLine,
-  Plus, Shield, LayoutDashboard, Crown, BookOpen, Zap
+  Plus, Shield, LayoutDashboard, Crown, BookOpen, Zap, Swords, Map
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import { cn } from "@/lib/utils"
@@ -25,9 +25,11 @@ export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [adminOpen, setAdminOpen] = useState(false)
   const [torneiOpen, setTorneiOpen] = useState(false)
+  const [classificheOpen, setClassificheOpen] = useState(false)
   const profileRef = useRef(null)
   const adminRef = useRef(null)
   const torneiRef = useRef(null)
+  const classificheRef = useRef(null)
 
     const navItems = [
         { name: 'Home',        path: '/',        icon: <Home size={15} /> },
@@ -43,6 +45,12 @@ export default function Navbar() {
         { name: 'Regolamento', path: '/regolamento', icon: <BookOpen size={15} /> },
         { name: 'Schedina',    path: '/schedina',    icon: <PenLine size={15} /> },
         { name: 'Carte',       path: '/carte',       icon: <Zap size={15} /> },
+    ]
+
+    const classificheSubItems = [
+        { name: 'Classifiche generali', path: '/stats',    icon: <BarChart3 size={15} /> },
+        { name: 'Confronto giocatori',  path: '/compare',  icon: <Swords size={15} /> },
+        { name: 'Statistiche circuiti', path: '/circuits', icon: <Map size={15} /> },
     ]
 
   const adminItems = [
@@ -61,6 +69,7 @@ export default function Navbar() {
       if (profileRef.current && !profileRef.current.contains(e.target)) setProfileOpen(false)
       if (adminRef.current && !adminRef.current.contains(e.target)) setAdminOpen(false)
       if (torneiRef.current && !torneiRef.current.contains(e.target)) setTorneiOpen(false)
+      if (classificheRef.current && !classificheRef.current.contains(e.target)) setClassificheOpen(false)
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -72,12 +81,14 @@ export default function Navbar() {
     setMobileOpen(false)
     setAdminOpen(false)
     setTorneiOpen(false)
+    setClassificheOpen(false)
   }, [location.pathname])
 
   const isActive = (path) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path)
 
   const isTorneiActive = () => torneiSubItems.some((item) => isActive(item.path))
+  const isClassificheActive = () => classificheSubItems.some((item) => isActive(item.path))
 
   const NavLink = ({ item }) => (
     <Link
@@ -162,6 +173,49 @@ export default function Navbar() {
                           key={sub.path}
                           to={sub.path}
                           onClick={() => setTorneiOpen(false)}
+                          className="font-title flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide transition hover:bg-white/8"
+                          style={{ color: isActive(sub.path) ? 'var(--mk-primary)' : 'rgb(203 213 225)' }}
+                        >
+                          {sub.icon}
+                          {sub.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            }
+            if (item.name === 'Classifiche') {
+              return (
+                <div key={item.path} className="relative" ref={classificheRef}>
+                  <button
+                    type="button"
+                    onClick={() => setClassificheOpen((v) => !v)}
+                    className="font-title relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] tracking-wide transition-all duration-150 select-none"
+                    style={isClassificheActive() ? {
+                      background: 'linear-gradient(135deg, var(--mk-primary), var(--mk-primary-strong))',
+                      boxShadow: '0 4px 14px var(--mk-primary-soft)',
+                      color: '#fff',
+                    } : {
+                      color: classificheOpen ? '#fff' : 'rgb(203 213 225)',
+                      background: classificheOpen ? 'rgba(255,255,255,0.08)' : 'transparent',
+                    }}
+                  >
+                    <BarChart3 size={15} />
+                    <span className="hidden lg:inline">Classifiche</span>
+                    <span className="lg:hidden">Classifiche</span>
+                    <ChevronDown size={11} className={`transition-transform ${classificheOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {classificheOpen && (
+                    <div
+                      className="absolute left-0 top-full mt-1.5 min-w-52 rounded-xl border-2 p-1.5 backdrop-blur-xl"
+                      style={{ background: 'var(--mk-navbar-bg)', borderColor: 'var(--mk-border)', boxShadow: 'var(--circuit-shadow-md)' }}
+                    >
+                      {classificheSubItems.map((sub) => (
+                        <Link
+                          key={sub.path}
+                          to={sub.path}
+                          onClick={() => setClassificheOpen(false)}
                           className="font-title flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide transition hover:bg-white/8"
                           style={{ color: isActive(sub.path) ? 'var(--mk-primary)' : 'rgb(203 213 225)' }}
                         >
@@ -412,6 +466,24 @@ export default function Navbar() {
               {navItems.flatMap((item) => {
                 if (item.name === 'Tornei') {
                   return torneiSubItems.map((sub) => (
+                    <Link
+                      key={sub.path}
+                      to={sub.path}
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(
+                        "flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-black uppercase tracking-wider transition",
+                        isActive(sub.path)
+                          ? `${theme.tailwind.bgSoft} ${theme.tailwind.text}`
+                          : "text-slate-300 hover:bg-white/5"
+                      )}
+                    >
+                      {sub.icon}
+                      {sub.name}
+                    </Link>
+                  ))
+                }
+                if (item.name === 'Classifiche') {
+                  return classificheSubItems.map((sub) => (
                     <Link
                       key={sub.path}
                       to={sub.path}
