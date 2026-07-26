@@ -39,7 +39,7 @@ PROGETTO_KART/
 
 | Dominio | Modelli | Controller | Service |
 |---------|---------|------------|---------|
-| `tornei` | Tournament, Race, Result, Game, Character, Circuit, TournamentPlayer, PlayoffHistory, Prediction | `controllers/tornei/` (6 router) | `services/tornei/` (7 service) |
+| `tornei` | Tournament, Race, Result, Game, Character, Circuit, TournamentPlayer, PlayoffHistory, Prediction | `controllers/tornei/` (7 router, incluso `stats.py` per le statistiche aggregate) | `services/tornei/` (7 service, `stats.py` copre leaderboard + testa a testa + statistiche circuito) |
 | `utenti` | Player, User, Notification, AuditLog, TempPassword, TournamentPhoto, PhotoComment, Challenge | `controllers/utenti/` (5 router) | `services/utenti/` (6 service) |
 | `schedine` | SchedinaTorneo, SchedinaTorneoGroupStage, PremioTorneo | `controllers/schedine/` (2 router) | `services/schedine/` (2 service) |
 | `cards` | UserInventory | `controllers/cards/inventory.py` | `services/cards/inventory.py` |

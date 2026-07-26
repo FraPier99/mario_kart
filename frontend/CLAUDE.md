@@ -30,7 +30,7 @@ src/
 │   ├── AppDataContext.jsx  client-side computed standings (buildTournamentDetails) — see root CLAUDE.md gotcha on tournament.standings scope
 │   └── AuthContext.jsx
 ├── lib/groupStage.js       groupLabel/groupColor/isPodiumDuelKey/findPlayerGroup — the canonical place to recognize a girone/semifinal/duel group_name string; keep in sync with backend's dynamic `duello_podio_<n>_<m>` naming
-└── services/apiClient.js   every backend call, organized by domain object (tournamentsApi, schedineApi, schedineDeluxeApi, inventoryApi, ...)
+└── services/apiClient.js   every backend call, organized by domain object (tournamentsApi, schedineApi, schedineDeluxeApi, inventoryApi, statsApi, ...)
 ```
 
 ## Asset system — sprite sheets + CDN
@@ -53,3 +53,4 @@ Nuove animazioni aggiunte di recente in `@theme inline`:
 - When a component needs "the player's own" view of a group_stage tournament (their girone's standings, their phase's circuits), use `findPlayerGroup(tournament.format_data, playerId)` — see the `myCircuitsView`/`myStandingsView` pattern in `TournamentDetail.jsx`.
 - Admin-only UI inside `TournamentDetail.jsx` is gated by `isAdmin && activeSection === '...'`, not by hiding/showing — read the `activeSection` tab-switcher before assuming a panel is reachable; a panel that exists in code but has no tab button is effectively dead code (this has happened before).
 - Prefer extending an existing generic component (`PodiumDuelCard`, `GroupCard`) over forking it per-format — the classic/group_stage duplication already exists at the *data* layer (backend), don't duplicate it at the UI layer too.
+- `Compare.jsx` (`/compare`, head-to-head) and `CircuitStats.jsx` (`/circuits`, per-circuit aggregates) are backed by `statsApi` (`app/controllers/tornei/stats.py`), not client-side computation over `AppDataContext` — `game_id` is a mandatory explicit filter in `Compare.jsx` (no default). `CircuitStats.jsx` fetches the cheap per-circuit list eagerly and lazily fetches the full player ranking (`components/stats/CircuitRankingTable.jsx`) only when a card is expanded (accordion pattern) — follow this lazy-detail-on-expand pattern for any future circuit-level drill-down rather than precomputing every circuit's full ranking upfront.

@@ -19,6 +19,7 @@ from app.controllers.tornei.results import router as results_router
 from app.controllers.schedine.schedine import router as schedine_router
 from app.controllers.cards.inventory import router as inventory_router
 from app.controllers.tornei.tournaments import router as tournaments_router
+from app.controllers.tornei.stats import router as stats_router
 from app.controllers.utenti.gallery import router as gallery_router
 from app.controllers.utenti.notifications import router as notifications_router
 from app.controllers.utenti.audit_log import router as audit_log_router
@@ -51,6 +52,10 @@ tags_metadata = [
     {
         "name": "Ownership",
         "description": "Possesso giochi/console e dispositivi R4 dichiarati dall'utente.",
+    },
+    {
+        "name": "Stats",
+        "description": "Statistiche aggregate: confronto testa a testa tra giocatori e classifiche per circuito.",
     },
 ]
 
@@ -115,6 +120,7 @@ app.include_router(notifications_router)
 app.include_router(audit_log_router)
 app.include_router(schedine_deluxe_router)
 app.include_router(ownership_router)
+app.include_router(stats_router)
 
 # Combined ASGI app: Socket.IO on /socket.io/, everything else → FastAPI
 socket_app = socketio.ASGIApp(sio, other_asgi_app=app)

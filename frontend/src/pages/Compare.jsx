@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
-import { Search, Swords, Trophy, Target, Rat, Medal } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Search, Swords, Trophy, Target, Medal, MapPin } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import { useAppData } from '@/context/AppDataContext'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
+import { statsApi, getApiErrorMessage } from '@/services/apiClient'
 
 const Selector = ({ label, search, setSearch, filtered, selected, setSelected, excludeId }) => (
     <div className="space-y-3">
@@ -75,11 +76,15 @@ const StatCard = ({ icon: Icon, label, valueA, valueB, suffix, highlight }) => {
 }
 
 const Compare = () => {
-    const { players, detailedTournaments } = useAppData()
+    const { players, games } = useAppData()
+    const [gameId, setGameId] = useState('')
     const [searchA, setSearchA] = useState('')
     const [searchB, setSearchB] = useState('')
     const [playerA, setPlayerA] = useState(null)
     const [playerB, setPlayerB] = useState(null)
+    const [comparison, setComparison] = useState(null)
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState(null)
 
     const sortedPlayers = useMemo(() =>
         players.slice().sort((a, b) => a.nickname.localeCompare(b.nickname)),
@@ -106,58 +111,23 @@ const Compare = () => {
         )
     }, [sortedPlayers, searchB])
 
-    const comparison = useMemo(() => {
-        if (!playerA || !playerB) return null
+    const canCompare = Boolean(gameId) && Boolean(playerA) && Boolean(playerB) && playerA.id !== playerB.id
 
-        let aWins = 0, bWins = 0, draws = 0
-        let aPoints = 0, bPoints = 0
-        let aSumPos = 0, bSumPos = 0
-        let commonRaces = 0
-        let commonTournaments = 0
-        let aTournamentWins = 0, bTournamentWins = 0
-        let aPodiums = 0, bPodiums = 0
-
-        ;(detailedTournaments ?? []).forEach((t) => {
-            const aStanding = (t.standings ?? []).find((s) => s.playerId === playerA.id)
-            const bStanding = (t.standings ?? []).find((s) => s.playerId === playerB.id)
-            if (!aStanding || !bStanding) return
-
-            commonTournaments++
-
-            if (t.winner_id === playerA.id) aTournamentWins++
-            if (t.winner_id === playerB.id) bTournamentWins++
-
-            ;(t.races ?? []).forEach((race) => {
-                const aRes = (race.results ?? []).find((r) => r.player_id === playerA.id)
-                const bRes = (race.results ?? []).find((r) => r.player_id === playerB.id)
-                if (!aRes || !bRes) return
-
-                commonRaces++
-                aPoints += aRes.points
-                bPoints += bRes.points
-                aSumPos += aRes.position
-                bSumPos += bRes.position
-
-                if (aRes.position < bRes.position) aWins++
-                else if (bRes.position < aRes.position) bWins++
-                else draws++
-
-                if (aRes.position <= 3) aPodiums++
-                if (bRes.position <= 3) bPodiums++
-            })
-        })
-
-        return {
-            commonTournaments,
-            commonRaces,
-            aWins, bWins, draws,
-            aPoints, bPoints,
-            aAvgPos: commonRaces ? (aSumPos / commonRaces).toFixed(2) : '-',
-            bAvgPos: commonRaces ? (bSumPos / commonRaces).toFixed(2) : '-',
-            aTournamentWins, bTournamentWins,
-            aPodiums, bPodiums,
+    useEffect(() => {
+        if (!canCompare) {
+            setComparison(null)
+            return
         }
-    }, [playerA, playerB, detailedTournaments])
+        setLoading(true)
+        setError(null)
+        statsApi.headToHead(gameId, playerA.id, playerB.id)
+            .then((res) => setComparison(res.data))
+            .catch((err) => {
+                setComparison(null)
+                setError(getApiErrorMessage(err, 'Impossibile caricare il confronto'))
+            })
+            .finally(() => setLoading(false))
+    }, [canCompare, gameId, playerA, playerB])
 
     return (
         <AppLayout>
@@ -166,8 +136,20 @@ const Compare = () => {
                     <p className="font-title text-[10px] tracking-wide text-emerald-600">Confronto 1vs1</p>
                     <h1 className="mt-2 text-3xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground md:text-4xl">SFIDA TESTA A TESTA</h1>
                     <p className="mx-auto mt-2 max-w-2xl text-sm text-slate-500 dark:text-muted-foreground">
-                        Seleziona due giocatori per confrontare le loro statistiche nelle gare comuni.
+                        Seleziona un gioco e due giocatori per confrontare le loro statistiche nelle gare comuni.
                     </p>
+                    <div className="mt-4 flex justify-center">
+                        <select
+                            value={gameId}
+                            onChange={(e) => setGameId(e.target.value)}
+                            className="rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-2.5 text-sm font-black uppercase tracking-widest outline-none focus:border-emerald-500"
+                        >
+                            <option value="">Seleziona un gioco...</option>
+                            {(games ?? []).map((g) => (
+                                <option key={g.id} value={g.id}>{g.name}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
 
                 <div className="mb-10 grid gap-6 md:grid-cols-2">
@@ -175,82 +157,112 @@ const Compare = () => {
                     <Selector label="Giocatore B" search={searchB} setSearch={setSearchB} filtered={filteredB} selected={playerB} setSelected={setPlayerB} excludeId={playerA?.id} />
                 </div>
 
+                {!gameId && (playerA || playerB) && (
+                    <p className="mb-6 text-center text-sm font-bold text-amber-600">Seleziona un gioco per vedere il confronto.</p>
+                )}
+
+                {error && (
+                    <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-900/40 p-4 text-center text-sm text-red-700 dark:text-red-400">
+                        {error}
+                    </div>
+                )}
+
+                {loading && (
+                    <p className="mb-6 text-center text-sm text-slate-400 dark:text-muted-foreground">Caricamento confronto…</p>
+                )}
+
                 {comparison && (
                     <>
                         <div className="mb-3 text-center animate-slide-up">
                             <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 dark:bg-muted px-4 py-1.5 text-xs font-black uppercase tracking-widest text-slate-600 dark:text-muted-foreground">
                                 <Swords size={14} />
-                                {comparison.commonTournaments} TORNEI IN COMUNE ({comparison.commonRaces} GARE)
+                                {comparison.summary.total_races} GARE IN COMUNE
                             </span>
                         </div>
 
-                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            <StatCard icon={Trophy} label="VITTORIE TORNEO" valueA={comparison.aTournamentWins} valueB={comparison.bTournamentWins}
-                                highlight={comparison.aTournamentWins > comparison.bTournamentWins ? 'a' : comparison.bTournamentWins > comparison.aTournamentWins ? 'b' : 'tie'} />
-                            <StatCard icon={Medal} label="PODI" valueA={comparison.aPodiums} valueB={comparison.bPodiums}
-                                highlight={comparison.aPodiums > comparison.bPodiums ? 'a' : comparison.bPodiums > comparison.aPodiums ? 'b' : 'tie'} />
-                            <StatCard icon={Rat} label="PUNTI TOTALI" valueA={comparison.aPoints} valueB={comparison.bPoints}
-                                highlight={comparison.aPoints > comparison.bPoints ? 'a' : comparison.bPoints > comparison.aPoints ? 'b' : 'tie'} />
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <StatCard icon={Trophy} label="VITTORIE TESTA A TESTA" valueA={comparison.summary.wins_a} valueB={comparison.summary.wins_b}
+                                highlight={comparison.summary.wins_a > comparison.summary.wins_b ? 'a' : comparison.summary.wins_b > comparison.summary.wins_a ? 'b' : 'tie'} />
+                            <StatCard icon={Medal} label="% VITTORIE" valueA={comparison.summary.win_pct_a} valueB={comparison.summary.win_pct_b} suffix="%"
+                                highlight={comparison.summary.win_pct_a > comparison.summary.win_pct_b ? 'a' : comparison.summary.win_pct_b > comparison.summary.win_pct_a ? 'b' : 'tie'} />
                         </div>
 
-                        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                        <div className="mt-4 grid gap-4">
                             <div className="rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm hover-lift">
                                 <div className="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">
                                     <Target size={14} />
-                                    POSIZIONE MEDIA
-                                </div>
-                                <div className="flex items-center justify-between gap-4">
-                                    <span className={`text-xl font-black ${Number(comparison.aAvgPos) < Number(comparison.bAvgPos) ? 'text-emerald-600' : Number(comparison.bAvgPos) < Number(comparison.aAvgPos) ? 'text-slate-500 dark:text-muted-foreground' : 'text-slate-800 dark:text-foreground'}`}>
-                                        #{comparison.aAvgPos}
-                                    </span>
-                                    <span className="text-xs font-black text-slate-300 dark:text-muted-foreground">vs</span>
-                                    <span className={`text-xl font-black ${Number(comparison.bAvgPos) < Number(comparison.aAvgPos) ? 'text-emerald-600' : Number(comparison.aAvgPos) < Number(comparison.bAvgPos) ? 'text-slate-500 dark:text-muted-foreground' : 'text-slate-800 dark:text-foreground'}`}>
-                                        #{comparison.bAvgPos}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm hover-lift">
-                                <div className="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">
-                                    <Swords size={14} />
                                     GARE VINTE (TESTA A TESTA)
                                 </div>
                                 <div className="flex flex-col gap-3">
                                     <div className="flex h-10 overflow-hidden rounded-xl bg-slate-100 dark:bg-muted">
                                         <div
                                             className="flex items-center justify-center bg-emerald-500 text-xs font-black text-white transition-all"
-                                            style={{ width: `${comparison.aWins + comparison.bWins + comparison.draws > 0 ? ((comparison.aWins / (comparison.aWins + comparison.bWins + comparison.draws)) * 100) : 0}%` }}
+                                            style={{ width: `${comparison.summary.total_races > 0 ? (comparison.summary.wins_a / comparison.summary.total_races) * 100 : 0}%` }}
                                         >
-                                            {comparison.aWins}
+                                            {comparison.summary.wins_a}
                                         </div>
-                                        <div
-                                            className="flex items-center justify-center bg-slate-300 text-xs font-black text-white transition-all"
-                                            style={{ width: `${comparison.aWins + comparison.bWins + comparison.draws > 0 ? ((comparison.draws / (comparison.aWins + comparison.bWins + comparison.draws)) * 100) : 0}%` }}
-                                        >
-                                            {comparison.draws || ''}
-                                        </div>
+                                        {comparison.summary.ties > 0 && (
+                                            <div
+                                                className="flex items-center justify-center bg-slate-300 text-xs font-black text-white transition-all"
+                                                style={{ width: `${(comparison.summary.ties / comparison.summary.total_races) * 100}%` }}
+                                            >
+                                                {comparison.summary.ties}
+                                            </div>
+                                        )}
                                         <div
                                             className="flex items-center justify-center bg-amber-500 text-xs font-black text-white transition-all"
-                                            style={{ width: `${comparison.aWins + comparison.bWins + comparison.draws > 0 ? ((comparison.bWins / (comparison.aWins + comparison.bWins + comparison.draws)) * 100) : 0}%` }}
+                                            style={{ width: `${comparison.summary.total_races > 0 ? (comparison.summary.wins_b / comparison.summary.total_races) * 100 : 0}%` }}
                                         >
-                                            {comparison.bWins}
+                                            {comparison.summary.wins_b}
                                         </div>
                                     </div>
                                     <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-muted-foreground">
-                                        <span>{playerA?.nickname?.toUpperCase()} {((comparison.aWins / (comparison.aWins + comparison.bWins + comparison.draws)) * 100 || 0).toFixed(0)}%</span>
-                                        <span>PAREGGI {comparison.draws}</span>
-                                        <span>{((comparison.bWins / (comparison.aWins + comparison.bWins + comparison.draws)) * 100 || 0).toFixed(0)}% {playerB?.nickname?.toUpperCase()}</span>
+                                        <span>{comparison.player_a.nickname?.toUpperCase()} {comparison.summary.win_pct_a}%</span>
+                                        <span>{comparison.summary.win_pct_b}% {comparison.player_b.nickname?.toUpperCase()}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {comparison.commonTournaments > 0 && (
+                        <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-lg shadow-slate-200/60 dark:shadow-black/20 animate-slide-up">
+                            <div className="border-b border-slate-100 dark:border-border bg-slate-50 dark:bg-muted px-6 py-4">
+                                <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-slate-700 dark:text-muted-foreground">
+                                    <MapPin size={16} />
+                                    CONFRONTO PER CIRCUITO
+                                </h3>
+                            </div>
+                            <div className="overflow-x-auto p-1">
+                                <table className="w-full text-left text-sm">
+                                    <thead>
+                                        <tr className="border-b border-slate-200 dark:border-border text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">
+                                            <th className="px-4 py-3">CIRCUITO</th>
+                                            <th className="px-4 py-3 text-right">GARE</th>
+                                            <th className="px-4 py-3 text-right">{comparison.player_a.nickname?.toUpperCase()}</th>
+                                            <th className="px-4 py-3 text-right">{comparison.player_b.nickname?.toUpperCase()}</th>
+                                            <th className="px-4 py-3 text-right">PAREGGI</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {comparison.by_circuit.map((c, i) => (
+                                            <tr key={c.circuit_id} className={`border-b border-slate-100 dark:border-border ${i % 2 === 0 ? 'bg-white dark:bg-card' : 'bg-slate-50/50 dark:bg-muted/50'}`}>
+                                                <td className="px-4 py-3 font-bold text-slate-800 dark:text-foreground uppercase">{c.circuit_name?.toUpperCase()}</td>
+                                                <td className="px-4 py-3 text-right text-slate-500 dark:text-muted-foreground">{c.total_races}</td>
+                                                <td className={`px-4 py-3 text-right font-bold ${c.wins_a > c.wins_b ? 'text-emerald-600' : 'text-slate-500 dark:text-muted-foreground'}`}>{c.wins_a}</td>
+                                                <td className={`px-4 py-3 text-right font-bold ${c.wins_b > c.wins_a ? 'text-emerald-600' : 'text-slate-500 dark:text-muted-foreground'}`}>{c.wins_b}</td>
+                                                <td className="px-4 py-3 text-right text-slate-400 dark:text-muted-foreground">{c.ties}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {comparison.history.length > 0 && (
                             <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-lg shadow-slate-200/60 dark:shadow-black/20 animate-slide-up">
                                 <div className="border-b border-slate-100 dark:border-border bg-slate-50 dark:bg-muted px-6 py-4">
                                     <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-slate-700 dark:text-muted-foreground">
                                         <Trophy size={16} />
-                                        STORICO TORNEI IN COMUNE
+                                        STORICO GARE IN COMUNE
                                     </h3>
                                 </div>
                                 <div className="overflow-x-auto p-1">
@@ -258,36 +270,30 @@ const Compare = () => {
                                         <thead>
                                             <tr className="border-b border-slate-200 dark:border-border text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">
                                                 <th className="px-4 py-3">TORNEO</th>
-                                                <th className="px-4 py-3 text-right">{playerA?.nickname?.toUpperCase()}</th>
-                                                <th className="px-4 py-3 text-right">{playerB?.nickname?.toUpperCase()}</th>
+                                                <th className="px-4 py-3">CIRCUITO</th>
+                                                <th className="px-4 py-3 text-right">{comparison.player_a.nickname?.toUpperCase()}</th>
+                                                <th className="px-4 py-3 text-right">{comparison.player_b.nickname?.toUpperCase()}</th>
                                                 <th className="px-4 py-3 text-right">RISULTATO</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {(detailedTournaments ?? [])
-                                                .filter((t) => (t.standings ?? []).some((s) => s.playerId === playerA.id) && (t.standings ?? []).some((s) => s.playerId === playerB.id))
-                                                .map((t, i) => {
-                                                    const aTotal = (t.standings ?? []).find((s) => s.playerId === playerA.id)
-                                                    const bTotal = (t.standings ?? []).find((s) => s.playerId === playerB.id)
-                                                    const aBetter = aTotal.points > bTotal.points
-                                                    const bBetter = bTotal.points > aTotal.points
-                                                    return (
-                                                        <tr key={t.id} className={`border-b border-slate-100 dark:border-border ${i % 2 === 0 ? 'bg-white dark:bg-card' : 'bg-slate-50/50 dark:bg-muted/50'}`}>
-                                                            <td className="px-4 py-3 font-bold text-slate-800 dark:text-foreground uppercase">{t.name?.toUpperCase()}</td>
-                                                            <td className={`px-4 py-3 text-right font-bold ${aBetter ? 'text-emerald-600' : 'text-slate-500 dark:text-muted-foreground'}`}>
-                                                                {aTotal.points}pt
-                                                            </td>
-                                                            <td className={`px-4 py-3 text-right font-bold ${bBetter ? 'text-emerald-600' : 'text-slate-500 dark:text-muted-foreground'}`}>
-                                                                {bTotal.points}pt
-                                                            </td>
-                                                            <td className="px-4 py-3 text-right">
-                                                                <span className={`rounded-lg px-2.5 py-1 text-[11px] font-black ${aBetter ? 'bg-emerald-100 text-emerald-700' : bBetter ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 dark:bg-muted text-slate-500 dark:text-muted-foreground'}`}>
-                                                                    {aBetter ? `${playerA?.nickname?.toUpperCase()}` : bBetter ? `${playerB?.nickname?.toUpperCase()}` : 'PAREGGIO'}
-                                                                </span>
-                                                            </td>
-                                                        </tr>
-                                                    )
-                                                })}
+                                            {comparison.history.map((h, i) => (
+                                                <tr key={h.race_id} className={`border-b border-slate-100 dark:border-border ${i % 2 === 0 ? 'bg-white dark:bg-card' : 'bg-slate-50/50 dark:bg-muted/50'}`}>
+                                                    <td className="px-4 py-3 font-bold text-slate-800 dark:text-foreground uppercase">{h.tournament_name?.toUpperCase()}</td>
+                                                    <td className="px-4 py-3 text-slate-500 dark:text-muted-foreground uppercase">{h.circuit_name?.toUpperCase()}</td>
+                                                    <td className={`px-4 py-3 text-right font-bold ${h.winner === 'a' ? 'text-emerald-600' : 'text-slate-500 dark:text-muted-foreground'}`}>
+                                                        #{h.position_a}
+                                                    </td>
+                                                    <td className={`px-4 py-3 text-right font-bold ${h.winner === 'b' ? 'text-emerald-600' : 'text-slate-500 dark:text-muted-foreground'}`}>
+                                                        #{h.position_b}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right">
+                                                        <span className={`rounded-lg px-2.5 py-1 text-[11px] font-black ${h.winner === 'a' ? 'bg-emerald-100 text-emerald-700' : h.winner === 'b' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 dark:bg-muted text-slate-500 dark:text-muted-foreground'}`}>
+                                                            {h.winner === 'a' ? comparison.player_a.nickname?.toUpperCase() : h.winner === 'b' ? comparison.player_b.nickname?.toUpperCase() : 'PAREGGIO'}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
                                         </tbody>
                                     </table>
                                 </div>

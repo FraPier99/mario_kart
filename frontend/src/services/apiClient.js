@@ -236,6 +236,12 @@ export const ownershipApi = {
     all: () => _get('/ownership/all'),
 }
 
+export const statsApi = {
+    headToHead: (gameId, playerAId, playerBId) => _get(`/stats/head-to-head?game_id=${gameId}&player_a_id=${playerAId}&player_b_id=${playerBId}`),
+    circuitList: (gameId) => _get(`/stats/circuits?game_id=${gameId}`),
+    circuitDetail: (circuitId) => _get(`/stats/circuits/${circuitId}`),
+}
+
 export const authStorage = {
     tokenKey: AUTH_TOKEN_KEY,
     getToken: () => localStorage.getItem(AUTH_TOKEN_KEY),

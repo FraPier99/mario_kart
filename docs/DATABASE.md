@@ -54,6 +54,13 @@ ad es. per `group_stage`: `{"groups": {"1": [player_id, ...], "2": [...], ...}}`
 con un numero di gironi calcolato dinamicamente in base al numero di partecipanti
 (`compute_group_layout`, in `app/services/tornei/tournaments.py`).
 
+`Circuit.game_id` e `Tournament.game_id` sono entrambe FK indipendenti verso
+`games.id`: non c'è una FK diretta `Race → Game`, quindi le statistiche
+aggregate per gioco (`app/services/tornei/stats.py`, testa a testa fra
+giocatori e classifiche per circuito) filtrano `Race` passando per
+`Race.tournament_id → Tournament.game_id`, escludendo sempre le gare di
+duello/spareggio (`Race.is_duello`).
+
 ## Dominio `schedine` — `app/models/schedine/models.py`
 
 | Tabella | Modello | Descrizione |
