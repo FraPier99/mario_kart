@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
-import { Map as MapIcon, Trophy, BarChart3, Swords, ChevronDown, Search } from 'lucide-react'
+import { Map as MapIcon, Trophy, BarChart3, Swords, ChevronDown, Search, TrendingDown } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import { useAppData } from '@/context/AppDataContext'
 import { useTheme } from '@/context/ThemeContext'
@@ -76,6 +76,16 @@ const CircuitStats = () => {
                 name: c.circuit_name.length > 18 ? c.circuit_name.slice(0, 16) + '…' : c.circuit_name,
                 gare: c.total_races,
             })),
+        [enrichedCircuits]
+    )
+
+    // I 10 circuiti meno scelti nei tornei di questo gioco (compresi quelli
+    // mai giocati) — speculare al grafico dei più giocati sopra.
+    const leastUsedData = useMemo(() =>
+        enrichedCircuits
+            .slice()
+            .sort((a, b) => a.total_races - b.total_races || a.circuit_name.localeCompare(b.circuit_name))
+            .slice(0, 10),
         [enrichedCircuits]
     )
 
@@ -160,6 +170,34 @@ const CircuitStats = () => {
                         )}
                     </div>
                 </div>
+
+                {leastUsedData.length > 0 && (
+                    <div className="mb-10 overflow-hidden rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-lg shadow-slate-200/60 dark:shadow-black/20 hover-lift">
+                        <div className="border-b border-slate-100 dark:border-border bg-slate-50 dark:bg-muted px-6 py-4">
+                            <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-slate-700 dark:text-muted-foreground">
+                                <TrendingDown size={16} />
+                                CIRCUITI MENO UTILIZZATI
+                            </h3>
+                        </div>
+                        <div className="divide-y divide-slate-100 dark:divide-border">
+                            {leastUsedData.map((circuit, i) => {
+                                const neverPlayed = circuit.total_races === 0
+                                return (
+                                    <div key={circuit.circuit_id} className="flex items-center gap-3 px-6 py-3">
+                                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-muted text-[10px] font-black text-slate-500 dark:text-muted-foreground">
+                                            {i + 1}
+                                        </span>
+                                        <CircuitThumbnail circuit={circuit.meta} size="sm" />
+                                        <span className="flex-1 truncate text-sm font-bold text-slate-700 dark:text-foreground uppercase">{circuit.circuit_name}</span>
+                                        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${neverPlayed ? 'bg-red-50 text-red-500 dark:bg-red-950/30 dark:text-red-400' : 'bg-slate-100 dark:bg-muted text-slate-500 dark:text-muted-foreground'}`}>
+                                            {neverPlayed ? 'MAI GIOCATO' : `${circuit.total_races} GARE`}
+                                        </span>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )}
 
                 <div className="mb-6 relative">
                     <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-muted-foreground" />
