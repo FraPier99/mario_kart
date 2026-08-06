@@ -5,6 +5,41 @@ import { getApiErrorMessage } from '@/services/apiClient'
 
 const AppDataContext = createContext(null)
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+// Un errore "di rete" (nessuna risposta HTTP, richiesta abortita) è spesso
+// transitorio — es. Railway che deve "risvegliare" il backend dopo un
+// periodo di inattività — non un errore applicativo reale (4xx/5xx), quindi
+// vale la pena ritentare automaticamente prima di mostrare il banner
+// d'errore all'utente.
+const isNetworkError = (error) => !error?.response
+
+// Tentativi con backoff crescente: il primo retry copre il caso più comune
+// (cold start Railway, che di solito richiede solo qualche secondo).
+const RETRY_DELAYS_MS = [1000, 2500]
+
+const fetchAllTournamentData = () => Promise.all([
+    playersApi.list(),
+    charactersApi.list(),
+    gamesApi.list(),
+    tournamentsApi.list(),
+    racesApi.list(),
+    resultsApi.list(),
+    circuitsApi.list(),
+])
+
+const fetchAllWithRetry = async () => {
+    for (const delay of RETRY_DELAYS_MS) {
+        try {
+            return await fetchAllTournamentData()
+        } catch (error) {
+            if (!isNetworkError(error)) throw error
+            await sleep(delay)
+        }
+    }
+    return fetchAllTournamentData()
+}
+
 const toTimestamp = (value) => {
     if (!value) return 0
 
@@ -350,15 +385,7 @@ export function AppDataProvider({ children }) {
         setErrorMessage('')
 
         try {
-            const [playersResponse, charactersResponse, gamesResponse, tournamentsResponse, racesResponse, resultsResponse, circuitsResponse] = await Promise.all([
-                playersApi.list(),
-                charactersApi.list(),
-                gamesApi.list(),
-                tournamentsApi.list(),
-                racesApi.list(),
-                resultsApi.list(),
-                circuitsApi.list(),
-            ])
+            const [playersResponse, charactersResponse, gamesResponse, tournamentsResponse, racesResponse, resultsResponse, circuitsResponse] = await fetchAllWithRetry()
 
             setPlayers(playersResponse.data ?? [])
             setCharacters(charactersResponse.data ?? [])
