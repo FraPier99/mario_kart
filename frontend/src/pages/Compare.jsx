@@ -85,6 +85,7 @@ const Compare = () => {
     const [comparison, setComparison] = useState(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
+    const [circuitSearch, setCircuitSearch] = useState('')
 
     const sortedPlayers = useMemo(() =>
         players.slice().sort((a, b) => a.nickname.localeCompare(b.nickname)),
@@ -128,6 +129,20 @@ const Compare = () => {
             })
             .finally(() => setLoading(false))
     }, [canCompare, gameId, playerA, playerB])
+
+    // Solo i circuiti dove i due giocatori si sono davvero incontrati:
+    // mostrare l'elenco completo del gioco (molti a 0 gare in comune) rende
+    // la tabella lunga e poco leggibile quando i due hanno pochi incroci.
+    const playedCircuits = useMemo(() =>
+        (comparison?.by_circuit ?? []).filter((c) => c.total_races > 0),
+        [comparison]
+    )
+
+    const filteredCircuits = useMemo(() => {
+        if (!circuitSearch.trim()) return playedCircuits
+        const t = circuitSearch.toLowerCase()
+        return playedCircuits.filter((c) => c.circuit_name.toLowerCase().includes(t))
+    }, [playedCircuits, circuitSearch])
 
     return (
         <AppLayout>
@@ -225,36 +240,56 @@ const Compare = () => {
                         </div>
 
                         <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-lg shadow-slate-200/60 dark:shadow-black/20 animate-slide-up">
-                            <div className="border-b border-slate-100 dark:border-border bg-slate-50 dark:bg-muted px-6 py-4">
+                            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-border bg-slate-50 dark:bg-muted px-6 py-4">
                                 <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-slate-700 dark:text-muted-foreground">
                                     <MapPin size={16} />
                                     CONFRONTO PER CIRCUITO
                                 </h3>
+                                {playedCircuits.length > 0 && (
+                                    <div className="relative">
+                                        <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-muted-foreground" />
+                                        <input
+                                            type="text"
+                                            placeholder="Cerca circuito..."
+                                            value={circuitSearch}
+                                            onChange={(e) => setCircuitSearch(e.target.value)}
+                                            className="w-48 rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card py-1.5 pl-8 pr-3 text-xs outline-none focus:border-emerald-500"
+                                        />
+                                    </div>
+                                )}
                             </div>
-                            <div className="overflow-x-auto p-1">
-                                <table className="w-full text-left text-sm">
-                                    <thead>
-                                        <tr className="border-b border-slate-200 dark:border-border text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">
-                                            <th className="px-4 py-3">CIRCUITO</th>
-                                            <th className="px-4 py-3 text-right">GARE</th>
-                                            <th className="px-4 py-3 text-right">{comparison.player_a.nickname?.toUpperCase()}</th>
-                                            <th className="px-4 py-3 text-right">{comparison.player_b.nickname?.toUpperCase()}</th>
-                                            <th className="px-4 py-3 text-right">PAREGGI</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {comparison.by_circuit.map((c, i) => (
-                                            <tr key={c.circuit_id} className={`border-b border-slate-100 dark:border-border ${i % 2 === 0 ? 'bg-white dark:bg-card' : 'bg-slate-50/50 dark:bg-muted/50'}`}>
-                                                <td className="px-4 py-3 font-bold text-slate-800 dark:text-foreground uppercase">{c.circuit_name?.toUpperCase()}</td>
-                                                <td className="px-4 py-3 text-right text-slate-500 dark:text-muted-foreground">{c.total_races}</td>
-                                                <td className={`px-4 py-3 text-right font-bold ${c.wins_a > c.wins_b ? 'text-emerald-600' : 'text-slate-500 dark:text-muted-foreground'}`}>{c.wins_a}</td>
-                                                <td className={`px-4 py-3 text-right font-bold ${c.wins_b > c.wins_a ? 'text-emerald-600' : 'text-slate-500 dark:text-muted-foreground'}`}>{c.wins_b}</td>
-                                                <td className="px-4 py-3 text-right text-slate-400 dark:text-muted-foreground">{c.ties}</td>
+                            {playedCircuits.length === 0 ? (
+                                <p className="p-6 text-center text-sm text-slate-400 dark:text-muted-foreground">
+                                    Nessun circuito in comune tra {comparison.player_a.nickname} e {comparison.player_b.nickname}.
+                                </p>
+                            ) : filteredCircuits.length === 0 ? (
+                                <p className="p-6 text-center text-sm text-slate-400 dark:text-muted-foreground">Nessun circuito trovato.</p>
+                            ) : (
+                                <div className="overflow-x-auto p-1">
+                                    <table className="w-full text-left text-sm">
+                                        <thead>
+                                            <tr className="border-b border-slate-200 dark:border-border text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">
+                                                <th className="px-4 py-3">CIRCUITO</th>
+                                                <th className="px-4 py-3 text-right">GARE</th>
+                                                <th className="px-4 py-3 text-right">{comparison.player_a.nickname?.toUpperCase()}</th>
+                                                <th className="px-4 py-3 text-right">{comparison.player_b.nickname?.toUpperCase()}</th>
+                                                <th className="px-4 py-3 text-right">PAREGGI</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                        </thead>
+                                        <tbody>
+                                            {filteredCircuits.map((c, i) => (
+                                                <tr key={c.circuit_id} className={`border-b border-slate-100 dark:border-border ${i % 2 === 0 ? 'bg-white dark:bg-card' : 'bg-slate-50/50 dark:bg-muted/50'}`}>
+                                                    <td className="px-4 py-3 font-bold text-slate-800 dark:text-foreground uppercase">{c.circuit_name?.toUpperCase()}</td>
+                                                    <td className="px-4 py-3 text-right text-slate-500 dark:text-muted-foreground">{c.total_races}</td>
+                                                    <td className={`px-4 py-3 text-right font-bold ${c.wins_a > c.wins_b ? 'text-emerald-600' : 'text-slate-500 dark:text-muted-foreground'}`}>{c.wins_a}</td>
+                                                    <td className={`px-4 py-3 text-right font-bold ${c.wins_b > c.wins_a ? 'text-emerald-600' : 'text-slate-500 dark:text-muted-foreground'}`}>{c.wins_b}</td>
+                                                    <td className="px-4 py-3 text-right text-slate-400 dark:text-muted-foreground">{c.ties}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
                         </div>
 
                         {comparison.history.length > 0 && (
