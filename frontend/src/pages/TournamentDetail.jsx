@@ -22,6 +22,7 @@ import GroupManagementSection from '@/components/tournaments/GroupManagementSect
 import ClassicPodiumDuelCard from '@/components/tournaments/ClassicPodiumDuelCard'
 import CollapsibleSection from '@/components/tournaments/CollapsibleSection'
 import TournamentResolutionNotes from '@/components/tournaments/TournamentResolutionNotes'
+import PointAdjustmentsPanel from '@/components/tournaments/PointAdjustmentsPanel'
 import GroupPlancia, { GroupCard } from '@/components/tournaments/GroupPlancia'
 import PhaseCircuitsCard from '@/components/tournaments/PhaseCircuitsCard'
 import SpareggioEsitiList from '@/components/tournaments/SpareggioEsitiList'
@@ -551,6 +552,8 @@ const TournamentDetail = () => {
                                     />
                                 </div>
                             )}
+
+                            <PointAdjustmentsPanel tournament={tournament} participants={activeTournamentParticipants} isSuperadmin={isSuperadmin} onChanged={refresh} />
 
                             <TournamentResolutionNotes tournament={tournament} />
 
@@ -1194,6 +1197,9 @@ const TournamentDetail = () => {
                                         isSuperadmin={isSuperadmin}
                                         onPlayerClick={handlePlayerClick}
                                     />
+                                </div>
+                                <div className="p-4">
+                                    <PointAdjustmentsPanel tournament={tournament} participants={activeTournamentParticipants} isSuperadmin={isSuperadmin} onChanged={refresh} />
                                 </div>
                             </div>
                         )}

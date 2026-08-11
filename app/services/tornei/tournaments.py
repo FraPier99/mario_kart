@@ -747,6 +747,7 @@ def tournament_delete(db: Session, tournament_id: int):
     from app.models import (
         Notification,
         PlayoffHistory,
+        PointAdjustment,
         Prediction,
         Race,
         Result,
@@ -757,6 +758,11 @@ def tournament_delete(db: Session, tournament_id: int):
         UserInventory,
         TournamentPlayer,
     )
+
+    # 0. PointAdjustment (rettifiche punti manuali)
+    db.query(PointAdjustment).filter(
+        PointAdjustment.tournament_id == tournament_id
+    ).delete()
 
     # 1. PlayoffHistory
     db.query(PlayoffHistory).filter(
@@ -1600,8 +1606,13 @@ FINALS_DUELLO_ULTIMO_POSTO = "finals_duello_ultimo_posto"
 
 
 def _classic_classifica(db: Session, tournament_id: int) -> list[dict]:
-    """Classifica generale di un torneo classic (sole gare ufficiali, non duello)."""
+    """Classifica generale di un torneo classic (sole gare ufficiali, non duello),
+    comprensiva delle eventuali rettifiche punti manuali del superadmin (vedi
+    services/tornei/point_adjustments.py) — così vincitore, spareggi e badge
+    2°/3° posto, che dipendono tutti da questa funzione, restano coerenti con
+    quanto mostrato pubblicamente in classifica."""
     from app.models import Race
+    from app.services.tornei.point_adjustments import get_point_adjustment_totals
 
     race_ids = [
         r.id
@@ -1609,9 +1620,24 @@ def _classic_classifica(db: Session, tournament_id: int) -> list[dict]:
         .filter(Race.tournament_id == tournament_id, Race.is_duello.is_(False))
         .all()
     ]
-    if not race_ids:
-        return []
-    return _classifica_girone(db, race_ids)
+    classifica = _classifica_girone(db, race_ids) if race_ids else []
+
+    adjustments = get_point_adjustment_totals(db, tournament_id)
+    if not adjustments:
+        return classifica
+
+    by_player = {row["player_id"]: row for row in classifica}
+    for player_id, delta in adjustments.items():
+        row = by_player.get(player_id)
+        if row:
+            row["punti_totali"] += delta
+        else:
+            new_row = {"player_id": player_id, "punti_totali": delta, "vittorie": 0, "podi": 0}
+            classifica.append(new_row)
+            by_player[player_id] = new_row
+
+    classifica.sort(key=lambda r: (-r["punti_totali"], -r["vittorie"], -r["podi"], r["player_id"]))
+    return classifica
 
 
 def _first_to_n_order(

@@ -16,6 +16,7 @@ from app.controllers.tornei.games import router as games_router
 from app.controllers.utenti.players import router as players_router
 from app.controllers.tornei.races import router as races_router
 from app.controllers.tornei.results import router as results_router
+from app.controllers.tornei.point_adjustments import router as point_adjustments_router
 from app.controllers.schedine.schedine import router as schedine_router
 from app.controllers.cards.inventory import router as inventory_router
 from app.controllers.tornei.tournaments import router as tournaments_router
@@ -113,6 +114,7 @@ app.include_router(games_router)
 app.include_router(tournaments_router)
 app.include_router(races_router)
 app.include_router(results_router)
+app.include_router(point_adjustments_router)
 app.include_router(circuits_router)
 app.include_router(schedine_router)
 app.include_router(inventory_router)

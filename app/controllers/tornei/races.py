@@ -10,12 +10,14 @@ from app.services.tornei.races import (
     delete_race,
     get_race,
     get_races,
+    reorder_race_results,
     update_race,
 )
 from app.services.tornei.tournaments import get_tournament
 from app.data.circuits import all_circuits as SERVER_CIRCUITS
 from app.models import Race
-from app.controllers.tornei.schemas.races import CreateRace, RaceResponse, UpdateRace
+from app.controllers.tornei.schemas.races import CreateRace, RaceResponse, ReorderResults, UpdateRace
+from app.controllers.tornei.schemas.results import ResultResponse
 
 
 router = APIRouter(prefix="/races", tags=["Races"])
@@ -189,3 +191,26 @@ def update_race_by_id(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid data or related entities not found",
         )
+
+
+@router.put("/{race_id}/results/reorder", response_model=list[ResultResponse])
+def reorder_race_results_by_id(
+    race_id: int,
+    payload: ReorderResults,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_roles("superadmin", "admin")),
+):
+    try:
+        results = reorder_race_results(
+            db, race_id, [item.model_dump() for item in payload.results]
+        )
+
+        if results is None:
+            raise HTTPException(status_code=404, detail="Race not found")
+
+        return results
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Invalid data")

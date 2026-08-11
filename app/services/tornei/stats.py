@@ -4,24 +4,59 @@ from app.models import Circuit, Game, Player, Race, Result, Tournament
 
 
 def get_leaderboard(db: Session, tournament_id: int):
+    """Leaderboard pubblica per torneo, comprensiva delle eventuali rettifiche
+    punti manuali del superadmin (vedi services/tornei/point_adjustments.py) —
+    stessa somma applicata in _classic_classifica (tournaments.py), per
+    coerenza tra questo endpoint (usato per il "leader" in tempo reale via
+    SocketContext) e la classifica ufficiale mostrata in pagina."""
+    from app.services.tornei.point_adjustments import get_point_adjustment_totals
 
-    lederboard = (
+    rows = (
         db.query(
-            Player.id, Player.nickname, func.sum(Result.points).label("total_point")
+            Player.id,
+            Player.nickname,
+            func.sum(Result.points).label("total_point"),
+            func.sum(case((Result.position == 1, 1), else_=0)).label("wins"),
+            func.sum(case((Result.position <= 3, 1), else_=0)).label("podiums"),
         )
         .join(Result, Result.player_id == Player.id)
         .join(Race, Race.id == Result.race_id)
         .filter(Race.tournament_id == tournament_id, Race.is_duello.is_(False))
         .group_by(Player.id, Player.nickname)
-        .order_by(
-            func.sum(Result.points).desc(),
-            func.sum(case((Result.position == 1, 1), else_=0)).desc(),
-            func.sum(case((Result.position <= 3, 1), else_=0)).desc(),
-            Player.nickname.asc(),
-        )
         .all()
     )
-    return lederboard
+
+    leaderboard = {
+        row.id: {
+            "id": row.id,
+            "nickname": row.nickname,
+            "total_point": row.total_point,
+            "wins": row.wins,
+            "podiums": row.podiums,
+        }
+        for row in rows
+    }
+
+    adjustments = get_point_adjustment_totals(db, tournament_id)
+    for player_id, delta in adjustments.items():
+        entry = leaderboard.get(player_id)
+        if entry:
+            entry["total_point"] += delta
+        else:
+            player = db.query(Player).filter(Player.id == player_id).first()
+            if player:
+                leaderboard[player_id] = {
+                    "id": player.id,
+                    "nickname": player.nickname,
+                    "total_point": delta,
+                    "wins": 0,
+                    "podiums": 0,
+                }
+
+    return sorted(
+        leaderboard.values(),
+        key=lambda r: (-r["total_point"], -r["wins"], -r["podiums"], r["nickname"]),
+    )
 
 
 def _head_to_head_base_query(db: Session, game_id: int, player_a_id: int, player_b_id: int):

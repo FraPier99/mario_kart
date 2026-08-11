@@ -244,6 +244,34 @@ class Result(Base):
 
 
 # -------------------
+# POINT ADJUSTMENT
+# -------------------
+class PointAdjustment(Base):
+    """Rettifica manuale di punti (bonus/penalità) su un giocatore, all'interno
+    di un torneo classic — vedi _classic_classifica/get_leaderboard, che la
+    sommano ai punti-gara. Solo superadmin, motivo sempre obbligatorio e
+    visibile pubblicamente (non è un log admin nascosto)."""
+
+    __tablename__ = "point_adjustments"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    tournament_id = Column(Integer, ForeignKey("tournaments.id"), nullable=False)
+    player_id = Column(Integer, ForeignKey("players.id"), nullable=False)
+    points = Column(Integer, nullable=False)
+    reason = Column(Text, nullable=False)
+    created_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, nullable=False, default=now_rome)
+
+    tournament = relationship("Tournament")
+    player = relationship("Player")
+    created_by = relationship("User")
+
+    __table_args__ = (
+        CheckConstraint("points != 0", name="check_points_adjustment_nonzero"),
+    )
+
+
+# -------------------
 # ENGAGEMENT
 # -------------------
 class Prediction(Base):

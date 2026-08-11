@@ -93,26 +93,28 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
         <div className="space-y-4">
             {editingRace && (
                 <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={closeEdit}>
-                    <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(event) => event.stopPropagation()}>
-                        <div className="flex items-center justify-end mb-2">
+                    <div className="flex max-h-[90vh] w-full max-w-2xl flex-col" onClick={(event) => event.stopPropagation()}>
+                        <div className="flex shrink-0 items-center justify-end mb-2">
                             <button type="button" onClick={closeEdit} className="rounded-full border border-white/10 bg-white/5 p-2 text-slate-200 transition hover:bg-white/10"><X size={16} /></button>
                         </div>
 
-                        <ClassicRaceForm
-                            key={editingRace.id}
-                            tournamentId={tournamentId}
-                            races={races}
-                            nPlayers={nPlayers}
-                            participants={editingRaceParticipants}
-                            circuits={circuits}
-                            characters={characters}
-                            editingRace={editingRace}
-                            onSaved={async () => { closeEdit(); await onChanged?.() }}
-                        />
+                        <div className="min-h-0 flex-1 overflow-y-auto">
+                            <ClassicRaceForm
+                                key={editingRace.id}
+                                tournamentId={tournamentId}
+                                races={races}
+                                nPlayers={nPlayers}
+                                participants={editingRaceParticipants}
+                                circuits={circuits}
+                                characters={characters}
+                                editingRace={editingRace}
+                                onSaved={async () => { closeEdit(); await onChanged?.() }}
+                            />
 
-                        <button type="button" onClick={() => setConfirmDelete(editingRace)} className="mt-3 w-full rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm font-black uppercase tracking-widest text-rose-200 transition hover:bg-rose-500/20">
-                            Elimina gara
-                        </button>
+                            <button type="button" onClick={() => setConfirmDelete(editingRace)} className="mt-3 w-full rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm font-black uppercase tracking-widest text-rose-200 transition hover:bg-rose-500/20">
+                                Elimina gara
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

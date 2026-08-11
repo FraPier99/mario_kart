@@ -138,9 +138,17 @@ export const schedineDeluxeApi = {
     tournamentDetail: (tournamentId) => _get(`/schedine-deluxe/tournament/${tournamentId}/detail`),
     settle: (tournamentId) => _post(`/schedine-deluxe/tournament/${tournamentId}/settle`, {}),
 }
-export const racesApi = createCrudApi('/races')
+export const racesApi = {
+    ...createCrudApi('/races'),
+    // Riordina posizione + personaggio di più risultati della stessa gara in
+    // un'unica transazione backend — necessario per gli scambi di posizione
+    // (es. 1° <-> 2°), che con PUT /results/{id} separati violerebbero
+    // temporaneamente il vincolo di unicità (race_id, position).
+    reorderResults: (raceId, results) => _put(`/races/${raceId}/results/reorder`, { results }),
+}
 export const resultsApi = createCrudApi('/results')
 export const circuitsApi = createCrudApi('/circuits')
+export const pointAdjustmentsApi = createCrudApi('/point-adjustments')
 export const schedineApi = {
     me: () => _get('/schedine/me'),
     overview: (gameId) => _get(`/schedine/overview${gameId ? `?game_id=${gameId}` : ''}`),

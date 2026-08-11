@@ -215,7 +215,7 @@ def get_tournament_leaderboard(tournament_id: int, db: Session = Depends(get_db)
             detail="No results for this tournament",
         )
 
-    return [dict(row._mapping) for row in leaderboard]
+    return leaderboard
 
 
 @router.post("/{tournament_id}/playoff", response_model=TournamentResponse)

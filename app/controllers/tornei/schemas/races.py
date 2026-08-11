@@ -44,3 +44,13 @@ class UpdateRace(BaseModel):
     phase: Optional[str] = None
     group_name: Optional[str] = None
     is_duello: Optional[bool] = None
+
+
+class ReorderResultItem(BaseModel):
+    result_id: int
+    position: int
+    character_id: int
+
+
+class ReorderResults(BaseModel):
+    results: list[ReorderResultItem]

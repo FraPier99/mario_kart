@@ -866,6 +866,34 @@ def ensure_user_ownership_declared_at_column():
             )
 
 
+def ensure_result_position_constraint_deferrable():
+    """Il vincolo unique_position_per_race va reso DEFERRABLE INITIALLY
+    DEFERRED: riordinare i risultati di una gara (es. scambiare 1° e 2°
+    posto) richiede più UPDATE nella stessa transazione che, prese una per
+    volta, violerebbero temporaneamente l'unicità (race_id, position) prima
+    di raggiungere lo stato finale valido. Con il vincolo differito, Postgres
+    controlla l'unicità solo al COMMIT della transazione, non ad ogni
+    singola riga — vedi reorder_race_results in services/tornei/races.py,
+    l'unico punto che sfrutta questo comportamento (fa tutti gli update e un
+    solo commit finale)."""
+    with engine.begin() as connection:
+        is_deferrable = connection.execute(
+            text(
+                "SELECT condeferrable FROM pg_constraint WHERE conname = 'unique_position_per_race'"
+            )
+        ).scalar()
+        if is_deferrable is False:
+            connection.execute(
+                text("ALTER TABLE results DROP CONSTRAINT unique_position_per_race")
+            )
+            connection.execute(
+                text(
+                    "ALTER TABLE results ADD CONSTRAINT unique_position_per_race "
+                    "UNIQUE (race_id, position) DEFERRABLE INITIALLY DEFERRED"
+                )
+            )
+
+
 def bootstrap_database():
     create_tables()
     ensure_player_img_url_column()
@@ -902,6 +930,7 @@ def bootstrap_database():
     ensure_user_console_ownership_quantity_column()
     ensure_user_r4_devices_quantity_column()
     ensure_user_ownership_declared_at_column()
+    ensure_result_position_constraint_deferrable()
     # seed_circuits()
     seed_mk8d_data()
     rename_mkds_circuits_to_italian()

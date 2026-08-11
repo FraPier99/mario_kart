@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { authApi, charactersApi, circuitsApi, gamesApi, playersApi, racesApi, resultsApi, tournamentsApi } from '@/services/apiClient'
+import { authApi, charactersApi, circuitsApi, gamesApi, playersApi, pointAdjustmentsApi, racesApi, resultsApi, tournamentsApi } from '@/services/apiClient'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/services/apiClient'
 
@@ -26,6 +26,7 @@ const fetchAllTournamentData = () => Promise.all([
     racesApi.list(),
     resultsApi.list(),
     circuitsApi.list(),
+    pointAdjustmentsApi.list(),
 ])
 
 const fetchAllWithRetry = async () => {
@@ -220,12 +221,19 @@ const buildPlayerStats = (players, tournaments, results, races = []) => {
     return { statsByPlayerId }
 }
 
-const buildTournamentDetails = (tournaments, races, results, playersById) => {
+const buildTournamentDetails = (tournaments, races, results, playersById, pointAdjustments = []) => {
     const racesByTournamentId = new Map()
     races.forEach((race) => {
         const list = racesByTournamentId.get(race.tournament_id)
         if (list) list.push(race)
         else racesByTournamentId.set(race.tournament_id, [race])
+    })
+
+    const adjustmentsByTournamentId = new Map()
+    pointAdjustments.forEach((adjustment) => {
+        const list = adjustmentsByTournamentId.get(adjustment.tournament_id)
+        if (list) list.push(adjustment)
+        else adjustmentsByTournamentId.set(adjustment.tournament_id, [adjustment])
     })
 
     const resultsByRaceId = new Map()
@@ -335,6 +343,33 @@ const buildTournamentDetails = (tournaments, races, results, playersById) => {
                 }
             })
 
+            // Rettifiche punti manuali del superadmin (vedi PointAdjustmentsPanel):
+            // si sommano al totale già accumulato dalle gare, creando la riga
+            // standing anche per un giocatore che ha solo una rettifica e
+            // nessuna gara giocata in questo torneo (racesPlayed resta 0, già
+            // gestito sotto da `rp = s.racesPlayed || 1`).
+            const tournamentPointAdjustments = adjustmentsByTournamentId.get(tournament.id) ?? []
+            tournamentPointAdjustments.forEach((adjustment) => {
+                const player = playersById.get(adjustment.player_id)
+                const currentStanding = standingsByPlayerId.get(adjustment.player_id) ?? {
+                    playerId: adjustment.player_id,
+                    player: player ?? null,
+                    nickname: player?.nickname ?? 'Sconosciuto',
+                    img_url: player?.img_url ?? null,
+                    favoriteCharacterId: player?.favorite_character_id ?? null,
+                    points: 0,
+                    raceWins: 0,
+                    podiums: 0,
+                    racesPlayed: 0,
+                    placementPctSum: 0,
+                    positionSum: 0,
+                    usedCharacterIds: [],
+                    lastCharacterId: null,
+                }
+                currentStanding.points += adjustment.points ?? 0
+                standingsByPlayerId.set(adjustment.player_id, currentStanding)
+            })
+
         const standings = Array.from(standingsByPlayerId.values()).map((s) => {
             const rp = s.racesPlayed || 1
             const placementIndex = Number(((s.placementPctSum / rp) * 100).toFixed(1))
@@ -363,6 +398,7 @@ const buildTournamentDetails = (tournaments, races, results, playersById) => {
                 races: detailedRaces,
                 standings,
                 raceCount: detailedRaces.length,
+                pointAdjustments: tournamentPointAdjustments,
             }
         })
 }
@@ -375,6 +411,7 @@ export function AppDataProvider({ children }) {
     const [races, setRaces] = useState([])
     const [results, setResults] = useState([])
     const [circuits, setCircuits] = useState([])
+    const [pointAdjustments, setPointAdjustments] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [errorMessage, setErrorMessage] = useState('')
@@ -401,7 +438,7 @@ export function AppDataProvider({ children }) {
         setErrorMessage('')
 
         try {
-            const [playersResponse, charactersResponse, gamesResponse, tournamentsResponse, racesResponse, resultsResponse, circuitsResponse] = await fetchAllWithRetry()
+            const [playersResponse, charactersResponse, gamesResponse, tournamentsResponse, racesResponse, resultsResponse, circuitsResponse, pointAdjustmentsResponse] = await fetchAllWithRetry()
 
             setPlayers(playersResponse.data ?? [])
             setCharacters(charactersResponse.data ?? [])
@@ -410,6 +447,7 @@ export function AppDataProvider({ children }) {
             setRaces(racesResponse.data ?? [])
             setResults(resultsResponse.data ?? [])
             setCircuits(circuitsResponse.data ?? [])
+            setPointAdjustments(pointAdjustmentsResponse.data ?? [])
         }
         catch (requestError) {
             const message = getApiErrorMessage(requestError, 'Impossibile caricare i dati del backend')
@@ -500,8 +538,8 @@ export function AppDataProvider({ children }) {
     }, [races])
 
     const detailedTournaments = useMemo(() => {
-        return buildTournamentDetails(tournaments, races, results, playersById)
-    }, [tournaments, races, results, playersById])
+        return buildTournamentDetails(tournaments, races, results, playersById, pointAdjustments)
+    }, [tournaments, races, results, playersById, pointAdjustments])
 
     const { statsByPlayerId } = useMemo(() => {
         return buildPlayerStats(players, tournaments, results, races)

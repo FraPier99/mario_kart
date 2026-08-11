@@ -128,12 +128,11 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
                     tournament_id: tournamentId,
                     circuit_id: Number(circuitId),
                 })
-                await Promise.all(
-                    (editingRace.results ?? []).map((result) => resultsApi.update(result.id, {
-                        position: order.indexOf(result.player_id) + 1,
-                        character_id: Number(charactersByPlayer[result.player_id]),
-                    }))
-                )
+                await racesApi.reorderResults(editingRace.id, (editingRace.results ?? []).map((result) => ({
+                    result_id: result.id,
+                    position: order.indexOf(result.player_id) + 1,
+                    character_id: Number(charactersByPlayer[result.player_id]),
+                })))
                 toast.success('Gara aggiornata')
             } else {
                 const raceRes = await racesApi.create({

@@ -33,6 +33,7 @@ from app.models.tornei.models import (
     Race,
     Result,
     Prediction,
+    PointAdjustment,
 )
 from app.models.schedine.models import (
     SchedinaTorneo,

@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models import Race
 from app.controllers.tornei.schemas.races import CreateRace, UpdateRace
+from app.data.punteggi import PUNTEGGI_CONFIG
 
 
 def get_races(db: Session):
@@ -88,3 +89,49 @@ def update_race(db: Session, raceData: UpdateRace, race_id: int):
     db.refresh(race)
 
     return race
+
+
+def reorder_race_results(db: Session, race_id: int, assignments: list[dict]):
+    """Riassegna posizione e personaggio di più risultati della STESSA gara in
+    un'unica transazione (un solo commit finale, non uno per riga).
+
+    Necessario perché il vincolo unique_position_per_race è DEFERRABLE
+    INITIALLY DEFERRED (vedi bootstrap.py): riordinando via singole PUT
+    /results/{id} indipendenti — ciascuna la propria transazione — uno
+    scambio di posizione (es. 1° <-> 2°) fa quasi sempre collidere
+    temporaneamente la nuova posizione di un risultato con quella non ancora
+    aggiornata di un altro, perché il vincolo differito si applica solo
+    all'interno di una singola transazione, non tra richieste separate.
+    Facendo tutti gli UPDATE qui e un solo commit alla fine, lo stato
+    intermedio (non ancora valido) non viene mai controllato.
+
+    assignments: [{"result_id": int, "position": int, "character_id": int}, ...]
+    """
+    race = db.query(Race).filter(Race.id == race_id).first()
+    if not race or not race.tournament:
+        return None
+
+    total_player = race.tournament.n_players
+    results_by_id = {r.id: r for r in race.results}
+
+    updated = []
+    for item in assignments:
+        result = results_by_id.get(item["result_id"])
+        if not result:
+            raise ValueError("Result not found for this race")
+
+        result.position = item["position"]
+        result.character_id = item["character_id"]
+        try:
+            result.points = PUNTEGGI_CONFIG[total_player][result.position - 1]
+        except KeyError:
+            raise ValueError("Invalid Tournament Size")
+        except IndexError:
+            raise ValueError("Invalid Position")
+        updated.append(result)
+
+    db.commit()
+    for result in updated:
+        db.refresh(result)
+
+    return updated
