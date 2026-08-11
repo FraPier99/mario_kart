@@ -165,13 +165,27 @@ const Faq = () => {
                             <div>
                                 <SectionHeading>La Lega</SectionHeading>
 
-                                <EditableContentImage
-                                    contentKey="faq_lega_founding"
-                                    imageUrl={images.faq_lega_founding}
-                                    onUploaded={handleImageUploaded}
-                                    alt="La nascita della Lega"
-                                    className="mt-5 h-72 w-full rounded-2xl md:h-96"
-                                />
+                                {/* Due foto affiancate invece di una sola a piena larghezza: con
+                                    object-cover un riquadro quadrato/verticale ritaglia molto meno
+                                    di un banner panoramico, qualunque sia l'inquadratura originale. */}
+                                <div className="mt-5 grid grid-cols-2 gap-3">
+                                    <EditableContentImage
+                                        contentKey="faq_lega_founding"
+                                        imageUrl={images.faq_lega_founding}
+                                        onUploaded={handleImageUploaded}
+                                        alt="La nascita della Lega — foto 1"
+                                        className="aspect-square h-auto w-full rounded-2xl md:aspect-4/3"
+                                        fit="cover"
+                                    />
+                                    <EditableContentImage
+                                        contentKey="faq_lega_founding_2"
+                                        imageUrl={images.faq_lega_founding_2}
+                                        onUploaded={handleImageUploaded}
+                                        alt="La nascita della Lega — foto 2"
+                                        className="aspect-square h-auto w-full rounded-2xl md:aspect-4/3"
+                                        fit="cover"
+                                    />
+                                </div>
 
                                 <div className="prose prose-slate dark:prose-invert mt-6 max-w-none text-sm leading-relaxed text-slate-700 dark:text-muted-foreground">
                                     <h3 className="mb-3 text-lg font-black text-slate-900 dark:text-foreground">Come è nata la Lega</h3>

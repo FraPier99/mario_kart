@@ -10,7 +10,12 @@ import { contentImagesApi, getApiErrorMessage } from '@/services/apiClient'
 // vede in più un controllo di upload (stesso flusso client-side di
 // compressione già usato per avatar/foto campione altrove nell'app).
 // `contentKey` deve corrispondere alla key usata in GET /content-images.
-const EditableContentImage = ({ contentKey, imageUrl, onUploaded, alt = '', className = '' }) => {
+// `fit`: 'contain' (default, l'immagine intera resta sempre visibile — utile
+// per un banner panoramico dove non si vuole ritagliare nulla) oppure
+// 'cover' (riempie il riquadro ritagliando gli eccessi — sensato solo con un
+// riquadro poco sensibile al ritaglio, es. un quadrato/4:3 di formato
+// prevedibile, come nella coppia di foto affiancate in /faq).
+const EditableContentImage = ({ contentKey, imageUrl, onUploaded, alt = '', className = '', fit = 'contain' }) => {
     const { isSuperadmin } = useAuth()
     const [uploading, setUploading] = useState(false)
     const inputRef = useRef(null)
@@ -35,12 +40,10 @@ const EditableContentImage = ({ contentKey, imageUrl, onUploaded, alt = '', clas
     return (
         <div className={`group relative overflow-hidden bg-slate-100 dark:bg-muted ${className}`}>
             {imageUrl ? (
-                // object-contain (non object-cover): l'immagine intera resta sempre
-                // visibile e centrata nel riquadro, senza ritagliare i bordi con
-                // aspect ratio diverse da quella del contenitore. `block` toglie lo
-                // spazio extra sotto l'immagine che un <img> inline lascia per
-                // default (altrimenti sembrava "non adattarsi" bene al riquadro).
-                <img src={imageUrl} alt={alt} className="block h-full w-full object-contain object-center" />
+                // `block` toglie lo spazio extra sotto l'immagine che un <img>
+                // inline lascia per default (altrimenti sembrava "non adattarsi"
+                // bene al riquadro).
+                <img src={imageUrl} alt={alt} className={`block h-full w-full object-center ${fit === 'cover' ? 'object-cover' : 'object-contain'}`} />
             ) : (
                 <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-slate-100 dark:bg-muted text-slate-400 dark:text-muted-foreground">
                     <ImagePlus size={28} />
