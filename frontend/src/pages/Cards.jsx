@@ -95,7 +95,6 @@ const Cards = () => {
     const [inventory, setInventory] = useState([])
     const [publicInventory, setPublicInventory] = useState([])
     const [loading, setLoading] = useState(true)
-    const [flippedCard, setFlippedCard] = useState(null)
     const [usingCardId, setUsingCardId] = useState(null)
 
     const activeLiveTournament = useMemo(() => tournaments.find(t => t.status === 'in_corso') ?? null, [tournaments])
@@ -181,6 +180,13 @@ const Cards = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
+                        <Link
+                            to="/faq"
+                            className="font-title rounded-xl border-2 border-slate-900 dark:border-white/20 bg-white px-4 py-3 text-[10px] tracking-wide text-slate-700 transition active:translate-y-px hover:border-slate-700 dark:bg-card dark:text-foreground"
+                            style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
+                        >
+                            Come funzionano le carte?
+                        </Link>
                         {user?.player && (() => {
                             const favChar = user.player.favorite_character_id
                                 ? charactersById?.get(user.player.favorite_character_id) ?? null
@@ -206,24 +212,6 @@ const Cards = () => {
                         >
                             Storico tornei
                         </Link>
-                    </div>
-                </div>
-
-                {/* Spiegazione visiva carte */}
-                <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl dark:border-border dark:bg-card">
-                    <div className="flex items-center gap-2 mb-5">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-amber-400 to-orange-500 text-white shadow-sm">
-                            <Zap size={14} />
-                        </div>
-                        <p className={`text-sm font-black uppercase tracking-[0.3em] ${theme.tailwind.text}`}>Carte Potere</p>
-                    </div>
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <PowerCard type="master" mode="flip" flipped={flippedCard === 'master'} onFlip={() => setFlippedCard(flippedCard === 'master' ? null : 'master')} />
-                        <PowerCard type="guscio" mode="flip" flipped={flippedCard === 'guscio'} onFlip={() => setFlippedCard(flippedCard === 'guscio' ? null : 'guscio')} />
-                    </div>
-                    <p className="mt-5 text-center text-[10px] text-slate-400 dark:text-slate-500">Le carte vengono attivate dall'organizzatore nella pagina di gestione del torneo. Una volta consumate non sono più recuperabili.</p>
-                    <div className="mt-4 rounded-2xl border border-dashed border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 px-5 py-3 text-center">
-                        <p className="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">⚙️ Effetti in fase di definizione — potrebbero subire modifiche</p>
                     </div>
                 </div>
 

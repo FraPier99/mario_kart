@@ -6,6 +6,7 @@ import {
 import AppLayout from '@/components/layout/AppLayout'
 import PlayerLink from '@/components/common/PlayerLink'
 import EditableContentImage from '@/components/common/EditableContentImage'
+import PowerCard from '@/components/cards/PowerCard'
 import { useAppData } from '@/context/AppDataContext'
 import { contentImagesApi } from '@/services/apiClient'
 
@@ -23,19 +24,32 @@ const FounderName = ({ name, players }) => {
 }
 
 const BADGE_TIERS_FAQ = [
-    { tier: 'LEGGENDA', Icon: Crown, color: 'text-amber-600 dark:text-amber-400', desc: 'Ha vinto TUTTI i tornei conclusi di quel gioco a cui ha partecipato (minimo 2 tornei giocati).' },
-    { tier: 'CAMPIONE', Icon: Trophy, color: 'text-amber-600 dark:text-amber-400', desc: 'Ha vinto almeno un torneo concluso di quel gioco.' },
+    { tier: 'LEGGENDA', Icon: Crown, color: 'text-amber-600 dark:text-amber-400', desc: 'Ha vinto TUTTI i tornei conclusi di quel gioco a cui ha partecipato (100% di vittorie).' },
+    { tier: 'CAMPIONE', Icon: Trophy, color: 'text-amber-600 dark:text-amber-400', desc: 'Ha vinto almeno un torneo concluso di quel gioco (ma non tutti).' },
     { tier: 'VETERANO', Icon: Star, color: 'text-blue-600 dark:text-blue-400', desc: 'Non ha mai vinto, ma è arrivato sul podio (primi 3 posti) in almeno metà dei tornei conclusi giocati.' },
     { tier: 'OUTSIDER', Icon: Flame, color: 'text-violet-600 dark:text-violet-400', desc: 'Non ha mai vinto, ha fatto almeno un podio, ma meno spesso della metà dei tornei giocati.' },
     { tier: 'SFIDANTE', Icon: Swords, color: 'text-slate-500 dark:text-muted-foreground', desc: 'Ha giocato almeno un torneo concluso ma non è mai arrivato sul podio.' },
     { tier: 'ESORDIENTE', Icon: FlagIcon, color: 'text-emerald-600 dark:text-emerald-400', desc: 'Non ha ancora giocato un torneo concluso di quel gioco (e quel gioco ha comunque almeno un torneo creato).' },
 ]
 
+// Struttura a due livelli: le voci con `children` sono un'etichetta di
+// raggruppamento non cliccabile (come "LA COLLEZIONE" nell'immagine di
+// riferimento), le sotto-voci sono le sezioni di contenuto vere e proprie.
 const SECTIONS = [
     { key: 'lega', label: 'La Lega', icon: Flag },
-    { key: 'tornei', label: 'Tornei', icon: Trophy },
+    {
+        label: 'Tornei', icon: Trophy, children: [
+            { key: 'tornei-classic', label: 'Classifica Unica' },
+            { key: 'tornei-gironi', label: 'Gironi' },
+        ],
+    },
     { key: 'badge', label: 'Badge', icon: Crown },
-    { key: 'schedina', label: 'Schedina', icon: ScrollText },
+    {
+        label: 'Schedina', icon: ScrollText, children: [
+            { key: 'schedina-classic', label: 'Classifica Unica' },
+            { key: 'schedina-gironi', label: 'Gironi' },
+        ],
+    },
     { key: 'card', label: 'Card', icon: Zap },
 ]
 
@@ -51,6 +65,7 @@ const Faq = () => {
     const { players } = useAppData()
     const [activeSection, setActiveSection] = useState('lega')
     const [images, setImages] = useState({})
+    const [flippedCard, setFlippedCard] = useState(null)
 
     useEffect(() => {
         contentImagesApi.list()
@@ -79,25 +94,55 @@ const Faq = () => {
                     </p>
                 </div>
 
-                <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
-                    {/* Sidebar */}
+                <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
+                    {/* Sidebar — sempre verticale (anche su mobile): una lista a scorrimento
+                        orizzontale con molte voci annidate era facile da non vedere fino in fondo. */}
                     <nav className="lg:sticky lg:top-20 lg:self-start">
-                        <div className="flex gap-2 overflow-x-auto rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card p-2 lg:flex-col lg:overflow-visible">
-                            {SECTIONS.map(({ key, label, icon: Icon }) => (
-                                <button
-                                    key={key}
-                                    type="button"
-                                    onClick={() => setActiveSection(key)}
-                                    className={`flex shrink-0 items-center gap-2.5 rounded-xl px-4 py-3 text-left text-xs font-black uppercase tracking-widest transition ${
-                                        activeSection === key
-                                            ? 'bg-emerald-500 text-white shadow-md'
-                                            : 'text-slate-600 dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-muted'
-                                    }`}
-                                >
-                                    <Icon size={15} />
-                                    {label}
-                                </button>
-                            ))}
+                        <div className="flex flex-col gap-0.5 rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card p-2">
+                            {SECTIONS.map((item) => {
+                                if (item.children) {
+                                    const groupActive = item.children.some((c) => c.key === activeSection)
+                                    return (
+                                        <div key={item.label} className="pt-2 first:pt-0">
+                                            <p className={`flex items-center gap-2 px-4 py-1.5 text-[11px] font-black uppercase tracking-widest ${groupActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-muted-foreground'}`}>
+                                                <item.icon size={13} />
+                                                {item.label}
+                                            </p>
+                                            <div className="ml-3 space-y-0.5 border-l-2 border-slate-100 dark:border-border pl-3">
+                                                {item.children.map((sub) => (
+                                                    <button
+                                                        key={sub.key}
+                                                        type="button"
+                                                        onClick={() => setActiveSection(sub.key)}
+                                                        className={`block w-full rounded-xl px-3 py-2 text-left text-xs font-bold uppercase tracking-wide transition ${
+                                                            activeSection === sub.key
+                                                                ? 'bg-emerald-500 text-white shadow-md'
+                                                                : 'text-slate-600 dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-muted'
+                                                        }`}
+                                                    >
+                                                        {sub.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )
+                                }
+                                return (
+                                    <button
+                                        key={item.key}
+                                        type="button"
+                                        onClick={() => setActiveSection(item.key)}
+                                        className={`flex items-center gap-2.5 rounded-xl px-4 py-3 text-left text-xs font-black uppercase tracking-widest transition ${
+                                            activeSection === item.key
+                                                ? 'bg-emerald-500 text-white shadow-md'
+                                                : 'text-slate-600 dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-muted'
+                                        }`}
+                                    >
+                                        <item.icon size={15} />
+                                        {item.label}
+                                    </button>
+                                )
+                            })}
                         </div>
                     </nav>
 
@@ -150,15 +195,10 @@ const Faq = () => {
                             </div>
                         )}
 
-                        {activeSection === 'tornei' && (
+                        {activeSection === 'tornei-classic' && (
                             <div>
-                                <SectionHeading>Tornei</SectionHeading>
-                                <p className="mt-3 text-sm text-slate-600 dark:text-muted-foreground">
-                                    Ogni torneo appartiene a un solo gioco e segue uno di due formati.
-                                </p>
-
-                                <SubHeading>Classifica Unica</SubHeading>
-                                <div className="space-y-3 text-sm text-slate-700 dark:text-muted-foreground">
+                                <SectionHeading>Tornei · Classifica Unica</SectionHeading>
+                                <div className="mt-5 space-y-3 text-sm text-slate-700 dark:text-muted-foreground">
                                     <p><strong className="text-slate-900 dark:text-foreground">Struttura e partecipanti:</strong> tutti i partecipanti gareggiano insieme nello stesso insieme di gare; la classifica finale è la somma dei punti di tutte le gare.</p>
                                     <p><strong className="text-slate-900 dark:text-foreground">Svolgimento:</strong> massimo 20 gare per torneo. Ogni giocatore sceglie un numero di circuiti pari a gare/partecipanti (arrotondato per eccesso); i circuiti scelti si esauriscono, i rimanenti vengono sorteggiati tra quelli non ancora usati (pool resettato se si esauriscono tutti).</p>
                                     <p><strong className="text-slate-900 dark:text-foreground">Punteggio:</strong> dinamico in base al numero di partecipanti n: 1° = n+1, 2° = n-1, 3° = n-2, a scalare di 1 fino a 1 punto per l'ultimo (es. con 8 giocatori: 9,7,6,5,4,3,2,1).</p>
@@ -166,8 +206,17 @@ const Faq = () => {
                                     <p><strong className="text-slate-900 dark:text-foreground">Conclusione:</strong> mai automatica — risolti tutti i duelli aperti, un admin deve premere "Decreta Vincitore".</p>
                                 </div>
 
-                                <SubHeading>Torneo a Gironi</SubHeading>
-                                <div className="space-y-3 text-sm text-slate-700 dark:text-muted-foreground">
+                                <SubHeading>Regole comuni a entrambi i formati</SubHeading>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground">
+                                    Massimo <strong>1 carta potere in totale</strong> per giocatore per torneo (non per fase), le carte non si possono usare nelle gare di spareggio/duello, e la schedina si chiude quando il torneo inizia (nessuna deadline automatica a tempo — decide l'admin).
+                                </p>
+                            </div>
+                        )}
+
+                        {activeSection === 'tornei-gironi' && (
+                            <div>
+                                <SectionHeading>Tornei · Gironi</SectionHeading>
+                                <div className="mt-5 space-y-3 text-sm text-slate-700 dark:text-muted-foreground">
                                     <p><strong className="text-slate-900 dark:text-foreground">Requisiti:</strong> almeno 8 partecipanti. I gironi vengono calcolati automaticamente: il minor numero possibile, massimo 4 giocatori a girone, scarto massimo di 1 tra gironi.</p>
                                     <p><strong className="text-slate-900 dark:text-foreground">Fase 1 — Gironi:</strong> ogni girone gioca gare indipendenti dagli altri, punteggio fisso per gara (1°=5, 2°=3, 3°=2, 4°=1). I circuiti sono indipendenti per girone e si resettano a ogni nuova fase.</p>
                                     <p><strong className="text-slate-900 dark:text-foreground">Qualificazione:</strong> i primi 2 di ogni girone avanzano. In caso di parità: prima vittorie di gara, poi podi, poi uno spareggio al meglio (primo a 2 vittorie).</p>
@@ -176,9 +225,9 @@ const Faq = () => {
                                     <p><strong className="text-slate-900 dark:text-foreground">Conclusione:</strong> come per la Classifica Unica, mai automatica.</p>
                                 </div>
 
-                                <SubHeading>Regole comuni</SubHeading>
+                                <SubHeading>Regole comuni a entrambi i formati</SubHeading>
                                 <p className="text-sm text-slate-700 dark:text-muted-foreground">
-                                    In entrambi i formati: massimo <strong>1 carta potere in totale</strong> per giocatore per torneo (non per fase), le carte non si possono usare nelle gare di spareggio/duello, e la schedina si chiude quando il torneo inizia (nessuna deadline automatica a tempo — decide l'admin).
+                                    Massimo <strong>1 carta potere in totale</strong> per giocatore per torneo (non per fase), le carte non si possono usare nelle gare di spareggio/duello, e la schedina si chiude quando il torneo inizia (nessuna deadline automatica a tempo — decide l'admin).
                                 </p>
                             </div>
                         )}
@@ -205,17 +254,17 @@ const Faq = () => {
                             </div>
                         )}
 
-                        {activeSection === 'schedina' && (
+                        {activeSection === 'schedina-classic' && (
                             <div>
-                                <SectionHeading>Schedina</SectionHeading>
+                                <SectionHeading>Schedina · Classifica Unica</SectionHeading>
                                 <p className="mt-3 text-sm text-slate-600 dark:text-muted-foreground">
                                     Prima dell'inizio di un torneo, ogni partecipante può compilare <strong>una sola
                                     schedina</strong> con i propri pronostici. Si chiude quando il torneo inizia (o
                                     prima, se un admin la chiude manualmente) — nessuna deadline automatica a tempo.
-                                    Ogni pronostico indovinato vale <strong>3 punti</strong>, uniforme su entrambi i formati.
+                                    Ogni pronostico indovinato vale <strong>3 punti</strong>.
                                 </p>
 
-                                <SubHeading>Schedina Classifica Unica</SubHeading>
+                                <SubHeading>Pronostici</SubHeading>
                                 <ul className="list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-muted-foreground">
                                     <li><strong className="text-slate-900 dark:text-foreground">Classifica generale:</strong> ordine completo di arrivo — ogni posizione esatta vale 3 punti.</li>
                                     <li><strong className="text-slate-900 dark:text-foreground">Maggior Streak:</strong> chi farà più vittorie consecutive (valido solo dalle 2 vittorie in su).</li>
@@ -223,7 +272,28 @@ const Faq = () => {
                                     <li><strong className="text-slate-900 dark:text-foreground">Distanza 1°-2°:</strong> non assegna punti, è il criterio di spareggio — vince chi ci si è avvicinato di più al distacco reale tra 1° e 2° classificato.</li>
                                 </ul>
 
-                                <SubHeading>Schedina Gironi</SubHeading>
+                                <SubHeading>Premi</SubHeading>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground">
+                                    Chi vince la schedina (e chi è in parità con lui) riceve una <strong>Carta Master</strong>;
+                                    chi arriva ultimo nel torneo (e il penultimo, se i partecipanti sono almeno 7) riceve
+                                    una <strong>Carta Guscio Blu</strong>. In caso di parità sui punti totali, vince chi si
+                                    è avvicinato di più al vero distacco 1°-2° (criterio sopra); a parità anche su questo,
+                                    vince chi ha inviato la schedina prima.
+                                </p>
+                            </div>
+                        )}
+
+                        {activeSection === 'schedina-gironi' && (
+                            <div>
+                                <SectionHeading>Schedina · Gironi</SectionHeading>
+                                <p className="mt-3 text-sm text-slate-600 dark:text-muted-foreground">
+                                    Prima dell'inizio di un torneo, ogni partecipante può compilare <strong>una sola
+                                    schedina</strong> con i propri pronostici. Si chiude quando il torneo inizia (o
+                                    prima, se un admin la chiude manualmente) — nessuna deadline automatica a tempo.
+                                    Ogni pronostico indovinato vale <strong>3 punti</strong>.
+                                </p>
+
+                                <SubHeading>Pronostici</SubHeading>
                                 <ul className="list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-muted-foreground">
                                     <li><strong className="text-slate-900 dark:text-foreground">Finalisti:</strong> chi accederà alla Fase 2 — ogni finalista indovinato vale 3 punti.</li>
                                     <li><strong className="text-slate-900 dark:text-foreground">Classifica Finale:</strong> ordine del podio finale.</li>
@@ -251,6 +321,11 @@ const Faq = () => {
                                     assegnare manualmente) e si possono giocare dal vivo durante un torneo.
                                 </p>
 
+                                <div className="mt-5 grid grid-cols-1 gap-6 md:grid-cols-2">
+                                    <PowerCard type="master" mode="flip" flipped={flippedCard === 'master'} onFlip={() => setFlippedCard(flippedCard === 'master' ? null : 'master')} />
+                                    <PowerCard type="guscio" mode="flip" flipped={flippedCard === 'guscio'} onFlip={() => setFlippedCard(flippedCard === 'guscio' ? null : 'guscio')} />
+                                </div>
+
                                 <SubHeading>Tipi di carta</SubHeading>
                                 <div className="space-y-3 text-sm text-slate-700 dark:text-muted-foreground">
                                     <p><strong className="text-slate-900 dark:text-foreground">Carta Master:</strong> assegnata a chi vince la schedina. Permette di bannare una pista o imporre un personaggio nel torneo successivo.</p>
@@ -263,6 +338,7 @@ const Faq = () => {
                                     <li><strong className="text-slate-900 dark:text-foreground">Stesso gioco:</strong> una carta vinta in un gioco (es. Mario Kart DS) non si può usare in un torneo di un altro gioco.</li>
                                     <li><strong className="text-slate-900 dark:text-foreground">Niente spareggi:</strong> le carte non si possono usare nelle gare di Duello/spareggio.</li>
                                 </ul>
+                                <p className="mt-5 text-center text-[10px] text-slate-400 dark:text-slate-500">Le carte vengono attivate dall'organizzatore nella pagina di gestione del torneo. Una volta consumate non sono più recuperabili.</p>
                             </div>
                         )}
                     </div>

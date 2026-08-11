@@ -1,6 +1,6 @@
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session, aliased
-from app.models import Circuit, Game, Player, Race, Result, Tournament, TournamentPlayer
+from app.models import Circuit, Game, Player, Race, Result, Tournament
 
 
 def get_leaderboard(db: Session, tournament_id: int):
@@ -246,7 +246,7 @@ _BADGE_LABELS = {
 def _badge_tier_from_stats(tournaments_played: int, wins: int, podiums: int) -> str:
     if tournaments_played == 0:
         return "esordiente"
-    if wins == tournaments_played and tournaments_played >= 2:
+    if wins == tournaments_played:
         return "leggenda"
     if wins > 0:
         return "campione"
@@ -271,15 +271,30 @@ def get_player_game_badge(db: Session, player_id: int, game_id: int) -> dict:
         get_group_stage_overall_classifica,
     )
 
-    tournaments = (
-        db.query(Tournament)
-        .join(TournamentPlayer, TournamentPlayer.tournament_id == Tournament.id)
+    # Partecipazione rilevata via Result/Race (non TournamentPlayer): alcuni
+    # tornei più vecchi hanno gare/risultati reali ma nessuna riga
+    # TournamentPlayer (gap di dati storico), e un giocatore che ha
+    # effettivamente giocato — e persino vinto — un torneo del genere non
+    # deve risultare "esordiente". Result/Race è anche la fonte già usata da
+    # tutte le altre query di questo file (get_leaderboard, head-to-head, ...).
+    tournament_ids = {
+        row[0]
+        for row in db.query(Race.tournament_id)
+        .join(Result, Result.race_id == Race.id)
+        .join(Tournament, Tournament.id == Race.tournament_id)
         .filter(
-            TournamentPlayer.player_id == player_id,
+            Result.player_id == player_id,
             Tournament.game_id == game_id,
             Tournament.winner_id.isnot(None),
+            Race.is_duello.is_(False),
         )
+        .distinct()
         .all()
+    }
+    tournaments = (
+        db.query(Tournament).filter(Tournament.id.in_(tournament_ids)).all()
+        if tournament_ids
+        else []
     )
 
     tournaments_played = len(tournaments)

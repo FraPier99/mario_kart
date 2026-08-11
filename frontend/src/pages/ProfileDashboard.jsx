@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Check, ChevronDown, Image as ImageIcon, PenLine, Search, Upload, X, Clock, AlertTriangle, Zap, Shield, ArrowRight, Trophy, Flag, BarChart3, Star, Crown } from 'lucide-react'
+import { Check, ChevronDown, Image as ImageIcon, PenLine, Search, Upload, X, Clock, AlertTriangle, Zap, Shield, Trophy, Flag, BarChart3, Star, Crown } from 'lucide-react'
 import PowerCard from '@/components/cards/PowerCard'
 import { toast } from 'sonner'
 import { playMkdsCharacterVoice, preloadMkdsCharacterVoiceByName } from '@/lib/mkdsSounds'
@@ -352,7 +352,6 @@ const Dashboard = () => {
             bio: player?.bio ?? '',
         })
         setImageFileName('')
-        if (player && !isSuperadmin) setProfileTab('panoramica')
     }, [player, user, isSuperadmin])
 
     const handleFormChange = (event) => {
@@ -599,7 +598,6 @@ const Dashboard = () => {
     }
 
     const PROFILE_TABS = [
-        ...(!isSuperadmin && player ? [{ key: 'panoramica', label: 'Panoramica' }] : []),
         { key: 'profilo', label: 'Profilo' },
         { key: 'sicurezza', label: 'Sicurezza' },
         ...(!isSuperadmin ? [
@@ -642,7 +640,7 @@ const Dashboard = () => {
                                 </div>
                                 <div>
                                     <p className="font-title text-[10px] tracking-wide text-emerald-600 dark:text-emerald-400">
-                                        {isAdmin ? 'Admin' : 'Profilo'}
+                                        Profilo
                                     </p>
                                     <h1 className="mt-0.5 text-2xl font-black text-slate-900 dark:text-foreground">
                                         {player?.nickname ?? user?.username ?? '—'}
@@ -651,8 +649,11 @@ const Dashboard = () => {
                                         {isSuperadmin ? 'Superadmin' : (player ? `${player.first_name} ${player.last_name}` : 'Nessun player collegato')}
                                         {favoriteCharacter && <span className="ml-2 text-slate-400">· {favoriteCharacter.name}</span>}
                                     </p>
-                                    <div className="mt-2">
+                                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
                                         <RoleBadge role={isSuperadmin ? 'superadmin' : isAdmin ? 'admin' : 'user'} size="sm" />
+                                        {badges.map((b) => (
+                                            <PlayerBadge key={b.game_id} badge={b} size="sm" />
+                                        ))}
                                     </div>
                                 </div>
                             </div>
@@ -698,104 +699,6 @@ const Dashboard = () => {
                 )}
 
                 <div className="rounded-3xl border border-slate-200 dark:border-border bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 md:p-8">
-
-                {/* ── TAB: PANORAMICA ─────────────────────────────── */}
-                {profileTab === 'panoramica' && player && (() => {
-                    return (
-                    <div className={`relative rounded-[2rem] border-2 p-6 gold-card-shimmer ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
-                        {(isChampion || isSuperadmin) && (
-                            <div className="absolute right-4 top-4 rounded-full bg-amber-400 p-1.5 shadow-lg z-10">
-                                <Crown size={16} className="text-amber-950" />
-                            </div>
-                        )}
-                        <div className="space-y-6">
-                        {/* Champion banner */}
-                        {isChampion && bestBadge && (
-                            <div className="flex flex-wrap items-center gap-4 rounded-[2rem] border-2 border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/8 px-5 py-4" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-400/20 text-amber-600 dark:text-amber-300">
-                                    <Trophy size={22} />
-                                </div>
-                                <div>
-                                    <p className="font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">Hall of Fame</p>
-                                    <div className="mt-1.5">
-                                        <PlayerBadge badge={bestBadge} />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Personal stats mini grid */}
-                        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                            {[
-                                {
-                                    label: 'Tornei vinti', value: playerStats?.tournamentWins ?? 0,
-                                    sub: `di ${playerStats?.tournamentsPlayed ?? 0} giocati`,
-                                    iconCls: isChampion ? 'bg-amber-400/25 text-amber-600 dark:text-amber-300' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-                                    cardCls: isChampion ? 'border-amber-300 dark:border-amber-500/40 bg-amber-50/70 dark:bg-amber-900/15' : 'border-slate-200 dark:border-border bg-white dark:bg-card',
-                                    Icon: Trophy,
-                                },
-                                { label: 'Vittorie gara', value: playerStats?.raceWins ?? 0, sub: `Win Rate ${playerStats?.winRate ?? 0}%`, iconCls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', cardCls: 'border-slate-200 dark:border-border bg-white dark:bg-card', Icon: Flag },
-                                { label: 'Podi totali', value: playerStats?.podiums ?? 0, sub: `Podium Rate ${playerStats?.podiumRate ?? 0}%`, iconCls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', cardCls: 'border-slate-200 dark:border-border bg-white dark:bg-card', Icon: Star },
-                                { label: 'Punti totali', value: playerStats?.points ?? 0, sub: `Efficienza ${playerStats?.avgEfficiency ?? 0}%`, iconCls: 'bg-violet-500/10 text-violet-600 dark:text-violet-400', cardCls: 'border-slate-200 dark:border-border bg-white dark:bg-card', Icon: BarChart3 },
-                            ].map(({ label, value, sub, iconCls, cardCls, Icon }) => (
-                                <div key={label} className={`flex items-start gap-3 rounded-2xl border-2 p-4 ${cardCls}`} style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconCls}`}>
-                                        <Icon size={16} />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="font-title text-[9px] tracking-wide text-slate-400">{label}</p>
-                                        <p className="mt-1 font-title text-2xl leading-none text-slate-900 dark:text-foreground">{value}</p>
-                                        <p className="mt-1 text-[10px] leading-snug text-slate-500 dark:text-muted-foreground">{sub}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Bio */}
-                        {player?.bio && (
-                            <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-5" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                                <p className="mb-3 font-title text-[9px] tracking-wide text-slate-400">Bio</p>
-                                <p className="text-sm text-slate-700 dark:text-foreground leading-relaxed whitespace-pre-wrap">{player.bio}</p>
-                            </div>
-                        )}
-
-                        {/* Quick links */}
-                        <div className="grid gap-3 sm:grid-cols-3">
-                            <Link to="/stats" className="group flex items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-4 transition hover:border-emerald-300" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                                    <Trophy size={16} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-black text-slate-900 dark:text-foreground">Classifica</p>
-                                    <p className="text-[10px] text-slate-500 dark:text-muted-foreground">Vedi la classifica generale</p>
-                                </div>
-                                <ArrowRight size={14} className="text-slate-300 group-hover:text-emerald-500 transition" />
-                            </Link>
-                            <Link to="/history" className="group flex items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-4 transition hover:border-emerald-300" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                                    <BarChart3 size={16} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-black text-slate-900 dark:text-foreground">Storico tornei</p>
-                                    <p className="text-[10px] text-slate-500 dark:text-muted-foreground">Tutti i tornei passati</p>
-                                </div>
-                                <ArrowRight size={14} className="text-slate-300 group-hover:text-emerald-500 transition" />
-                            </Link>
-                            <Link to="/schedina" className="group flex items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-4 transition hover:border-emerald-300" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                                    <PenLine size={16} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-black text-slate-900 dark:text-foreground">Schedina</p>
-                                    <p className="text-[10px] text-slate-500 dark:text-muted-foreground">Compila i pronostici</p>
-                                </div>
-                                <ArrowRight size={14} className="text-slate-300 group-hover:text-emerald-500 transition" />
-                            </Link>
-                            </div>
-                        </div>
-                    </div>
-                    )
-                })()}
 
                 {/* ── TAB: PROFILO ─────────────────────────────── */}
                 {profileTab === 'profilo' && (
