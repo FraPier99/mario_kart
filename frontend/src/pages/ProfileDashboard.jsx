@@ -11,6 +11,7 @@ import ConfirmModal from '@/components/common/ConfirmModal'
 import ApiBanner from '@/components/common/ApiBanner'
 import PlayerTournamentHistory from '@/components/community/PlayerTournamentHistory'
 import PlayerBadge from '@/components/community/PlayerBadge'
+import RoleBadge from '@/components/community/RoleBadge'
 import { pickBestBadge } from '@/lib/playerBadges'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
@@ -650,6 +651,9 @@ const Dashboard = () => {
                                         {isSuperadmin ? 'Superadmin' : (player ? `${player.first_name} ${player.last_name}` : 'Nessun player collegato')}
                                         {favoriteCharacter && <span className="ml-2 text-slate-400">· {favoriteCharacter.name}</span>}
                                     </p>
+                                    <div className="mt-2">
+                                        <RoleBadge role={isSuperadmin ? 'superadmin' : isAdmin ? 'admin' : 'user'} size="sm" />
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">

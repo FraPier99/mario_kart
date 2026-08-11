@@ -1,5 +1,6 @@
 import { Trophy, Percent, Flag, Medal, Star } from 'lucide-react'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
+import PlayerBadge from '@/components/community/PlayerBadge'
 
 const STAT_ICONS = {
     'Tornei': Trophy,
@@ -21,7 +22,7 @@ const CARD_BORDER = {
     3: 'border-orange-400/70 dark:border-orange-500/40',
 }
 
-const PodiumSteps = ({ players = [], onPlayerClick = null }) => {
+const PodiumSteps = ({ players = [], onPlayerClick = null, firstPlaceBadge = null }) => {
     if (players.length < 3) return null
 
     const order = [players[1], players[0], players[2]]
@@ -90,10 +91,14 @@ const PodiumSteps = ({ players = [], onPlayerClick = null }) => {
                             </div>
                         )}
 
-                        {/* Campione badge — only for 1st place, nascosto sotto sm perché non c'è spazio */}
-                        {isFirst && (
-                            <span className="mt-1 hidden sm:inline-flex items-center gap-1 rounded-full bg-amber-400/20 px-2 py-0.5 text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-400">
-                                <Trophy size={11} /> Campione
+                        {/* Badge di livello per il 1° posto — solo se è stato selezionato un
+                            gioco specifico (il badge è per-game_id: con "Tutti i giochi" il
+                            1° per placement index aggregato non corrisponde necessariamente
+                            a un vincitore di torneo, quindi non si mostra nulla per non dare
+                            un'etichetta fuorviante), nascosto sotto sm perché non c'è spazio */}
+                        {isFirst && firstPlaceBadge && (
+                            <span className="mt-1 hidden sm:inline-flex">
+                                <PlayerBadge badge={firstPlaceBadge} size="sm" />
                             </span>
                         )}
 

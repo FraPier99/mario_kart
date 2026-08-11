@@ -4,6 +4,7 @@ import { ArrowLeft, Crown, Flag, Trophy, Star, BarChart3, UserCircle2, Shield } 
 import AppLayout from '@/components/layout/AppLayout'
 import PlayerTournamentHistory from '@/components/community/PlayerTournamentHistory'
 import PlayerBadge from '@/components/community/PlayerBadge'
+import RoleBadge from '@/components/community/RoleBadge'
 import { pickBestBadge } from '@/lib/playerBadges'
 import { authApi, statsApi, getApiErrorMessage } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
@@ -145,9 +146,7 @@ const CommunityUserPage = () => {
                                     </span>
                                 )}
                             </div>
-                            <span className="font-title inline-flex items-center rounded-full border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-1 text-[9px] tracking-wide text-emerald-600 dark:text-emerald-400">
-                                {communityUser.role === 'superadmin' ? 'Superadmin' : communityUser.role === 'admin' ? 'Admin' : 'Giocatore'}
-                            </span>
+                            <RoleBadge role={communityUser.role} size="sm" />
                         </div>
 
                         {/* Colonna destra: identità allineata a sinistra + badge in fondo */}

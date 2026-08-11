@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { HelpCircle, ChevronDown } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import LeaderboardTable from '@/components/stats/LeaderboardTable'
@@ -7,6 +7,7 @@ import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { useCommunityUserNav } from '@/hooks/useCommunityUserNav'
 import ApiBanner from '@/components/common/ApiBanner'
+import { statsApi } from '@/services/apiClient'
 
 
 const ScoreLegend = () => {
@@ -132,6 +133,27 @@ const Stats = () => {
         : []
     const tableRows = showPodium ? filteredRows.slice(3) : filteredRows
 
+    // Il badge di livello è per-gioco: si può mostrare sul podio solo quando
+    // è selezionato un gioco specifico (con "Tutti i giochi" nessun singolo
+    // tier avrebbe senso, dato che il 1° per placement index aggregato non
+    // corrisponde necessariamente a un vincitore di torneo — vedi CLAUDE.md).
+    const [firstPlaceBadge, setFirstPlaceBadge] = useState(null)
+    const firstPlacePlayerId = showPodium ? podiumPlayers[0]?.playerId : null
+    useEffect(() => {
+        if (!selectedGameId || !firstPlacePlayerId) {
+            setFirstPlaceBadge(null)
+            return
+        }
+        let active = true
+        statsApi.playerBadges(firstPlacePlayerId)
+            .then((res) => {
+                if (!active) return
+                setFirstPlaceBadge(res.data.find((b) => b.game_id === Number(selectedGameId)) ?? null)
+            })
+            .catch(() => { if (active) setFirstPlaceBadge(null) })
+        return () => { active = false }
+    }, [selectedGameId, firstPlacePlayerId])
+
     const handlePlayerClick = (row) => {
         goToPlayerProfile(row.playerId)
     }
@@ -206,7 +228,7 @@ const Stats = () => {
                 ) : (
                     <>
                         <div className="mb-3">
-                            <PodiumSteps players={podiumPlayers} onPlayerClick={handlePlayerClick} />
+                            <PodiumSteps players={podiumPlayers} onPlayerClick={handlePlayerClick} firstPlaceBadge={firstPlaceBadge} />
                         </div>
                         <LeaderboardTable
                             rows={tableRows}
