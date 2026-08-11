@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { getApiErrorMessage, resultsApi } from '@/services/apiClient'
 import { ChevronDown, Search, Check, X } from 'lucide-react'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
+import { getPlayerPreviousCharacterId } from '@/lib/raceEntry'
 
 const useDropdownPosition = (triggerRef, menuRef, open, options = {}) => {
     const [menuPos, setMenuPos] = useState({ top: 0, left: 0, width: 0, ready: false })
@@ -506,24 +507,13 @@ const ResultEntryForm = ({ tournament, races, tournamentParticipants, onCreated,
         return alreadyEnteredPlayerIds.size >= tournamentParticipants.length
     }, [formState.race_id, alreadyEnteredPlayerIds, tournamentParticipants])
 
-    const getPlayerPreviousCharacterId = (playerId, currentRaceId) => {
+    const getPreviousCharacterId = (playerId, currentRaceId) => {
         if (!playerId || !currentRaceId) return null
         const currentRace = races.find((r) => r.id === Number(currentRaceId))
         if (!currentRace) return null
-        const currentOrder = currentRace.race_order ?? 0
-        // find the most recent result for this player in any race before current (by race_order)
-        const prevResult = results
-            .filter((r) => r.player_id === Number(playerId))
-            .filter((r) => {
-                const race = races.find((race) => race.id === r.race_id)
-                return race && (race.race_order ?? 0) < currentOrder
-            })
-            .sort((a, b) => {
-                const raceA = races.find((r) => r.id === a.race_id)
-                const raceB = races.find((r) => r.id === b.race_id)
-                return (raceB?.race_order ?? 0) - (raceA?.race_order ?? 0)
-            })[0]
-        return prevResult?.character_id ?? null
+        return getPlayerPreviousCharacterId({
+            playerId, results, races, beforeRaceOrder: currentRace.race_order ?? 0,
+        })
     }
 
     const handleChange = (name, value) => {
@@ -532,7 +522,7 @@ const ResultEntryForm = ({ tournament, races, tournamentParticipants, onCreated,
                 return { ...current, race_id: value, player_id: '', character_id: '', position: null }
             }
             if (name === 'player_id') {
-                const previousCharacterId = getPlayerPreviousCharacterId(value, current.race_id)
+                const previousCharacterId = getPreviousCharacterId(value, current.race_id)
                 const fallbackCharacterId = tournamentParticipants.find((player) => player.id === Number(value))?.favorite_character_id ?? ''
                 return {
                     ...current,

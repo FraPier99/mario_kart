@@ -12,7 +12,7 @@ import RaceList from '@/components/tournaments/RaceList'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import ApiBanner from '@/components/common/ApiBanner'
-import RaceCreator from '@/components/tournaments/RaceCreator'
+import ClassicRaceForm from '@/components/tournaments/ClassicRaceForm'
 import TournamentParticipantsManager from '@/components/tournaments/TournamentParticipantsManager'
 import WithdrawalManager from '@/components/tournaments/WithdrawalManager'
 import ResultEntryForm from '@/components/tournaments/ResultEntryForm'
@@ -1093,8 +1093,18 @@ const TournamentDetail = () => {
                                 </button>
                             </div>
                         </div>
-                        <RaceCreator tournament={tournament} circuits={tournamentCircuits} loading={loading} onCreated={refresh} disabled={isTournamentLocked} results={results} tournamentParticipants={activeTournamentParticipants} onRefresh={refresh} refreshing={loading} />
-                        <ResultEntryForm tournament={tournament} races={tournament.races} tournamentParticipants={activeTournamentParticipants} onCreated={refresh} disabled={isTournamentLocked} />
+                        <ClassicRaceForm tournament={tournament} participants={activeTournamentParticipants} circuits={tournamentCircuits} characters={charactersByGameId.get(tournament?.game_id ?? 0) ?? []} disabled={isTournamentLocked} onCreated={refresh} />
+
+                        {/* Fallback per gare incomplete create col vecchio flusso (un
+                        risultato alla volta): ClassicRaceForm crea sempre gara +
+                        ordine completo insieme, quindi non c'è più un modo per
+                        aggiungere un risultato mancante a una gara già esistente.
+                        Sparisce da sola appena non ci sono più gare incomplete. */}
+                        {incompleteRacesCount > 0 && (
+                            <CollapsibleSection title="Completa una gara incompleta" subtitle="Percorso di riserva per le gare create con risultati parziali — non serve più una volta che ogni gara ha l'ordine di arrivo completo." icon={<AlertCircle size={16} />}>
+                                <ResultEntryForm tournament={tournament} races={tournament.races} tournamentParticipants={activeTournamentParticipants} onCreated={refresh} disabled={isTournamentLocked} />
+                            </CollapsibleSection>
+                        )}
                     </CollapsibleSection>
                 )}
 
