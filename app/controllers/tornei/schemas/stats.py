@@ -85,3 +85,18 @@ class CircuitPlayerRanking(BaseModel):
 class CircuitStatsDetailResponse(BaseModel):
     circuit_id: int
     ranking: list[CircuitPlayerRanking]
+
+
+class PlayerGameBadgeResponse(BaseModel):
+    game_id: int
+    game_name: str
+    # Codice stabile per la palette/icona lato frontend — vedi
+    # BADGE_TIER_RANK in app/services/tornei/stats.py per l'ordine di
+    # esclusività. Il "label" (nome mostrato) può cambiare copy senza
+    # rompere il frontend, il "tier" no.
+    tier: Literal["leggenda", "campione", "veterano", "outsider", "sfidante", "esordiente"]
+    label: str
+    tournaments_played: int
+    wins: int
+    podiums: int
+    podium_rate: float

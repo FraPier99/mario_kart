@@ -3,7 +3,9 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Crown, Flag, Trophy, Star, BarChart3, UserCircle2, Shield } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import PlayerTournamentHistory from '@/components/community/PlayerTournamentHistory'
-import { authApi, getApiErrorMessage } from '@/services/apiClient'
+import PlayerBadge from '@/components/community/PlayerBadge'
+import { pickBestBadge } from '@/lib/playerBadges'
+import { authApi, statsApi, getApiErrorMessage } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
 import { toast } from 'sonner'
 
@@ -16,6 +18,7 @@ const CommunityUserPage = () => {
     const [notFound, setNotFound] = useState(false)
     const [fetchError, setFetchError] = useState(false)
     const [selectedGameId, setSelectedGameId] = useState('')
+    const [badges, setBadges] = useState([])
 
     useEffect(() => {
         let active = true
@@ -42,8 +45,23 @@ const CommunityUserPage = () => {
     const player = communityUser?.player ?? null
     const playerStats = player ? (statsByPlayerId.get(player.id) ?? null) : null
     const favoriteCharacter = player?.favorite_character_id ? charactersById.get(player.favorite_character_id) : null
-    const isChampion = (playerStats?.tournamentWins ?? 0) > 0
     const viewedUserIsSuperadmin = communityUser?.role === 'superadmin'
+
+    useEffect(() => {
+        if (!player) return
+        let active = true
+        statsApi.playerBadges(player.id)
+            .then((res) => { if (active) setBadges(res.data) })
+            .catch(() => { if (active) setBadges([]) })
+        return () => { active = false }
+    }, [player])
+
+    const bestBadge = useMemo(() => pickBestBadge(badges), [badges])
+    const activeBadge = useMemo(() => {
+        if (!selectedGameId) return bestBadge
+        return badges.find((b) => b.game_id === Number(selectedGameId)) ?? bestBadge
+    }, [badges, selectedGameId, bestBadge])
+    const isChampion = bestBadge?.tier === 'leggenda' || bestBadge?.tier === 'campione'
 
     const gameStats = useMemo(() => {
         if (!selectedGameId || !player) return null
@@ -138,16 +156,9 @@ const CommunityUserPage = () => {
                             {player && <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">{player.first_name} {player.last_name}</p>}
                             {player?.bio && <p className="mt-3 max-w-xl text-sm text-slate-600 dark:text-muted-foreground leading-relaxed whitespace-pre-wrap">{player.bio}</p>}
 
-                            {(favoriteCharacter || isChampion) && (
+                            {(favoriteCharacter || activeBadge) && (
                                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                                    {isChampion && (
-                                        <div className="flex items-center gap-1.5 rounded-xl border-2 border-amber-300 dark:border-amber-500/40 bg-amber-100/70 dark:bg-amber-500/15 px-3 py-1.5">
-                                            <Trophy size={13} className="text-amber-600 dark:text-amber-400" />
-                                            <span className="text-xs font-black text-amber-700 dark:text-amber-300">
-                                                {playerStats.tournamentWins} {playerStats.tournamentWins === 1 ? 'torneo vinto' : 'tornei vinti'}
-                                            </span>
-                                        </div>
-                                    )}
+                                    {activeBadge && <PlayerBadge badge={activeBadge} />}
                                     {favoriteCharacter && (
                                         <div className="flex items-center gap-2 rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-1.5">
                                             {favoriteCharacter.img_url && <img src={favoriteCharacter.img_url} alt={favoriteCharacter.name} className="h-5 w-5 rounded-full object-cover" />}

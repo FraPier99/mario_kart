@@ -10,9 +10,11 @@ import AppLayout from '@/components/layout/AppLayout'
 import ConfirmModal from '@/components/common/ConfirmModal'
 import ApiBanner from '@/components/common/ApiBanner'
 import PlayerTournamentHistory from '@/components/community/PlayerTournamentHistory'
+import PlayerBadge from '@/components/community/PlayerBadge'
+import { pickBestBadge } from '@/lib/playerBadges'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
-import { authApi, schedineApi, inventoryApi, ownershipApi, getApiErrorMessage } from '@/services/apiClient'
+import { authApi, schedineApi, inventoryApi, ownershipApi, statsApi, getApiErrorMessage } from '@/services/apiClient'
 import { compressImage } from '@/lib/imageCompression'
 import { CONSOLE_LIST, R4_DEVICE_LIST, MKDS_GAME_ID } from '@/lib/consoles'
 
@@ -295,8 +297,22 @@ const Dashboard = () => {
     const player = user?.player ?? null
     const playerStats = player ? (statsByPlayerId.get(player.id) ?? null) : null
     const favoriteCharacter = player?.favorite_character_id ? charactersById.get(player.favorite_character_id) : null
-    const isChampion = (playerStats?.tournamentWins ?? 0) > 0
+    const [badges, setBadges] = useState([])
+    useEffect(() => {
+        if (!player) return
+        let active = true
+        statsApi.playerBadges(player.id)
+            .then((res) => { if (active) setBadges(res.data) })
+            .catch(() => { if (active) setBadges([]) })
+        return () => { active = false }
+    }, [player])
+    const bestBadge = useMemo(() => pickBestBadge(badges), [badges])
+    const isChampion = bestBadge?.tier === 'leggenda' || bestBadge?.tier === 'campione'
     const [selectedGameId, setSelectedGameId] = useState('')
+    const activeBadge = useMemo(() => {
+        if (!selectedGameId) return bestBadge
+        return badges.find((b) => b.game_id === Number(selectedGameId)) ?? bestBadge
+    }, [badges, selectedGameId, bestBadge])
     const gameStats = useMemo(() => {
         if (!selectedGameId || !player) return null
         const leaderboard = getLeaderboardByGame(selectedGameId)
@@ -681,7 +697,6 @@ const Dashboard = () => {
 
                 {/* ── TAB: PANORAMICA ─────────────────────────────── */}
                 {profileTab === 'panoramica' && player && (() => {
-                    const isChampion = (playerStats?.tournamentWins ?? 0) > 0
                     return (
                     <div className={`relative rounded-[2rem] border-2 p-6 gold-card-shimmer ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                         {(isChampion || isSuperadmin) && (
@@ -691,16 +706,16 @@ const Dashboard = () => {
                         )}
                         <div className="space-y-6">
                         {/* Champion banner */}
-                        {isChampion && (
-                            <div className="flex items-center gap-4 rounded-[2rem] border-2 border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/8 px-5 py-4" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+                        {isChampion && bestBadge && (
+                            <div className="flex flex-wrap items-center gap-4 rounded-[2rem] border-2 border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/8 px-5 py-4" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-400/20 text-amber-600 dark:text-amber-300">
                                     <Trophy size={22} />
                                 </div>
                                 <div>
                                     <p className="font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">Hall of Fame</p>
-                                    <p className="mt-0.5 text-base font-black text-amber-800 dark:text-amber-200">
-                                        {playerStats.tournamentWins} {playerStats.tournamentWins === 1 ? 'torneo vinto' : 'tornei vinti'} · Campione della lega
-                                    </p>
+                                    <div className="mt-1.5">
+                                        <PlayerBadge badge={bestBadge} />
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -951,13 +966,16 @@ const Dashboard = () => {
                         <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-5" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                                 <p className="font-title text-[9px] tracking-wide text-slate-400">Statistiche per gioco</p>
-                                <select value={selectedGameId} onChange={e => setSelectedGameId(e.target.value)}
-                                    className="rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2 font-title text-[9px] tracking-wide text-slate-700 dark:text-foreground outline-none focus:border-emerald-400">
-                                    <option value="">Seleziona un gioco</option>
-                                    {games.map((g) => (
-                                        <option key={g.id} value={g.id}>{g.name}</option>
-                                    ))}
-                                </select>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {activeBadge && <PlayerBadge badge={activeBadge} size="sm" />}
+                                    <select value={selectedGameId} onChange={e => setSelectedGameId(e.target.value)}
+                                        className="rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2 font-title text-[9px] tracking-wide text-slate-700 dark:text-foreground outline-none focus:border-emerald-400">
+                                        <option value="">Seleziona un gioco</option>
+                                        {games.map((g) => (
+                                            <option key={g.id} value={g.id}>{g.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
                             {gameStats ? (
                                 <div className="space-y-4">

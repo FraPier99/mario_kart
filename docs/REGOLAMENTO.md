@@ -150,7 +150,24 @@ Un amministratore può segnare un partecipante come ritirato. I risultati già r
 
 ---
 
-## 6. Note di compatibilità
+## 6. Badge Giocatore
+
+Ogni giocatore ha un badge di livello **per ogni gioco** (`game_id`), calcolato sui soli **tornei conclusi** a cui ha partecipato — un torneo in corso non conta finché non è decretato un vincitore. Dal più al meno esclusivo:
+
+| Badge | Come si ottiene |
+|---|---|
+| **LEGGENDA** | ha vinto **tutti** i tornei conclusi di quel gioco a cui ha partecipato (minimo 2 tornei) |
+| **CAMPIONE** | ha vinto almeno un torneo concluso di quel gioco |
+| **VETERANO** | non ha mai vinto, ma è arrivato sul podio (primi 3 posti) in almeno metà dei tornei conclusi giocati |
+| **OUTSIDER** | non ha mai vinto, ha fatto almeno un podio, ma meno spesso della metà dei tornei giocati |
+| **SFIDANTE** | ha giocato almeno un torneo concluso ma non è mai arrivato sul podio |
+| **ESORDIENTE** | non ha ancora giocato un torneo concluso di quel gioco |
+
+Il badge di un gioco non influenza quello di un altro: si può essere Leggenda su un gioco ed Esordiente su un altro.
+
+---
+
+## 7. Note di compatibilità
 
 - Il campo `vittima_del_caos_id` è ancora presente nello schema della schedina classic per compatibilità, ma **non genera punteggio**.
 - La tabella `schedine_torneo_deluxe` ospita le schedine del formato a gironi: il nome è mantenuto per compatibilità.

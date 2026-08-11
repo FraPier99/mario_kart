@@ -6,6 +6,7 @@ from app.controllers.tornei.schemas.stats import (
     CircuitStatsDetailResponse,
     CircuitStatsListItem,
     HeadToHeadResponse,
+    PlayerGameBadgeResponse,
 )
 from app.models import Circuit, Player
 from app.services.tornei.stats import (
@@ -14,6 +15,7 @@ from app.services.tornei.stats import (
     get_head_to_head_by_circuit,
     get_head_to_head_history,
     get_head_to_head_summary,
+    get_player_badges,
 )
 
 router = APIRouter(prefix="/stats", tags=["Stats"])
@@ -61,3 +63,12 @@ def circuit_stats_detail(circuit_id: int, db: Session = Depends(get_db)):
         "circuit_id": circuit_id,
         "ranking": get_circuit_stats_detail(db, circuit_id),
     }
+
+
+@router.get("/players/{player_id}/badges", response_model=list[PlayerGameBadgeResponse])
+def player_badges(player_id: int, db: Session = Depends(get_db)):
+    player = db.query(Player).filter(Player.id == player_id).first()
+    if not player:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Giocatore non trovato")
+
+    return get_player_badges(db, player_id)

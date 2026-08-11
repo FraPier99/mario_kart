@@ -1,6 +1,6 @@
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session, aliased
-from app.models import Circuit, Player, Race, Result, Tournament
+from app.models import Circuit, Game, Player, Race, Result, Tournament, TournamentPlayer
 
 
 def get_leaderboard(db: Session, tournament_id: int):
@@ -221,4 +221,100 @@ def get_circuit_stats_detail(db: Session, circuit_id: int):
             "avg_position": round(float(row.avg_position), 2) if row.avg_position is not None else None,
         }
         for row in rows
+    ]
+
+
+# ---------------------------------------------------------------------------
+# BADGE GIOCATORE — livello per game_id, basato sui tornei conclusi
+# ---------------------------------------------------------------------------
+
+# Ordine dal più al meno esclusivo: usato sia per determinare il tier (primo
+# predicato che risulta vero) sia lato frontend per scegliere il "badge
+# migliore" fra più giochi.
+BADGE_TIER_RANK = ["leggenda", "campione", "veterano", "outsider", "sfidante", "esordiente"]
+
+_BADGE_LABELS = {
+    "leggenda": "LEGGENDA",
+    "campione": "CAMPIONE",
+    "veterano": "VETERANO",
+    "outsider": "OUTSIDER",
+    "sfidante": "SFIDANTE",
+    "esordiente": "ESORDIENTE",
+}
+
+
+def _badge_tier_from_stats(tournaments_played: int, wins: int, podiums: int) -> str:
+    if tournaments_played == 0:
+        return "esordiente"
+    if wins == tournaments_played and tournaments_played >= 2:
+        return "leggenda"
+    if wins > 0:
+        return "campione"
+    podium_rate = podiums / tournaments_played
+    if podium_rate >= 0.5:
+        return "veterano"
+    if podiums > 0:
+        return "outsider"
+    return "sfidante"
+
+
+def get_player_game_badge(db: Session, player_id: int, game_id: int) -> dict:
+    """Calcola il badge di un giocatore per un dato gioco, sui soli tornei
+    CONCLUSI (Tournament.winner_id.isnot(None)) a cui ha partecipato.
+
+    Tournament.winner_id è già la fonte ufficiale per il 1° posto (valida
+    identicamente per classic e group_stage). Per il 2°/3° posto non esiste
+    un campo persistito: serve la classifica finale del torneo, calcolata
+    SOLO per i tornei non vinti dal giocatore (il 1° posto si sa già)."""
+    from app.services.tornei.tournaments import (
+        get_classic_final_classifica,
+        get_group_stage_overall_classifica,
+    )
+
+    tournaments = (
+        db.query(Tournament)
+        .join(TournamentPlayer, TournamentPlayer.tournament_id == Tournament.id)
+        .filter(
+            TournamentPlayer.player_id == player_id,
+            Tournament.game_id == game_id,
+            Tournament.winner_id.isnot(None),
+        )
+        .all()
+    )
+
+    tournaments_played = len(tournaments)
+    wins = sum(1 for t in tournaments if t.winner_id == player_id)
+    podiums = wins
+    for t in tournaments:
+        if t.winner_id == player_id:
+            continue
+        order = (
+            get_group_stage_overall_classifica(db, t.id)
+            if t.tournament_format == "group_stage"
+            else get_classic_final_classifica(db, t.id)
+        )
+        if player_id in order[1:3]:
+            podiums += 1
+
+    tier = _badge_tier_from_stats(tournaments_played, wins, podiums)
+    return {
+        "tier": tier,
+        "label": _BADGE_LABELS[tier],
+        "tournaments_played": tournaments_played,
+        "wins": wins,
+        "podiums": podiums,
+        "podium_rate": round(podiums / tournaments_played * 100, 1) if tournaments_played else 0.0,
+    }
+
+
+def get_player_badges(db: Session, player_id: int) -> list[dict]:
+    """Badge del giocatore per ogni gioco esistente."""
+    games = db.query(Game).order_by(Game.name.asc()).all()
+    return [
+        {
+            "game_id": game.id,
+            "game_name": game.name,
+            **get_player_game_badge(db, player_id, game.id),
+        }
+        for game in games
     ]

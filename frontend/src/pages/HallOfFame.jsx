@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Crown, Trophy, Flag, Sparkles, Filter, Calendar, ChevronDown, ChevronUp } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import { useAppData } from '@/context/AppDataContext'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
+import { statsApi } from '@/services/apiClient'
 import { Link } from 'react-router-dom'
 
 const CONFETTI_COLORS = ['#f59e0b', '#d97706', '#b45309', '#fbbf24', '#fcd34d', '#fef3c7']
@@ -44,7 +45,7 @@ const formatDate = (d) => {
   return new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-const ChampionCard = ({ player, wins, gamesWon, tournaments, index }) => {
+const ChampionCard = ({ player, wins, gamesWon, tournaments, index, isLegend }) => {
   const [expanded, setExpanded] = useState(false)
   const particles = useMemo(() =>
     Array.from({ length: PARTICLE_COUNT }, (_, i) => ({
@@ -60,10 +61,21 @@ const ChampionCard = ({ player, wins, gamesWon, tournaments, index }) => {
       className="group relative overflow-hidden rounded-2xl border-2 border-amber-400/60 dark:border-amber-500/30 bg-linear-to-br from-amber-100/90 via-amber-50/60 to-amber-100/80 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60 transition-all duration-500 hover:scale-[1.02]"
       style={{ animation: `fade-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both`, animationDelay: `${index * 0.06}s`, boxShadow: 'var(--circuit-shadow-md)' }}
     >
-      {/* Crown badge */}
-      <div className="absolute right-3 top-3 z-10 rounded-full bg-amber-400 p-1.5 shadow-lg shadow-amber-400/40" style={{ animation: 'crown-drop 1.2s cubic-bezier(0.34,1.56,0.64,1) both 0.3s' }}>
+      {/* Crown badge — variante dorata con glow per il tier "Leggenda" (ha vinto
+          tutti i tornei conclusi del gioco filtrato, min. 2), altrimenti la
+          semplice corona ambra di sempre. */}
+      <div
+        className={`absolute right-3 top-3 z-10 rounded-full p-1.5 shadow-lg ${isLegend ? 'bg-linear-to-br from-amber-300 via-yellow-200 to-amber-500 shadow-amber-400/60' : 'bg-amber-400 shadow-amber-400/40'}`}
+        style={{ animation: 'crown-drop 1.2s cubic-bezier(0.34,1.56,0.64,1) both 0.3s' }}
+        title={isLegend ? 'Leggenda: ha vinto tutti i tornei giocati di questo gioco' : undefined}
+      >
         <Crown size={14} className="text-amber-950" />
       </div>
+      {isLegend && (
+        <span className="absolute left-1/2 top-3 z-10 -translate-x-1/2 rounded-full bg-amber-950/70 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-200 backdrop-blur-sm">
+          Leggenda
+        </span>
+      )}
 
       {/* Number badge */}
       <div className="absolute left-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-amber-950/60 text-[10px] font-black text-amber-300 backdrop-blur-sm">
@@ -217,6 +229,31 @@ const HallOfFame = () => {
       .sort((a, b) => b.wins - a.wins)
   }, [detailedTournaments, selectedGameId, playersById])
 
+  // Il tier "Leggenda" è per-gioco: con "Tutti i giochi" selezionato un
+  // singolo badge non avrebbe senso (un giocatore può essere Leggenda su
+  // un gioco e Campione su un altro), quindi si calcola solo quando è
+  // selezionato un game_id specifico.
+  const [legendPlayerIds, setLegendPlayerIds] = useState(new Set())
+  useEffect(() => {
+    if (!selectedGameId || champions.length === 0) {
+      setLegendPlayerIds(new Set())
+      return
+    }
+    let active = true
+    Promise.all(champions.map((c) => statsApi.playerBadges(c.player.id)))
+      .then((responses) => {
+        if (!active) return
+        const legends = new Set()
+        responses.forEach((res, i) => {
+          const badge = res.data.find((b) => b.game_id === Number(selectedGameId))
+          if (badge?.tier === 'leggenda') legends.add(champions[i].player.id)
+        })
+        setLegendPlayerIds(legends)
+      })
+      .catch(() => { if (active) setLegendPlayerIds(new Set()) })
+    return () => { active = false }
+  }, [selectedGameId, champions])
+
   const gamesWonByPlayer = useMemo(() => {
     const map = new Map()
     detailedTournaments.forEach((t) => {
@@ -353,6 +390,7 @@ const HallOfFame = () => {
                 gamesWon={gamesWonByPlayer.get(entry.player.id) ?? 0}
                 tournaments={entry.tournaments}
                 index={idx}
+                isLegend={legendPlayerIds.has(entry.player.id)}
               />
             ))}
           </div>

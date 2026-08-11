@@ -240,6 +240,7 @@ export const statsApi = {
     headToHead: (gameId, playerAId, playerBId) => _get(`/stats/head-to-head?game_id=${gameId}&player_a_id=${playerAId}&player_b_id=${playerBId}`),
     circuitList: (gameId) => _get(`/stats/circuits?game_id=${gameId}`),
     circuitDetail: (circuitId) => _get(`/stats/circuits/${circuitId}`),
+    playerBadges: (playerId) => _get(`/stats/players/${playerId}/badges`),
 }
 
 export const authStorage = {

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { FileText, Users, Swords, Trophy, Medal, Gauge, LayoutGrid, Timer, Ban, Dice1 } from 'lucide-react'
+import { FileText, Users, Swords, Trophy, Medal, Gauge, LayoutGrid, Timer, Ban, Dice1, Crown, Star, Flame, Flag } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
@@ -153,6 +153,38 @@ const Regolamento = () => {
                                 <li>• <strong>Chiusura schedine</strong>: non esiste una deadline automatica. L'admin decide quando chiudere le schedine, previo avviso ai partecipanti.</li>
                             </ul>
                         )}
+                    </div>
+                </div>
+
+                {/* SEZIONE BADGE GIOCATORE */}
+                <div
+                    className="mt-6 rounded-[2rem] border-2 border-slate-900 dark:border-white/20 bg-white p-6 dark:bg-card"
+                    style={{ boxShadow: 'var(--circuit-shadow-lg)' }}
+                >
+                    <p className={`font-title text-[10px] tracking-wide ${theme.tailwind.text}`}>Progressione</p>
+                    <h2 className="mt-2 font-title text-2xl uppercase tracking-tight text-slate-900 dark:text-foreground">Badge giocatore</h2>
+                    <p className="mt-2 max-w-2xl text-sm text-slate-500 dark:text-muted-foreground">
+                        Ogni giocatore ha un badge di livello <strong>per ogni gioco</strong>, calcolato sui soli tornei
+                        conclusi a cui ha partecipato — si può essere Leggenda su un gioco ed Esordiente su un altro.
+                    </p>
+
+                    <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                        {[
+                            { icon: <Crown size={16} />, title: 'LEGGENDA', body: 'Ha vinto TUTTI i tornei conclusi di quel gioco a cui ha partecipato (minimo 2 tornei).', color: 'text-amber-600 dark:text-amber-400' },
+                            { icon: <Trophy size={16} />, title: 'CAMPIONE', body: 'Ha vinto almeno un torneo concluso di quel gioco.', color: 'text-amber-600 dark:text-amber-400' },
+                            { icon: <Star size={16} />, title: 'VETERANO', body: 'Non ha mai vinto, ma è arrivato sul podio in almeno metà dei tornei conclusi giocati.', color: 'text-blue-600 dark:text-blue-400' },
+                            { icon: <Flame size={16} />, title: 'OUTSIDER', body: 'Non ha mai vinto, ha fatto almeno un podio, ma meno spesso della metà dei tornei giocati.', color: 'text-violet-600 dark:text-violet-400' },
+                            { icon: <Swords size={16} />, title: 'SFIDANTE', body: 'Ha giocato almeno un torneo concluso ma non è mai arrivato sul podio.', color: 'text-slate-500 dark:text-muted-foreground' },
+                            { icon: <Flag size={16} />, title: 'ESORDIENTE', body: 'Non ha ancora giocato un torneo concluso di quel gioco.', color: 'text-emerald-600 dark:text-emerald-400' },
+                        ].map(({ icon, title, body, color }) => (
+                            <div key={title} className="rounded-2xl border-2 border-slate-300 dark:border-white/15 p-4" style={{ background: `linear-gradient(135deg, ${theme.accentSoft}, transparent)` }}>
+                                <div className={`flex items-center gap-2 mb-1 ${color}`}>
+                                    {icon}
+                                    <p className="font-title text-[9px] tracking-wide">{title}</p>
+                                </div>
+                                <p className="text-sm text-slate-500 dark:text-muted-foreground leading-relaxed">{body}</p>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
