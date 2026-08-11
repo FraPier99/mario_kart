@@ -243,6 +243,11 @@ export const statsApi = {
     playerBadges: (playerId) => _get(`/stats/players/${playerId}/badges`),
 }
 
+export const contentImagesApi = {
+    list: () => _get('/content-images'),
+    upload: (key, imageData) => _put(`/content-images/${key}`, { image_data: imageData }),
+}
+
 export const authStorage = {
     tokenKey: AUTH_TOKEN_KEY,
     getToken: () => localStorage.getItem(AUTH_TOKEN_KEY),

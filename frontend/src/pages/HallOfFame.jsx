@@ -4,6 +4,7 @@ import AppLayout from '@/components/layout/AppLayout'
 import { useAppData } from '@/context/AppDataContext'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import { statsApi } from '@/services/apiClient'
+import PlayerLink from '@/components/common/PlayerLink'
 import { Link } from 'react-router-dom'
 
 const CONFETTI_COLORS = ['#f59e0b', '#d97706', '#b45309', '#fbbf24', '#fcd34d', '#fef3c7']
@@ -116,9 +117,12 @@ const ChampionCard = ({ player, wins, gamesWon, tournaments, index, isLegend }) 
 
       {/* Info */}
       <div className="px-5 pb-5 text-center">
-        <span className="inline-block rounded-full bg-amber-500/20 px-3 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-300 mb-2">
+        <PlayerLink
+          playerId={player.id}
+          className="inline-block rounded-full bg-amber-500/20 px-3 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-300 mb-2 hover:bg-amber-500/30 transition"
+        >
           {player.nickname}
-        </span>
+        </PlayerLink>
         <h3 className="text-lg font-black uppercase tracking-tight text-slate-800 dark:text-foreground">
           {player.first_name} {player.last_name}
         </h3>

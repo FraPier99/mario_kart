@@ -1,4 +1,5 @@
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
+import PlayerLink from '@/components/common/PlayerLink'
 
 // Ranking per-circuito: gare giocate/vittorie/podi/posizione media. Righe
 // dalla forma di app/services/tornei/stats.py::get_circuit_stats_detail
@@ -26,7 +27,9 @@ const CircuitRankingTable = ({ rows, playersById = null }) => {
                         </span>
                         <img src={avatarFor(row)} alt={row.player_nickname} className="h-8 w-8 shrink-0 rounded-full object-cover" />
                         <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-black text-slate-800 dark:text-foreground uppercase">{row.player_nickname}</p>
+                            <PlayerLink playerId={row.player_id} className="block truncate text-sm font-black text-slate-800 dark:text-foreground uppercase">
+                                {row.player_nickname}
+                            </PlayerLink>
                             <p className="text-[10px] text-slate-400 dark:text-muted-foreground">
                                 {row.races_played} gare · {row.wins} vittorie · {row.podiums} podi
                             </p>
@@ -56,7 +59,9 @@ const CircuitRankingTable = ({ rows, playersById = null }) => {
                             <td className="px-4 py-3">
                                 <div className="flex items-center gap-2.5">
                                     <img src={avatarFor(row)} alt={row.player_nickname} className="h-7 w-7 shrink-0 rounded-full object-cover" />
-                                    <span className="font-bold text-slate-800 dark:text-foreground uppercase">{row.player_nickname}</span>
+                                    <PlayerLink playerId={row.player_id} className="font-bold text-slate-800 dark:text-foreground uppercase hover:text-emerald-600 dark:hover:text-emerald-400">
+                                        {row.player_nickname}
+                                    </PlayerLink>
                                 </div>
                             </td>
                             <td className="px-4 py-3 text-right font-bold text-slate-700 dark:text-muted-foreground">{row.races_played}</td>

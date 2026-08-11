@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { charactersApi, circuitsApi, gamesApi, playersApi, racesApi, resultsApi, tournamentsApi } from '@/services/apiClient'
+import { authApi, charactersApi, circuitsApi, gamesApi, playersApi, racesApi, resultsApi, tournamentsApi } from '@/services/apiClient'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/services/apiClient'
 
@@ -378,6 +378,22 @@ export function AppDataProvider({ children }) {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [errorMessage, setErrorMessage] = useState('')
+    const [communityUsers, setCommunityUsers] = useState([])
+
+    // Caricata una sola volta per l'intera sessione (AppDataProvider è
+    // montato una volta sola alla radice dell'app) — sostituisce i fetch
+    // indipendenti che ogni pagina faceva prima tramite useCommunityUserNav,
+    // che diventavano N richieste duplicate con N componenti che linkano al
+    // profilo di un giocatore nella stessa pagina. Fetch separata dal
+    // Promise.all critico di refresh(): questo endpoint richiede solo
+    // autenticazione (non un ruolo specifico), ma un suo fallimento non deve
+    // far fallire il caricamento dei dati principali (stesso motivo del
+    // .catch silenzioso che aveva l'hook originale).
+    useEffect(() => {
+        authApi.listCommunityUsers()
+            .then((res) => setCommunityUsers(res.data ?? []))
+            .catch(() => {})
+    }, [])
 
     const refresh = useCallback(async () => {
         setLoading(true)
@@ -584,6 +600,7 @@ export function AppDataProvider({ children }) {
         races,
         results,
         circuits,
+        communityUsers,
         playersById,
         charactersById,
         gamesById,

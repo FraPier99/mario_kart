@@ -8,6 +8,7 @@ import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import { statsApi, getApiErrorMessage } from '@/services/apiClient'
 import CircuitRankingTable from '@/components/stats/CircuitRankingTable'
 import CircuitThumbnail from '@/components/common/CircuitThumbnail'
+import PlayerLink from '@/components/common/PlayerLink'
 
 const COLORS = ['#059669', '#2563eb', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#db2777', '#65a30d', '#ea580c', '#0d9488']
 
@@ -258,7 +259,9 @@ const CircuitStats = () => {
                                                                     className="h-8 w-8 shrink-0 rounded-full object-cover border border-white/20"
                                                                 />
                                                                 <div>
-                                                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase">{circuit.top_winner.player_nickname?.toUpperCase()}</p>
+                                                                    <PlayerLink playerId={circuit.top_winner.player_id} className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase hover:text-emerald-600 dark:hover:text-emerald-400">
+                                                                        {circuit.top_winner.player_nickname?.toUpperCase()}
+                                                                    </PlayerLink>
                                                                     <p className="text-lg font-black text-emerald-600">{circuit.top_winner.wins} VITTORIE</p>
                                                                 </div>
                                                             </div>

@@ -25,6 +25,7 @@ from app.controllers.utenti.notifications import router as notifications_router
 from app.controllers.utenti.audit_log import router as audit_log_router
 from app.controllers.schedine.schedine_deluxe import router as schedine_deluxe_router
 from app.controllers.utenti.ownership import router as ownership_router
+from app.controllers.utenti.content_images import router as content_images_router
 
 
 tags_metadata = [
@@ -56,6 +57,10 @@ tags_metadata = [
     {
         "name": "Stats",
         "description": "Statistiche aggregate: confronto testa a testa tra giocatori e classifiche per circuito.",
+    },
+    {
+        "name": "ContentImages",
+        "description": "Immagini di contenuto statico (es. pagina /faq) caricabili dal superadmin.",
     },
 ]
 
@@ -120,6 +125,7 @@ app.include_router(notifications_router)
 app.include_router(audit_log_router)
 app.include_router(schedine_deluxe_router)
 app.include_router(ownership_router)
+app.include_router(content_images_router)
 app.include_router(stats_router)
 
 # Combined ASGI app: Socket.IO on /socket.io/, everything else → FastAPI

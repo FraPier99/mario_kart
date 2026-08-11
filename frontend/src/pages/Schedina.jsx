@@ -9,6 +9,7 @@ import { useTheme } from '@/context/ThemeContext'
 import { getProfileTheme } from '@/lib/profileTheme'
 import { schedineApi, schedineDeluxeApi } from '@/services/apiClient'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
+import PlayerLink from '@/components/common/PlayerLink'
 
 const formatDate = (value) => {
     if (!value) return 'data non disponibile'
@@ -301,7 +302,7 @@ const Schedina = () => {
         return (
             <div className="flex items-center gap-1.5 min-w-0">
                 <PlayerAvatar img={img} nickname={nickname} size="h-5 w-5" textSize="text-[8px]" className={`ring-1 ${ringColor}`} />
-                <span className={`truncate text-xs ${textColor}`}>{nickname}</span>
+                <PlayerLink playerId={playerId} className={`truncate text-xs ${textColor}`}>{nickname}</PlayerLink>
                 {correct === true && <span className="text-emerald-500 text-[9px]">✓</span>}
                 {correct === false && <span className="text-rose-400 text-[9px]">✗</span>}
             </div>
@@ -317,7 +318,7 @@ const Schedina = () => {
             <div className="flex items-center gap-2 rounded-xl bg-slate-50 dark:bg-muted px-3 py-1.5">
                 <span className="w-6 shrink-0 text-center text-xs font-black text-slate-400">{position}</span>
                 <PlayerAvatar img={img} nickname={nick} size="h-5 w-5" textSize="text-[8px]" />
-                <span className="truncate text-xs font-bold text-slate-900 dark:text-foreground">{nick ?? `#${playerId}`}</span>
+                <PlayerLink playerId={playerId} className="truncate text-xs font-bold text-slate-900 dark:text-foreground">{nick ?? `#${playerId}`}</PlayerLink>
             </div>
         )
     }
@@ -733,9 +734,9 @@ const Schedina = () => {
                                                                         <div className="flex items-center gap-2.5 min-w-0">
                                                                             <PlayerAvatar img={img} nickname={nick} size="h-8 w-8" className="ring-2 ring-white dark:ring-slate-700 shadow-sm" />
                                                                             <div className="min-w-0">
-                                                                                <p className={`text-sm font-black truncate ${isWinner ? 'text-amber-700 dark:text-amber-300' : isMe ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-900 dark:text-foreground'}`}>
+                                                                                <PlayerLink userId={entry.user_id} className={`block text-sm font-black truncate ${isWinner ? 'text-amber-700 dark:text-amber-300' : isMe ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-900 dark:text-foreground'}`}>
                                                                                     {nick}{isMe && <span className="ml-1.5 text-[8px] text-emerald-500 font-black">(tu)</span>}
-                                                                                </p>
+                                                                                </PlayerLink>
                                                                             </div>
                                                                         </div>
                                                                     </td>
@@ -970,7 +971,7 @@ const Schedina = () => {
                                         <div key={p.user_id} className="flex items-center gap-2.5 rounded-xl bg-white dark:bg-slate-800 px-3 py-2.5 shadow-sm">
                                             <PlayerAvatar img={getPlayerImg(p.nickname)} nickname={p.nickname} size="h-7 w-7" textSize="text-[10px]" />
                                             <div className="min-w-0 flex-1">
-                                                <p className="truncate text-xs font-bold text-slate-900 dark:text-white">{p.nickname || p.username}</p>
+                                                <PlayerLink userId={p.user_id} className="block truncate text-xs font-bold text-slate-900 dark:text-white">{p.nickname || p.username}</PlayerLink>
                                                 {p.compiled_at && (
                                                     <p className="text-[9px] text-slate-400">{new Date(p.compiled_at).toLocaleString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                                                 )}
@@ -1076,7 +1077,9 @@ const Schedina = () => {
                                                             <div>
                                                                 <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Torneo #{getTournamentDisplayNumber(winner.tournament_id)}</p>
                                                                 <h3 className="text-base font-black uppercase tracking-tight text-slate-900 dark:text-foreground">{winner.tournament_name}</h3>
-                                                                <p className="text-xs text-slate-500 dark:text-muted-foreground">{formatDate(winner.tournament_date)} · {winner.nickname ?? winner.username}</p>
+                                                                <p className="text-xs text-slate-500 dark:text-muted-foreground">
+                                                                    {formatDate(winner.tournament_date)} · <PlayerLink userId={winner.user_id} className="hover:text-emerald-600 dark:hover:text-emerald-400">{winner.nickname ?? winner.username}</PlayerLink>
+                                                                </p>
                                                             </div>
                                                         </div>
                                                         <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.3em] ${winner.redeemed_at ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200' : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-200'}`}>
@@ -1130,7 +1133,7 @@ const Schedina = () => {
                                         {(overview?.usage ?? []).map((row) => (
                                             <div key={row.user_id} className="flex items-center gap-3 p-4">
                                                 <PlayerAvatar img={row.img_url} nickname={row.nickname ?? row.username} size="h-10 w-10" textSize="text-sm" className="ring-1 ring-slate-200 dark:ring-slate-700 shrink-0" />
-                                                <p className="min-w-0 flex-1 truncate text-sm font-black text-slate-900 dark:text-foreground">{row.nickname ?? row.username}</p>
+                                                <PlayerLink userId={row.user_id} className="min-w-0 flex-1 truncate text-sm font-black text-slate-900 dark:text-foreground">{row.nickname ?? row.username}</PlayerLink>
                                                 <div className="shrink-0 text-center">
                                                     <p className="text-sm font-bold text-slate-700 dark:text-foreground">{row.schedine_compiled}<span className="text-slate-300 dark:text-slate-600">/</span>{row.schedine_won}</p>
                                                     <p className="text-[8px] font-black uppercase tracking-wide text-slate-400">Comp./Vinte</p>
@@ -1155,7 +1158,7 @@ const Schedina = () => {
                                                         <td className="px-4 py-3">
                                                             <div className="flex items-center gap-2.5 min-w-0">
                                                                 <PlayerAvatar img={row.img_url} nickname={row.nickname ?? row.username} size="h-9 w-9" textSize="text-xs" className="ring-1 ring-slate-200 dark:ring-slate-700 shrink-0" />
-                                                                <p className="truncate text-sm font-black text-slate-900 dark:text-foreground">{row.nickname ?? row.username}</p>
+                                                                <PlayerLink userId={row.user_id} className="truncate text-sm font-black text-slate-900 dark:text-foreground">{row.nickname ?? row.username}</PlayerLink>
                                                             </div>
                                                         </td>
                                                         <td className="px-4 py-3 text-center text-sm font-bold text-slate-700 dark:text-foreground">{row.schedine_compiled}</td>
@@ -1239,7 +1242,7 @@ const Schedina = () => {
                                                         <div key={s.schedina_id} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 dark:bg-muted px-4 py-2.5">
                                                             <div className="flex items-center gap-2.5 min-w-0">
                                                                 <PlayerAvatar img={getPlayerImg(s.nickname)} nickname={s.nickname ?? s.username} size="h-7 w-7" textSize="text-[9px]" />
-                                                                <p className="text-sm font-black text-slate-900 dark:text-foreground truncate">{s.nickname ?? s.username}</p>
+                                                                <PlayerLink userId={s.user_id} className="text-sm font-black text-slate-900 dark:text-foreground truncate">{s.nickname ?? s.username}</PlayerLink>
                                                             </div>
                                                             <div className="flex items-center gap-2 shrink-0">
                                                                 <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">{s.points} pt</span>

@@ -267,3 +267,23 @@ class UserR4Device(Base):
     __table_args__ = (
         UniqueConstraint("user_id", "device_type", name="unique_user_r4_device"),
     )
+
+
+# -------------------
+# SITE CONTENT IMAGE
+# -------------------
+class SiteContentImage(Base):
+    """Immagini gestibili dal superadmin per contenuti statici (es. la
+    pagina /faq) — non legate a un giocatore/torneo specifico. Una riga per
+    "slot", identificato da una `key` stabile scelta dal frontend (es.
+    "faq_lega_founding"): permette di aggiungere nuovi slot in futuro senza
+    modifiche allo schema, semplicemente usando una nuova key."""
+    __tablename__ = "site_content_images"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    key = Column(String, nullable=False, unique=True)
+    image_data = Column(Text, nullable=True)
+    updated_at = Column(DateTime, nullable=True)
+    updated_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+
+    updated_by = relationship("User", foreign_keys=[updated_by_id])

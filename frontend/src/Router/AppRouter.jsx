@@ -8,6 +8,7 @@ import SchedinaForm from '../pages/SchedinaForm'
 import SchedinaGroupForm from '../pages/SchedinaGroupForm'
 import Cards from '../pages/Cards'
 import Regolamento from '../pages/Regolamento'
+import Faq from '../pages/Faq'
 import Stats from '../pages/Stats'
 import NewTournament from '../pages/NewTournament'
 import TournamentDetail from '../pages/TournamentDetail'
@@ -58,6 +59,7 @@ const AppRouter = () =>{
                     <Route path='/schedina/:tournamentId/group-stage' element={<SchedinaGroupForm />} />
                     <Route path='/carte' element={<Cards />} />
                     <Route path='/regolamento' element={<Regolamento />} />
+                    <Route path='/faq' element={<Faq />} />
                     <Route path='/stats' element={<Stats />} />
                     <Route path='/compare' element={<Compare />} />
                     <Route path='/circuits' element={<CircuitStats />} />

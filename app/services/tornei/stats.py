@@ -308,8 +308,19 @@ def get_player_game_badge(db: Session, player_id: int, game_id: int) -> dict:
 
 
 def get_player_badges(db: Session, player_id: int) -> list[dict]:
-    """Badge del giocatore per ogni gioco esistente."""
-    games = db.query(Game).order_by(Game.name.asc()).all()
+    """Badge del giocatore per ogni gioco che ha almeno un torneo (di
+    qualunque stato). Un gioco senza tornei non produce alcun badge: un
+    tier come "esordiente" sarebbe rumore privo di significato per un gioco
+    che nessuno ha mai potuto giocare."""
+    game_ids_with_tournaments = {
+        row[0] for row in db.query(Tournament.game_id).distinct().all()
+    }
+    games = (
+        db.query(Game)
+        .filter(Game.id.in_(game_ids_with_tournaments))
+        .order_by(Game.name.asc())
+        .all()
+    )
     return [
         {
             "game_id": game.id,

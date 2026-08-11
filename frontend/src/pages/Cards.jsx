@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { getProfileTheme } from '@/lib/profileTheme'
 import { getApiErrorMessage, inventoryApi } from '@/services/apiClient'
+import PlayerLink from '@/components/common/PlayerLink'
 
 const formatDate = (value) => {
     if (!value) return 'data non disponibile'
@@ -44,7 +45,7 @@ const CardTypeTable = ({ label, accentClass, items }) => (
                                                 {(item.user_nickname ?? '?').charAt(0).toUpperCase()}
                                             </div>
                                         )}
-                                        <p className="text-sm font-black text-slate-900 dark:text-foreground">{item.user_nickname ?? `#${item.user_id}`}</p>
+                                        <PlayerLink userId={item.user_id} className="text-sm font-black text-slate-900 dark:text-foreground">{item.user_nickname ?? `#${item.user_id}`}</PlayerLink>
                                     </div>
                                 </td>
                                 <td className="px-4 py-2.5 text-sm font-bold text-slate-700 dark:text-foreground">

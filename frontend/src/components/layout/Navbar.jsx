@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import {
   Home, Trophy, BarChart3, Users, Menu, X, Sun, Moon,
   LogOut, User, ChevronDown, PenLine,
-  Plus, Shield, LayoutDashboard, Crown, BookOpen, Zap, Swords, Map
+  Plus, Shield, LayoutDashboard, Crown, BookOpen, Zap, Swords, Map, ScrollText
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import { cn } from "@/lib/utils"
@@ -43,6 +43,7 @@ export default function Navbar() {
     const torneiSubItems = [
         { name: 'Storico',     path: '/history',     icon: <Trophy size={15} /> },
         { name: 'Regolamento', path: '/regolamento', icon: <BookOpen size={15} /> },
+        { name: 'FAQ',         path: '/faq',         icon: <ScrollText size={15} /> },
         { name: 'Schedina',    path: '/schedina',    icon: <PenLine size={15} /> },
         { name: 'Carte',       path: '/carte',       icon: <Zap size={15} /> },
     ]

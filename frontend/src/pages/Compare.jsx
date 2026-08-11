@@ -4,6 +4,7 @@ import AppLayout from '@/components/layout/AppLayout'
 import { useAppData } from '@/context/AppDataContext'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import { statsApi, getApiErrorMessage } from '@/services/apiClient'
+import PlayerLink from '@/components/common/PlayerLink'
 
 const Selector = ({ label, search, setSearch, filtered, selected, setSelected, excludeId }) => (
     <div className="space-y-3">
@@ -271,8 +272,16 @@ const Compare = () => {
                                             <tr className="border-b border-slate-200 dark:border-border text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">
                                                 <th className="px-4 py-3">CIRCUITO</th>
                                                 <th className="px-4 py-3 text-right">GARE</th>
-                                                <th className="px-4 py-3 text-right">{comparison.player_a.nickname?.toUpperCase()}</th>
-                                                <th className="px-4 py-3 text-right">{comparison.player_b.nickname?.toUpperCase()}</th>
+                                                <th className="px-4 py-3 text-right">
+                                                    <PlayerLink playerId={comparison.player_a.id} className="hover:text-emerald-600 dark:hover:text-emerald-400">
+                                                        {comparison.player_a.nickname?.toUpperCase()}
+                                                    </PlayerLink>
+                                                </th>
+                                                <th className="px-4 py-3 text-right">
+                                                    <PlayerLink playerId={comparison.player_b.id} className="hover:text-emerald-600 dark:hover:text-emerald-400">
+                                                        {comparison.player_b.nickname?.toUpperCase()}
+                                                    </PlayerLink>
+                                                </th>
                                                 <th className="px-4 py-3 text-right">PAREGGI</th>
                                             </tr>
                                         </thead>
@@ -306,8 +315,16 @@ const Compare = () => {
                                             <tr className="border-b border-slate-200 dark:border-border text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">
                                                 <th className="px-4 py-3">TORNEO</th>
                                                 <th className="px-4 py-3">CIRCUITO</th>
-                                                <th className="px-4 py-3 text-right">{comparison.player_a.nickname?.toUpperCase()}</th>
-                                                <th className="px-4 py-3 text-right">{comparison.player_b.nickname?.toUpperCase()}</th>
+                                                <th className="px-4 py-3 text-right">
+                                                    <PlayerLink playerId={comparison.player_a.id} className="hover:text-emerald-600 dark:hover:text-emerald-400">
+                                                        {comparison.player_a.nickname?.toUpperCase()}
+                                                    </PlayerLink>
+                                                </th>
+                                                <th className="px-4 py-3 text-right">
+                                                    <PlayerLink playerId={comparison.player_b.id} className="hover:text-emerald-600 dark:hover:text-emerald-400">
+                                                        {comparison.player_b.nickname?.toUpperCase()}
+                                                    </PlayerLink>
+                                                </th>
                                                 <th className="px-4 py-3 text-right">RISULTATO</th>
                                             </tr>
                                         </thead>
