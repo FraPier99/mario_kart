@@ -37,14 +37,14 @@ export default function Navbar() {
         { name: 'Classifiche', path: '/stats',   icon: <BarChart3 size={15} /> },
         { name: 'Giocatori',   path: '/players', icon: <Users size={15} /> },
         // Galleria temporaneamente disattivata lato backend (foto troppo pesanti) — vedi app/main.py
-        { name: 'Hall of Fame', path: '/hall-of-fame', icon: <Crown size={15} /> },
         { name: 'FAQ',         path: '/faq',      icon: <ScrollText size={15} /> },
     ]
 
     const torneiSubItems = [
-        { name: 'Storico',     path: '/history',     icon: <Trophy size={15} /> },
-        { name: 'Schedina',    path: '/schedina',    icon: <PenLine size={15} /> },
-        { name: 'Carte',       path: '/carte',       icon: <Zap size={15} /> },
+        { name: 'Storico',      path: '/history',       icon: <Trophy size={15} /> },
+        { name: 'Hall of Fame', path: '/hall-of-fame',  icon: <Crown size={15} /> },
+        { name: 'Schedina',     path: '/schedina',      icon: <PenLine size={15} /> },
+        { name: 'Carte',        path: '/carte',         icon: <Zap size={15} /> },
     ]
 
     const classificheSubItems = [

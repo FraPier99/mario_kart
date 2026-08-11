@@ -33,9 +33,14 @@ const EditableContentImage = ({ contentKey, imageUrl, onUploaded, alt = '', clas
     }
 
     return (
-        <div className={`group relative overflow-hidden ${className}`}>
+        <div className={`group relative overflow-hidden bg-slate-100 dark:bg-muted ${className}`}>
             {imageUrl ? (
-                <img src={imageUrl} alt={alt} className="h-full w-full object-cover" />
+                // object-contain (non object-cover): l'immagine intera resta sempre
+                // visibile e centrata nel riquadro, senza ritagliare i bordi con
+                // aspect ratio diverse da quella del contenitore. `block` toglie lo
+                // spazio extra sotto l'immagine che un <img> inline lascia per
+                // default (altrimenti sembrava "non adattarsi" bene al riquadro).
+                <img src={imageUrl} alt={alt} className="block h-full w-full object-contain object-center" />
             ) : (
                 <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-slate-100 dark:bg-muted text-slate-400 dark:text-muted-foreground">
                     <ImagePlus size={28} />

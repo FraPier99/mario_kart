@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
     Flag, Trophy, Swords, ScrollText, Zap,
-    Crown, Star, Flame, Flag as FlagIcon,
+    Crown, Star, Flame, Flag as FlagIcon, ChevronDown,
 } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import PlayerLink from '@/components/common/PlayerLink'
@@ -66,6 +66,10 @@ const Faq = () => {
     const [activeSection, setActiveSection] = useState('lega')
     const [images, setImages] = useState({})
     const [flippedCard, setFlippedCard] = useState(null)
+    // Quali gruppi (Tornei/Schedina) sono espansi in sidebar — cliccando
+    // sull'intestazione del gruppo si apre/chiude il relativo sottomenu.
+    const [openGroups, setOpenGroups] = useState({})
+    const toggleGroup = (label) => setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }))
 
     useEffect(() => {
         contentImagesApi.list()
@@ -102,28 +106,36 @@ const Faq = () => {
                             {SECTIONS.map((item) => {
                                 if (item.children) {
                                     const groupActive = item.children.some((c) => c.key === activeSection)
+                                    const isOpen = openGroups[item.label] ?? groupActive
                                     return (
                                         <div key={item.label} className="pt-2 first:pt-0">
-                                            <p className={`flex items-center gap-2 px-4 py-1.5 text-[11px] font-black uppercase tracking-widest ${groupActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-muted-foreground'}`}>
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleGroup(item.label)}
+                                                className={`flex w-full items-center gap-2 rounded-xl px-4 py-1.5 text-[11px] font-black uppercase tracking-widest transition ${groupActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-muted-foreground hover:text-slate-600 dark:hover:text-foreground'}`}
+                                            >
                                                 <item.icon size={13} />
-                                                {item.label}
-                                            </p>
-                                            <div className="ml-3 space-y-0.5 border-l-2 border-slate-100 dark:border-border pl-3">
-                                                {item.children.map((sub) => (
-                                                    <button
-                                                        key={sub.key}
-                                                        type="button"
-                                                        onClick={() => setActiveSection(sub.key)}
-                                                        className={`block w-full rounded-xl px-3 py-2 text-left text-xs font-bold uppercase tracking-wide transition ${
-                                                            activeSection === sub.key
-                                                                ? 'bg-emerald-500 text-white shadow-md'
-                                                                : 'text-slate-600 dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-muted'
-                                                        }`}
-                                                    >
-                                                        {sub.label}
-                                                    </button>
-                                                ))}
-                                            </div>
+                                                <span className="flex-1 text-left">{item.label}</span>
+                                                <ChevronDown size={13} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                                            </button>
+                                            {isOpen && (
+                                                <div className="ml-3 mt-0.5 space-y-0.5 border-l-2 border-slate-100 dark:border-border pl-3">
+                                                    {item.children.map((sub) => (
+                                                        <button
+                                                            key={sub.key}
+                                                            type="button"
+                                                            onClick={() => setActiveSection(sub.key)}
+                                                            className={`block w-full rounded-xl px-3 py-2 text-left text-xs font-bold uppercase tracking-wide transition ${
+                                                                activeSection === sub.key
+                                                                    ? 'bg-emerald-500 text-white shadow-md'
+                                                                    : 'text-slate-600 dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-muted'
+                                                            }`}
+                                                        >
+                                                            {sub.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                     )
                                 }
@@ -158,7 +170,7 @@ const Faq = () => {
                                     imageUrl={images.faq_lega_founding}
                                     onUploaded={handleImageUploaded}
                                     alt="La nascita della Lega"
-                                    className="mt-5 h-56 w-full rounded-2xl md:h-72"
+                                    className="mt-5 h-72 w-full rounded-2xl md:h-96"
                                 />
 
                                 <div className="prose prose-slate dark:prose-invert mt-6 max-w-none text-sm leading-relaxed text-slate-700 dark:text-muted-foreground">
