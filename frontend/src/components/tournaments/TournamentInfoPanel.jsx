@@ -69,7 +69,7 @@ const Timeline = ({ steps }) => (
     </div>
 )
 
-const TournamentInfoPanel = ({ tournament, isAdmin, isSuperadmin, collapsible = false, defaultOpen = true }) => {
+const TournamentInfoPanel = ({ tournament, isAdmin, isSuperadmin, collapsible = false, defaultOpen = true, showOverviewBasics = true }) => {
     const [overview, setOverview] = useState(null)
     const [audit, setAudit] = useState(null)
     const [open, setOpen] = useState(defaultOpen)
@@ -93,11 +93,11 @@ const TournamentInfoPanel = ({ tournament, isAdmin, isSuperadmin, collapsible = 
     if (!overview) return null
 
     const infoItems = [
-        { label: 'Data', value: overview.date ?? '—' },
+        ...(showOverviewBasics ? [{ label: 'Data', value: overview.date ?? '—' }] : []),
         { label: 'Tipo', value: FORMAT_LABEL[overview.tournament_format] ?? overview.tournament_format },
         { label: 'Partecipanti', value: `${overview.participants_count}/${overview.n_players}` },
         ...(overview.groups_count != null ? [{ label: 'Gironi', value: overview.groups_count }] : []),
-        { label: 'Gare', value: `${overview.races_completed}/${overview.races_total}` },
+        ...(showOverviewBasics ? [{ label: 'Gare', value: `${overview.races_completed}/${overview.races_total}` }] : []),
         { label: 'Schedine', value: `${overview.schedine_count} · ${overview.schedina_status_label}` },
     ]
 
@@ -108,9 +108,11 @@ const TournamentInfoPanel = ({ tournament, isAdmin, isSuperadmin, collapsible = 
                 <h3 className="text-lg font-black text-slate-900 dark:text-foreground">Informazioni torneo</h3>
             </div>
             <div className="flex items-center gap-2">
-                <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest ${STATUS_BADGE[overview.status_label] ?? 'bg-slate-500 text-white'}`}>
-                    {overview.status_label}
-                </span>
+                {showOverviewBasics && (
+                    <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest ${STATUS_BADGE[overview.status_label] ?? 'bg-slate-500 text-white'}`}>
+                        {overview.status_label}
+                    </span>
+                )}
                 {collapsible && (
                     <ChevronDown size={16} className={`text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
                 )}

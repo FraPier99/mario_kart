@@ -242,8 +242,7 @@ const TournamentDetail = () => {
 
     const [confirmDeleteTournament, setConfirmDeleteTournament] = useState(false)
     const [deleting, setDeleting] = useState(false)
-    const [activeSection, setActiveSection] = useState('management')
-    const [managementTab, setManagementTab] = useState('setup')
+    const [activeSection, setActiveSection] = useState('setup')
     const [participantsStatus, setParticipantsStatus] = useState([])
     const [userHasPredicted, setUserHasPredicted] = useState(null)
     const [userTab, setUserTab] = useState('riepilogo')
@@ -1018,166 +1017,137 @@ const TournamentDetail = () => {
 
                 <div className="rounded-3xl border border-slate-200 dark:border-border bg-white/90 dark:bg-card/90 backdrop-blur-sm p-6 md:p-8">
 
-                <TournamentInfoPanel tournament={tournament} isAdmin={isAdmin} isSuperadmin={isSuperadmin} />
+                <TournamentInfoPanel tournament={tournament} isAdmin={isAdmin} isSuperadmin={isSuperadmin} showOverviewBasics={false} />
 
                 <div className="rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-3" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                     <div className="flex flex-wrap items-center gap-2 md:gap-3">
                         <span className="font-title select-none px-2 text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-muted-foreground/70 cursor-default">Gestione torneo</span>
-                        <div className="inline-flex rounded-xl bg-slate-100 dark:bg-muted p-1 overflow-x-auto max-w-full gap-0.5">
-                            <button type="button" onClick={() => setActiveSection('management')}
-                                className={`font-title rounded-lg px-3 py-2 text-[10px] tracking-wide whitespace-nowrap transition ${activeSection === 'management' ? 'bg-emerald-500 text-white shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
-                                Gestione
-                            </button>
-                            <button type="button" onClick={() => setActiveSection('leaderboard')}
-                                className={`font-title rounded-lg px-3 py-2 text-[10px] tracking-wide whitespace-nowrap transition ${activeSection === 'leaderboard' ? 'bg-amber-500 text-white shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
-                                Classifica
-                            </button>
-                            <button type="button" onClick={() => setActiveSection('races')}
-                                className={`font-title rounded-lg px-3 py-2 text-[10px] tracking-wide whitespace-nowrap transition ${activeSection === 'races' ? 'bg-blue-500 text-white shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
-                                Gare
-                            </button>
-                            <button type="button" onClick={() => setActiveSection('carte')}
-                                className={`font-title flex items-center gap-1.5 rounded-lg px-3 py-2 text-[10px] tracking-wide whitespace-nowrap transition ${activeSection === 'carte' ? 'bg-amber-400 text-amber-950 shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
-                                <Zap size={12} />
-                                Carte
-                                {inventory.filter((c) => !c.is_consumed).length > 0 && (
-                                    <span className="font-title flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[9px] text-white">
-                                        {inventory.filter((c) => !c.is_consumed).length}
-                                    </span>
-                                )}
-                            </button>
-                            {isAdmin && (
-                                <button type="button" onClick={() => setActiveSection('schedina')}
-                                    className={`font-title flex items-center gap-1.5 rounded-lg px-3 py-2 text-[10px] tracking-wide whitespace-nowrap transition ${activeSection === 'schedina' ? 'bg-sky-500 text-white shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
-                                    <ListChecks size={12} />
-                                    Schedine
+                        <div className="inline-flex flex-wrap rounded-xl bg-slate-100 dark:bg-muted p-1 overflow-x-auto max-w-full gap-0.5">
+                            {[
+                                ...(isAdmin ? (
+                                    tournament.tournament_format === 'group_stage'
+                                        ? [
+                                            { key: 'setup', label: 'Impostazioni', icon: Settings },
+                                            { key: 'gironi', label: 'Gironi/Fasi', icon: Flag },
+                                        ]
+                                        : [
+                                            { key: 'setup', label: 'Impostazioni', icon: Settings },
+                                            { key: 'gare', label: 'Risultati', icon: Flag },
+                                            { key: 'duelli', label: 'Duelli', icon: Swords },
+                                            { key: 'finale', label: 'Finale', icon: Crown },
+                                        ]
+                                ) : []),
+                                { key: 'leaderboard', label: 'Classifica', icon: BarChart3 },
+                                { key: 'races', label: 'Gare', icon: ListChecks },
+                                { key: 'carte', label: 'Carte', icon: Zap },
+                                ...(isAdmin ? [{ key: 'schedina', label: 'Schedine', icon: ListChecks }] : []),
+                            ].map(({ key, label, icon: Icon }) => (
+                                <button key={key} type="button" onClick={() => setActiveSection(key)}
+                                    className={`font-title flex items-center gap-1.5 rounded-lg px-3 py-2 text-[10px] tracking-wide whitespace-nowrap transition ${activeSection === key ? 'bg-slate-700 dark:bg-slate-600 text-white shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
+                                    <Icon size={12} />
+                                    {label}
+                                    {key === 'carte' && inventory.filter((c) => !c.is_consumed).length > 0 && (
+                                        <span className="font-title flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[9px] text-white">
+                                            {inventory.filter((c) => !c.is_consumed).length}
+                                        </span>
+                                    )}
                                 </button>
-                            )}
+                            ))}
                         </div>
                     </div>
                 </div>
 
-                {isAdmin && activeSection === 'management' && (
+                {isAdmin && activeSection === 'setup' && (
                     <div className="space-y-4">
-                        <div className="inline-flex flex-wrap rounded-xl bg-slate-100 dark:bg-muted p-1 gap-0.5 max-w-full overflow-x-auto">
-                            {(tournament.tournament_format === 'group_stage'
-                                ? [
-                                    { key: 'setup', label: 'Impostazioni', icon: <Settings size={14} /> },
-                                    { key: 'gironi', label: 'Gironi/Fasi', icon: <Flag size={14} /> },
-                                ]
-                                : [
-                                    { key: 'setup', label: 'Impostazioni', icon: <Settings size={14} /> },
-                                    { key: 'gare', label: 'Risultati', icon: <Flag size={14} /> },
-                                    { key: 'duelli', label: 'Duelli', icon: <Swords size={14} /> },
-                                    { key: 'finale', label: 'Finale', icon: <Crown size={14} /> },
-                                ]
-                            ).map(({ key, label, icon }) => (
-                                <button key={key} type="button" onClick={() => setManagementTab(key)}
-                                    className={`font-title flex items-center gap-1.5 rounded-lg px-3 py-2 text-[10px] tracking-wide whitespace-nowrap transition ${managementTab === key ? 'bg-slate-700 dark:bg-slate-600 text-white shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
-                                    {icon}
-                                    {label}
-                                </button>
-                            ))}
-                        </div>
+                        <CollapsibleSection title="Stato torneo" icon={<Settings size={16} />} defaultOpen>
+                            <TournamentStatusManager tournament={tournament} disabled={!isAdmin} onUpdated={refresh} />
+                        </CollapsibleSection>
 
-                        {managementTab === 'setup' && (
-                            <div className="space-y-4">
-                                <CollapsibleSection title="Stato torneo" icon={<Settings size={16} />} defaultOpen>
-                                    <TournamentStatusManager tournament={tournament} disabled={!isAdmin} onUpdated={refresh} />
-                                </CollapsibleSection>
+                        <CollapsibleSection
+                            title="Partecipanti"
+                            icon={<Users size={16} />}
+                            badge={(
+                                <span className="rounded-full bg-slate-100 dark:bg-muted px-2.5 py-0.5 text-[10px] font-black text-slate-500 dark:text-muted-foreground">
+                                    {tournament.participant_ids?.length ?? 0}
+                                </span>
+                            )}
+                            defaultOpen
+                        >
+                            <TournamentParticipantsManager tournament={tournament} players={players} initialParticipantIds={tournament.participant_ids ?? []} disabled={Boolean(tournament.winner_id) || tournament.status === 'in_corso'} onUpdated={refresh} excludePlayerIds={superadminPlayerIds} />
 
-                                <CollapsibleSection
-                                    title="Partecipanti"
-                                    icon={<Users size={16} />}
-                                    badge={(
-                                        <span className="rounded-full bg-slate-100 dark:bg-muted px-2.5 py-0.5 text-[10px] font-black text-slate-500 dark:text-muted-foreground">
-                                            {tournament.participant_ids?.length ?? 0}
-                                        </span>
-                                    )}
-                                    defaultOpen
-                                >
-                                    <TournamentParticipantsManager tournament={tournament} players={players} initialParticipantIds={tournament.participant_ids ?? []} disabled={Boolean(tournament.winner_id) || tournament.status === 'in_corso'} onUpdated={refresh} excludePlayerIds={superadminPlayerIds} />
-
-                                    {(tournament.status === 'in_corso' || tournament.status === 'da_svolgere') && (
-                                        <WithdrawalManager tournament={tournament} players={players} disabled={!isAdmin} onUpdated={refresh} />
-                                    )}
-                                </CollapsibleSection>
-                            </div>
-                        )}
-
-                        {tournament.tournament_format === 'group_stage' ? (
-                            /* ── Modalità MK8 Deluxe: gironi, spareggi, semifinali e finale ──
-                               GroupManagementSection rende già le proprie CollapsibleSection
-                               per fase (Generale/Gironi/Semifinali/Finali/Classifica Finale) */
-                            managementTab === 'gironi' && (
-                                <GroupManagementSection
-                                    tournament={tournament}
-                                    players={players}
-                                    circuits={tournamentCircuits}
-                                    characters={charactersByGameId.get(tournament?.game_id ?? 0) ?? []}
-                                    results={results}
-                                    isAdmin={isAdmin}
-                                    onRefresh={refresh}
-                                    leader={currentLeader}
-                                    onFinalized={handleFinalized}
-                                    onReplayCelebration={handleReplayCelebration}
-                                />
-                            )
-                        ) : (
-                            /* ── Modalità Classic: flusso standard ── */
-                            <>
-                                {managementTab === 'gare' && (
-                                    <CollapsibleSection title="Risultati" icon={<Flag size={16} />} defaultOpen>
-                                        {/* Riepilogo sintetico — l'elenco completo gare/circuiti e la
-                                        modifica dei risultati già inseriti vivono solo nel tab "Gare"
-                                        di primo livello, per evitare due viste della stessa lista. */}
-                                        <div className="rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-5">
-                                            <div className="flex flex-wrap items-center justify-between gap-4">
-                                                <div>
-                                                    <p className="text-xs font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Riepilogo gare</p>
-                                                    <p className="mt-1 text-2xl font-black text-slate-900 dark:text-foreground">
-                                                        {tournament.raceCount}/{tournament.n_races} <span className="text-sm font-bold text-slate-400 dark:text-muted-foreground">gare inserite</span>
-                                                    </p>
-                                                    {incompleteRacesCount > 0 && (
-                                                        <p className="mt-1 text-xs font-bold text-amber-600 dark:text-amber-400">
-                                                            {incompleteRacesCount} gara/e con risultati incompleti
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                <button type="button" onClick={() => setActiveSection('races')}
-                                                    className="font-title shrink-0 rounded-xl border-2 border-blue-300 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 px-4 py-2.5 text-[10px] tracking-wide text-blue-700 dark:text-blue-300 transition active:translate-y-px hover:bg-blue-100 dark:hover:bg-blue-500/20">
-                                                    Vai a Gare — consulta e modifica i risultati →
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <RaceCreator tournament={tournament} circuits={tournamentCircuits} loading={loading} onCreated={refresh} disabled={isTournamentLocked} results={results} tournamentParticipants={activeTournamentParticipants} onRefresh={refresh} refreshing={loading} />
-                                        <ResultEntryForm tournament={tournament} races={tournament.races} tournamentParticipants={activeTournamentParticipants} onCreated={refresh} disabled={isTournamentLocked} />
-                                    </CollapsibleSection>
-                                )}
-
-                                {managementTab === 'duelli' && (
-                                    <CollapsibleSection title="Duelli spareggio" subtitle="Spareggi automatici per pareggi in classifica — risolvono le posizioni a pari merito indipendentemente dal podio. Non assegnano punti in classifica." icon={<Swords size={16} />} defaultOpen>
-                                        <ClassicPodiumDuelCard
-                                            tournament={tournament}
-                                            players={players}
-                                            circuits={tournamentCircuits}
-                                            characters={charactersByGameId.get(tournament?.game_id ?? 0) ?? []}
-                                            onRefresh={refresh}
-                                        />
-                                    </CollapsibleSection>
-                                )}
-
-                                {managementTab === 'finale' && (
-                                    <CollapsibleSection title="Classifica finale" icon={<Crown size={16} />} defaultOpen>
-                                        <div className="space-y-4">
-                                            <WinnerFinalizeCard tournament={tournament} leader={currentLeader} onFinalized={handleFinalized} onReplayCelebration={handleReplayCelebration} />
-                                            <TournamentResolutionNotes tournament={tournament} />
-                                        </div>
-                                    </CollapsibleSection>
-                                )}
-                            </>
-                        )}
+                            {(tournament.status === 'in_corso' || tournament.status === 'da_svolgere') && (
+                                <WithdrawalManager tournament={tournament} players={players} disabled={!isAdmin} onUpdated={refresh} />
+                            )}
+                        </CollapsibleSection>
                     </div>
+                )}
+
+                {/* ── Modalità MK8 Deluxe: gironi, spareggi, semifinali e finale ──
+                    GroupManagementSection rende già le proprie CollapsibleSection
+                    per fase (Generale/Gironi/Semifinali/Finali/Classifica Finale) */}
+                {isAdmin && activeSection === 'gironi' && (
+                    <GroupManagementSection
+                        tournament={tournament}
+                        players={players}
+                        circuits={tournamentCircuits}
+                        characters={charactersByGameId.get(tournament?.game_id ?? 0) ?? []}
+                        results={results}
+                        isAdmin={isAdmin}
+                        onRefresh={refresh}
+                        leader={currentLeader}
+                        onFinalized={handleFinalized}
+                        onReplayCelebration={handleReplayCelebration}
+                    />
+                )}
+
+                {isAdmin && activeSection === 'gare' && (
+                    <CollapsibleSection title="Risultati" icon={<Flag size={16} />} defaultOpen>
+                        {/* Riepilogo sintetico — l'elenco completo gare/circuiti e la
+                        modifica dei risultati già inseriti vivono solo nel tab "Gare"
+                        di primo livello, per evitare due viste della stessa lista. */}
+                        <div className="rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-5">
+                            <div className="flex flex-wrap items-center justify-between gap-4">
+                                <div>
+                                    <p className="text-xs font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Riepilogo gare</p>
+                                    <p className="mt-1 text-2xl font-black text-slate-900 dark:text-foreground">
+                                        {tournament.raceCount}/{tournament.n_races} <span className="text-sm font-bold text-slate-400 dark:text-muted-foreground">gare inserite</span>
+                                    </p>
+                                    {incompleteRacesCount > 0 && (
+                                        <p className="mt-1 text-xs font-bold text-amber-600 dark:text-amber-400">
+                                            {incompleteRacesCount} gara/e con risultati incompleti
+                                        </p>
+                                    )}
+                                </div>
+                                <button type="button" onClick={() => setActiveSection('races')}
+                                    className="font-title shrink-0 rounded-xl border-2 border-blue-300 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 px-4 py-2.5 text-[10px] tracking-wide text-blue-700 dark:text-blue-300 transition active:translate-y-px hover:bg-blue-100 dark:hover:bg-blue-500/20">
+                                    Vai a Gare — consulta e modifica i risultati →
+                                </button>
+                            </div>
+                        </div>
+                        <RaceCreator tournament={tournament} circuits={tournamentCircuits} loading={loading} onCreated={refresh} disabled={isTournamentLocked} results={results} tournamentParticipants={activeTournamentParticipants} onRefresh={refresh} refreshing={loading} />
+                        <ResultEntryForm tournament={tournament} races={tournament.races} tournamentParticipants={activeTournamentParticipants} onCreated={refresh} disabled={isTournamentLocked} />
+                    </CollapsibleSection>
+                )}
+
+                {isAdmin && activeSection === 'duelli' && (
+                    <CollapsibleSection title="Duelli spareggio" subtitle="Spareggi automatici per pareggi in classifica — risolvono le posizioni a pari merito indipendentemente dal podio. Non assegnano punti in classifica." icon={<Swords size={16} />} defaultOpen>
+                        <ClassicPodiumDuelCard
+                            tournament={tournament}
+                            players={players}
+                            circuits={tournamentCircuits}
+                            characters={charactersByGameId.get(tournament?.game_id ?? 0) ?? []}
+                            onRefresh={refresh}
+                        />
+                    </CollapsibleSection>
+                )}
+
+                {isAdmin && activeSection === 'finale' && (
+                    <CollapsibleSection title="Classifica finale" icon={<Crown size={16} />} defaultOpen>
+                        <div className="space-y-4">
+                            <WinnerFinalizeCard tournament={tournament} leader={currentLeader} onFinalized={handleFinalized} onReplayCelebration={handleReplayCelebration} />
+                            <TournamentResolutionNotes tournament={tournament} />
+                        </div>
+                    </CollapsibleSection>
                 )}
 
                 {isAdmin && activeSection === 'schedina' && (
