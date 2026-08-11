@@ -60,24 +60,19 @@ const buildWarnings = (tournament, targetStatus) => {
     if (targetStatus === 'in_corso') {
         const now = new Date()
         const tournamentDate = tournament.date ? new Date(tournament.date) : null
-        const raceCount = tournament.raceCount ?? tournament.races?.length ?? 0
-        const nRaces = tournament.n_races ?? 0
 
+        // Le gare si possono creare solo a torneo "in corso" (vedi
+        // isTournamentLocked in TournamentDetail.jsx): a questo punto
+        // raceCount è SEMPRE 0, per ogni torneo — non è un'anomalia da
+        // segnalare, è l'unico stato possibile. Un avviso qui sparerebbe
+        // sempre, senza mai indicare un problema reale (stessa ragione per
+        // cui i gironi non hanno un controllo analogo, vedi commento sopra).
         if (tournamentDate && tournamentDate > now) {
             warnings.push({
                 level: 'warning',
                 icon: '📅',
                 title: 'Torneo non ancora alla data',
                 body: `Il torneo è previsto per il ${tournamentDate.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })}. Stai avanzando prima della data programmata.`,
-            })
-        }
-
-        if (!isGroupStage && nRaces > 0 && raceCount === 0) {
-            warnings.push({
-                level: 'warning',
-                icon: '🏁',
-                title: 'Nessuna gara ancora creata',
-                body: `Il torneo prevede ${nRaces} gare ma nessuna è stata ancora creata. Puoi crearle anche dopo, ma è consigliato farlo prima.`,
             })
         }
     }

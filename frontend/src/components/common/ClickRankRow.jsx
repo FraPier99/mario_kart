@@ -21,6 +21,19 @@
  */
 import { Trophy, Ban } from 'lucide-react'
 
+// Il cerchietto di posizione usa la stessa palette oro/argento/bronzo del
+// podio in LeaderboardTable (medalClasses) invece di un verde uniforme per
+// tutti i piazzati: senza, 1° e 5° erano indistinguibili a colpo d'occhio,
+// bisognava leggere il numero. Dal 4° posto in poi resta un colore neutro
+// ma ad alto contrasto, comunque ben distinto sia dal podio sia dal
+// cerchietto "non piazzato" (chiarissimo, bg-slate-100).
+const badgeClasses = (pos) => {
+    if (pos === 0) return 'bg-circuit-gold text-circuit-ink'
+    if (pos === 1) return 'bg-slate-300 text-slate-700'
+    if (pos === 2) return 'bg-orange-400 text-orange-950'
+    return 'bg-slate-700 text-white dark:bg-slate-600'
+}
+
 const ClickRankRow = ({
     player,
     pos,
@@ -47,7 +60,7 @@ const ClickRankRow = ({
                         : 'border-slate-200 bg-white hover:border-slate-300 dark:border-border dark:bg-card'
             }`}
         >
-            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black ${isAccent ? 'bg-cyan-100 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-300' : isPlaced ? 'bg-emerald-400 text-white' : 'bg-slate-100 text-slate-400 dark:bg-muted dark:text-slate-500'}`}>
+            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black ${isAccent ? 'bg-cyan-100 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-300' : isPlaced ? badgeClasses(pos) : 'bg-slate-100 text-slate-400 dark:bg-muted dark:text-slate-500'}`}>
                 {pos === 0 ? (
                     <Trophy size={14} className="text-amber-500" />
                 ) : isAccent ? (

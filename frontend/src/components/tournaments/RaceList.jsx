@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
-import { Search, ChevronDown, PencilLine, Trash2, X, MapPin, Swords } from 'lucide-react'
+import { Search, ChevronDown, PencilLine, Trash2, X, Swords } from 'lucide-react'
 import { toast } from 'sonner'
-import CircuitPicker from '@/components/tournaments/CircuitPicker'
-import { getApiErrorMessage, racesApi, resultsApi } from '@/services/apiClient'
+import { getApiErrorMessage, racesApi } from '@/services/apiClient'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import CircuitThumbnail from '@/components/common/CircuitThumbnail'
+import ClassicRaceForm from '@/components/tournaments/ClassicRaceForm'
 
 const getCupStyle = (description = '') => {
     const d = description.toLowerCase()
@@ -21,18 +21,14 @@ const getCupStyle = (description = '') => {
 
 const PAGE_SIZE = 10
 
-const RaceList = ({ races, circuits = [], circuitsById, charactersById, characters = [], tournamentId, onChanged, canEdit = false }) => {
+const RaceList = ({ races, circuits = [], circuitsById, charactersById, characters = [], nPlayers, tournamentId, onChanged, canEdit = false }) => {
     const [searchTerm, setSearchTerm] = useState('')
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
     const [expandedRaces, setExpandedRaces] = useState(new Set())
     const [editingRace, setEditingRace] = useState(null)
     const [saving, setSaving] = useState(false)
     const [confirmDelete, setConfirmDelete] = useState(null)
-    const [editForm, setEditForm] = useState({ name: '', race_order: '', circuit_id: '' })
     const [duelloFilter, setDuelloFilter] = useState('all') // 'all' | 'duelli' | 'regolari'
-    const [editingResult, setEditingResult] = useState(null)
-    const [editResultForm, setEditResultForm] = useState({ position: '', character_id: '' })
-    const [savingResult, setSavingResult] = useState(false)
 
     const toggleRace = (id) => {
         setExpandedRaces((prev) => {
@@ -59,56 +55,12 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
     const visibleRaces = filteredRaces.slice(0, visibleCount)
     const hasMore = visibleCount < filteredRaces.length
 
-    const usedCircuitIds = useMemo(() => {
-        const ids = new Set(races.map((race) => race.circuit_id))
-        if (editingRace) {
-            ids.delete(editingRace.circuit_id)
-        }
-        return ids
-    }, [editingRace, races])
+    const closeEdit = () => setEditingRace(null)
 
-    const openEdit = (race) => {
-        setEditingRace(race)
-        setEditForm({
-            name: race.name ?? '',
-            race_order: race.race_order ?? '',
-            circuit_id: race.circuit_id ?? '',
-        })
-    }
-
-    const closeEdit = () => {
-        setEditingRace(null)
-        setEditForm({ name: '', race_order: '', circuit_id: '' })
-    }
-
-    const handleEditChange = (event) => {
-        const { name, value } = event.target
-        setEditForm((current) => ({ ...current, [name]: value }))
-    }
-
-    const handleEditSave = async () => {
-        if (!editingRace) return
-        if (!editForm.circuit_id) return
-
-        setSaving(true)
-        try {
-            await racesApi.update(editingRace.id, {
-                name: editForm.name.trim() || `Gara ${editForm.race_order}`,
-                race_order: Number(editForm.race_order),
-                tournament_id: tournamentId,
-                circuit_id: Number(editForm.circuit_id),
-            })
-            toast.success('Gara aggiornata')
-            closeEdit()
-            await onChanged?.()
-        }
-        catch (error) {
-            toast.error('Aggiornamento gara fallito', { description: getApiErrorMessage(error) })
-        }
-        finally {
-            setSaving(false)
-        }
-    }
+    const editingRaceParticipants = useMemo(() => {
+        if (!editingRace) return []
+        return (editingRace.results ?? []).map((r) => r.player).filter(Boolean)
+    }, [editingRace])
 
     const handleDelete = async () => {
         if (!confirmDelete) return
@@ -118,6 +70,7 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
             await racesApi.remove(confirmDelete.id)
             toast.success('Gara eliminata')
             setConfirmDelete(null)
+            closeEdit()
             await onChanged?.()
         }
         catch (error) {
@@ -125,46 +78,6 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
         }
         finally {
             setSaving(false)
-        }
-    }
-
-    const openEditResult = (race, result) => {
-        setEditingResult({ race, result })
-        setEditResultForm({ position: result.position ?? '', character_id: result.character_id ?? '' })
-    }
-
-    const closeEditResult = () => {
-        setEditingResult(null)
-        setEditResultForm({ position: '', character_id: '' })
-    }
-
-    const editResultTakenPositions = useMemo(() => {
-        if (!editingResult) return new Set()
-        return new Set(
-            (editingResult.race.results ?? [])
-                .filter((r) => r.id !== editingResult.result.id)
-                .map((r) => r.position)
-        )
-    }, [editingResult])
-
-    const handleEditResultSave = async () => {
-        if (!editingResult || !editResultForm.position || !editResultForm.character_id) return
-
-        setSavingResult(true)
-        try {
-            await resultsApi.update(editingResult.result.id, {
-                position: Number(editResultForm.position),
-                character_id: Number(editResultForm.character_id),
-            })
-            toast.success('Risultato aggiornato')
-            closeEditResult()
-            await onChanged?.()
-        }
-        catch (error) {
-            toast.error('Aggiornamento risultato fallito', { description: getApiErrorMessage(error) })
-        }
-        finally {
-            setSavingResult(false)
         }
     }
 
@@ -180,51 +93,26 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
         <div className="space-y-4">
             {editingRace && (
                 <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={closeEdit}>
-                    <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-slate-950 p-6 text-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
-                        <div className="flex items-start justify-between gap-4">
-                            <div>
-                                <p className="text-xs font-black uppercase tracking-[0.35em] text-emerald-300">Modifica gara</p>
-                                <h3 className="mt-2 text-2xl font-black uppercase tracking-tight">{editingRace.name ?? `Gara ${editingRace.race_order}`}</h3>
-                            </div>
+                    <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(event) => event.stopPropagation()}>
+                        <div className="flex items-center justify-end mb-2">
                             <button type="button" onClick={closeEdit} className="rounded-full border border-white/10 bg-white/5 p-2 text-slate-200 transition hover:bg-white/10"><X size={16} /></button>
                         </div>
 
-                        <div className="mt-6 grid gap-4 md:grid-cols-3">
-                            <label className="space-y-2 md:col-span-1">
-                                <span className="text-xs font-black uppercase tracking-widest text-slate-400">Ordine gara</span>
-                                <input name="race_order" type="number" min="1" value={editForm.race_order} onChange={handleEditChange} className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-emerald-400" />
-                            </label>
-                            <label className="space-y-2 md:col-span-2">
-                                <span className="text-xs font-black uppercase tracking-widest text-slate-400">Nome gara</span>
-                                <input name="name" value={editForm.name} onChange={handleEditChange} className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-emerald-400" />
-                            </label>
-                        </div>
+                        <ClassicRaceForm
+                            key={editingRace.id}
+                            tournamentId={tournamentId}
+                            races={races}
+                            nPlayers={nPlayers}
+                            participants={editingRaceParticipants}
+                            circuits={circuits}
+                            characters={characters}
+                            editingRace={editingRace}
+                            onSaved={async () => { closeEdit(); await onChanged?.() }}
+                        />
 
-                        <div className="mt-4 space-y-2">
-                            <span className="text-xs font-black uppercase tracking-widest text-slate-400">Circuito</span>
-                            <CircuitPicker
-                                circuits={circuits}
-                                value={editForm.circuit_id}
-                                onChange={(circuitId) => setEditForm((current) => ({ ...current, circuit_id: circuitId }))}
-                                usedCircuitIds={usedCircuitIds}
-                                label="Aggiorna circuito"
-                                placeholder="Seleziona un circuito"
-                            />
-                        </div>
-
-                        <div className="mt-6 flex items-center justify-between gap-3">
-                            <button type="button" onClick={() => setConfirmDelete(editingRace)} className="rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm font-black uppercase tracking-widest text-rose-200 transition hover:bg-rose-500/20">
-                                Elimina gara
-                            </button>
-                            <div className="flex items-center gap-3">
-                                <button type="button" onClick={closeEdit} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-black uppercase tracking-widest text-slate-200 transition hover:bg-white/10">
-                                    Annulla
-                                </button>
-                                <button type="button" onClick={handleEditSave} disabled={saving} className="rounded-2xl bg-linear-to-r from-emerald-500 to-green-600 px-4 py-3 text-sm font-black uppercase tracking-widest text-white transition hover:from-emerald-400 hover:to-green-500 disabled:opacity-60">
-                                    {saving ? 'Salvataggio...' : 'Salva'}
-                                </button>
-                            </div>
-                        </div>
+                        <button type="button" onClick={() => setConfirmDelete(editingRace)} className="mt-3 w-full rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm font-black uppercase tracking-widest text-rose-200 transition hover:bg-rose-500/20">
+                            Elimina gara
+                        </button>
                     </div>
                 </div>
             )}
@@ -237,63 +125,6 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
                         <div className="mt-6 flex gap-3">
                             <button type="button" onClick={() => setConfirmDelete(null)} className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-black uppercase tracking-widest text-white transition hover:bg-white/10">Annulla</button>
                             <button type="button" onClick={handleDelete} disabled={saving} className="flex-1 rounded-2xl bg-rose-500 px-4 py-2.5 text-sm font-black uppercase tracking-widest text-white transition hover:bg-rose-400 disabled:opacity-60">{saving ? 'Elimino...' : 'Elimina'}</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {editingResult && (
-                <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={closeEditResult}>
-                    <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-slate-950 p-6 text-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
-                        <div className="flex items-start justify-between gap-4">
-                            <div>
-                                <p className="text-xs font-black uppercase tracking-[0.35em] text-emerald-300">Modifica risultato</p>
-                                <h3 className="mt-2 text-lg font-black uppercase tracking-tight">
-                                    {editingResult.result.player?.nickname ?? `Player ${editingResult.result.player_id}`} — Gara {editingResult.race.race_order}
-                                </h3>
-                            </div>
-                            <button type="button" onClick={closeEditResult} className="rounded-full border border-white/10 bg-white/5 p-2 text-slate-200 transition hover:bg-white/10"><X size={16} /></button>
-                        </div>
-
-                        <div className="mt-5 space-y-4">
-                            <label className="block space-y-2">
-                                <span className="text-xs font-black uppercase tracking-widest text-slate-400">Posizione</span>
-                                <select
-                                    value={editResultForm.position}
-                                    onChange={(e) => setEditResultForm((cur) => ({ ...cur, position: e.target.value }))}
-                                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-emerald-400"
-                                >
-                                    <option value="" disabled>Seleziona posizione</option>
-                                    {Array.from({ length: editingResult.race.results?.length ?? 0 }, (_, i) => i + 1).map((pos) => (
-                                        <option key={pos} value={pos} disabled={editResultTakenPositions.has(pos)}>
-                                            {pos}{editResultTakenPositions.has(pos) ? ' (occupata)' : ''}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
-
-                            <label className="block space-y-2">
-                                <span className="text-xs font-black uppercase tracking-widest text-slate-400">Personaggio</span>
-                                <select
-                                    value={editResultForm.character_id}
-                                    onChange={(e) => setEditResultForm((cur) => ({ ...cur, character_id: e.target.value }))}
-                                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-emerald-400"
-                                >
-                                    <option value="" disabled>Seleziona personaggio</option>
-                                    {characters.map((ch) => (
-                                        <option key={ch.id} value={ch.id}>{ch.name}</option>
-                                    ))}
-                                </select>
-                            </label>
-                        </div>
-
-                        <div className="mt-6 flex gap-3">
-                            <button type="button" onClick={closeEditResult} className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-black uppercase tracking-widest text-white transition hover:bg-white/10">
-                                Annulla
-                            </button>
-                            <button type="button" onClick={handleEditResultSave} disabled={savingResult || !editResultForm.position || !editResultForm.character_id} className="flex-1 rounded-2xl bg-linear-to-r from-emerald-500 to-green-600 px-4 py-2.5 text-sm font-black uppercase tracking-widest text-white transition hover:from-emerald-400 hover:to-green-500 disabled:opacity-60">
-                                {savingResult ? 'Salvataggio...' : 'Salva'}
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -368,7 +199,7 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
                                             {canEdit && (
                                                 <button
                                                     type="button"
-                                                    onClick={(event) => { event.stopPropagation(); openEdit(race) }}
+                                                    onClick={(event) => { event.stopPropagation(); setEditingRace(race) }}
                                                     className="rounded-full border border-slate-200 dark:border-border bg-white dark:bg-card p-2 text-slate-500 transition hover:border-emerald-300 hover:text-emerald-600"
                                                     aria-label="Modifica gara"
                                                 >
@@ -417,20 +248,8 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black uppercase tracking-widest text-emerald-700">
-                                                            {result.points} pt
-                                                        </div>
-                                                        {canEdit && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={(event) => { event.stopPropagation(); openEditResult(race, result) }}
-                                                                className="flex items-center gap-1 rounded-full border border-slate-200 dark:border-border bg-white dark:bg-card px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500 transition hover:border-emerald-300 hover:text-emerald-600"
-                                                                aria-label="Modifica risultato"
-                                                            >
-                                                                <PencilLine size={11} /> Modifica risultato
-                                                            </button>
-                                                        )}
+                                                    <div className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black uppercase tracking-widest text-emerald-700">
+                                                        {result.points} pt
                                                     </div>
                                                 </div>
                                             ))}

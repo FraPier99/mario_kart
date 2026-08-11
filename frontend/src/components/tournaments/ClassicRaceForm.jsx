@@ -1,22 +1,31 @@
 /**
- * ClassicRaceForm — Inserimento gara torneo classic, in un solo salvataggio.
+ * ClassicRaceForm — Inserimento/modifica gara torneo classic, in un solo salvataggio.
  *
- * Sostituisce la coppia RaceCreator (crea una gara vuota) + ResultEntryForm
- * (un risultato alla volta, quattro tendine per pilota): con 8+ partecipanti
- * il vecchio flusso richiedeva decine di interazioni per gara. Qui si sceglie
- * il circuito e si clicca l'ordine di arrivo — le posizioni si assegnano da
- * sole, stesso principio già usato dai gironi (GroupRaceForm) e dalla
- * classifica a click-in-sequenza della schedina (ClickRankRow).
+ * Modalità creazione (default): sostituisce la vecchia coppia RaceCreator (crea una
+ * gara vuota) + ResultEntryForm (un risultato alla volta): si sceglie il circuito e si
+ * clicca l'ordine di arrivo — le posizioni si assegnano da sole, stesso principio già
+ * usato dai gironi (GroupRaceForm) e dalla classifica a click-in-sequenza della
+ * schedina (ClickRankRow).
+ *
+ * Modalità modifica (prop `editingRace`): stesso form, precompilato con circuito,
+ * ordine e personaggi della gara esistente — sostituisce sia il vecchio modale
+ * "modifica gara" (solo nome/ordine/circuito) sia "modifica risultato" (un pilota alla
+ * volta). L'insieme dei piloti non cambia: si possono solo riordinare le posizioni e
+ * cambiare i personaggi.
  *
  * Props:
- *   tournament   {object}   — torneo completo (id, races, n_players)
- *   participants {array}    — partecipanti attivi (esclusi i ritirati) [{id, nickname, img_url, favorite_character_id}]
- *   circuits     {array}    — circuiti del gioco [{id, name}]
- *   characters   {array}    — personaggi del gioco [{id, name, img_url}]
- *   disabled     {boolean}  — torneo non in corso: form visibile ma bloccato
- *   onCreated    {function} — callback dopo submit riuscito
+ *   tournamentId {number}    — id del torneo
+ *   races        {array}     — gare del torneo (per calcolare il prossimo numero e i circuiti già usati)
+ *   nPlayers     {number?}   — tournament.n_players, solo per l'anteprima punti (opzionale)
+ *   participants {array}     — piloti selezionabili [{id, nickname, img_url, favorite_character_id}]
+ *                               (in modifica: i piloti che hanno corso QUESTA gara)
+ *   circuits     {array}     — circuiti del gioco [{id, name}]
+ *   characters   {array}     — personaggi del gioco [{id, name, img_url}]
+ *   disabled     {boolean}   — torneo non in corso: form visibile ma bloccato
+ *   editingRace  {object?}   — gara da modificare (con .results popolati); assente = crea
+ *   onSaved      {function}  — callback dopo submit riuscito (creazione o modifica)
  */
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { AlertCircle, CheckCircle2, Loader2, Flag, Users, Trophy } from 'lucide-react'
 import { toast } from 'sonner'
 import { racesApi, resultsApi, getApiErrorMessage } from '@/services/apiClient'
@@ -27,46 +36,62 @@ import CharacterPicker from '@/components/tournaments/CharacterPicker'
 import ClickRankRow from '@/components/common/ClickRankRow'
 import { useAppData } from '@/context/AppDataContext'
 
-const ClassicRaceForm = ({ tournament, participants = [], circuits = [], characters = [], disabled = false, onCreated }) => {
+const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = [], circuits = [], characters = [], disabled = false, editingRace = null, onSaved }) => {
     const { results } = useAppData()
+    const isEditing = Boolean(editingRace)
 
-    const [order, setOrder] = useState([]) // sequenza di player id nell'ordine cliccato
-    const [charactersByPlayer, setCharactersByPlayer] = useState({})
-    const [circuitId, setCircuitId] = useState('')
+    const initialOrder = useMemo(() => {
+        if (!editingRace) return []
+        return [...(editingRace.results ?? [])]
+            .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+            .map((r) => r.player_id)
+    }, [editingRace])
+
+    const initialCharacters = useMemo(() => {
+        const map = {}
+        ;(editingRace?.results ?? []).forEach((r) => { map[r.player_id] = String(r.character_id ?? '') })
+        return map
+    }, [editingRace])
+
+    const [order, setOrder] = useState(initialOrder) // sequenza di player id nell'ordine cliccato
+    const [charactersByPlayer, setCharactersByPlayer] = useState(initialCharacters)
+    const [circuitId, setCircuitId] = useState(editingRace ? String(editingRace.circuit_id ?? '') : '')
+    const [name, setName] = useState(editingRace?.name ?? '')
+    const [raceOrderInput, setRaceOrderInput] = useState(editingRace?.race_order ?? '')
     const [saving, setSaving] = useState(false)
     const [errors, setErrors] = useState([])
 
-    const nextRaceOrder = useMemo(() => (tournament?.races?.length ?? 0) + 1, [tournament?.races])
+    const nextRaceOrder = useMemo(() => (races?.length ?? 0) + 1, [races])
 
-    // Circuiti già usati in gare non-duello del torneo (stessa regola del
-    // vecchio RaceCreator): restano selezionabili altrove ma non qui.
+    // Circuiti già usati in gare non-duello del torneo; in modifica va escluso il
+    // circuito della gara stessa, altrimenti risulterebbe "già usato" da se stessa.
     const usedCircuitIds = useMemo(() => {
-        return new Set((tournament?.races ?? []).filter((race) => !race.is_duello).map((race) => race.circuit_id))
-    }, [tournament?.races])
+        const ids = new Set(races.filter((race) => !race.is_duello).map((race) => race.circuit_id))
+        if (editingRace) ids.delete(editingRace.circuit_id)
+        return ids
+    }, [races, editingRace])
     const availableCircuits = useMemo(() => circuits.filter((c) => !usedCircuitIds.has(c.id)), [circuits, usedCircuitIds])
     const noCircuitsLeft = circuits.length > 0 && availableCircuits.length === 0
 
-    // Precompila il personaggio di ogni partecipante (ultimo usato in questo
-    // torneo, altrimenti il preferito) così il picker si tocca solo quando il
-    // pilota ha davvero cambiato. Riseeding solo quando cambia l'elenco
-    // partecipanti (non a ogni refresh) per non sovrascrivere scelte manuali:
-    // TournamentDetail fa polling ogni 20s mentre il torneo è in corso.
-    const seededKeyRef = useRef(null)
-    useEffect(() => {
-        const key = participants.map((p) => p.id).join(',')
-        if (seededKeyRef.current === key) return
-        seededKeyRef.current = key
-        const seeded = {}
-        participants.forEach((p) => {
-            const previous = getPlayerPreviousCharacterId({ playerId: p.id, results, races: tournament?.races ?? [] })
-            seeded[p.id] = String(previous ?? p.favorite_character_id ?? '')
-        })
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setCharactersByPlayer(seeded)
-    }, [participants, results, tournament?.races])
+    const playerMap = useMemo(() => new Map(participants.map((p) => [p.id, p])), [participants])
 
+    // Il personaggio "precedente" si calcola al VOLO quando un pilota viene
+    // piazzato (stesso approccio di GroupRaceForm.setSlotPlayer), non con un
+    // pre-seeding in blocco all'apertura: pre-calcolare tutto in anticipo e
+    // proteggerlo con un ref sull'elenco partecipanti si bloccava dopo la
+    // prima gara (l'elenco non cambia da una gara all'altra, quindi il
+    // re-seed non scattava mai) e la "memoria" smetteva di aggiornarsi.
     const toggleRank = (id) => {
-        setOrder((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])
+        setOrder((prev) => {
+            if (prev.includes(id)) return prev.filter((x) => x !== id)
+            setCharactersByPlayer((chars) => {
+                if (chars[id]) return chars // già scelto manualmente in questa sessione: non sovrascrivere
+                const player = playerMap.get(id)
+                const previous = getPlayerPreviousCharacterId({ playerId: id, results, races })
+                return { ...chars, [id]: String(previous ?? player?.favorite_character_id ?? '') }
+            })
+            return [...prev, id]
+        })
         setErrors([])
     }
 
@@ -74,13 +99,12 @@ const ClassicRaceForm = ({ tournament, participants = [], circuits = [], charact
         setCharactersByPlayer((prev) => ({ ...prev, [id]: String(characterId) }))
     }
 
-    const playerMap = useMemo(() => new Map(participants.map((p) => [p.id, p])), [participants])
-
-    const punti = hasPunteggi(tournament?.n_players) ? computePunteggi(tournament.n_players) : null
+    const punti = hasPunteggi(nPlayers) ? computePunteggi(nPlayers) : null
 
     const validate = () => {
         const problemi = []
         if (!circuitId) problemi.push('Seleziona un circuito per questa gara.')
+        if (isEditing && !raceOrderInput) problemi.push('Indica il numero d\'ordine della gara.')
         if (order.length !== participants.length) {
             problemi.push(`Assegna la posizione a tutti e ${participants.length} i piloti (mancano ${participants.length - order.length}).`)
         }
@@ -96,34 +120,53 @@ const ClassicRaceForm = ({ tournament, participants = [], circuits = [], charact
 
         setSaving(true)
         try {
-            const raceRes = await racesApi.create({
-                name: `Gara ${nextRaceOrder}`,
-                race_order: nextRaceOrder,
-                tournament_id: tournament.id,
-                circuit_id: Number(circuitId),
-            })
-            const raceId = raceRes.data.id
+            if (isEditing) {
+                await racesApi.update(editingRace.id, {
+                    name: name.trim() || `Gara ${raceOrderInput}`,
+                    race_order: Number(raceOrderInput),
+                    tournament_id: tournamentId,
+                    circuit_id: Number(circuitId),
+                })
+                await Promise.all(
+                    (editingRace.results ?? []).map((result) => resultsApi.update(result.id, {
+                        position: order.indexOf(result.player_id) + 1,
+                        character_id: Number(charactersByPlayer[result.player_id]),
+                    }))
+                )
+                toast.success('Gara aggiornata')
+            } else {
+                const raceRes = await racesApi.create({
+                    name: `Gara ${nextRaceOrder}`,
+                    race_order: nextRaceOrder,
+                    tournament_id: tournamentId,
+                    circuit_id: Number(circuitId),
+                })
+                const raceId = raceRes.data.id
 
-            await Promise.all(
-                order.map((playerId, index) => resultsApi.create({
-                    race_id: raceId,
-                    player_id: Number(playerId),
-                    character_id: Number(charactersByPlayer[playerId]) || (playerMap.get(playerId)?.favorite_character_id ?? 1),
-                    position: index + 1,
-                }))
-            )
+                await Promise.all(
+                    order.map((playerId, index) => resultsApi.create({
+                        race_id: raceId,
+                        player_id: Number(playerId),
+                        character_id: Number(charactersByPlayer[playerId]) || (playerMap.get(playerId)?.favorite_character_id ?? 1),
+                        position: index + 1,
+                    }))
+                )
 
-            toast.success(`Gara ${nextRaceOrder} inserita!`, {
-                description: circuits.find((c) => String(c.id) === String(circuitId))?.name ?? '',
-            })
+                toast.success(`Gara ${nextRaceOrder} inserita!`, {
+                    description: circuits.find((c) => String(c.id) === String(circuitId))?.name ?? '',
+                })
 
-            setOrder([])
-            setCircuitId('')
+                setOrder([])
+                setCircuitId('')
+                setCharactersByPlayer({})
+            }
             setErrors([])
-            onCreated?.()
+            onSaved?.()
         } catch (err) {
             toast.error('Errore durante il salvataggio', {
-                description: `${getApiErrorMessage(err)} — alcuni risultati potrebbero non essere stati salvati, verifica nel tab Gare.`,
+                description: isEditing
+                    ? getApiErrorMessage(err)
+                    : `${getApiErrorMessage(err)} — alcuni risultati potrebbero non essere stati salvati, verifica nel tab Gare.`,
             })
         } finally {
             setSaving(false)
@@ -147,8 +190,8 @@ const ClassicRaceForm = ({ tournament, participants = [], circuits = [], charact
             <div className="flex items-center gap-3 rounded-2xl border border-blue-400/40 bg-blue-500/8 px-4 py-3 text-blue-700 dark:text-blue-300">
                 <Flag size={15} className="shrink-0" />
                 <div className="flex-1 min-w-0">
-                    <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-70">Registra gara</p>
-                    <p className="text-sm font-black leading-tight">Gara {nextRaceOrder}</p>
+                    <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-70">{isEditing ? 'Modifica gara' : 'Registra gara'}</p>
+                    <p className="text-sm font-black leading-tight">Gara {isEditing ? editingRace.race_order : nextRaceOrder}</p>
                 </div>
                 <div className="flex items-center gap-1.5 rounded-xl bg-white/60 dark:bg-black/20 px-2.5 py-1">
                     <Users size={11} />
@@ -157,10 +200,25 @@ const ClassicRaceForm = ({ tournament, participants = [], circuits = [], charact
             </div>
 
             {disabled && (
-                <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Torneo completato — non è possibile inserire altre gare.</p>
+                <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Torneo completato — non è possibile {isEditing ? 'modificare' : 'inserire altre'} gare.</p>
             )}
 
             <fieldset disabled={disabled || saving} className="space-y-5">
+                {isEditing && (
+                    <div className="grid gap-3 sm:grid-cols-3">
+                        <label className="space-y-1.5 sm:col-span-1">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Ordine gara</span>
+                            <input type="number" min="1" value={raceOrderInput} onChange={(e) => setRaceOrderInput(e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5 text-sm text-slate-900 dark:text-foreground outline-none focus:border-blue-500" />
+                        </label>
+                        <label className="space-y-1.5 sm:col-span-2">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Nome gara</span>
+                            <input value={name} onChange={(e) => setName(e.target.value)} placeholder={`Gara ${raceOrderInput}`}
+                                className="w-full rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5 text-sm text-slate-900 dark:text-foreground outline-none focus:border-blue-500" />
+                        </label>
+                    </div>
+                )}
+
                 {/* Circuito */}
                 <div className="space-y-1.5">
                     {noCircuitsLeft ? (
@@ -280,7 +338,9 @@ const ClassicRaceForm = ({ tournament, participants = [], circuits = [], charact
             >
                 {saving
                     ? <><Loader2 size={15} className="animate-spin" /> Salvataggio...</>
-                    : <><Trophy size={15} /> Salva gara {nextRaceOrder}</>
+                    : isEditing
+                        ? <><Trophy size={15} /> Salva modifiche</>
+                        : <><Trophy size={15} /> Salva gara {nextRaceOrder}</>
                 }
             </button>
         </form>

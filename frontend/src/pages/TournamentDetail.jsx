@@ -1093,7 +1093,7 @@ const TournamentDetail = () => {
                                 </button>
                             </div>
                         </div>
-                        <ClassicRaceForm tournament={tournament} participants={activeTournamentParticipants} circuits={tournamentCircuits} characters={charactersByGameId.get(tournament?.game_id ?? 0) ?? []} disabled={isTournamentLocked} onCreated={refresh} />
+                        <ClassicRaceForm tournamentId={tournament.id} races={tournament.races} nPlayers={tournament.n_players} participants={activeTournamentParticipants} circuits={tournamentCircuits} characters={charactersByGameId.get(tournament?.game_id ?? 0) ?? []} disabled={isTournamentLocked} onSaved={refresh} />
 
                         {/* Fallback per gare incomplete create col vecchio flusso (un
                         risultato alla volta): ClassicRaceForm crea sempre gara +
@@ -1202,7 +1202,7 @@ const TournamentDetail = () => {
 
                 {activeSection === 'races' && (
                     <div className="space-y-4">
-                        <RaceList races={tournament.races} circuits={tournamentCircuits} circuitsById={circuitsById} charactersById={charactersById} characters={charactersByGameId.get(tournament?.game_id ?? 0) ?? []} tournamentId={tournament.id} onChanged={refresh} canEdit={isAdmin} />
+                        <RaceList races={tournament.races} circuits={tournamentCircuits} circuitsById={circuitsById} charactersById={charactersById} characters={charactersByGameId.get(tournament?.game_id ?? 0) ?? []} nPlayers={tournament.n_players} tournamentId={tournament.id} onChanged={refresh} canEdit={isAdmin} />
                         {/* Log azioni carte nella timeline */}
                         {localCardLog.length > 0 && (
                             <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 p-4 space-y-2">

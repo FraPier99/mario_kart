@@ -16,8 +16,11 @@ const getCupStyle = (description = '') => {
     return { dot: 'bg-slate-400', badge: 'bg-slate-100 dark:bg-muted text-slate-600 dark:text-muted-foreground border-slate-200 dark:border-border', label: 'text-slate-400 dark:text-slate-500' }
 }
 
+const MAX_MENU_HEIGHT = 420
+const VIEWPORT_MARGIN = 12
+
 const useDropdownPosition = (triggerRef, menuRef, open) => {
-    const [menuPos, setMenuPos] = useState({ top: 0, left: 0, width: 0, ready: false })
+    const [menuPos, setMenuPos] = useState({ top: 0, left: 0, width: 0, maxHeight: MAX_MENU_HEIGHT, ready: false })
 
     useEffect(() => {
         if (!open) {
@@ -29,17 +32,27 @@ const useDropdownPosition = (triggerRef, menuRef, open) => {
         const measure = () => {
             if (!triggerRef.current) return
             const rect = triggerRef.current.getBoundingClientRect()
-            const menuHeight = menuRef.current?.offsetHeight || 320
+            const menuHeight = menuRef.current?.offsetHeight || MAX_MENU_HEIGHT
 
+            // Il popover è position:fixed: se lo spazio reale sopra/sotto il
+            // trigger è minore dell'altezza del contenuto, la parte in
+            // eccesso finisce fuori dal viewport e non è raggiungibile né
+            // scrollando la pagina (l'elemento è fixed) né scrollando il
+            // popover stesso (che scrolla solo il proprio contenuto interno,
+            // non oltre la propria altezza). Si limita quindi maxHeight allo
+            // spazio realmente disponibile, così la lista resta sempre
+            // interamente scrollabile.
             if (rect.top > menuHeight + 8) {
-                setMenuPos({ top: rect.top - menuHeight - 4, left: rect.left, width: rect.width, ready: true })
+                const maxHeight = Math.min(MAX_MENU_HEIGHT, rect.top - VIEWPORT_MARGIN)
+                setMenuPos({ top: rect.top - Math.min(menuHeight, maxHeight) - 4, left: rect.left, width: rect.width, maxHeight, ready: true })
             }
             else {
-                setMenuPos({ top: rect.bottom + 4, left: rect.left, width: rect.width, ready: true })
+                const maxHeight = Math.min(MAX_MENU_HEIGHT, window.innerHeight - rect.bottom - 4 - VIEWPORT_MARGIN)
+                setMenuPos({ top: rect.bottom + 4, left: rect.left, width: rect.width, maxHeight, ready: true })
             }
         }
 
-        setMenuPos({ top: 0, left: 0, width: triggerRef.current?.getBoundingClientRect().width || 0, ready: false })
+        setMenuPos({ top: 0, left: 0, width: triggerRef.current?.getBoundingClientRect().width || 0, maxHeight: MAX_MENU_HEIGHT, ready: false })
         const raf = requestAnimationFrame(measure)
 
         return () => cancelAnimationFrame(raf)
@@ -155,10 +168,10 @@ const CircuitPicker = ({ circuits = [], value, onChange, disabled = false, usedC
             {open && createPortal(
                 <div
                     ref={menuRef}
-                    style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, width: Math.max(menuPos.width, 360), zIndex: 9999, visibility: menuPos.ready ? 'visible' : 'hidden' }}
-                    className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl overflow-hidden"
+                    style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, width: Math.max(menuPos.width, 360), maxHeight: menuPos.maxHeight, zIndex: 9999, visibility: menuPos.ready ? 'visible' : 'hidden' }}
+                    className="flex flex-col rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl overflow-hidden"
                 >
-                    <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 px-3 py-2">
+                    <div className="flex shrink-0 items-center gap-2 border-b border-slate-100 dark:border-slate-700 px-3 py-2">
                         <Search size={14} className="shrink-0 text-slate-400" />
                         <input
                             ref={inputRef}
@@ -170,7 +183,7 @@ const CircuitPicker = ({ circuits = [], value, onChange, disabled = false, usedC
                         />
                     </div>
 
-                    <div className="max-h-[420px] overflow-y-auto p-3">
+                    <div className="min-h-0 flex-1 overflow-y-auto p-3">
                         <div className="space-y-4">
                             {filteredGroups.map(([groupName, groupCircuits]) => {
                                 const cupStyle = getCupStyle(groupName)
