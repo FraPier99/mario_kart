@@ -203,6 +203,13 @@ const TournamentDetail = () => {
     const tournamentStatus = tournament?.status ?? (tournament?.winner_id ? 'concluso' : 'in_corso')
     const isTournamentLocked = tournamentStatus !== 'in_corso'
 
+    // Gestione > Risultati (classic) non mostra più l'elenco completo
+    // gare/circuiti — quello vive solo nel tab "Gare" — ma un riepilogo
+    // sintetico con conteggio gare senza tutti i risultati inseriti.
+    const incompleteRacesCount = useMemo(() => {
+        return (tournament?.races ?? []).filter((r) => !r.is_duello && (r.results?.length ?? 0) < activeTournamentParticipants.length).length
+    }, [tournament?.races, activeTournamentParticipants])
+
     // Il podio (classic, tab Classifica) mostra già i dati dei primi 3 con
     // le stesse metriche della tabella, stile arcade — la tabella sotto
     // parte dal 4° posto per non ripeterli. Visibile solo a torneo concluso.
@@ -912,6 +919,25 @@ const TournamentDetail = () => {
         )}
 
         <AppLayout>
+            {isParticipantAdmin && (
+                <div
+                    role="alert"
+                    className="sticky top-14 z-40 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 border-b-2 border-amber-600/40 bg-amber-500 px-4 py-2 text-center shadow-md"
+                >
+                    <span className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wide text-amber-950">
+                        <AlertCircle size={14} className="shrink-0" />
+                        Modalità Admin attiva — le modifiche incidono sui dati del torneo
+                    </span>
+                    <button
+                        type="button"
+                        onClick={() => setAdminModeOn(false)}
+                        className="font-title shrink-0 rounded-lg border-2 border-amber-950/20 bg-amber-950 px-3 py-1 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-amber-900"
+                    >
+                        <Settings size={11} className="inline -mt-0.5 me-1" />
+                        Esci
+                    </button>
+                </div>
+            )}
             <section className="mx-auto max-w-7xl px-4 py-12 space-y-6">
                 <ApiBanner title="Errore caricamento torneo" message={errorMessage} />
 
@@ -978,15 +1004,6 @@ const TournamentDetail = () => {
                             )}
                         </div>
                         <div className="flex flex-col items-start sm:items-end gap-2">
-                            {isParticipantAdmin && (
-                                <button
-                                    onClick={() => setAdminModeOn(false)}
-                                    className="font-title rounded-xl border-2 border-violet-300 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/10 px-4 py-2.5 text-[10px] tracking-wide text-violet-700 dark:text-violet-300 transition active:translate-y-px hover:bg-violet-100"
-                                >
-                                    <Settings size={13} className="inline -mt-0.5 me-1" />
-                                    Esci da Modalità Admin
-                                </button>
-                            )}
                             <button
                                 onClick={() => setConfirmDeleteTournament(true)}
                                 disabled={deleting}
@@ -1005,7 +1022,7 @@ const TournamentDetail = () => {
 
                 <div className="rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-3" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                     <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                        <span className="font-title px-2 text-[10px] tracking-wide text-slate-500 dark:text-muted-foreground">Sezione</span>
+                        <span className="font-title select-none px-2 text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-muted-foreground/70 cursor-default">Gestione torneo</span>
                         <div className="inline-flex rounded-xl bg-slate-100 dark:bg-muted p-1 overflow-x-auto max-w-full gap-0.5">
                             <button type="button" onClick={() => setActiveSection('management')}
                                 className={`font-title rounded-lg px-3 py-2 text-[10px] tracking-wide whitespace-nowrap transition ${activeSection === 'management' ? 'bg-emerald-500 text-white shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
@@ -1111,7 +1128,28 @@ const TournamentDetail = () => {
                             <>
                                 {managementTab === 'gare' && (
                                     <CollapsibleSection title="Risultati" icon={<Flag size={16} />} defaultOpen>
-                                        <PhaseCircuitsCard circuits={tournamentCircuits} races={(tournament.races ?? []).filter((r) => !r.is_duello)} title="Circuiti" onRefresh={refresh} refreshing={loading} />
+                                        {/* Riepilogo sintetico — l'elenco completo gare/circuiti e la
+                                        modifica dei risultati già inseriti vivono solo nel tab "Gare"
+                                        di primo livello, per evitare due viste della stessa lista. */}
+                                        <div className="rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-5">
+                                            <div className="flex flex-wrap items-center justify-between gap-4">
+                                                <div>
+                                                    <p className="text-xs font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Riepilogo gare</p>
+                                                    <p className="mt-1 text-2xl font-black text-slate-900 dark:text-foreground">
+                                                        {tournament.raceCount}/{tournament.n_races} <span className="text-sm font-bold text-slate-400 dark:text-muted-foreground">gare inserite</span>
+                                                    </p>
+                                                    {incompleteRacesCount > 0 && (
+                                                        <p className="mt-1 text-xs font-bold text-amber-600 dark:text-amber-400">
+                                                            {incompleteRacesCount} gara/e con risultati incompleti
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <button type="button" onClick={() => setActiveSection('races')}
+                                                    className="font-title shrink-0 rounded-xl border-2 border-blue-300 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 px-4 py-2.5 text-[10px] tracking-wide text-blue-700 dark:text-blue-300 transition active:translate-y-px hover:bg-blue-100 dark:hover:bg-blue-500/20">
+                                                    Vai a Gare — consulta e modifica i risultati →
+                                                </button>
+                                            </div>
+                                        </div>
                                         <RaceCreator tournament={tournament} circuits={tournamentCircuits} loading={loading} onCreated={refresh} disabled={isTournamentLocked} results={results} tournamentParticipants={activeTournamentParticipants} onRefresh={refresh} refreshing={loading} />
                                         <ResultEntryForm tournament={tournament} races={tournament.races} tournamentParticipants={activeTournamentParticipants} onCreated={refresh} disabled={isTournamentLocked} />
                                     </CollapsibleSection>
@@ -1212,7 +1250,7 @@ const TournamentDetail = () => {
 
                 {activeSection === 'races' && (
                     <div className="space-y-4">
-                        <RaceList races={tournament.races} circuits={tournamentCircuits} circuitsById={circuitsById} charactersById={charactersById} tournamentId={tournament.id} onChanged={refresh} canEdit={isAdmin} />
+                        <RaceList races={tournament.races} circuits={tournamentCircuits} circuitsById={circuitsById} charactersById={charactersById} characters={charactersByGameId.get(tournament?.game_id ?? 0) ?? []} tournamentId={tournament.id} onChanged={refresh} canEdit={isAdmin} />
                         {/* Log azioni carte nella timeline */}
                         {localCardLog.length > 0 && (
                             <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 p-4 space-y-2">

@@ -8,7 +8,7 @@ import ApiBanner from '@/components/common/ApiBanner'
 const PAGE_SIZE = 10
 
 const History = () => {
-    const { detailedTournaments, loading, errorMessage, refresh, circuitsById, charactersById, games, getTournamentsByGame } = useAppData()
+    const { detailedTournaments, loading, errorMessage, refresh, games, getTournamentsByGame } = useAppData()
     const [selectedGameId, setSelectedGameId] = useState('')
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
@@ -81,7 +81,7 @@ const History = () => {
                         <div className="space-y-8">
                             {visibleTournaments.map((tournament, idx) => (
                                 <div key={tournament.id} style={{ animationDelay: `${idx * 0.06}s` }} className="animate-slide-up">
-                                    <TournamentHistoryCard tournament={tournament} circuitsById={circuitsById} charactersById={charactersById} />
+                                    <TournamentHistoryCard tournament={tournament} />
                                 </div>
                             ))}
                         </div>

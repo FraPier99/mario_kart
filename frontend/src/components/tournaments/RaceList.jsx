@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Search, ChevronDown, PencilLine, Trash2, X, MapPin, Swords } from 'lucide-react'
 import { toast } from 'sonner'
 import CircuitPicker from '@/components/tournaments/CircuitPicker'
-import { getApiErrorMessage, racesApi } from '@/services/apiClient'
+import { getApiErrorMessage, racesApi, resultsApi } from '@/services/apiClient'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import CircuitThumbnail from '@/components/common/CircuitThumbnail'
 
@@ -21,7 +21,7 @@ const getCupStyle = (description = '') => {
 
 const PAGE_SIZE = 10
 
-const RaceList = ({ races, circuits = [], circuitsById, charactersById, tournamentId, onChanged, canEdit = false }) => {
+const RaceList = ({ races, circuits = [], circuitsById, charactersById, characters = [], tournamentId, onChanged, canEdit = false }) => {
     const [searchTerm, setSearchTerm] = useState('')
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
     const [expandedRaces, setExpandedRaces] = useState(new Set())
@@ -30,6 +30,9 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, tourname
     const [confirmDelete, setConfirmDelete] = useState(null)
     const [editForm, setEditForm] = useState({ name: '', race_order: '', circuit_id: '' })
     const [duelloFilter, setDuelloFilter] = useState('all') // 'all' | 'duelli' | 'regolari'
+    const [editingResult, setEditingResult] = useState(null)
+    const [editResultForm, setEditResultForm] = useState({ position: '', character_id: '' })
+    const [savingResult, setSavingResult] = useState(false)
 
     const toggleRace = (id) => {
         setExpandedRaces((prev) => {
@@ -125,6 +128,46 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, tourname
         }
     }
 
+    const openEditResult = (race, result) => {
+        setEditingResult({ race, result })
+        setEditResultForm({ position: result.position ?? '', character_id: result.character_id ?? '' })
+    }
+
+    const closeEditResult = () => {
+        setEditingResult(null)
+        setEditResultForm({ position: '', character_id: '' })
+    }
+
+    const editResultTakenPositions = useMemo(() => {
+        if (!editingResult) return new Set()
+        return new Set(
+            (editingResult.race.results ?? [])
+                .filter((r) => r.id !== editingResult.result.id)
+                .map((r) => r.position)
+        )
+    }, [editingResult])
+
+    const handleEditResultSave = async () => {
+        if (!editingResult || !editResultForm.position || !editResultForm.character_id) return
+
+        setSavingResult(true)
+        try {
+            await resultsApi.update(editingResult.result.id, {
+                position: Number(editResultForm.position),
+                character_id: Number(editResultForm.character_id),
+            })
+            toast.success('Risultato aggiornato')
+            closeEditResult()
+            await onChanged?.()
+        }
+        catch (error) {
+            toast.error('Aggiornamento risultato fallito', { description: getApiErrorMessage(error) })
+        }
+        finally {
+            setSavingResult(false)
+        }
+    }
+
     if (!races.length) {
         return (
             <div className="rounded-3xl border border-dashed border-slate-200 dark:border-border bg-white dark:bg-card p-6 text-sm text-slate-500 dark:text-muted-foreground">
@@ -194,6 +237,63 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, tourname
                         <div className="mt-6 flex gap-3">
                             <button type="button" onClick={() => setConfirmDelete(null)} className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-black uppercase tracking-widest text-white transition hover:bg-white/10">Annulla</button>
                             <button type="button" onClick={handleDelete} disabled={saving} className="flex-1 rounded-2xl bg-rose-500 px-4 py-2.5 text-sm font-black uppercase tracking-widest text-white transition hover:bg-rose-400 disabled:opacity-60">{saving ? 'Elimino...' : 'Elimina'}</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {editingResult && (
+                <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={closeEditResult}>
+                    <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-slate-950 p-6 text-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <p className="text-xs font-black uppercase tracking-[0.35em] text-emerald-300">Modifica risultato</p>
+                                <h3 className="mt-2 text-lg font-black uppercase tracking-tight">
+                                    {editingResult.result.player?.nickname ?? `Player ${editingResult.result.player_id}`} — Gara {editingResult.race.race_order}
+                                </h3>
+                            </div>
+                            <button type="button" onClick={closeEditResult} className="rounded-full border border-white/10 bg-white/5 p-2 text-slate-200 transition hover:bg-white/10"><X size={16} /></button>
+                        </div>
+
+                        <div className="mt-5 space-y-4">
+                            <label className="block space-y-2">
+                                <span className="text-xs font-black uppercase tracking-widest text-slate-400">Posizione</span>
+                                <select
+                                    value={editResultForm.position}
+                                    onChange={(e) => setEditResultForm((cur) => ({ ...cur, position: e.target.value }))}
+                                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-emerald-400"
+                                >
+                                    <option value="" disabled>Seleziona posizione</option>
+                                    {Array.from({ length: editingResult.race.results?.length ?? 0 }, (_, i) => i + 1).map((pos) => (
+                                        <option key={pos} value={pos} disabled={editResultTakenPositions.has(pos)}>
+                                            {pos}{editResultTakenPositions.has(pos) ? ' (occupata)' : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+
+                            <label className="block space-y-2">
+                                <span className="text-xs font-black uppercase tracking-widest text-slate-400">Personaggio</span>
+                                <select
+                                    value={editResultForm.character_id}
+                                    onChange={(e) => setEditResultForm((cur) => ({ ...cur, character_id: e.target.value }))}
+                                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-emerald-400"
+                                >
+                                    <option value="" disabled>Seleziona personaggio</option>
+                                    {characters.map((ch) => (
+                                        <option key={ch.id} value={ch.id}>{ch.name}</option>
+                                    ))}
+                                </select>
+                            </label>
+                        </div>
+
+                        <div className="mt-6 flex gap-3">
+                            <button type="button" onClick={closeEditResult} className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-black uppercase tracking-widest text-white transition hover:bg-white/10">
+                                Annulla
+                            </button>
+                            <button type="button" onClick={handleEditResultSave} disabled={savingResult || !editResultForm.position || !editResultForm.character_id} className="flex-1 rounded-2xl bg-linear-to-r from-emerald-500 to-green-600 px-4 py-2.5 text-sm font-black uppercase tracking-widest text-white transition hover:from-emerald-400 hover:to-green-500 disabled:opacity-60">
+                                {savingResult ? 'Salvataggio...' : 'Salva'}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -317,8 +417,20 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, tourname
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black uppercase tracking-widest text-emerald-700">
-                                                        {result.points} pt
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black uppercase tracking-widest text-emerald-700">
+                                                            {result.points} pt
+                                                        </div>
+                                                        {canEdit && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={(event) => { event.stopPropagation(); openEditResult(race, result) }}
+                                                                className="flex items-center gap-1 rounded-full border border-slate-200 dark:border-border bg-white dark:bg-card px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500 transition hover:border-emerald-300 hover:text-emerald-600"
+                                                                aria-label="Modifica risultato"
+                                                            >
+                                                                <PencilLine size={11} /> Modifica risultato
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
                                             ))}
