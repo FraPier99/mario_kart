@@ -3,14 +3,61 @@
  * ricerca e griglia). Estratto da GroupRaceForm.jsx per essere condiviso con
  * ClassicRaceForm: entrambi i form inseriscono un personaggio per riga di
  * risultato e serviva lo stesso identico controllo.
+ *
+ * Il popover è in portale (position: fixed), non assoluto rispetto alla riga:
+ * per righe dal 2° posto in giù, un popover posizionato "assoluto" veniva
+ * tagliato dall'overflow-hidden del contenitore (es. CollapsibleSection) prima
+ * ancora di poter scrollare fino in fondo — stesso problema già risolto per
+ * CircuitPicker. L'altezza massima si adatta allo spazio reale disponibile
+ * sopra/sotto il bottone, allineato a destra come nella versione originale.
  */
 import { useState, useMemo, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Search, ChevronDown, X } from 'lucide-react'
+
+const MAX_MENU_HEIGHT = 300
+const VIEWPORT_MARGIN = 12
+
+const useDropdownPosition = (triggerRef, menuRef, open) => {
+    const [menuPos, setMenuPos] = useState({ top: 0, right: 0, maxHeight: MAX_MENU_HEIGHT, ready: false })
+
+    useEffect(() => {
+        if (!open) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setMenuPos((position) => ({ ...position, ready: false }))
+            return
+        }
+
+        const measure = () => {
+            if (!triggerRef.current) return
+            const rect = triggerRef.current.getBoundingClientRect()
+            const menuHeight = menuRef.current?.offsetHeight || MAX_MENU_HEIGHT
+            const right = window.innerWidth - rect.right
+
+            if (rect.top > menuHeight + 8) {
+                const maxHeight = Math.min(MAX_MENU_HEIGHT, rect.top - VIEWPORT_MARGIN)
+                setMenuPos({ top: rect.top - Math.min(menuHeight, maxHeight) - 4, right, maxHeight, ready: true })
+            }
+            else {
+                const maxHeight = Math.min(MAX_MENU_HEIGHT, window.innerHeight - rect.bottom - 4 - VIEWPORT_MARGIN)
+                setMenuPos({ top: rect.bottom + 4, right, maxHeight, ready: true })
+            }
+        }
+
+        setMenuPos((position) => ({ ...position, ready: false }))
+        const raf = requestAnimationFrame(measure)
+        return () => cancelAnimationFrame(raf)
+    }, [open, triggerRef, menuRef])
+
+    return menuPos
+}
 
 const CharacterPicker = ({ characters = [], value, onChange, disabled }) => {
     const [open, setOpen]     = useState(false)
     const [search, setSearch] = useState('')
-    const ref = useRef(null)
+    const triggerRef = useRef(null)
+    const menuRef = useRef(null)
+    const menuPos = useDropdownPosition(triggerRef, menuRef, open)
 
     const selected = characters.find((c) => String(c.id) === String(value))
 
@@ -21,13 +68,15 @@ const CharacterPicker = ({ characters = [], value, onChange, disabled }) => {
 
     useEffect(() => {
         if (!open) return
-        const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+        const handler = (e) => {
+            if (triggerRef.current && !triggerRef.current.contains(e.target) && menuRef.current && !menuRef.current.contains(e.target)) setOpen(false)
+        }
         document.addEventListener('mousedown', handler)
         return () => document.removeEventListener('mousedown', handler)
     }, [open])
 
     return (
-        <div ref={ref} className="relative shrink-0">
+        <div ref={triggerRef} className="relative shrink-0">
             <button
                 type="button"
                 onClick={() => !disabled && setOpen((o) => !o)}
@@ -47,10 +96,14 @@ const CharacterPicker = ({ characters = [], value, onChange, disabled }) => {
                 <ChevronDown size={10} className="opacity-50" />
             </button>
 
-            {open && (
-                <div className="absolute z-50 top-full right-0 mt-1 w-72 rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-2xl p-3 space-y-2">
+            {open && createPortal(
+                <div
+                    ref={menuRef}
+                    style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, maxHeight: menuPos.maxHeight, width: 288, zIndex: 9999, visibility: menuPos.ready ? 'visible' : 'hidden' }}
+                    className="flex flex-col rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-2xl p-3 space-y-2"
+                >
                     {/* Search */}
-                    <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2">
+                    <div className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2">
                         <Search size={12} className="text-slate-400 shrink-0" />
                         <input
                             autoFocus
@@ -68,7 +121,7 @@ const CharacterPicker = ({ characters = [], value, onChange, disabled }) => {
                     </div>
 
                     {/* Grid */}
-                    <div className="grid grid-cols-4 gap-1 max-h-52 overflow-y-auto">
+                    <div className="min-h-0 flex-1 grid grid-cols-4 gap-1 overflow-y-auto content-start">
                         {filtered.length === 0 && (
                             <p className="col-span-4 text-center text-[10px] text-slate-400 py-3">Nessun personaggio trovato</p>
                         )}
@@ -91,7 +144,8 @@ const CharacterPicker = ({ characters = [], value, onChange, disabled }) => {
                             </button>
                         ))}
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     )

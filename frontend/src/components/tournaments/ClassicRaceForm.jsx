@@ -29,7 +29,7 @@ import { useState, useMemo } from 'react'
 import { AlertCircle, CheckCircle2, Loader2, Flag, Users, Trophy } from 'lucide-react'
 import { toast } from 'sonner'
 import { racesApi, resultsApi, getApiErrorMessage } from '@/services/apiClient'
-import { getPlayerPreviousCharacterId } from '@/lib/raceEntry'
+import { getPlayerPreviousCharacterId, resolveFavoriteCharacterId } from '@/lib/raceEntry'
 import { computePunteggi, medalFor, hasPunteggi } from '@/lib/punteggi'
 import CircuitPicker from '@/components/tournaments/CircuitPicker'
 import CharacterPicker from '@/components/tournaments/CharacterPicker'
@@ -88,7 +88,8 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
                 if (chars[id]) return chars // già scelto manualmente in questa sessione: non sovrascrivere
                 const player = playerMap.get(id)
                 const previous = getPlayerPreviousCharacterId({ playerId: id, results, races })
-                return { ...chars, [id]: String(previous ?? player?.favorite_character_id ?? '') }
+                const favorite = resolveFavoriteCharacterId(player, characters)
+                return { ...chars, [id]: String(previous ?? favorite ?? '') }
             })
             return [...prev, id]
         })
@@ -147,7 +148,7 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
                     order.map((playerId, index) => resultsApi.create({
                         race_id: raceId,
                         player_id: Number(playerId),
-                        character_id: Number(charactersByPlayer[playerId]) || (playerMap.get(playerId)?.favorite_character_id ?? 1),
+                        character_id: Number(charactersByPlayer[playerId]) || (resolveFavoriteCharacterId(playerMap.get(playerId), characters) ?? 1),
                         position: index + 1,
                     }))
                 )

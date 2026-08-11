@@ -62,7 +62,7 @@ const ClickRankRow = ({
         >
             <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black ${isAccent ? 'bg-cyan-100 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-300' : isPlaced ? badgeClasses(pos) : 'bg-slate-100 text-slate-400 dark:bg-muted dark:text-slate-500'}`}>
                 {pos === 0 ? (
-                    <Trophy size={14} className="text-amber-500" />
+                    <Trophy size={14} className={isAccent ? '' : 'text-circuit-ink'} />
                 ) : isAccent ? (
                     <Ban size={14} />
                 ) : isPlaced ? `#${pos + 1}` : '—'}

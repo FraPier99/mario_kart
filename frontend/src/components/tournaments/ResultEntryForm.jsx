@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { getApiErrorMessage, resultsApi } from '@/services/apiClient'
 import { ChevronDown, Search, Check, X } from 'lucide-react'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
-import { getPlayerPreviousCharacterId } from '@/lib/raceEntry'
+import { getPlayerPreviousCharacterId, resolveFavoriteCharacterId } from '@/lib/raceEntry'
 
 const useDropdownPosition = (triggerRef, menuRef, open, options = {}) => {
     const [menuPos, setMenuPos] = useState({ top: 0, left: 0, width: 0, ready: false })
@@ -447,6 +447,11 @@ const PositionGrid = ({ max, value, onChange, disabled, takenPositions }) => {
 }
 
 const ResultEntryForm = ({ tournament, races, tournamentParticipants, onCreated, disabled = false }) => {
+    const { charactersByGameId, characters, results, circuitsById } = useAppData()
+    const gameCharacters = tournament?.game_id
+        ? (charactersByGameId.get(tournament.game_id) ?? characters)
+        : characters
+
     const initialRaceId = useMemo(() => {
         if (!races.length) return ''
         return races.reduce((max, r) => (r.race_order ?? 0) > (max.race_order ?? 0) ? r : max, races[0]).id
@@ -454,17 +459,12 @@ const ResultEntryForm = ({ tournament, races, tournamentParticipants, onCreated,
     const [formState, setFormState] = useState({
         race_id: initialRaceId,
         player_id: tournamentParticipants[0]?.id ?? '',
-        character_id: tournamentParticipants[0]?.favorite_character_id ?? '',
+        character_id: resolveFavoriteCharacterId(tournamentParticipants[0], gameCharacters) ?? '',
         position: null,
     })
     const [saving, setSaving] = useState(false)
     const [localEntries, setLocalEntries] = useState([])
     const isFirstRender = useRef(true)
-
-    const { charactersByGameId, characters, results, circuitsById } = useAppData()
-    const gameCharacters = tournament?.game_id
-        ? (charactersByGameId.get(tournament.game_id) ?? characters)
-        : characters
 
     useEffect(() => {
         if (isFirstRender.current) { isFirstRender.current = false; return }
@@ -482,9 +482,9 @@ const ResultEntryForm = ({ tournament, races, tournamentParticipants, onCreated,
             ...current,
             race_id: lastRace?.id ?? current.race_id ?? '',
             player_id: current.player_id || fallbackPlayer?.id || '',
-            character_id: current.character_id || fallbackPlayer?.favorite_character_id || '',
+            character_id: current.character_id || resolveFavoriteCharacterId(fallbackPlayer, gameCharacters) || '',
         }))
-    }, [tournamentParticipants, races])
+    }, [tournamentParticipants, races, gameCharacters])
 
     const alreadyEnteredPlayerIds = useMemo(() => {
         const ids = new Set()
@@ -523,7 +523,7 @@ const ResultEntryForm = ({ tournament, races, tournamentParticipants, onCreated,
             }
             if (name === 'player_id') {
                 const previousCharacterId = getPreviousCharacterId(value, current.race_id)
-                const fallbackCharacterId = tournamentParticipants.find((player) => player.id === Number(value))?.favorite_character_id ?? ''
+                const fallbackCharacterId = resolveFavoriteCharacterId(tournamentParticipants.find((player) => player.id === Number(value)), gameCharacters) ?? ''
                 return {
                     ...current,
                     player_id: value,
@@ -577,7 +577,7 @@ const ResultEntryForm = ({ tournament, races, tournamentParticipants, onCreated,
             setFormState((current) => ({
                 ...current,
                 player_id: freePlayer?.id ?? '',
-                character_id: freeChar?.id ?? freePlayer?.favorite_character_id ?? '',
+                character_id: freeChar?.id ?? resolveFavoriteCharacterId(freePlayer, gameCharacters) ?? '',
                 position: null,
             }))
 

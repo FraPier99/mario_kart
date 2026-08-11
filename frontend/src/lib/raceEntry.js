@@ -34,3 +34,23 @@ export const getPlayerPreviousCharacterId = ({ playerId, results = [], races = [
 
     return previous?.character_id ?? null
 }
+
+/**
+ * favorite_character_id è un unico campo per giocatore (Player), non uno per
+ * gioco: se il personaggio preferito appartiene a un gioco diverso da quello
+ * del torneo corrente, non compare nella lista `characters` di quel gioco.
+ * Usarlo comunque come fallback lascia il picker vuoto in apparenza (l'id
+ * salvato non ha un'opzione corrispondente da mostrare) o, peggio, rischia di
+ * inviare al backend un character_id non valido per questo gioco. Va quindi
+ * sempre validato contro la lista dei personaggi del gioco in corso prima di
+ * usarlo come default.
+ *
+ * @param {object?} player      giocatore con eventuale .favorite_character_id
+ * @param {Array}   characters  personaggi del GIOCO CORRENTE (non tutti i giochi)
+ * @returns {number|null} favorite_character_id se valido per questo gioco, altrimenti null
+ */
+export const resolveFavoriteCharacterId = (player, characters = []) => {
+    const favoriteId = player?.favorite_character_id
+    if (favoriteId == null) return null
+    return characters.some((c) => String(c.id) === String(favoriteId)) ? favoriteId : null
+}

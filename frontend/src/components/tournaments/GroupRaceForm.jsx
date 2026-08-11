@@ -15,7 +15,7 @@ import { Trophy, AlertCircle, CheckCircle2, Loader2, Flag, Users } from 'lucide-
 import { toast } from 'sonner'
 import { racesApi, resultsApi, getApiErrorMessage } from '@/services/apiClient'
 import { groupColor, groupLabel } from '@/lib/groupStage'
-import { getPlayerPreviousCharacterId } from '@/lib/raceEntry'
+import { getPlayerPreviousCharacterId, resolveFavoriteCharacterId } from '@/lib/raceEntry'
 import CircuitPicker from '@/components/tournaments/CircuitPicker'
 import CharacterPicker from '@/components/tournaments/CharacterPicker'
 import { useAppData } from '@/context/AppDataContext'
@@ -63,7 +63,7 @@ const GroupRaceForm = ({
 
     const emptySlots = () => Array.from({ length: slotCount }, (_, i) => ({
         playerId: '',
-        characterId: activeGroupPlayers[i]?.favorite_character_id ?? '',
+        characterId: resolveFavoriteCharacterId(activeGroupPlayers[i], characters) ?? '',
     }))
 
     const [slots, setSlots]               = useState(emptySlots)
@@ -133,9 +133,10 @@ const GroupRaceForm = ({
             // pilota in questo torneo; altrimenti il favorite_character_id.
             const player = activeGroupPlayers.find((p) => String(p.id) === String(playerId))
             const previousCharacterId = getPlayerPreviousCharacterId({ playerId, results, races: tournament?.races ?? [] })
+            const favoriteCharacterId = resolveFavoriteCharacterId(player, characters)
             const characterId = previousCharacterId
                 ? String(previousCharacterId)
-                : player?.favorite_character_id ? String(player.favorite_character_id) : s.characterId
+                : favoriteCharacterId ? String(favoriteCharacterId) : s.characterId
             return { ...s, playerId, characterId }
         }))
         setErrors([])
@@ -183,8 +184,10 @@ const GroupRaceForm = ({
                         race_id:      raceId,
                         player_id:    Number(slot.playerId),
                         character_id: Number(slot.characterId) || (
-                            activeGroupPlayers.find((p) => String(p.id) === String(slot.playerId))
-                                ?.favorite_character_id ?? 1
+                            resolveFavoriteCharacterId(
+                                activeGroupPlayers.find((p) => String(p.id) === String(slot.playerId)),
+                                characters
+                            ) ?? 1
                         ),
                         position:     index + 1,
                     })
