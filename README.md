@@ -7,8 +7,12 @@ Breve panoramica
 - Frontend: codice in `frontend/src` (React, Vite, Tailwind CSS).
 
 Documentazione
-- [`DATABASE.md`](DATABASE.md) — schema dati, domini e relazioni fra le tabelle.
-- [`REGOLAMENTO.md`](REGOLAMENTO.md) — regole di gioco: formati torneo, schedine, punteggi, carte potere.
+- [`docs/DATABASE.md`](docs/DATABASE.md) — schema dati, domini e relazioni fra le tabelle.
+- [`docs/REGOLAMENTO.md`](docs/REGOLAMENTO.md) — regole di gioco: formati torneo, schedine, punteggi, carte potere, badge.
+- [`docs/ARCHITETTURA.md`](docs/ARCHITETTURA.md) — panoramica stack, struttura directory backend/frontend, flusso dati.
+- [`docs/CLASSIFICA.md`](docs/CLASSIFICA.md) — sistema di classifiche e Placement Index.
+- [`TOURNAMENT_TRACKER_RULES.md`](TOURNAMENT_TRACKER_RULES.md) — sintesi delle regole effettivamente applicate dal backend, con puntatori al codice.
+- `/faq` (in-app) — FAQ/documentazione ufficiale della Lega, player-facing: La Lega, Tornei, Badge, Schedina, Card.
 
 Prerequisiti
 - Python 3.10+ (virtualenv o venv consigliato)
@@ -27,7 +31,7 @@ pip install -r app/requirements.txt
    - Avvia il server (sviluppo):
 
 ```powershell
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:socket_app --reload --port 8000
 ```
 
 2. Frontend

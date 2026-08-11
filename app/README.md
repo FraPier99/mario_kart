@@ -2,45 +2,49 @@ Backend (app)
 ==============
 
 Overview
-- Backend FastAPI: implementa modelli SQLAlchemy, CRUD e router per tornei, gare, risultati e giocatori.
+- Backend FastAPI: gestisce tornei, schedine, carte potere e utenti per una lega di gaming Mario Kart.
+- Codice organizzato **per dominio** (`tornei`, `schedine`, `utenti`, `cards`), ogni dominio a tre strati: `controllers/` → `services/` → `models/`. Vedi [`docs/ARCHITETTURA.md`](../docs/ARCHITETTURA.md) per la panoramica completa e [`app/CLAUDE.md`](CLAUDE.md) per le convenzioni interne.
 
 Prerequisiti
-- Python 3.10+ (virtualenv consigliato)
+- Python 3.12+ (virtualenv consigliato)
+- PostgreSQL in locale (default `postgresql://postgres:gradino@localhost:5432/kart`, configurabile in `.env`)
 
 Installazione
-1. Creare e attivare l'ambiente virtuale:
 
 ```powershell
 python -m venv venv
 .\venv\Scripts\Activate.ps1
-```
-
-2. Installare dipendenze:
-
-```powershell
 pip install -r requirements.txt
 ```
 
 Avvio in sviluppo
 
 ```powershell
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:socket_app --reload --port 8000
 ```
 
-File e cartelle principali
-- `app/main.py` — entrypoint FastAPI
-- `app/core/bootstrap.py` — inizializzazioni DB, migrazioni leggeri (es. aggiunta colonna `status`)
-- `app/model.py` — modelli SQLAlchemy
-- `app/crud/` — logica DB riutilizzabile
-- `app/routers/` — endpoint REST (es. `tournaments.py`)
-- `app/schemas/` — Pydantic request/response
+Nota: l'entrypoint ASGI è `socket_app` (FastAPI + Socket.IO montati insieme in `app/main.py`), non `app`.
+
+Struttura
+
+```
+app/
+  controllers/{tornei,schedine,utenti,cards}/   FastAPI APIRouter + handler, schemi Pydantic in schemas/
+  services/{tornei,schedine,utenti,cards}/      business logic + query DB
+  models/{tornei,schedine,utenti,cards}/        modelli ORM SQLAlchemy (condividono Base da app.models.base)
+  core/                                          config, sessione DB, sicurezza, bootstrap, ottimizzazione immagini
+  data/                                          seed data (circuiti, personaggi, tabelle punteggio)
+  Scripts/                                       script una tantum, non importati dall'app
+```
+
+`app.models` re-esporta tutte le classi ORM dei quattro domini: nel resto del backend si importa sempre `from app.models import Tournament, User, ...`, mai dal sottomodulo di dominio direttamente.
 
 Endpoint utili
-- Consulta i router in `app/routers/` per la lista completa. In particolare:
-  - `GET /tournaments/{id}/leaderboard` — leaderboard
-  - `POST /tournaments/{id}/playoff` — endpoint per spareggio best-of-3 (frontend usa `tournamentsApi.playoff`)
+- Consulta i router in `app/controllers/*/` per la lista completa (uno per file, registrati in `app/main.py`).
+- `GET /tournaments/{id}/leaderboard` — classifica di un torneo.
+- `GET /stats/head-to-head`, `GET /stats/circuits`, `GET /stats/players/{id}/badges` — statistiche aggregate (vedi `controllers/tornei/stats.py`).
+- `POST /tournaments/{id}/playoff` — spareggio diretto fra due giocatori (usato da `tournamentsApi.playoff` nel frontend).
 
 Note operative
-- Alcune colonne vengono normalizzate a runtime in `bootstrap` per database legacy.
-- Se cambi schema o aggiungi tabelle, aggiorna i backup e considera una migrazione vera (Alembic o simile).
-
+- **Nessun Alembic**: le migrazioni sono funzioni `ensure_*` in `app/core/bootstrap.py` (ALTER TABLE su colonne esistenti, CREATE TABLE IF NOT EXISTS per tabelle nuove), eseguite automaticamente a ogni avvio via `bootstrap_database()`.
+- Per qualunque modifica di schema in produzione, esegui un backup del database prima.
