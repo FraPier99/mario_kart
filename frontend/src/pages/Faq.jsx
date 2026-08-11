@@ -24,7 +24,7 @@ const FounderName = ({ name, players }) => {
 }
 
 const BADGE_TIERS_FAQ = [
-    { tier: 'LEGGENDA', Icon: Crown, color: 'text-amber-600 dark:text-amber-400', desc: 'Ha vinto TUTTI i tornei conclusi di quel gioco a cui ha partecipato (100% di vittorie).' },
+    { tier: 'LEGGENDA', Icon: Crown, color: 'text-amber-600 dark:text-amber-400', desc: 'Ha vinto TUTTI i tornei conclusi di quel gioco a cui ha partecipato (100% di vittorie), oppure ha vinto almeno 3 tornei di quel gioco.' },
     { tier: 'CAMPIONE', Icon: Trophy, color: 'text-amber-600 dark:text-amber-400', desc: 'Ha vinto almeno un torneo concluso di quel gioco (ma non tutti).' },
     { tier: 'VETERANO', Icon: Star, color: 'text-blue-600 dark:text-blue-400', desc: 'Non ha mai vinto, ma è arrivato sul podio (primi 3 posti) in almeno metà dei tornei conclusi giocati.' },
     { tier: 'OUTSIDER', Icon: Flame, color: 'text-violet-600 dark:text-violet-400', desc: 'Non ha mai vinto, ha fatto almeno un podio, ma meno spesso della metà dei tornei giocati.' },

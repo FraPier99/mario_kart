@@ -118,20 +118,22 @@ export default function Navbar() {
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 gap-3">
 
         {/* LOGO */}
-        <Link to='/' className="flex shrink-0 items-center gap-1.5 select-none">
-          <LogoMark
-            className="h-8 w-8"
-            style={{ filter: 'drop-shadow(0 0 6px var(--mk-primary-glow))' }}
-          />
-          <span className="flex flex-col leading-none">
+        <Link to='/' className="flex shrink-0 items-center gap-2 select-none">
+          <LogoMark className="h-9 w-9" />
+          <span className="flex flex-col leading-[0.85]">
             <span
-              className="font-title text-base font-black"
-              style={{ color: 'var(--mk-primary)', textShadow: '0 0 10px var(--mk-primary-soft)' }}
+              className="font-title text-lg font-black uppercase"
+              style={{
+                color: '#F5F7FA',
+                WebkitTextStroke: '1.3px var(--mk-primary)',
+                paintOrder: 'stroke fill',
+                textShadow: '0 0 8px var(--mk-primary-glow)',
+              }}
             >
               LEGA
             </span>
             <span
-              className="font-title text-[9px] tracking-[0.3em] opacity-70"
+              className="font-title text-[10px] tracking-[0.28em]"
               style={{ color: 'var(--mk-primary)' }}
             >
               KART

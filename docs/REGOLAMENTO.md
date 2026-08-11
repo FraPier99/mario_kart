@@ -156,7 +156,7 @@ Ogni giocatore ha un badge di livello **per ogni gioco** (`game_id`), calcolato 
 
 | Badge | Come si ottiene |
 |---|---|
-| **LEGGENDA** | ha vinto **tutti** i tornei conclusi di quel gioco a cui ha partecipato (minimo 2 tornei) |
+| **LEGGENDA** | ha vinto **tutti** i tornei conclusi di quel gioco a cui ha partecipato, oppure ha vinto almeno **3 tornei** di quel gioco (qualunque sia la percentuale) |
 | **CAMPIONE** | ha vinto almeno un torneo concluso di quel gioco |
 | **VETERANO** | non ha mai vinto, ma è arrivato sul podio (primi 3 posti) in almeno metà dei tornei conclusi giocati |
 | **OUTSIDER** | non ha mai vinto, ha fatto almeno un podio, ma meno spesso della metà dei tornei giocati |

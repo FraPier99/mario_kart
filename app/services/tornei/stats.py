@@ -233,6 +233,11 @@ def get_circuit_stats_detail(db: Session, circuit_id: int):
 # migliore" fra più giochi.
 BADGE_TIER_RANK = ["leggenda", "campione", "veterano", "outsider", "sfidante", "esordiente"]
 
+# Soglia di vittorie totali che garantisce Leggenda a prescindere dalla
+# percentuale (in OR con la regola "100% dei tornei giocati") — un solo
+# numero qui, facile da tarare senza toccare la logica.
+LEGGENDA_MIN_WINS = 3
+
 _BADGE_LABELS = {
     "leggenda": "LEGGENDA",
     "campione": "CAMPIONE",
@@ -246,7 +251,7 @@ _BADGE_LABELS = {
 def _badge_tier_from_stats(tournaments_played: int, wins: int, podiums: int) -> str:
     if tournaments_played == 0:
         return "esordiente"
-    if wins == tournaments_played:
+    if wins == tournaments_played or wins >= LEGGENDA_MIN_WINS:
         return "leggenda"
     if wins > 0:
         return "campione"

@@ -1,46 +1,56 @@
-// Icona del logo "Lega Kart": esagono + strada stilizzata a "L".
-// Lo stroke dell'esagono e delle corsie tratteggiate è fisso (chiaro), perché
-// vive sempre su uno sfondo scuro (Navbar). Lo stroke della "strada" invece
-// segue il tema del personaggio preferito del giocatore, esattamente come
-// l'icona Flag che sostituisce (vedi useProfileTheme / var(--mk-primary)).
+// Icona del logo "Lega Kart": doppio esagono (anello esterno luminoso +
+// esagono interno fisso chiaro) con una strada stilizzata a "L" al centro.
+// Il colore dell'anello esterno e della strada segue il tema del personaggio
+// preferito del giocatore (var(--mk-primary), impostata da useProfileTheme),
+// con un drop-shadow dello stesso colore a fare da "glow" — l'esagono interno
+// resta sempre chiaro perché vive su sfondo scuro (Navbar).
 export default function LogoMark({ className, style }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="130 53 380 380"
+      viewBox="0 0 200 200"
       className={className}
       style={style}
       aria-hidden="true"
       focusable="false"
     >
-      {/* Esagono */}
+      {/* Anello esterno — colore dinamico + glow */}
       <path
-        d="M320 72 L465 155 L465 323 L320 406 L175 323 L175 155 Z"
+        d="M100 8 L182 54 L182 146 L100 192 L18 146 L18 54 Z"
+        fill="none"
+        stroke="var(--mk-primary)"
+        strokeWidth="9"
+        strokeLinejoin="round"
+        style={{ filter: 'drop-shadow(0 0 7px var(--mk-primary-glow))' }}
+      />
+
+      {/* Esagono interno — sempre chiaro */}
+      <path
+        d="M100 26 L164 62 L164 138 L100 174 L36 138 L36 62 Z"
         fill="none"
         stroke="#F5F7FA"
-        strokeWidth="18"
-        strokeLinecap="round"
+        strokeWidth="6"
         strokeLinejoin="round"
       />
 
       {/* Strada — colore dinamico in base al tema del personaggio */}
       <path
-        d="M320 126 L320 250 C320 286 342 302 380 302 L412 302 C444 302 462 322 462 350 C462 381 438 402 406 402 L282 402"
+        d="M100 58 L100 112 C100 128 110 136 128 136 L142 136 C156 136 164 144 164 156"
         fill="none"
         stroke="var(--mk-primary)"
-        strokeWidth="42"
+        strokeWidth="17"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
 
-      {/* Corsie tratteggiate */}
+      {/* Corsia tratteggiata */}
       <path
-        d="M320 134 L320 248 C320 286 342 302 380 302 L412 302 C444 302 462 322 462 350 C462 381 438 402 406 402 L290 402"
+        d="M100 62 L100 110 C100 128 110 134 128 134 L142 134 C154 134 161 141 162 152"
         fill="none"
         stroke="#F5F7FA"
-        strokeWidth="6"
+        strokeWidth="2.5"
         strokeLinecap="round"
-        strokeDasharray="10 14"
+        strokeDasharray="4 6"
       />
     </svg>
   )
