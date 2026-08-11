@@ -125,7 +125,7 @@ const PlayerRow = ({ player, onSaved, onDelete }) => {
                     <PlayerAvatar src={player.img_url ?? undefined} name={player.nickname ?? ''} size="sm" />
                     <div className="min-w-0">
                         <p className="truncate text-sm font-black text-slate-900 dark:text-foreground">{player.nickname}</p>
-                        <p className="truncate text-[10px] text-slate-500 dark:text-muted-foreground">{player.first_name} {player.last_name}</p>
+                        <p className="truncate text-[10px] capitalize text-slate-500 dark:text-muted-foreground">{player.first_name} {player.last_name}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">

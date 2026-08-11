@@ -439,7 +439,7 @@ const GiocatoriTab = ({ players }) => {
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-black text-slate-900 dark:text-foreground truncate capitalize">{p.nickname}</p>
-                                <p className="text-xs text-slate-500 dark:text-muted-foreground truncate">{p.first_name} {p.last_name}</p>
+                                <p className="text-xs capitalize text-slate-500 dark:text-muted-foreground truncate">{p.first_name} {p.last_name}</p>
                             </div>
                         </div>
                     ))}

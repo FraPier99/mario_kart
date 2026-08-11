@@ -6,10 +6,12 @@ from app.controllers.tornei.schemas.stats import (
     CircuitStatsDetailResponse,
     CircuitStatsListItem,
     HeadToHeadResponse,
+    PlayerBestBadgeResponse,
     PlayerGameBadgeResponse,
 )
 from app.models import Circuit, Player
 from app.services.tornei.stats import (
+    get_best_badges_for_players,
     get_circuit_stats_detail,
     get_circuit_stats_list,
     get_head_to_head_by_circuit,
@@ -72,3 +74,15 @@ def player_badges(player_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Giocatore non trovato")
 
     return get_player_badges(db, player_id)
+
+
+@router.get("/players/badges/best", response_model=list[PlayerBestBadgeResponse])
+def players_best_badges(db: Session = Depends(get_db)):
+    """Badge migliore per ogni giocatore esistente — usato dal roster
+    /players per evitare un fetch per-giocatore (N+1)."""
+    player_ids = [row[0] for row in db.query(Player.id).all()]
+    best_by_player = get_best_badges_for_players(db, player_ids)
+    return [
+        {"player_id": player_id, **best}
+        for player_id, best in best_by_player.items()
+    ]

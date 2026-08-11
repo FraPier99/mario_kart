@@ -76,9 +76,13 @@ export const PROFILE_CARD_STYLES = {
     veterano: {
         Icon: Star,
         shimmer: false,
-        cardBorder: 'border-blue-400/50 dark:border-blue-500/30 shadow-blue-300/20 dark:shadow-blue-950/40 ring-1 ring-blue-400/30 dark:ring-blue-500/20',
-        cardBg: 'bg-linear-to-br from-blue-100/90 via-blue-50/60 to-blue-100/80 dark:from-blue-950/60 dark:via-blue-900/30 dark:to-blue-950/60',
-        avatarBorder: 'border-blue-400 shadow-blue-400/20',
+        // Sfondo/bordo volutamente tenui (non un gradiente pieno come
+        // leggenda): la palette blu è condivisa con RoleBadge "admin"
+        // (indigo) e il badge-pill "veterano" stesso — una card di sfondo
+        // altrettanto satura li fa sparire tutti nello stesso azzurro.
+        cardBorder: 'border-blue-300/40 dark:border-blue-500/20 shadow-blue-200/10 dark:shadow-blue-950/20',
+        cardBg: 'bg-blue-50/50 dark:bg-blue-950/20',
+        avatarBorder: 'border-blue-300 shadow-blue-300/15',
         badgeBg: 'bg-blue-400',
         badgeIconColor: 'text-white',
         textColor: 'text-blue-600 dark:text-blue-400',

@@ -98,7 +98,7 @@ const WithdrawalManager = ({ tournament, players = [], disabled = false, onUpdat
                                                 <span className="rounded-full bg-rose-500/20 px-2 py-0.5 text-[9px] text-rose-600 dark:text-rose-300 border border-rose-500/30">Ritirato</span>
                                             )}
                                         </div>
-                                        <div className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">{player.first_name} {player.last_name}</div>
+                                        <div className="mt-1 text-sm capitalize text-slate-500 dark:text-muted-foreground">{player.first_name} {player.last_name}</div>
                                     </div>
                                     <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${isWithdrawn ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}>
                                         {isWithdrawn ? <Undo2 size={16} /> : <UserX size={16} />}

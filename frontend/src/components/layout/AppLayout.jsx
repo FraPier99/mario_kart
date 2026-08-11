@@ -29,6 +29,9 @@ const AppLayout  =({children})=>{
                 <main className="grow animate-fade-in">
                     {children}
                 </main>
+                <footer className="py-6 text-center text-xs text-slate-400 dark:text-muted-foreground">
+                    © Francesco Pierucci — Tutti i diritti riservati.
+                </footer>
             </div>
 
             {winnerData && (

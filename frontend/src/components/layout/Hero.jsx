@@ -46,8 +46,8 @@ const Hero = () => {
     // anziché classi Tailwind.
     const goldBackground = cardTier === 'veterano'
         ? (dark
-            ? 'linear-gradient(to bottom right, rgba(23,37,84,0.60), rgba(30,58,138,0.30), rgba(23,37,84,0.60))'
-            : 'linear-gradient(to bottom right, rgba(219,234,254,0.92), rgba(239,246,255,0.70), rgba(219,234,254,0.88))')
+            ? 'rgba(23,37,84,0.20)'
+            : 'rgba(239,246,255,0.50)')
         : (dark
             ? 'linear-gradient(to bottom right, rgba(67,20,7,0.60), rgba(120,53,15,0.30), rgba(67,20,7,0.60))'
             : 'linear-gradient(to bottom right, rgba(254,243,199,0.92), rgba(255,251,235,0.70), rgba(254,243,199,0.88))')

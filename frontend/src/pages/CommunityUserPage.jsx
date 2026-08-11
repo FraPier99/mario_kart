@@ -152,7 +152,7 @@ const CommunityUserPage = () => {
                         {/* Colonna destra: identità allineata a sinistra + badge in fondo */}
                         <div className="min-w-0 text-left">
                             <h1 className="text-3xl font-black text-slate-900 dark:text-foreground">{player?.nickname ?? communityUser.username}</h1>
-                            {player && <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">{player.first_name} {player.last_name}</p>}
+                            {player && <p className="mt-1 text-sm capitalize text-slate-500 dark:text-muted-foreground">{player.first_name} {player.last_name}</p>}
                             {player?.bio && <p className="mt-3 max-w-xl text-sm text-slate-600 dark:text-muted-foreground leading-relaxed whitespace-pre-wrap">{player.bio}</p>}
 
                             {(favoriteCharacter || activeBadge) && (

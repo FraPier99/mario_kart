@@ -100,3 +100,11 @@ class PlayerGameBadgeResponse(BaseModel):
     wins: int
     podiums: int
     podium_rate: float
+
+
+class PlayerBestBadgeResponse(BaseModel):
+    player_id: int
+    game_id: int
+    game_name: str
+    tier: Literal["leggenda", "campione", "veterano", "outsider", "sfidante", "esordiente"]
+    label: str

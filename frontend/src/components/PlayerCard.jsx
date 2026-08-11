@@ -1,7 +1,7 @@
-import { Crown } from 'lucide-react'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
+import { getProfileCardStyle } from '@/lib/playerBadges'
 
-const PlayerCard = ({ players, statsByPlayerId, handlePlayerClick }) => {
+const PlayerCard = ({ players, bestBadgeByPlayerId, handlePlayerClick }) => {
     if (!players.length) {
         return (
             <div className="col-span-full rounded-3xl border border-dashed border-slate-200 dark:border-border bg-white dark:bg-card px-8 py-12 text-center text-slate-500 dark:text-muted-foreground">
@@ -13,26 +13,26 @@ const PlayerCard = ({ players, statsByPlayerId, handlePlayerClick }) => {
     return (
         <>
             {players.map((p, idx) => {
-                const playerStats = statsByPlayerId?.get(p.id)
-                const isWinner = (playerStats?.tournamentWins ?? 0) > 0
+                const bestBadge = bestBadgeByPlayerId?.get(p.id)
+                const cardStyle = getProfileCardStyle(bestBadge?.tier)
 
                 return (
                     <div
                         key={p.id}
                         style={{
                             animationDelay: `${idx * 0.04}s`,
-                            boxShadow: isWinner ? 'var(--circuit-shadow-md)' : 'var(--circuit-shadow-sm)',
+                            boxShadow: cardStyle ? 'var(--circuit-shadow-md)' : 'var(--circuit-shadow-sm)',
                         }}
                         className={`animate-fade-in flex flex-col items-center overflow-hidden rounded-2xl border-2 transition-all duration-300 hover:scale-[1.03] ${
-                            isWinner
-                                ? 'border-circuit-ink bg-linear-to-br from-amber-100/90 via-amber-50/60 to-amber-100/80 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60'
+                            cardStyle
+                                ? `border-circuit-ink ${cardStyle.cardBg}`
                                 : 'border-slate-300 dark:border-border bg-white dark:bg-card'
                         }`}
                     >
                         <div className="relative h-32 w-full bg-gradient-to-b from-slate-50 dark:from-muted to-slate-200 dark:to-muted pb-2">
-                            {isWinner && (
-                                <div className="absolute right-2 top-2 rounded-full border-2 border-circuit-ink bg-circuit-gold p-1.5" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                                    <Crown size={16} className="text-circuit-ink" />
+                            {cardStyle && (
+                                <div className={`absolute right-2 top-2 rounded-full border-2 border-circuit-ink p-1.5 ${cardStyle.badgeBg}`} style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+                                    <cardStyle.Icon size={16} className={cardStyle.badgeIconColor} />
                                 </div>
                             )}
                             <img
@@ -47,8 +47,8 @@ const PlayerCard = ({ players, statsByPlayerId, handlePlayerClick }) => {
                                 {p.nickname?.toUpperCase()}
                             </span>
 
-                            <h3 className="mb-3 text-base font-black uppercase tracking-tight text-slate-800 dark:text-foreground">
-                                {p.first_name?.toUpperCase()} {p.last_name?.toUpperCase()}
+                            <h3 className="mb-3 text-base font-black capitalize tracking-tight text-slate-800 dark:text-foreground">
+                                {p.first_name} {p.last_name}
                             </h3>
 
                             <button

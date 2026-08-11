@@ -640,13 +640,10 @@ const Dashboard = () => {
                                     )}
                                 </div>
                                 <div>
-                                    <p className="font-title text-[10px] tracking-wide text-emerald-600 dark:text-emerald-400">
-                                        Profilo
-                                    </p>
-                                    <h1 className="mt-0.5 text-2xl font-black text-slate-900 dark:text-foreground">
+                                    <h1 className="text-2xl font-black text-slate-900 dark:text-foreground">
                                         {player?.nickname ?? user?.username ?? '—'}
                                     </h1>
-                                    <p className="text-sm text-slate-500 dark:text-muted-foreground">
+                                    <p className="text-sm capitalize text-slate-500 dark:text-muted-foreground">
                                         {isSuperadmin ? 'Superadmin' : (player ? `${player.first_name} ${player.last_name}` : 'Nessun player collegato')}
                                         {favoriteCharacter && <span className="ml-2 text-slate-400">· {favoriteCharacter.name}</span>}
                                     </p>

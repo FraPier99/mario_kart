@@ -344,3 +344,17 @@ def get_player_badges(db: Session, player_id: int) -> list[dict]:
         }
         for game in games
     ]
+
+
+def get_best_badges_for_players(db: Session, player_ids: list[int]) -> dict[int, dict]:
+    """Badge di rango più alto per ciascun player_id, fra tutti i suoi giochi
+    (stessa logica di pickBestBadge lato frontend, calcolata qui per evitare
+    N+1 fetch di /players/{id}/badges dal roster di /players)."""
+    result = {}
+    for player_id in player_ids:
+        badges = get_player_badges(db, player_id)
+        if not badges:
+            continue
+        best = min(badges, key=lambda b: BADGE_TIER_RANK.index(b["tier"]))
+        result[player_id] = best
+    return result

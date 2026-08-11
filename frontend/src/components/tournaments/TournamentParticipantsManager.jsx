@@ -105,7 +105,7 @@ const TournamentParticipantsManager = ({ tournament, players = [], initialPartic
                                 <div className="flex items-center justify-between gap-3">
                                     <div>
                                         <div className="text-xs font-black uppercase tracking-widest">{player.nickname}</div>
-                                        <div className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">{player.first_name} {player.last_name}</div>
+                                        <div className="mt-1 text-sm capitalize text-slate-500 dark:text-muted-foreground">{player.first_name} {player.last_name}</div>
                                     </div>
                                     <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${selected ? 'bg-emerald-500 text-white' : 'bg-white/60 dark:bg-black/20 text-slate-400'}`}>
                                         {selected ? <UserMinus2 size={16} /> : <UserPlus2 size={16} />}

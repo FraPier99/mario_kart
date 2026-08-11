@@ -303,7 +303,7 @@ const TournamentForm = ({
                                     <div className={`text-xs font-black uppercase tracking-widest truncate ${selected ? 'text-emerald-800 dark:text-emerald-200' : 'text-slate-700 dark:text-slate-300'}`}>
                                         {player.nickname}
                                     </div>
-                                    <div className="mt-0.5 truncate text-[10px] text-slate-500 dark:text-muted-foreground">
+                                    <div className="mt-0.5 truncate text-[10px] capitalize text-slate-500 dark:text-muted-foreground">
                                         {player.first_name} {player.last_name}
                                     </div>
                                 </div>

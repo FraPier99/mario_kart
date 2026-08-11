@@ -188,35 +188,53 @@ const Faq = () => {
                                 </div>
 
                                 <div className="prose prose-slate dark:prose-invert mt-6 max-w-none text-sm leading-relaxed text-slate-700 dark:text-muted-foreground">
-                                    <h3 className="mb-3 text-lg font-black text-slate-900 dark:text-foreground">Come è nata la Lega</h3>
-                                    <p>Tutto ebbe inizio il <strong>16 marzo 2026</strong>.</p>
+                                    <h3 className="mb-3 text-lg font-black text-slate-900 dark:text-foreground">L'inizio della rivalità</h3>
+                                    <p><strong>16 marzo 2026.</strong></p>
+                                    <p>Nessuno aveva pianificato davvero quello che sarebbe successo.</p>
                                     <p>
-                                        Quello che doveva essere semplicemente un torneo improvvisato all'ultimo momento
-                                        diventò il primo capitolo della nostra storia. Al <strong>HOG di Curno</strong>,
-                                        quattro giocatori — {foundersLine} — si sfidarono nel primo torneo di{' '}
-                                        <strong>Mario Kart 8 Deluxe</strong>.
+                                        Un torneo organizzato all'ultimo momento. <strong>Quattro giocatori. Quattro Nintendo DS.
+                                        Una sola cosa in palio: la vittoria.</strong>
                                     </p>
                                     <p>
-                                        Fu una battaglia intensa, combattuta fino all'ultima curva, che vide alla fine{' '}
-                                        <FounderName name="Shiba" players={players} /> conquistare la vittoria,
-                                        lasciando <FounderName name="Josh" players={players} /> tra lacrime, disperazione
-                                        e una sola certezza: questa storia non poteva finire lì.
+                                        Al <strong>HOG di Curno</strong> scendono in pista {foundersLine} per quello che sarebbe
+                                        diventato, senza che nessuno lo sapesse ancora, <strong>il primo torneo della storia della Lega</strong>.
                                     </p>
-                                    <p>Da quella sconfitta nacque la voglia di <strong>rivincita</strong>. I tornei dovevano essere rifatti.</p>
+                                    <p>Le gare si fanno sempre più intense. Ogni curva conta, ogni errore può costare la vittoria e la rivalità cresce giro dopo giro.</p>
+                                    <p>Alla fine, però, c'è un solo vincitore:</p>
+                                    <h3 className="text-lg font-black text-slate-900 dark:text-foreground">
+                                        <FounderName name="Shiba" players={players} />.
+                                    </h3>
+                                    <p>E <FounderName name="Josh" players={players} />?</p>
+                                    <p><strong>Josh è distrutto.</strong></p>
+                                    <p>Lacrime. Disperazione. Rabbia.</p>
+                                    <p>Ma soprattutto nasce una certezza:</p>
+                                    <p><strong>questa storia non può finire qui.</strong></p>
                                     <p>
-                                        Nel frattempo, <FounderName name="Shiba" players={players} /> sarebbe partito per
-                                        il Giappone, con un ritorno previsto per luglio. Fu proprio in quel periodo che{' '}
-                                        <FounderName name="Josh" players={players} /> e <FounderName name="Gradino" players={players} />{' '}
-                                        iniziarono a dare forma a un'idea più grande: non organizzare semplicemente un
-                                        altro torneo, ma creare una vera <strong>lega per tutti gli appassionati di Mario Kart</strong>.
+                                        La voglia di rivincita cresce. <FounderName name="Josh" players={players} /> vuole tornare
+                                        in pista. Questa volta, però, con un solo obiettivo: battere <FounderName name="Shiba" players={players} />.
                                     </p>
-                                    <p>Il gruppo iniziò ad allargarsi, arrivarono nuovi giocatori e, insieme alle sfide, nacque qualcosa di più grande.</p>
+                                    <p>Shiba, però, sta per partire per il Giappone e tornerà soltanto a luglio.</p>
+                                    <p>Ed è proprio durante questa pausa che succede qualcosa.</p>
+                                    <p>
+                                        <FounderName name="Josh" players={players} /> e <FounderName name="Gradino" players={players} /> iniziano
+                                        a parlare.
+                                    </p>
+                                    <p>Quello che era nato come un semplice torneo improvvisato comincia a trasformarsi in un'idea:</p>
+                                    <blockquote>E se invece di organizzare semplicemente altre partite, creassimo una vera lega?</blockquote>
+                                    <p>Una lega per chi ama Mario Kart. Con tornei, classifiche, rivalità, nuovi giocatori e una community.</p>
+                                    <p>Il gruppo cresce. Arrivano nuovi giocatori. Le sfide aumentano.</p>
+                                    <p>E, poco alla volta, nasce anche il sito.</p>
+                                    <p>
+                                        Quella che era iniziata come <strong>una sfida improvvisata tra quattro amici, quattro console
+                                        e una serata al HOG</strong>, diventa qualcosa di molto più grande.
+                                    </p>
                                     <p className="font-black text-slate-900 dark:text-foreground">
-                                        Da una serata improvvisata nacque una lega.<br />
-                                        Da una sconfitta nacque la voglia di rivincita.<br />
-                                        E da quella voglia nacque questa community.
+                                        Una sconfitta.<br />
+                                        Una rivincita.<br />
+                                        Un'idea.<br />
+                                        Una lega.
                                     </p>
-                                    <p className="mt-8 text-xs italic text-slate-400">© Francesco Pierucci — Tutti i diritti riservati.</p>
+                                    <p>E tutto è iniziato il <strong>16 marzo 2026</strong>.</p>
                                 </div>
                             </div>
                         )}

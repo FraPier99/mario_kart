@@ -5,19 +5,28 @@ import AppLayout from '@/components/layout/AppLayout'
 import PlayerCard from '@/components/PlayerCard'
 import { useAppData } from '@/context/AppDataContext'
 import ApiBanner from '@/components/common/ApiBanner'
-import { authApi } from '@/services/apiClient'
+import { authApi, statsApi } from '@/services/apiClient'
 
 const Players = () => {
-    const { players, statsByPlayerId, loading, errorMessage, refresh } = useAppData()
+    const { players, loading, errorMessage, refresh } = useAppData()
     const navigate = useNavigate()
     const [searchTerm, setSearchTerm] = useState('')
     const [users, setUsers] = useState([])
+    const [bestBadgeByPlayerId, setBestBadgeByPlayerId] = useState(new Map())
 
     // /auth/community/users (a differenza di /auth/users, riservato al
     // superadmin) è raggiungibile da qualsiasi utente autenticato — serve
     // solo a risalire da player_id a user.id per il link al profilo dedicato.
     useEffect(() => {
         authApi.listCommunityUsers().then((res) => setUsers(res.data ?? [])).catch(() => {})
+    }, [])
+
+    // Un'unica chiamata bulk (non un fetch per giocatore) per lo stesso
+    // stile "carta speciale" usato in dashboard/profilo pubblico/Home.
+    useEffect(() => {
+        statsApi.bestBadgesByPlayer()
+            .then((res) => setBestBadgeByPlayerId(new Map((res.data ?? []).map((b) => [b.player_id, b]))))
+            .catch(() => setBestBadgeByPlayerId(new Map()))
     }, [])
 
     const userIdByPlayerId = useMemo(() => {
@@ -93,7 +102,7 @@ const Players = () => {
                                     Nessun giocatore presente nel database.
                                 </div>
                             ) : (
-                                <PlayerCard players={filteredPlayers} statsByPlayerId={statsByPlayerId} handlePlayerClick={handlePlayerClick} />
+                                <PlayerCard players={filteredPlayers} bestBadgeByPlayerId={bestBadgeByPlayerId} handlePlayerClick={handlePlayerClick} />
                             )}
                         </div>
                     )}
