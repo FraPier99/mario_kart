@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Crown, Flag, Trophy, Star, BarChart3, UserCircle2, Shield } from 'lucide-react'
+import { ArrowLeft, Flag, Trophy, Star, BarChart3, UserCircle2, Shield } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import PlayerTournamentHistory from '@/components/community/PlayerTournamentHistory'
 import PlayerBadge from '@/components/community/PlayerBadge'
 import RoleBadge from '@/components/community/RoleBadge'
-import { pickBestBadge } from '@/lib/playerBadges'
+import { pickBestBadge, getProfileCardStyle } from '@/lib/playerBadges'
 import { authApi, statsApi, getApiErrorMessage } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
 import { toast } from 'sonner'
@@ -62,7 +62,7 @@ const CommunityUserPage = () => {
         if (!selectedGameId) return bestBadge
         return badges.find((b) => b.game_id === Number(selectedGameId)) ?? bestBadge
     }, [badges, selectedGameId, bestBadge])
-    const isChampion = bestBadge?.tier === 'leggenda' || bestBadge?.tier === 'campione'
+    const cardStyle = getProfileCardStyle(bestBadge?.tier)
 
     const gameStats = useMemo(() => {
         if (!selectedGameId || !player) return null
@@ -129,20 +129,20 @@ const CommunityUserPage = () => {
                 </button>
 
                 {/* Profile card — composizione editoriale asimmetrica: colonna avatar fissa + colonna contenuto fluida, niente centratura */}
-                <div className={`rounded-2xl border-2 p-6 md:p-8 ${isChampion ? 'border-amber-400/60 dark:border-amber-500/30 bg-linear-to-br from-amber-100/90 via-amber-50/60 to-amber-100/80 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60' : 'border-slate-200 dark:border-border bg-white dark:bg-card'}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
+                <div className={`rounded-2xl border-2 p-6 md:p-8 ${cardStyle ? `${cardStyle.cardBorder} ${cardStyle.cardBg}` : 'border-slate-200 dark:border-border bg-white dark:bg-card'}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                     <div className="grid gap-6 md:grid-cols-[auto_1fr] items-start">
                         {/* Colonna sinistra: avatar + ruolo */}
                         <div className="flex flex-row items-center gap-3 md:flex-col md:items-start">
                             <div className="relative shrink-0">
                                 <div className="absolute inset-0 rounded-2xl bg-emerald-400/20 blur-xl scale-125 pointer-events-none" />
-                                <div className={`relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-2xl border-[2.5px] bg-gradient-to-br from-emerald-400 to-green-500 shadow-lg shadow-emerald-400/20 ${isChampion ? 'border-amber-400' : 'border-emerald-400'}`}>
+                                <div className={`relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-2xl border-[2.5px] bg-gradient-to-br from-emerald-400 to-green-500 shadow-lg shadow-emerald-400/20 ${cardStyle ? cardStyle.avatarBorder : 'border-emerald-400'}`}>
                                     {player?.img_url || communityUser?.img_url
                                         ? <img src={player?.img_url || communityUser?.img_url} alt={player?.nickname ?? communityUser?.username} className="h-full w-full object-cover" />
                                         : <UserCircle2 size={40} className="text-white" />}
                                 </div>
-                                {isChampion && (
-                                    <span className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white dark:border-card bg-amber-400 shadow-md">
-                                        <Crown size={13} className="text-amber-950" />
+                                {cardStyle && (
+                                    <span className={`absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white dark:border-card shadow-md ${cardStyle.badgeBg}`}>
+                                        <cardStyle.Icon size={13} className={cardStyle.badgeIconColor} />
                                     </span>
                                 )}
                             </div>

@@ -1,10 +1,13 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Users, Flag, Trophy, Crown, ArrowRight, User } from "lucide-react";
+import { Users, Flag, ArrowRight, User } from "lucide-react";
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { getProfileTheme } from '@/lib/profileTheme'
 import { getTimeGreeting } from '@/lib/greeting'
+import { statsApi } from '@/services/apiClient'
+import { pickBestBadge, getProfileCardStyle } from '@/lib/playerBadges'
 
 const Header = () => {
     const { detailedTournaments, charactersById, statsByPlayerId } = useAppData()
@@ -13,7 +16,19 @@ const Header = () => {
     const theme = getProfileTheme(user, charactersById, dark)
     const player = user?.player ?? null
     const playerStats = player ? (statsByPlayerId.get(player.id) ?? null) : null
-    const isChampion = (playerStats?.tournamentWins ?? 0) > 0
+    const [badges, setBadges] = useState([])
+    useEffect(() => {
+        if (!player) return
+        let active = true
+        statsApi.playerBadges(player.id)
+            .then((res) => { if (active) setBadges(res.data) })
+            .catch(() => { if (active) setBadges([]) })
+        return () => { active = false }
+    }, [player])
+    const bestBadge = useMemo(() => pickBestBadge(badges), [badges])
+    // Stile "carta speciale" guidato dal tier reale del badge migliore
+    // (leggenda/campione/veterano), non più da "ha vinto almeno un torneo".
+    const cardStyle = getProfileCardStyle(bestBadge?.tier)
 
     // Il nome/avatar è cliccabile solo per chi ha un profilo da raggiungere
     // (giocatore o superadmin) — sostituisce la vecchia "Profile card" di
@@ -55,9 +70,9 @@ const Header = () => {
                                     </div>
                                 )}
                             </div>
-                            {isChampion && (
-                                <div className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white dark:border-card bg-amber-400 shadow-lg shadow-amber-400/40">
-                                    <Crown size={12} className="text-amber-950" />
+                            {cardStyle && (
+                                <div className={`absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white dark:border-card shadow-lg ${cardStyle.badgeBg}`}>
+                                    <cardStyle.Icon size={12} className={cardStyle.badgeIconColor} />
                                 </div>
                             )}
                         </div>
@@ -72,9 +87,9 @@ const Header = () => {
                             <h1 className="mt-0.5 truncate text-3xl font-black uppercase tracking-tighter leading-none text-slate-900 dark:text-foreground md:text-4xl">
                                 {isSuperadmin ? user?.username : player ? player.nickname ?? 'Area personale' : 'Mario Kart'}
                             </h1>
-                            {isChampion && (
-                                <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-black text-amber-600 dark:text-amber-400">
-                                    <Trophy size={13} /> {playerStats.tournamentWins} {playerStats.tournamentWins === 1 ? 'torneo vinto' : 'tornei vinti'}
+                            {cardStyle && (
+                                <p className={`mt-1.5 inline-flex items-center gap-1.5 text-xs font-black ${cardStyle.textColor}`}>
+                                    <cardStyle.Icon size={13} /> {playerStats?.tournamentWins ?? 0} {(playerStats?.tournamentWins ?? 0) === 1 ? 'torneo vinto' : 'tornei vinti'}
                                 </p>
                             )}
                         </div>

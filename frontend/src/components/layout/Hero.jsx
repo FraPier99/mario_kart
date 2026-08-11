@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Trophy, Crown, Gamepad2, Users2, Calendar, ArrowRight } from 'lucide-react'
 import { useAppData } from '@/context/AppDataContext'
@@ -8,6 +9,8 @@ import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import TournamentAwardsPanel from '@/components/layout/TournamentAwardsPanel'
 import TournamentMilestonesPanel from '@/components/layout/TournamentMilestonesPanel'
 import { detectTournamentMilestones } from '@/lib/milestones'
+import { statsApi } from '@/services/apiClient'
+import { pickBestBadge, getProfileCardStyle, PROFILE_CARD_STYLES } from '@/lib/playerBadges'
 
 const formatChampionDate = (value) => {
     if (!value) return null
@@ -21,12 +24,33 @@ const Hero = () => {
     const { dark } = useTheme()
     const theme = getProfileTheme(user, charactersById, dark)
     const player = user?.player ?? null
-    const playerStats = player ? (statsByPlayerId.get(player.id) ?? null) : null
-    const isChampion = (playerStats?.tournamentWins ?? 0) > 0
-    const goldCard = isChampion || isSuperadmin
-    const goldBackground = dark
-        ? 'linear-gradient(to bottom right, rgba(67,20,7,0.60), rgba(120,53,15,0.30), rgba(67,20,7,0.60))'
-        : 'linear-gradient(to bottom right, rgba(254,243,199,0.92), rgba(255,251,235,0.70), rgba(254,243,199,0.88))'
+    const [badges, setBadges] = useState([])
+    useEffect(() => {
+        if (!player) return
+        let active = true
+        statsApi.playerBadges(player.id)
+            .then((res) => { if (active) setBadges(res.data) })
+            .catch(() => { if (active) setBadges([]) })
+        return () => { active = false }
+    }, [player])
+    const bestBadge = useMemo(() => pickBestBadge(badges), [badges])
+    // Stile "carta speciale" guidato dal tier reale del badge migliore
+    // (leggenda/campione/veterano), non più da "ha vinto almeno un torneo".
+    const cardStyle = getProfileCardStyle(bestBadge?.tier)
+    const cardTier = cardStyle ? bestBadge.tier : (isSuperadmin ? 'leggenda' : null)
+    const effectiveCardStyle = cardStyle ?? (isSuperadmin ? PROFILE_CARD_STYLES.leggenda : null)
+    const goldCard = Boolean(effectiveCardStyle)
+    // Gradiente coerente col tier: oro per leggenda/campione (e superadmin),
+    // blu per veterano — stessa palette di PROFILE_CARD_STYLES ma come
+    // inline style perché qui il resto della card usa già `style.background`
+    // anziché classi Tailwind.
+    const goldBackground = cardTier === 'veterano'
+        ? (dark
+            ? 'linear-gradient(to bottom right, rgba(23,37,84,0.60), rgba(30,58,138,0.30), rgba(23,37,84,0.60))'
+            : 'linear-gradient(to bottom right, rgba(219,234,254,0.92), rgba(239,246,255,0.70), rgba(219,234,254,0.88))')
+        : (dark
+            ? 'linear-gradient(to bottom right, rgba(67,20,7,0.60), rgba(120,53,15,0.30), rgba(67,20,7,0.60))'
+            : 'linear-gradient(to bottom right, rgba(254,243,199,0.92), rgba(255,251,235,0.70), rgba(254,243,199,0.88))')
 
     // "Ultimo campione": non usare lastWinner/lastWinnerStats del context — quelli
     // valgono solo se il torneo più recente in assoluto è concluso, quindi sono
@@ -65,7 +89,7 @@ const Hero = () => {
     return (
         <section className="mx-auto max-w-7xl px-4 py-8">
             <div
-                className={`overflow-hidden rounded-[2rem] border-2 backdrop-blur-xl transition-all duration-500 ${goldCard ? 'gold-card-shimmer border-circuit-ink' : 'border-slate-900/70 dark:border-white/20'}`}
+                className={`overflow-hidden rounded-[2rem] border-2 backdrop-blur-xl transition-all duration-500 ${goldCard ? `border-circuit-ink ${effectiveCardStyle?.shimmer ? 'gold-card-shimmer' : ''}` : 'border-slate-900/70 dark:border-white/20'}`}
                 style={{ background: goldCard ? goldBackground : theme.cardBackground, boxShadow: 'var(--circuit-shadow-lg)' }}
             >
 
