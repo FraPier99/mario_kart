@@ -34,7 +34,7 @@ export const BADGE_TIERS = {
 }
 
 // Dal più al meno esclusivo — stesso ordine di BADGE_TIER_RANK nel backend.
-export const BADGE_TIER_RANK = ['leggenda', 'campione', 'veterano', 'outsider', 'sfidante', 'esordiente']
+export const BADGE_TIER_RANK = ['leggenda', 'campione', 'veterano', 'outsider', 'esordiente', 'sfidante']
 
 /** Il badge di rango più alto fra una lista di badge (uno per gioco). */
 export function pickBestBadge(badges) {

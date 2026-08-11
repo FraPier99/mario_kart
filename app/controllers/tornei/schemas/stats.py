@@ -94,7 +94,7 @@ class PlayerGameBadgeResponse(BaseModel):
     # BADGE_TIER_RANK in app/services/tornei/stats.py per l'ordine di
     # esclusività. Il "label" (nome mostrato) può cambiare copy senza
     # rompere il frontend, il "tier" no.
-    tier: Literal["leggenda", "campione", "veterano", "outsider", "sfidante", "esordiente"]
+    tier: Literal["leggenda", "campione", "veterano", "outsider", "esordiente", "sfidante"]
     label: str
     tournaments_played: int
     wins: int
@@ -106,5 +106,5 @@ class PlayerBestBadgeResponse(BaseModel):
     player_id: int
     game_id: int
     game_name: str
-    tier: Literal["leggenda", "campione", "veterano", "outsider", "sfidante", "esordiente"]
+    tier: Literal["leggenda", "campione", "veterano", "outsider", "esordiente", "sfidante"]
     label: str

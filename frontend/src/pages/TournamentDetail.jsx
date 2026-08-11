@@ -1,6 +1,6 @@
 ﻿import { useMemo, useState, useEffect, useCallback } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { Crown, Trophy, Trash2, Shield, Ban, Zap, AlertCircle, Settings, Users, Flag, Swords, Clock, LayoutDashboard, BarChart3, ListChecks } from 'lucide-react'
+import { Crown, Trophy, Trash2, Shield, Ban, Zap, AlertCircle, Settings, Users, Flag, Swords, Clock, BarChart3, ListChecks, MapPin } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import PortalSelect from '@/components/common/PortalSelect'
 import RefreshButton from '@/components/common/RefreshButton'
@@ -22,12 +22,10 @@ import GroupManagementSection from '@/components/tournaments/GroupManagementSect
 import ClassicPodiumDuelCard from '@/components/tournaments/ClassicPodiumDuelCard'
 import CollapsibleSection from '@/components/tournaments/CollapsibleSection'
 import TournamentResolutionNotes from '@/components/tournaments/TournamentResolutionNotes'
-import TournamentInfoPanel from '@/components/tournaments/TournamentInfoPanel'
 import GroupPlancia, { GroupCard } from '@/components/tournaments/GroupPlancia'
 import PhaseCircuitsCard from '@/components/tournaments/PhaseCircuitsCard'
 import SpareggioEsitiList from '@/components/tournaments/SpareggioEsitiList'
 import CardLogPanel from '@/components/tournaments/CardLogPanel'
-import AlgorithmAnalysisPanel from '@/components/tournaments/AlgorithmAnalysisPanel'
 import OverallClassificaCard from '@/components/tournaments/OverallClassificaCard'
 import { findPlayerGroup, groupLabel, isPodiumDuelKey } from '@/lib/groupStage'
 import { useTournamentCards, MASTER_EFFECTS, SHELL_EFFECTS } from '@/hooks/useTournamentCards'
@@ -168,26 +166,6 @@ const TournamentDetail = () => {
         })
     }, [tournament?.races])
 
-    // Classifica per la vista giocatore: nei tornei a gironi mostra solo il
-    // girone/fase in cui si trova attualmente il giocatore, non la classifica
-    // globale. Nei tornei classic resta la classifica generale (tournament.standings).
-    const myStandingsView = useMemo(() => {
-        if (!tournament || tournament.tournament_format !== 'group_stage') return null
-        const myGroup = findPlayerGroup(tournament.format_data, myPlayerId)
-        if (!myGroup) return null
-        const { phase, groupName } = myGroup
-        const fd = tournament.format_data ?? {}
-        const seedPlayerIds = phase === 'group'
-            ? (fd.groups?.[groupName] ?? [])
-            : phase === 'semifinal'
-                ? (fd.semifinals?.[groupName] ?? [])
-                : (fd.finals?.[groupName] ?? [])
-        return {
-            groupKey: groupName,
-            races: (tournament.races ?? []).filter((r) => r.phase === phase && r.group_name === groupName && !r.is_duello),
-            seedPlayerIds,
-        }
-    }, [tournament, myPlayerId])
 
     const tournamentParticipants = useMemo(() => {
         if (!tournament?.participant_ids?.length) return []
@@ -242,13 +220,31 @@ const TournamentDetail = () => {
 
     const [confirmDeleteTournament, setConfirmDeleteTournament] = useState(false)
     const [deleting, setDeleting] = useState(false)
-    const [activeSection, setActiveSection] = useState('setup')
+    // 'leaderboard' è l'unica chiave presente in entrambi i formati e sempre
+    // renderizzabile: come atterraggio evita sia di dipendere dal formato
+    // (non ancora noto se il torneo non è in cache al mount) sia di aprire
+    // l'admin direttamente su un form di inserimento dati.
+    const [activeSection, setActiveSection] = useState('leaderboard')
     const [participantsStatus, setParticipantsStatus] = useState([])
     const [userHasPredicted, setUserHasPredicted] = useState(null)
-    const [userTab, setUserTab] = useState('riepilogo')
+    // Nessun tab "riepilogo" condiviso da entrambi i formati come default:
+    // sceglie subito quello giusto se il torneo è già in cache, e si
+    // autocorregge quando i dati arrivano dopo il mount (vedi effect sotto).
+    const [userTab, setUserTab] = useState(() => (tournament?.tournament_format === 'group_stage' ? 'generale' : 'classifica'))
     const [expandedDuelGroups, setExpandedDuelGroups] = useState(new Set())
     const [superadminPlayerIds, setSuperadminPlayerIds] = useState([])
     const { goToPlayerProfile } = useCommunityUserNav()
+
+    // Corregge il tab di default se il torneo non era ancora in cache al
+    // mount (lo useState qui sopra sceglie 'classifica' come fallback prima
+    // di sapere il formato): appena arriva il formato reale, se il tab
+    // attivo è ancora quel fallback e non combacia col formato, lo aggiusta.
+    useEffect(() => {
+        if (!tournament) return
+        const isGroup = tournament.tournament_format === 'group_stage'
+        if (isGroup && userTab === 'classifica') setUserTab('generale')
+        if (!isGroup && userTab === 'generale') setUserTab('classifica')
+    }, [tournament, userTab])
 
     const {
         inventory, localCardLog, showCardModal, setShowCardModal, selectedCard,
@@ -402,15 +398,14 @@ const TournamentDetail = () => {
         const myPhaseTabKey = myGroup?.phase === 'finals' ? 'finale' : 'fase'
         const USER_TABS = isGroupStageView
             ? [
-                { key: 'riepilogo', label: 'Riepilogo', icon: LayoutDashboard },
                 ...(myGroup ? [{ key: myPhaseTabKey, label: groupLabel(myGroup.groupName), icon: myGroup.phase === 'finals' ? Trophy : Users }] : []),
                 { key: 'generale', label: 'Classifica Generale', icon: BarChart3 },
                 ...(hasCardHistory ? [{ key: 'carte', label: 'Carte', icon: Zap }] : []),
             ]
             : [
-                { key: 'riepilogo', label: 'Riepilogo', icon: LayoutDashboard },
                 { key: 'classifica', label: 'Classifica', icon: BarChart3 },
                 { key: 'gare', label: 'Gare', icon: ListChecks },
+                { key: 'circuiti', label: 'Circuiti', icon: MapPin },
                 ...(hasCardHistory ? [{ key: 'carte', label: 'Carte', icon: Zap }] : []),
             ]
 
@@ -520,35 +515,6 @@ const TournamentDetail = () => {
                             </button>
                         ))}
                     </div>
-
-                    {/* ── TAB: Riepilogo ── */}
-                    {userTab === 'riepilogo' && (
-                        <div className="space-y-6">
-                            <TournamentInfoPanel tournament={tournament} isAdmin={isAdmin} isSuperadmin={isSuperadmin} collapsible defaultOpen />
-
-                            {tournamentStatus === 'in_corso' && (
-                                <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 p-5 flex items-center gap-3 shadow-sm">
-                                    <Clock size={20} className="shrink-0 text-amber-500 dark:text-amber-400" />
-                                    <div>
-                                        <p className="text-sm font-black uppercase tracking-widest text-amber-700 dark:text-amber-300">Torneo in corso</p>
-                                        <p className="text-xs text-amber-600 dark:text-amber-400">I risultati completi saranno visibili a torneo concluso.</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Circuiti — solo classic: nei gironi sono nella tab della fase, non nel Riepilogo */}
-                            {!isGroupStageView && myCircuitsView && (
-                                <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} collapsible defaultOpen onRefresh={refresh} refreshing={loading} />
-                            )}
-
-                            {/* Se non ci sono classifiche/gare, mostra lo stesso placeholder */}
-                            {!myStandingsView && (tournament.standings?.length ?? 0) === 0 && (tournament.races?.length ?? 0) === 0 && (
-                                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-8 text-center shadow-sm">
-                                    <p className="text-sm text-slate-500 dark:text-muted-foreground">Nessuna gara ancora disponibile per questo torneo.</p>
-                                </div>
-                            )}
-                        </div>
-                    )}
 
                     {/* ── TAB: Classifica ── */}
                     {userTab === 'classifica' && (
@@ -696,7 +662,12 @@ const TournamentDetail = () => {
                                     </div>
                                 </div>
                             )}
+                        </div>
+                    )}
 
+                    {/* ── TAB: Circuiti — solo classic: nei gironi sono già nella tab della fase ── */}
+                    {userTab === 'circuiti' && (
+                        <div className="space-y-6">
                             {myCircuitsView && (
                                 <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} onRefresh={refresh} refreshing={loading} />
                             )}
@@ -1017,29 +988,27 @@ const TournamentDetail = () => {
 
                 <div className="rounded-3xl border border-slate-200 dark:border-border bg-white/90 dark:bg-card/90 backdrop-blur-sm p-6 md:p-8">
 
-                <TournamentInfoPanel tournament={tournament} isAdmin={isAdmin} isSuperadmin={isSuperadmin} showOverviewBasics={false} />
-
                 <div className="rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-3" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                     <div className="flex flex-wrap items-center gap-2 md:gap-3">
                         <span className="font-title select-none px-2 text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-muted-foreground/70 cursor-default">Gestione torneo</span>
                         <div className="inline-flex flex-wrap rounded-xl bg-slate-100 dark:bg-muted p-1 overflow-x-auto max-w-full gap-0.5">
                             {[
+                                // Le più usate in cima: inserire risultati, consultare la
+                                // classifica e le carte sono le azioni ricorrenti; il resto
+                                // (setup una tantum, casi limite, servizi) segue dopo.
                                 ...(isAdmin ? (
                                     tournament.tournament_format === 'group_stage'
-                                        ? [
-                                            { key: 'setup', label: 'Impostazioni', icon: Settings },
-                                            { key: 'gironi', label: 'Gironi/Fasi', icon: Flag },
-                                        ]
-                                        : [
-                                            { key: 'setup', label: 'Impostazioni', icon: Settings },
-                                            { key: 'gare', label: 'Risultati', icon: Flag },
-                                            { key: 'duelli', label: 'Duelli', icon: Swords },
-                                            { key: 'finale', label: 'Finale', icon: Crown },
-                                        ]
+                                        ? [{ key: 'gironi', label: 'Gironi/Fasi', icon: Flag }]
+                                        : [{ key: 'gare', label: 'Risultati', icon: Flag }]
                                 ) : []),
                                 { key: 'leaderboard', label: 'Classifica', icon: BarChart3 },
-                                { key: 'races', label: 'Gare', icon: ListChecks },
                                 { key: 'carte', label: 'Carte', icon: Zap },
+                                { key: 'races', label: 'Gare', icon: ListChecks },
+                                ...(isAdmin ? [{ key: 'setup', label: 'Impostazioni', icon: Settings }] : []),
+                                ...(isAdmin && tournament.tournament_format !== 'group_stage' ? [
+                                    { key: 'duelli', label: 'Duelli', icon: Swords },
+                                    { key: 'finale', label: 'Verdetto', icon: Crown },
+                                ] : []),
                                 ...(isAdmin ? [{ key: 'schedina', label: 'Schedine', icon: ListChecks }] : []),
                             ].map(({ key, label, icon: Icon }) => (
                                 <button key={key} type="button" onClick={() => setActiveSection(key)}
@@ -1142,7 +1111,7 @@ const TournamentDetail = () => {
                 )}
 
                 {isAdmin && activeSection === 'finale' && (
-                    <CollapsibleSection title="Classifica finale" icon={<Crown size={16} />} defaultOpen>
+                    <CollapsibleSection title="Verdetto" icon={<Crown size={16} />} defaultOpen>
                         <div className="space-y-4">
                             <WinnerFinalizeCard tournament={tournament} leader={currentLeader} onFinalized={handleFinalized} onReplayCelebration={handleReplayCelebration} />
                             <TournamentResolutionNotes tournament={tournament} />
@@ -1194,27 +1163,30 @@ const TournamentDetail = () => {
                     <div className="space-y-4">
                         {tournament.tournament_format === 'group_stage' ? (
                             <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm">
-                                <p className="mb-4 text-xs font-black uppercase tracking-[0.3em] text-slate-400 dark:text-muted-foreground">Classifiche · per fase</p>
+                                <div className="mb-4 flex items-center justify-between gap-3">
+                                    <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400 dark:text-muted-foreground">Classifiche · per fase</p>
+                                    <RefreshButton onClick={refresh} loading={loading} />
+                                </div>
                                 <GroupPlancia tournament={tournament} players={players} results={results} highlightPlayerId={myPlayerId} />
                             </div>
                         ) : (
-                        <div className="grid gap-4 xl:grid-cols-[1.65fr_1fr] items-stretch max-h-160 min-h-0">
-                            <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-1 shadow-sm h-full min-h-0 overflow-hidden">
-                                <LeaderboardTable
-                                    rows={tournament.standings}
-                                    showTournamentWins={false}
-                                    charactersById={charactersById}
-                                    highlightPlayerId={user?.player_id ?? user?.player?.id ?? null}
-                                    isSuperadmin={isSuperadmin}
-                                    onPlayerClick={handlePlayerClick}
-                                />
+                            <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden shadow-sm">
+                                <div className="px-5 py-4 border-b border-slate-100 dark:border-border flex items-center justify-between">
+                                    <p className="text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Classifica</p>
+                                    <RefreshButton onClick={refresh} loading={loading} />
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <LeaderboardTable
+                                        rows={tournament.standings}
+                                        showTournamentWins={false}
+                                        charactersById={charactersById}
+                                        highlightPlayerId={user?.player_id ?? user?.player?.id ?? null}
+                                        isSuperadmin={isSuperadmin}
+                                        onPlayerClick={handlePlayerClick}
+                                    />
+                                </div>
                             </div>
-
-                            <AlgorithmAnalysisPanel tournament={tournament} />
-                        </div>
                         )}
-
-
                     </div>
                 )}
 

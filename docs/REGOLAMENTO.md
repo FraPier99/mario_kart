@@ -160,10 +160,10 @@ Ogni giocatore ha un badge di livello **per ogni gioco** (`game_id`), calcolato 
 | **CAMPIONE** | ha vinto almeno un torneo concluso di quel gioco |
 | **VETERANO** | non ha mai vinto, ma è arrivato sul podio (primi 3 posti) in almeno metà dei tornei conclusi giocati |
 | **OUTSIDER** | non ha mai vinto, ha fatto almeno un podio, ma meno spesso della metà dei tornei giocati |
-| **SFIDANTE** | ha giocato almeno un torneo concluso ma non è mai arrivato sul podio |
-| **ESORDIENTE** | non ha ancora giocato un torneo concluso di quel gioco |
+| **ESORDIENTE** | ha giocato almeno un torneo concluso ma non è mai arrivato sul podio |
+| **SFIDANTE** | non ha ancora giocato un torneo concluso di quel gioco |
 
-Il badge di un gioco non influenza quello di un altro: si può essere Leggenda su un gioco ed Esordiente su un altro.
+Il badge di un gioco non influenza quello di un altro: si può essere Leggenda su un gioco e Sfidante su un altro.
 
 ---
 

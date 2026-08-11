@@ -28,8 +28,8 @@ const BADGE_TIERS_FAQ = [
     { tier: 'CAMPIONE', Icon: Trophy, color: 'text-amber-600 dark:text-amber-400', desc: 'Ha vinto almeno un torneo concluso di quel gioco (ma non tutti).' },
     { tier: 'VETERANO', Icon: Star, color: 'text-blue-600 dark:text-blue-400', desc: 'Non ha mai vinto, ma è arrivato sul podio (primi 3 posti) in almeno metà dei tornei conclusi giocati.' },
     { tier: 'OUTSIDER', Icon: Flame, color: 'text-violet-600 dark:text-violet-400', desc: 'Non ha mai vinto, ha fatto almeno un podio, ma meno spesso della metà dei tornei giocati.' },
-    { tier: 'SFIDANTE', Icon: Swords, color: 'text-slate-500 dark:text-muted-foreground', desc: 'Ha giocato almeno un torneo concluso ma non è mai arrivato sul podio.' },
-    { tier: 'ESORDIENTE', Icon: FlagIcon, color: 'text-emerald-600 dark:text-emerald-400', desc: 'Non ha ancora giocato un torneo concluso di quel gioco (e quel gioco ha comunque almeno un torneo creato).' },
+    { tier: 'ESORDIENTE', Icon: FlagIcon, color: 'text-emerald-600 dark:text-emerald-400', desc: 'Ha giocato almeno un torneo concluso ma non è mai arrivato sul podio.' },
+    { tier: 'SFIDANTE', Icon: Swords, color: 'text-slate-500 dark:text-muted-foreground', desc: 'Non ha ancora giocato un torneo concluso di quel gioco (e quel gioco ha comunque almeno un torneo creato).' },
 ]
 
 // Struttura a due livelli: le voci con `children` sono un'etichetta di
@@ -281,7 +281,7 @@ const Faq = () => {
                                 <SectionHeading>Badge</SectionHeading>
                                 <p className="mt-3 text-sm text-slate-600 dark:text-muted-foreground">
                                     Ogni giocatore ha un badge di livello <strong>per ogni gioco</strong>, calcolato sui soli
-                                    tornei conclusi a cui ha partecipato — si può essere Leggenda su un gioco ed Esordiente
+                                    tornei conclusi a cui ha partecipato — si può essere Leggenda su un gioco e Sfidante
                                     su un altro. Un gioco senza nessun torneo creato non produce alcun badge.
                                 </p>
                                 <div className="mt-5 space-y-3">

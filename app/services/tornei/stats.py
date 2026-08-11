@@ -231,7 +231,7 @@ def get_circuit_stats_detail(db: Session, circuit_id: int):
 # Ordine dal più al meno esclusivo: usato sia per determinare il tier (primo
 # predicato che risulta vero) sia lato frontend per scegliere il "badge
 # migliore" fra più giochi.
-BADGE_TIER_RANK = ["leggenda", "campione", "veterano", "outsider", "sfidante", "esordiente"]
+BADGE_TIER_RANK = ["leggenda", "campione", "veterano", "outsider", "esordiente", "sfidante"]
 
 # Soglia di vittorie totali che garantisce Leggenda a prescindere dalla
 # percentuale (in OR con la regola "100% dei tornei giocati") — un solo
@@ -250,7 +250,7 @@ _BADGE_LABELS = {
 
 def _badge_tier_from_stats(tournaments_played: int, wins: int, podiums: int) -> str:
     if tournaments_played == 0:
-        return "esordiente"
+        return "sfidante"
     if wins == tournaments_played or wins >= LEGGENDA_MIN_WINS:
         return "leggenda"
     if wins > 0:
@@ -260,7 +260,7 @@ def _badge_tier_from_stats(tournaments_played: int, wins: int, podiums: int) -> 
         return "veterano"
     if podiums > 0:
         return "outsider"
-    return "sfidante"
+    return "esordiente"
 
 
 def get_player_game_badge(db: Session, player_id: int, game_id: int) -> dict:
@@ -280,8 +280,9 @@ def get_player_game_badge(db: Session, player_id: int, game_id: int) -> dict:
     # tornei più vecchi hanno gare/risultati reali ma nessuna riga
     # TournamentPlayer (gap di dati storico), e un giocatore che ha
     # effettivamente giocato — e persino vinto — un torneo del genere non
-    # deve risultare "esordiente". Result/Race è anche la fonte già usata da
-    # tutte le altre query di questo file (get_leaderboard, head-to-head, ...).
+    # deve risultare "sfidante" (0 tornei giocati). Result/Race è anche la
+    # fonte già usata da tutte le altre query di questo file (get_leaderboard,
+    # head-to-head, ...).
     tournament_ids = {
         row[0]
         for row in db.query(Race.tournament_id)
@@ -330,8 +331,8 @@ def get_player_game_badge(db: Session, player_id: int, game_id: int) -> dict:
 def get_player_badges(db: Session, player_id: int) -> list[dict]:
     """Badge del giocatore per ogni gioco che ha almeno un torneo (di
     qualunque stato). Un gioco senza tornei non produce alcun badge: un
-    tier come "esordiente" sarebbe rumore privo di significato per un gioco
-    che nessuno ha mai potuto giocare."""
+    tier come "sfidante" (0 tornei giocati) sarebbe rumore privo di
+    significato per un gioco che nessuno ha mai potuto giocare."""
     game_ids_with_tournaments = {
         row[0] for row in db.query(Tournament.game_id).distinct().all()
     }
