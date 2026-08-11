@@ -252,7 +252,7 @@ const Faq = () => {
 
                                 <SubHeading>Regole comuni a entrambi i formati</SubHeading>
                                 <p className="text-sm text-slate-700 dark:text-muted-foreground">
-                                    Massimo <strong>1 carta potere in totale</strong> per giocatore per torneo (non per fase), le carte non si possono usare nelle gare di spareggio/duello, e la schedina si chiude quando il torneo inizia (nessuna deadline automatica a tempo — decide l'admin).
+                                    Ogni carta ha un numero di usi proprio (Carta Master 1 uso, Guscio Blu fino a 3 nello stesso torneo — vedi la sezione <strong>Card</strong>), le carte non si possono usare nelle gare di spareggio/duello, e la schedina si chiude quando il torneo inizia (nessuna deadline automatica a tempo — decide l'admin).
                                 </p>
                             </div>
                         )}
@@ -271,7 +271,7 @@ const Faq = () => {
 
                                 <SubHeading>Regole comuni a entrambi i formati</SubHeading>
                                 <p className="text-sm text-slate-700 dark:text-muted-foreground">
-                                    Massimo <strong>1 carta potere in totale</strong> per giocatore per torneo (non per fase), le carte non si possono usare nelle gare di spareggio/duello, e la schedina si chiude quando il torneo inizia (nessuna deadline automatica a tempo — decide l'admin).
+                                    Ogni carta ha un numero di usi proprio (Carta Master 1 uso, Guscio Blu fino a 3 nello stesso torneo — vedi la sezione <strong>Card</strong>), le carte non si possono usare nelle gare di spareggio/duello, e la schedina si chiude quando il torneo inizia (nessuna deadline automatica a tempo — decide l'admin).
                                 </p>
                             </div>
                         )}
@@ -370,19 +370,24 @@ const Faq = () => {
                                     <PowerCard type="guscio" mode="flip" flipped={flippedCard === 'guscio'} onFlip={() => setFlippedCard(flippedCard === 'guscio' ? null : 'guscio')} />
                                 </div>
 
-                                <SubHeading>Tipi di carta</SubHeading>
-                                <div className="space-y-3 text-sm text-slate-700 dark:text-muted-foreground">
-                                    <p><strong className="text-slate-900 dark:text-foreground">Carta Master:</strong> assegnata a chi vince la schedina. Permette di bannare una pista o imporre un personaggio nel torneo successivo.</p>
-                                    <p><strong className="text-slate-900 dark:text-foreground">Guscio Blu:</strong> assegnata a chi arriva ultimo (e penultimo, con 7+ partecipanti). Fissa una pista come invulnerabile al ban nel torneo successivo.</p>
-                                </div>
-
-                                <SubHeading>Come si usano</SubHeading>
+                                <SubHeading>Carta Master — 1 uso, tre effetti a scelta</SubHeading>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground">Assegnata a chi vince la schedina (e ai pari merito). Chi la possiede sceglie <strong>uno</strong> dei tre effetti al momento dell'uso:</p>
                                 <ul className="list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-muted-foreground">
-                                    <li><strong className="text-slate-900 dark:text-foreground">Un solo gioco alla volta:</strong> massimo 1 carta in totale per giocatore per torneo, indipendentemente dal tipo o dal formato del torneo.</li>
+                                    <li><strong className="text-slate-900 dark:text-foreground">Annulla pista:</strong> invalida la pista scelta da un avversario per la sua prossima gara e la sostituisce con quella scelta dal possessore della carta.</li>
+                                    <li><strong className="text-slate-900 dark:text-foreground">Impone personaggio:</strong> obbliga un avversario a usare, per una gara, il personaggio scelto dal possessore della carta.</li>
+                                    <li><strong className="text-slate-900 dark:text-foreground">Gara extra:</strong> aggiunge una gara a fine torneo (nessun bersaglio).</li>
+                                </ul>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground">I primi due effetti possono essere dichiarati dall'admin anche prima che la gara che devono influenzare esista: restano "in sospeso" e vengono applicati automaticamente alla prossima gara che coinvolge il bersaglio scelto.</p>
+
+                                <SubHeading>Guscio Blu — fino a 3 usi nello stesso torneo</SubHeading>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground">Assegnata a chi arriva ultimo (e al penultimo, con 7+ partecipanti). Un solo effetto: <strong className="text-slate-900 dark:text-foreground">tutti i giocatori tranne chi la usa restano fermi per un giro</strong> — chi la usa parte con un giro pieno di vantaggio, gli altri partono quando il primo inizia il secondo giro (regola di gioco dal vivo: il tracker registra soltanto l'uso). Può essere attivata fino a 3 volte nello stesso torneo; una volta usata la prima volta, gli usi restanti restano vincolati a quel torneo e non si possono risparmiare per uno successivo.</p>
+
+                                <SubHeading>Limiti generali</SubHeading>
+                                <ul className="list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-muted-foreground">
                                     <li><strong className="text-slate-900 dark:text-foreground">Stesso gioco:</strong> una carta vinta in un gioco (es. Mario Kart DS) non si può usare in un torneo di un altro gioco.</li>
                                     <li><strong className="text-slate-900 dark:text-foreground">Niente spareggi:</strong> le carte non si possono usare nelle gare di Duello/spareggio.</li>
                                 </ul>
-                                <p className="mt-5 text-center text-[10px] text-slate-400 dark:text-slate-500">Le carte vengono attivate dall'organizzatore nella pagina di gestione del torneo. Una volta consumate non sono più recuperabili.</p>
+                                <p className="mt-5 text-center text-[10px] text-slate-400 dark:text-slate-500">Le carte vengono attivate dall'organizzatore nella pagina di gestione del torneo. Una volta esauriti tutti gli usi non sono più recuperabili.</p>
                             </div>
                         )}
                     </div>

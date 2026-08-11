@@ -894,6 +894,44 @@ def ensure_result_position_constraint_deferrable():
             )
 
 
+def ensure_inventory_uses_columns():
+    """Guscio Blu ora si può attivare fino a max_uses volte nello stesso
+    torneo (vedi CARD_META in services/cards/inventory.py) invece di un
+    singolo uso — e il "bersaglio" che il modale raccoglieva ma non
+    salvava mai ora ha una colonna. Le righe già esistenti erano tutte a
+    uso singolo: backfill uses_remaining=0 per quelle già consumate,
+    altrimenti resterebbero col default 1 pur essendo già state usate."""
+    inspector = inspect(engine)
+    inventory_columns = {
+        column_info["name"] for column_info in inspector.get_columns("user_inventory")
+    }
+
+    with engine.begin() as connection:
+        if "max_uses" not in inventory_columns:
+            connection.execute(
+                text(
+                    "ALTER TABLE user_inventory ADD COLUMN max_uses INTEGER NOT NULL DEFAULT 1"
+                )
+            )
+        if "uses_remaining" not in inventory_columns:
+            connection.execute(
+                text(
+                    "ALTER TABLE user_inventory ADD COLUMN uses_remaining INTEGER NOT NULL DEFAULT 1"
+                )
+            )
+            connection.execute(
+                text(
+                    "UPDATE user_inventory SET uses_remaining = 0 WHERE is_consumed = TRUE"
+                )
+            )
+        if "target_player_id" not in inventory_columns:
+            connection.execute(
+                text(
+                    "ALTER TABLE user_inventory ADD COLUMN target_player_id INTEGER REFERENCES players(id)"
+                )
+            )
+
+
 def bootstrap_database():
     create_tables()
     ensure_player_img_url_column()
@@ -931,6 +969,7 @@ def bootstrap_database():
     ensure_user_r4_devices_quantity_column()
     ensure_user_ownership_declared_at_column()
     ensure_result_position_constraint_deferrable()
+    ensure_inventory_uses_columns()
     # seed_circuits()
     seed_mk8d_data()
     rename_mkds_circuits_to_italian()

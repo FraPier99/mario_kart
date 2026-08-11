@@ -13,6 +13,8 @@ import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import ApiBanner from '@/components/common/ApiBanner'
 import ClassicRaceForm from '@/components/tournaments/ClassicRaceForm'
+import CircuitPicker from '@/components/tournaments/CircuitPicker'
+import CharacterPicker from '@/components/tournaments/CharacterPicker'
 import TournamentParticipantsManager from '@/components/tournaments/TournamentParticipantsManager'
 import WithdrawalManager from '@/components/tournaments/WithdrawalManager'
 import ResultEntryForm from '@/components/tournaments/ResultEntryForm'
@@ -249,11 +251,15 @@ const TournamentDetail = () => {
 
     const {
         inventory, localCardLog, showCardModal, setShowCardModal, selectedCard,
-        cardEffectOption, setCardEffectOption, cardEffectCustom, setCardEffectCustom,
+        cardEffectOption, setCardEffectOption,
         cardTargetId, setCardTargetId, cardEffectOwner, setCardEffectOwner,
-        cardRaceId, setCardRaceId, usingCard, availableCards, cardHolders, cardHistory,
-        cardTypeHolders, openCardModal, handleUseCard,
-    } = useTournamentCards({ tournamentId, tournamentStatus, tournamentParticipants, tournament, user })
+        cardRaceId, setCardRaceId,
+        cardImposedCircuitId, setCardImposedCircuitId,
+        cardImposedCharacterId, setCardImposedCharacterId,
+        selectedEffectDef,
+        usingCard, availableCards, cardHolders, cardHistory,
+        cardTypeHolders, pendingEffects, refreshPendingEffects, openCardModal, handleUseCard,
+    } = useTournamentCards({ tournamentId, tournamentStatus, tournamentParticipants, tournament, user, refresh })
 
     // Carica superadmin player IDs per escluderli dalla lista partecipanti.
     // listUsers() (/auth/users) è riservato al superadmin: per un admin
@@ -814,7 +820,7 @@ const TournamentDetail = () => {
                             <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-slate-400">Effetto applicato</span>
                             <PortalSelect
                                 value={cardEffectOption}
-                                onChange={(v) => { setCardEffectOption(v); setCardEffectCustom('') }}
+                                onChange={setCardEffectOption}
                                 placeholder="Seleziona effetto…"
                                 options={(selectedCard.card_type === 'master' ? MASTER_EFFECTS : SHELL_EFFECTS).map((e) => ({
                                     value: e.value,
@@ -823,56 +829,70 @@ const TournamentDetail = () => {
                             />
                         </label>
 
-                        {cardEffectOption === 'custom' && (
+                        {/* Bersaglio — solo per gli effetti che colpiscono un avversario */}
+                        {selectedEffectDef?.needsTarget && (
                             <label className="block space-y-1.5">
-                                <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-slate-400">Descrivi l'effetto</span>
-                                <input
-                                    type="text"
-                                    value={cardEffectCustom}
-                                    onChange={(e) => setCardEffectCustom(e.target.value)}
-                                    placeholder="Es. Annulla la penalizzazione della gara 3"
-                                    className="w-full rounded-xl border-2 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-3 text-sm text-slate-900 dark:text-white outline-none focus:border-amber-400 placeholder:text-slate-400"
+                                <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-slate-400">Giocatore bersaglio</span>
+                                <PortalSelect
+                                    value={cardTargetId}
+                                    onChange={setCardTargetId}
+                                    placeholder="Seleziona bersaglio…"
+                                    options={tournamentParticipants
+                                        .filter((p) => String(p.id) !== String(cardEffectOwner))
+                                        .map((p) => ({ value: p.id, label: p.nickname }))}
                                 />
                             </label>
                         )}
 
-                        {/* Bersaglio */}
-                        <label className="block space-y-1.5">
-                            <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-slate-400">
-                                {selectedCard.card_type === 'master' ? 'Beneficiario / contesto (opzionale)' : 'Giocatore bersaglio'}
-                            </span>
-                            <PortalSelect
-                                value={cardTargetId}
-                                onChange={setCardTargetId}
-                                placeholder="Nessun bersaglio specifico"
-                                options={[
-                                    { value: '', label: 'Nessun bersaglio specifico' },
-                                    ...tournamentParticipants
-                                        .filter((p) => String(p.id) !== String(cardEffectOwner))
-                                        .map((p) => ({ value: p.id, label: p.nickname })),
-                                ]}
-                            />
-                        </label>
+                        {/* Pista imposta — solo ban_pista */}
+                        {selectedEffectDef?.needsCircuit && (
+                            <label className="block space-y-1.5">
+                                <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-slate-400">Pista imposta al bersaglio</span>
+                                <CircuitPicker
+                                    circuits={tournamentCircuits}
+                                    value={cardImposedCircuitId}
+                                    onChange={setCardImposedCircuitId}
+                                    label="Pista imposta"
+                                    placeholder="Seleziona una pista"
+                                />
+                            </label>
+                        )}
 
-                        {/* Gara — collega l'uso allo storico carte per fase/gara */}
-                        <label className="block space-y-1.5">
-                            <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-slate-400">Gara (opzionale)</span>
-                            <PortalSelect
-                                value={cardRaceId}
-                                onChange={setCardRaceId}
-                                placeholder="Nessuna gara specifica"
-                                options={[
-                                    { value: '', label: 'Nessuna gara specifica' },
-                                    ...(tournament.races ?? [])
+                        {/* Personaggio imposto — solo imponi_personaggio */}
+                        {selectedEffectDef?.needsCharacter && (
+                            <label className="block space-y-1.5">
+                                <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-slate-400">Personaggio imposto al bersaglio</span>
+                                <CharacterPicker
+                                    characters={charactersByGameId.get(tournament?.game_id ?? 0) ?? []}
+                                    value={cardImposedCharacterId}
+                                    onChange={setCardImposedCharacterId}
+                                />
+                            </label>
+                        )}
+                        {(selectedEffectDef?.needsCircuit || selectedEffectDef?.needsCharacter) && (
+                            <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                                Nessuna gara da scegliere ora: questo effetto verrà proposto in automatico alla prossima gara creata che coinvolge il bersaglio.
+                            </p>
+                        )}
+
+                        {/* Gara — solo per gli effetti retroattivi su una gara già esistente (Guscio Blu) */}
+                        {selectedEffectDef?.needsRace && (
+                            <label className="block space-y-1.5">
+                                <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-slate-400">Gara</span>
+                                <PortalSelect
+                                    value={cardRaceId}
+                                    onChange={setCardRaceId}
+                                    placeholder="Seleziona la gara…"
+                                    options={(tournament.races ?? [])
                                         .slice()
                                         .sort((a, b) => (a.race_order ?? 0) - (b.race_order ?? 0))
                                         .map((r) => ({
                                             value: r.id,
                                             label: `Gara ${r.race_order ?? r.id}${r.group_name ? ` · ${groupLabel(r.group_name)}` : ''}${r.name ? ` — ${r.name}` : ''}`,
-                                        })),
-                                ]}
-                            />
-                        </label>
+                                        }))}
+                                />
+                            </label>
+                        )}
                     </div>
 
                     <div className="mt-5 flex gap-3">
@@ -881,7 +901,13 @@ const TournamentDetail = () => {
                             Annulla
                         </button>
                         <button type="button" onClick={handleUseCard}
-                            disabled={usingCard || !cardEffectOption || !cardEffectOwner || (cardEffectOption === 'custom' && !cardEffectCustom.trim())}
+                            disabled={
+                                usingCard || !cardEffectOption || !cardEffectOwner ||
+                                (selectedEffectDef?.needsTarget && !cardTargetId) ||
+                                (selectedEffectDef?.needsCircuit && !cardImposedCircuitId) ||
+                                (selectedEffectDef?.needsCharacter && !cardImposedCharacterId) ||
+                                (selectedEffectDef?.needsRace && !cardRaceId)
+                            }
                             className={`font-title flex-1 rounded-xl border-2 border-black/20 px-4 py-2.5 text-[11px] tracking-wide text-white transition bg-gradient-to-r active:translate-y-px disabled:opacity-50 disabled:cursor-not-allowed ${selectedCard.card_type === 'master' ? 'from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400' : 'from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400'}`}
                             style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                             {usingCard ? 'Registrazione…' : 'Registra uso'}
@@ -1096,7 +1122,7 @@ const TournamentDetail = () => {
                                 </button>
                             </div>
                         </div>
-                        <ClassicRaceForm tournamentId={tournament.id} races={tournament.races} nPlayers={tournament.n_players} participants={activeTournamentParticipants} circuits={tournamentCircuits} characters={charactersByGameId.get(tournament?.game_id ?? 0) ?? []} disabled={isTournamentLocked} onSaved={refresh} />
+                        <ClassicRaceForm tournamentId={tournament.id} races={tournament.races} nPlayers={tournament.n_players} participants={activeTournamentParticipants} circuits={tournamentCircuits} characters={charactersByGameId.get(tournament?.game_id ?? 0) ?? []} disabled={isTournamentLocked} pendingEffects={pendingEffects} onCardEffectsResolved={refreshPendingEffects} onSaved={refresh} />
 
                         {/* Fallback per gare incomplete create col vecchio flusso (un
                         risultato alla volta): ClassicRaceForm crea sempre gara +

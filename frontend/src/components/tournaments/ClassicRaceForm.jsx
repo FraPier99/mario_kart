@@ -23,12 +23,17 @@
  *   characters   {array}     — personaggi del gioco [{id, name, img_url}]
  *   disabled     {boolean}   — torneo non in corso: form visibile ma bloccato
  *   editingRace  {object?}   — gara da modificare (con .results popolati); assente = crea
+ *   pendingEffects {array}   — effetti Master (ban_pista/imponi_personaggio) dichiarati
+ *                               ma non ancora collegati a una gara (solo modalità creazione:
+ *                               vedi inventoryApi.tournamentPendingEffects) — proposti in
+ *                               automatico e risolti al salvataggio se il bersaglio corre in questa gara
  *   onSaved      {function}  — callback dopo submit riuscito (creazione o modifica)
+ *   onCardEffectsResolved {function} — callback dopo aver collegato effetti in sospeso a questa gara
  */
 import { useState, useMemo } from 'react'
-import { AlertCircle, CheckCircle2, Loader2, Flag, Users, Trophy } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Loader2, Flag, Shield, Users, Trophy } from 'lucide-react'
 import { toast } from 'sonner'
-import { racesApi, resultsApi, getApiErrorMessage } from '@/services/apiClient'
+import { racesApi, resultsApi, inventoryApi, getApiErrorMessage } from '@/services/apiClient'
 import { getPlayerPreviousCharacterId, resolveFavoriteCharacterId } from '@/lib/raceEntry'
 import { computePunteggi, medalFor, hasPunteggi } from '@/lib/punteggi'
 import CircuitPicker from '@/components/tournaments/CircuitPicker'
@@ -36,7 +41,7 @@ import CharacterPicker from '@/components/tournaments/CharacterPicker'
 import ClickRankRow from '@/components/common/ClickRankRow'
 import { useAppData } from '@/context/AppDataContext'
 
-const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = [], circuits = [], characters = [], disabled = false, editingRace = null, onSaved }) => {
+const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = [], circuits = [], characters = [], disabled = false, editingRace = null, pendingEffects = [], onSaved, onCardEffectsResolved }) => {
     const { results } = useAppData()
     const isEditing = Boolean(editingRace)
 
@@ -74,6 +79,24 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
     const noCircuitsLeft = circuits.length > 0 && availableCircuits.length === 0
 
     const playerMap = useMemo(() => new Map(participants.map((p) => [p.id, p])), [participants])
+
+    // Effetti Master "in sospeso" (ban_pista/imponi_personaggio) che riguardano
+    // un partecipante di QUESTA gara — solo in creazione: in modifica l'ordine
+    // dei piloti è già quello della gara esistente, un cambio pista/pg
+    // retroattivo non avrebbe senso qui.
+    const relevantPendingEffects = useMemo(() => {
+        if (isEditing) return []
+        const participantIds = new Set(participants.map((p) => p.id))
+        return pendingEffects.filter((e) => participantIds.has(e.target_player_id))
+    }, [isEditing, pendingEffects, participants])
+    const pendingCircuitEffects = relevantPendingEffects.filter((e) => e.imposed_circuit_id != null)
+    const pendingCharacterEffectsByTarget = useMemo(() => {
+        const map = new Map()
+        relevantPendingEffects
+            .filter((e) => e.imposed_character_id != null)
+            .forEach((e) => map.set(e.target_player_id, e))
+        return map
+    }, [relevantPendingEffects])
 
     // Il personaggio "precedente" si calcola al VOLO quando un pilota viene
     // piazzato (stesso approccio di GroupRaceForm.setSlotPlayer), non con un
@@ -152,6 +175,13 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
                     }))
                 )
 
+                if (relevantPendingEffects.length > 0) {
+                    await Promise.all(
+                        relevantPendingEffects.map((e) => inventoryApi.resolveCardUsage(e.id, raceId))
+                    )
+                    onCardEffectsResolved?.()
+                }
+
                 toast.success(`Gara ${nextRaceOrder} inserita!`, {
                     description: circuits.find((c) => String(c.id) === String(circuitId))?.name ?? '',
                 })
@@ -219,6 +249,31 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
                     </div>
                 )}
 
+                {/* Effetti Master in sospeso su una pista — proposti alla prima gara che coinvolge il bersaglio */}
+                {pendingCircuitEffects.length > 0 && (
+                    <div className="rounded-2xl border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 space-y-2">
+                        {pendingCircuitEffects.map((e) => {
+                            const imposedCircuit = circuits.find((c) => c.id === e.imposed_circuit_id)
+                            return (
+                                <div key={e.id} className="flex flex-wrap items-center justify-between gap-2">
+                                    <p className="flex items-center gap-1.5 text-xs text-amber-800 dark:text-amber-300">
+                                        <Shield size={12} className="shrink-0" />
+                                        Pista imposta da Carta Master di <strong>{e.owner_nickname}</strong> su{' '}
+                                        <strong>{e.target_nickname}</strong>: {imposedCircuit?.name ?? `#${e.imposed_circuit_id}`}
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setCircuitId(String(e.imposed_circuit_id)); setErrors([]) }}
+                                        className="shrink-0 rounded-lg bg-amber-500 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-white transition hover:bg-amber-400"
+                                    >
+                                        Applica
+                                    </button>
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
+
                 {/* Circuito */}
                 <div className="space-y-1.5">
                     {noCircuitsLeft ? (
@@ -246,9 +301,11 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
 
                     {placed.length > 0 && (
                         <div className="space-y-2">
-                            {placed.map((p, idx) => (
+                            {placed.map((p, idx) => {
+                                const pendingCharacterEffect = pendingCharacterEffectsByTarget.get(p.id)
+                                return (
                                 <div key={p.id} className="flex items-center gap-2">
-                                    <div className="min-w-0 flex-1">
+                                    <div className="min-w-0 flex-1 space-y-1">
                                         <ClickRankRow
                                             player={p}
                                             pos={idx}
@@ -256,6 +313,16 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
                                             complete={order.length === participants.length}
                                             onToggle={toggleRank}
                                         />
+                                        {pendingCharacterEffect && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setPlayerCharacter(p.id, pendingCharacterEffect.imposed_character_id)}
+                                                className="flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-400 pl-1"
+                                            >
+                                                <Shield size={11} className="shrink-0" />
+                                                PG imposto da Carta Master di {pendingCharacterEffect.owner_nickname}: {characters.find((c) => c.id === pendingCharacterEffect.imposed_character_id)?.name ?? `#${pendingCharacterEffect.imposed_character_id}`} — applica
+                                            </button>
+                                        )}
                                     </div>
                                     {characters.length > 0 && (
                                         <CharacterPicker
@@ -271,7 +338,8 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
                                         </div>
                                     )}
                                 </div>
-                            ))}
+                                )
+                            })}
                         </div>
                     )}
 

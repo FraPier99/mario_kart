@@ -110,11 +110,28 @@ Prerequisiti:
 
 ### 2.5 Carte potere
 
-- [ ] Un utente con una carta in inventario la usa su una gara → effetto
-      applicato e registrato
-- [ ] Lo stesso utente tenta una **seconda carta nello stesso torneo** →
-      rifiutato (max 1 carta per giocatore per torneo, di qualunque tipo)
+- [ ] Carta **Master**, effetto "annulla pista": l'admin la registra scegliendo
+      un avversario bersaglio e la pista imposta, **senza scegliere una gara**
+      → resta "in sospeso". Alla creazione della prossima gara con quel
+      bersaglio tra i partecipanti, il banner compare in `ClassicRaceForm` e
+      "Applica" preseleziona la pista; al salvataggio la carta risulta
+      consumata e collegata a quella gara
+- [ ] Stesso flusso per l'effetto "impone personaggio" (indicatore per riga
+      pilota invece del banner sopra il circuito)
+- [ ] Carta **Master**, effetto "gara extra": si applica subito, nessun
+      bersaglio/gara richiesti — `tournament.n_races` aumenta di 1 e la carta
+      risulta consumata immediatamente
+- [ ] Carta **Guscio Blu**: un solo effetto ("tutti fermi per un giro"), va
+      collegata a una gara già esistente. Usarla **fino a 3 volte nello
+      stesso torneo** → consentito; il 4° tentativo → rifiutato (carta
+      esaurita)
+- [ ] Un uso residuo del Guscio Blu (dopo il primo uso) tentato in un
+      **torneo diverso** da quello di attivazione → rifiutato
+- [ ] `GET /inventory/tournament/{id}/history` mostra una riga per **ogni**
+      uso (un Guscio Blu usato 3 volte → 3 righe distinte)
 - [ ] Tentare una carta su una **gara duello** → rifiutato
+- [ ] Tentare una carta vinta in un gioco su un torneo di un **gioco diverso**
+      → rifiutato
 
 ### 2.6 Pareggio e duello podio
 

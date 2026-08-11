@@ -1,15 +1,20 @@
 """
-_check_player_card_limit (app/controllers/cards/inventory.py) è la regola
-"max 1 Card totale per torneo, indipendente dal tipo" documentata in
-CLAUDE.md. È una funzione privata di un controller (non un service) ma niente
-qui dipende da FastAPI/DB session iniettata via Depends — è chiamabile
-direttamente, quindi la testiamo così invece di passare per HTTP.
+Limiti d'uso delle Card (app/controllers/cards/inventory.py): ogni carta ha
+un numero di usi proprio (`uses_remaining`/`max_uses` — Master 1, Guscio Blu
+3, vedi CARD_META in app/services/cards/inventory.py), verificato da
+_check_card_available. Una carta parzialmente usata resta vincolata al
+torneo in cui è stata attivata per la prima volta (_check_activation_tournament).
+Sostituisce il vecchio _check_player_card_limit ("1 card totale per torneo,
+indipendente dal tipo"), decaduto con l'introduzione degli usi multipli.
 """
 
 import pytest
 from fastapi import HTTPException
 
-from app.controllers.cards.inventory import _check_player_card_limit
+from app.controllers.cards.inventory import (
+    _check_activation_tournament,
+    _check_card_available,
+)
 from app.controllers.tornei.schemas.races import CreateRace
 from app.services.cards.inventory import consume_inventory_item, grant_card
 from app.services.tornei.races import create_race
@@ -40,43 +45,69 @@ def _make_tournament_with_race(db, prefix):
     return tournament, players, users, race
 
 
-def test_card_limit_allows_first_card_of_any_type(db):
+def test_fresh_card_is_available(db):
     tournament, players, users, race = _make_tournament_with_race(db, "cardlimit1")
-    # Nessuna card ancora consumata in questo torneo per questo utente: non deve alzare.
-    _check_player_card_limit(db, users[0].id, tournament.id, race.id)
+    item = grant_card(db, users[0].id, "master", source_tournament_id=tournament.id)
+    # Carta appena assegnata, nessun uso ancora registrato: non deve alzare.
+    _check_card_available(item)
 
 
-def test_card_limit_blocks_second_card_same_type(db):
+def test_master_card_exhausted_after_single_use(db):
     tournament, players, users, race = _make_tournament_with_race(db, "cardlimit2")
     item = grant_card(db, users[0].id, "master", source_tournament_id=tournament.id)
-    consume_inventory_item(db, item.id, users[0].id, race_id=race.id)
+    item = consume_inventory_item(db, item.id, users[0].id, race_id=race.id)
     db.flush()
 
+    assert item.uses_remaining == 0
     with pytest.raises(HTTPException) as exc_info:
-        _check_player_card_limit(db, users[0].id, tournament.id, race.id)
+        _check_card_available(item)
     assert exc_info.value.status_code == 422
 
 
-def test_card_limit_blocks_second_card_different_type(db):
-    """La regola è 1 Card TOTALE per torneo, non 1 per tipo: usare la Master
-    non lascia comunque disponibile la Guscio Blu nello stesso torneo."""
+def test_blue_shell_allows_up_to_three_uses(db):
     tournament, players, users, race = _make_tournament_with_race(db, "cardlimit3")
-    master_item = grant_card(db, users[0].id, "master", source_tournament_id=tournament.id)
-    consume_inventory_item(db, master_item.id, users[0].id, race_id=race.id)
-    db.flush()
+    item = grant_card(db, users[0].id, "blue_shell", source_tournament_id=tournament.id)
 
-    grant_card(db, users[0].id, "blue_shell", source_tournament_id=tournament.id)
+    for _ in range(3):
+        _check_card_available(item)
+        item = consume_inventory_item(
+            db, item.id, users[0].id, tournament_id=tournament.id, race_id=race.id
+        )
+        db.flush()
 
+    assert item.uses_remaining == 0
     with pytest.raises(HTTPException) as exc_info:
-        _check_player_card_limit(db, users[0].id, tournament.id, race.id)
+        _check_card_available(item)
+    assert exc_info.value.status_code == 422
+
+
+def test_blue_shell_locks_remaining_uses_to_activation_tournament(db):
+    tournament, players, users, race = _make_tournament_with_race(db, "cardlimit4")
+    other_tournament, _, _, other_race = _make_tournament_with_race(db, "cardlimit4b")
+    item = grant_card(db, users[0].id, "blue_shell", source_tournament_id=tournament.id)
+
+    # Primo uso: attiva la carta su `tournament`.
+    item = consume_inventory_item(
+        db, item.id, users[0].id, tournament_id=tournament.id, race_id=race.id
+    )
+    db.flush()
+    assert item.uses_remaining == 2
+
+    # Un uso residuo nello STESSO torneo è consentito.
+    _check_activation_tournament(db, item, tournament.id)
+
+    # Un uso residuo in un torneo DIVERSO è bloccato.
+    with pytest.raises(HTTPException) as exc_info:
+        _check_activation_tournament(db, item, other_tournament.id)
     assert exc_info.value.status_code == 422
 
 
 def test_card_limit_does_not_block_other_players(db):
-    tournament, players, users, race = _make_tournament_with_race(db, "cardlimit4")
+    tournament, players, users, race = _make_tournament_with_race(db, "cardlimit5")
     item = grant_card(db, users[0].id, "master", source_tournament_id=tournament.id)
     consume_inventory_item(db, item.id, users[0].id, race_id=race.id)
     db.flush()
 
-    # users[1] non ha ancora usato nulla in questo torneo: non deve essere bloccato.
-    _check_player_card_limit(db, users[1].id, tournament.id, race.id)
+    # users[1] ha la propria carta indipendente, non tocca quella di users[0].
+    other_item = grant_card(db, users[1].id, "master", source_tournament_id=tournament.id)
+    _check_card_available(other_item)

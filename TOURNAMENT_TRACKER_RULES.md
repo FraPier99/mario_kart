@@ -15,7 +15,7 @@ tra codice, DB e regolamento. Per il dettaglio completo vedi
 
 | Regola | Classic | Group Stage |
 |---|---|---|
-| Carte Potere: max per torneo | **1 per giocatore** | **1 per giocatore** (stesso limite, nessuna eccezione per fase) |
+| Carte Potere: usi per carta | Master **1 uso**, Guscio Blu **fino a 3 usi** (`item.uses_remaining`, stesso limite in entrambi i formati) |
 | Card non usabili su gare di spareggio | ✅ | ✅ |
 | Card usabile solo su torneo dello stesso gioco di provenienza | ✅ | ✅ |
 | Una sola schedina per torneo per utente | ✅ (`schedine_torneo`) | ✅ (`schedine_torneo_deluxe`) |
@@ -25,10 +25,15 @@ tra codice, DB e regolamento. Per il dettaglio completo vedi
 Le regole che **cambiano** in base al formato sono quelle legate alla
 struttura della classifica (gironi vs unica) — vedi sezioni 3 e 4.
 
-> ⚠️ **Nota storica**: prima di questa revisione il limite Card era "1 per
-> fase" solo nei tornei a gironi e "nessun limite" in classic. Ora è
-> uniforme: **1 carta totale per torneo, qualunque sia il formato o il tipo
-> di carta** (`_check_player_card_limit`, `app/controllers/cards/inventory.py`).
+> ⚠️ **Nota storica**: il vecchio limite era "1 carta totale per torneo,
+> qualunque sia il tipo di carta" (`_check_player_card_limit`). Con
+> l'introduzione del Guscio Blu a 3 usi il limite cross-tipo è stato
+> abbandonato: ora ogni carta ha un `max_uses`/`uses_remaining` proprio
+> (Master 1, Guscio Blu 3, configurabile in `CARD_META` —
+> `app/services/cards/inventory.py`), verificato da
+> `_check_activation_tournament` (`app/controllers/cards/inventory.py`), che
+> vincola gli usi residui di una carta parzialmente usata al **primo torneo**
+> in cui è stata attivata.
 
 ---
 
@@ -183,8 +188,9 @@ il proprio girone, e dopo l'avanzamento solo la fase in cui si trova
 | Avanzamento qualificati > 4 | `_advance_top_n` — idem |
 | Pareggi podio classic/finale | `get_classic_podium_ties`, `get_finals_podium_ties` — idem |
 | Conclusione torneo (manuale, mai automatica) | `update_tournament`/`set_tournament_playoff_winner` + `_has_unresolved_ties` — idem |
-| Limite 1 carta/torneo | `_check_player_card_limit` — `app/controllers/cards/inventory.py` |
+| Limite usi carta + attivazione singolo torneo | `_check_card_available`, `_check_activation_tournament` — `app/controllers/cards/inventory.py` |
 | Card non su gare di spareggio | `_check_not_duello_race` — idem |
+| Effetti in sospeso (Master ban_pista/imponi_personaggio senza gara ancora creata) | `get_pending_card_usages`, `resolve_pending_card_usage` — `app/services/cards/inventory.py` |
 | Punteggio gare (griglia dinamica) | `app/data/punteggi.py` (`PUNTEGGI_CONFIG`) |
 | Punteggio schedine | `PUNTI_PRONOSTICO = 3` — `app/services/schedine/*` |
 | Standings per-girone lato frontend | `GroupCard`, `computeGroupStandings` — `frontend/src/components/tournaments/GroupPlancia.jsx` |

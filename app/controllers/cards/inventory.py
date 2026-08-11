@@ -1,5 +1,3 @@
-from datetime import datetime
-from app.core.timezone import now_rome
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -10,8 +8,15 @@ from sqlalchemy.orm import Session, joinedload
 from app.core.db import get_db
 from app.core.media import to_image_url
 from app.core.security import get_current_user, require_roles
-from app.services.cards.inventory import consume_inventory_item, get_inventory, get_tournament_awards
-from app.models import Player, Race, Tournament, TournamentPlayer, User, UserInventory
+from app.services.cards.inventory import (
+    consume_inventory_item,
+    get_inventory,
+    get_pending_card_usages,
+    get_tournament_awards,
+    record_card_usage,
+    resolve_pending_card_usage,
+)
+from app.models import CardUsageLog, Player, Race, Tournament, TournamentPlayer, User, UserInventory
 from app.controllers.cards.schemas.inventory import UserInventoryResponse
 
 
@@ -85,39 +90,51 @@ PHASE_LABEL = {
 }
 
 
-def _check_player_card_limit(
-    db: Session, user_id: int, tournament_id: int | None, race_id: int | None
-) -> None:
-    """
-    Massimo 1 Card TOTALE per giocatore per torneo (vale sia per gironi che classifica unica).
-    Se l'utente ha già consumato una carta in questo torneo, blocca (422).
-    """
-    if not tournament_id:
-        if race_id:
-            race = db.query(Race).filter(Race.id == race_id).first()
-            if race:
-                tournament_id = race.tournament_id
-    if not tournament_id:
-        return
-    tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
-    if not tournament:
-        return
+def _resolve_tournament_id(db: Session, tournament_id: int | None, race_id: int | None) -> int | None:
+    if tournament_id:
+        return tournament_id
+    if race_id:
+        race = db.query(Race).filter(Race.id == race_id).first()
+        if race:
+            return race.tournament_id
+    return None
 
-    already = (
-        db.query(UserInventory)
-        .join(Race, Race.id == UserInventory.consumed_in_race_id)
-        .filter(
-            UserInventory.user_id == user_id,
-            UserInventory.is_consumed.is_(True),
-            Race.tournament_id == tournament_id,
-        )
-        .count()
-    )
 
-    if already >= 1:
+def _check_card_available(item: UserInventory) -> None:
+    """La carta ha ancora usi disponibili (1 per Master, fino a max_uses per
+    Guscio Blu — vedi CARD_META). Sostituisce il vecchio limite incrociato
+    "1 card totale per torneo indipendentemente dal tipo", decaduto insieme
+    all'introduzione degli usi multipli: il limite ora è per-carta
+    (uses_remaining), non più un tetto unico che mischiava Master e Guscio
+    Blu. Corregge anche un bug del vecchio controllo, che contava solo gli
+    usi già legati a una gara (JOIN su Race) — un uso senza gara non veniva
+    mai conteggiato."""
+    if item.uses_remaining <= 0:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Hai già usato una Card in questo torneo. Limite: 1 Card totale per torneo.",
+            detail="Questa carta è esaurita: nessun uso rimasto.",
+        )
+
+
+def _check_activation_tournament(
+    db: Session, item: UserInventory, tournament_id: int | None
+) -> None:
+    """Il Guscio Blu, una volta attivato (primo uso) in un torneo, deve
+    esaurire lì i suoi usi restanti — non si possono "risparmiare" per un
+    torneo successivo. Se questo non è il primo uso, il torneo dev'essere
+    lo stesso del primo uso registrato."""
+    if item.uses_remaining >= item.max_uses:
+        return  # primo uso, nessun vincolo pregresso
+    first_use = (
+        db.query(CardUsageLog)
+        .filter(CardUsageLog.inventory_item_id == item.id)
+        .order_by(CardUsageLog.used_at.asc())
+        .first()
+    )
+    if first_use and first_use.tournament_id and first_use.tournament_id != tournament_id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Questa carta è già stata attivata in un altro torneo: gli usi restanti valgono solo lì.",
         )
 
 
@@ -204,7 +221,9 @@ def get_tournament_card_history(
     current_user=Depends(get_current_user),
 ):
     """Storico ufficiale delle Card usate nel torneo: giocatore, fase, gara,
-    effetto e data/ora di utilizzo (derivato da UserInventory + Race)."""
+    effetto e data/ora di utilizzo — un rigo per OGNI uso (CardUsageLog), non
+    più uno per carta: un Guscio Blu attivato 3 volte compare come 3 righe
+    distinte, non una sola come con le sole colonne piatte di UserInventory."""
     if not db.query(Tournament).filter(Tournament.id == tournament_id).first():
         raise HTTPException(status_code=404, detail="Tournament not found")
 
@@ -212,50 +231,43 @@ def get_tournament_card_history(
     if not participant_ids:
         return []
 
-    users_by_id = {
-        u.id: u.player_id
-        for u in db.query(User).filter(User.player_id.in_(participant_ids)).all()
-    }
-    if not users_by_id:
-        return []
-
     players_by_id = {
         p.id: p for p in db.query(Player).filter(Player.id.in_(participant_ids)).all()
     }
 
-    items = (
-        db.query(UserInventory)
-        .join(Race, Race.id == UserInventory.consumed_in_race_id)
-        .filter(
-            UserInventory.is_consumed.is_(True),
-            UserInventory.user_id.in_(users_by_id.keys()),
-            Race.tournament_id == tournament_id,
-        )
-        .order_by(UserInventory.consumed_at.asc())
+    logs = (
+        db.query(CardUsageLog)
+        .join(UserInventory, UserInventory.id == CardUsageLog.inventory_item_id)
+        .filter(CardUsageLog.tournament_id == tournament_id)
+        .order_by(CardUsageLog.used_at.asc())
         .all()
     )
 
     result = []
-    for item in items:
-        race = db.query(Race).filter(Race.id == item.consumed_in_race_id).first()
-        player = players_by_id.get(users_by_id.get(item.user_id))
-
-        phase = race.phase if race else item.consumed_in_phase
-        group_name = race.group_name if race else item.consumed_in_group_name
+    for log in logs:
+        item = log.inventory_item
+        owner_player = item.user.player if item and item.user else None
+        if not owner_player or owner_player.id not in players_by_id:
+            continue
+        race = log.race
+        target_player = log.target_player
 
         result.append(
             {
-                "player_id": player.id if player else None,
-                "player_nickname": player.nickname if player else None,
+                "player_id": owner_player.id,
+                "player_nickname": owner_player.nickname,
                 "card_type": item.card_type,
                 "card_name": item.card_name,
-                "effect": item.consumed_effect,
-                "consumed_at": item.consumed_at,
+                "effect": log.effect,
+                "consumed_at": log.used_at,
                 "race_id": race.id if race else None,
                 "race_name": race.name if race else None,
                 "race_order": race.race_order if race else None,
-                "phase": phase,
-                "group_name": group_name,
+                "phase": race.phase if race else None,
+                "group_name": race.group_name if race else None,
+                "pending": race is None,
+                "target_player_id": target_player.id if target_player else None,
+                "target_nickname": target_player.nickname if target_player else None,
             }
         )
     return result
@@ -388,11 +400,18 @@ def admin_revoke_inventory_item(
 class AdminUseItemRequest(BaseModel):
     player_id: int
     card_type: str
+    tournament_id: int
     race_id: int | None = None
     effect: str | None = None
-    tournament_id: int | None = None
     phase: str | None = None
     group_name: str | None = None
+    # Bersaglio avversario (ban_pista/imponi_personaggio) e la pista/il
+    # personaggio imposti — vedi CardUsageLog. race_id resta None per questi
+    # due effetti finché la gara che devono influenzare non esiste ancora:
+    # si risolve dopo con POST /card-usage/{log_id}/resolve.
+    target_player_id: int | None = None
+    imposed_circuit_id: int | None = None
+    imposed_character_id: int | None = None
 
 
 @router.post("/admin/use", response_model=UserInventoryResponse)
@@ -412,7 +431,7 @@ def admin_use_inventory_item(
         .filter(
             UserInventory.user_id == user.id,
             UserInventory.card_type == body.card_type,
-            UserInventory.is_consumed == False,
+            UserInventory.uses_remaining > 0,
         )
         .first()
     )
@@ -422,25 +441,84 @@ def admin_use_inventory_item(
             detail=f"Carta {body.card_type} non disponibile per questo giocatore",
         )
     _check_game_compatibility(db, item, body.race_id, body.tournament_id)
-    _check_player_card_limit(db, user.id, body.tournament_id, body.race_id)
+    _check_card_available(item)
+    _check_activation_tournament(db, item, body.tournament_id)
     _check_not_duello_race(db, body.race_id)
-    item.is_consumed = True
-    item.consumed_at = now_rome()
-    if body.race_id is not None:
-        item.consumed_in_race_id = body.race_id
-        race = db.query(Race).filter(Race.id == body.race_id).first()
-        if race:
-            item.consumed_in_phase = race.phase
-            item.consumed_in_group_name = race.group_name
+
+    item, log = record_card_usage(
+        db,
+        item,
+        tournament_id=body.tournament_id,
+        race_id=body.race_id,
+        target_player_id=body.target_player_id,
+        imposed_circuit_id=body.imposed_circuit_id,
+        imposed_character_id=body.imposed_character_id,
+        effect=body.effect,
+        used_by_user_id=current_user.id,
+    )
     if body.phase is not None:
         item.consumed_in_phase = body.phase
     if body.group_name is not None:
         item.consumed_in_group_name = body.group_name
-    if body.effect is not None:
-        item.consumed_effect = body.effect
+
     db.commit()
     db.refresh(item)
     return item
+
+
+class ResolveCardUsageRequest(BaseModel):
+    race_id: int
+
+
+@router.post("/card-usage/{log_id}/resolve", response_model=UserInventoryResponse)
+def resolve_card_usage_endpoint(
+    log_id: int,
+    body: ResolveCardUsageRequest,
+    current_user=Depends(require_roles("admin", "superadmin")),
+    db: Session = Depends(get_db),
+):
+    """Collega a una gara appena creata un effetto Master dichiarato "in
+    sospeso" (ban_pista/imponi_personaggio) — vedi ClassicRaceForm."""
+    log = resolve_pending_card_usage(db, log_id, body.race_id)
+    if not log:
+        raise HTTPException(status_code=404, detail="Utilizzo carta non trovato")
+    item = db.query(UserInventory).filter(UserInventory.id == log.inventory_item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Carta non trovata")
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.get("/tournament/{tournament_id}/pending-effects")
+def get_pending_effects(
+    tournament_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_roles("admin", "superadmin")),
+):
+    """Effetti Master dichiarati ma non ancora collegati a una gara (vedi
+    ClassicRaceForm, che li propone in automatico alla prossima gara che
+    coinvolge il bersaglio)."""
+    logs = get_pending_card_usages(db, tournament_id)
+    result = []
+    for log in logs:
+        item = db.query(UserInventory).filter(UserInventory.id == log.inventory_item_id).first()
+        owner_player = item.user.player if item and item.user else None
+        result.append(
+            {
+                "id": log.id,
+                "inventory_item_id": log.inventory_item_id,
+                "owner_player_id": owner_player.id if owner_player else None,
+                "owner_nickname": owner_player.nickname if owner_player else None,
+                "target_player_id": log.target_player_id,
+                "target_nickname": log.target_player.nickname if log.target_player else None,
+                "effect": log.effect,
+                "imposed_circuit_id": log.imposed_circuit_id,
+                "imposed_character_id": log.imposed_character_id,
+                "used_at": log.used_at,
+            }
+        )
+    return result
 
 
 @router.get("/public", response_model=list[UserInventoryResponse])
@@ -568,11 +646,14 @@ def use_inventory_item(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Carta non trovata"
         )
+    resolved_tournament_id = _resolve_tournament_id(db, body.tournament_id, body.race_id)
     _check_game_compatibility(db, item, body.race_id, body.tournament_id)
-    _check_player_card_limit(db, current_user.id, body.tournament_id, body.race_id)
+    _check_card_available(item)
+    _check_activation_tournament(db, item, resolved_tournament_id)
     _check_not_duello_race(db, body.race_id)
     item = consume_inventory_item(
-        db, item_id, current_user.id, race_id=body.race_id, effect=body.effect
+        db, item_id, current_user.id,
+        tournament_id=resolved_tournament_id, race_id=body.race_id, effect=body.effect,
     )
     db.commit()
     return item

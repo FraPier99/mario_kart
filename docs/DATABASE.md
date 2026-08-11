@@ -79,19 +79,39 @@ per quel torneo (`tournament.tournament_format` decide quale tabella usare).
 |---|---|---|
 | Table | Model | Description |
 |------|-------|-------------|
-| `user_inventory` | `UserInventory` | Power card inventory per user: type (`master`/`blue_shell`), source tournament/schedina, consumption status, race/phase/group where used. |
+| `user_inventory` | `UserInventory` | Power card **grant** per user: type (`master`/`blue_shell`), source tournament/schedina, `max_uses`/`uses_remaining`, plus a flat "last use" mirror (race/phase/group/effect/target) for `/inventory/all` and `/inventory/public`. |
+| `card_usage_log` | `CardUsageLog` | One row per individual **use** of a card (Master has at most 1, Blue Shell up to 3) — target player, imposed circuit/character, race, and who registered it. |
 
 `UserInventory.source_tournament_id` records which tournament the card was won in
 (hence which game, via `source_tournament.game_id`) — used at runtime to enforce
 the constraint "card only usable in tournaments of the same game"
 (`_check_game_compatibility` in `app/controllers/cards/inventory.py`).
 
-Additional consumption columns:
-- `consumed_in_race_id` → the specific race the card was used in (FK to `races`)
-- `consumed_in_phase` → `"group"`, `"semifinal"`, or `"finals"` (for group-stage tournaments where no specific race is targeted)
-- `consumed_in_group_name` → the group/battery name (e.g. `"1"`, `"top"`, `"bottom"`)
-- `consumed_effect` → textual description of the effect applied (e.g. `"proteggi_posizione"`, `"custom"`)
-- `consumed_at` → timestamp of consumption
+`UserInventory.max_uses`/`uses_remaining` (default 1, set from `CARD_META` in
+`app/services/cards/inventory.py` at grant time — Master 1, Blue Shell 3) replace
+the old single `is_consumed` boolean as the source of truth for whether a card can
+still be used; `is_consumed` is now derived (`uses_remaining <= 0`).
+`UserInventory.target_player_id` mirrors the target of the most recent use.
+
+`CardUsageLog` columns:
+- `inventory_item_id` → the `UserInventory` grant this use belongs to
+- `tournament_id` → denormalized for the "activation locks to one tournament" check
+- `race_id` → the race the use applies to, **nullable**: `NULL` means the effect is
+  declared but not yet linked to a race ("pending" — see below)
+- `target_player_id` → the opponent this use targets (Master's `ban_pista`/`imponi_personaggio`)
+- `imposed_circuit_id` / `imposed_character_id` → what's being imposed on the target
+- `effect`, `used_at`, `used_by_user_id`
+
+**Pending Master effects**: `ban_pista` (cancel an opponent's circuit choice and
+impose the card holder's) and `imponi_personaggio` (force an opponent to use a
+chosen character) can be declared before the race they affect exists — since
+`ClassicRaceForm` creates a race and all its results in a single save, there's no
+longer an empty-race window to attach the effect to at creation time. The effect is
+recorded as a `CardUsageLog` with `race_id = NULL`; `ClassicRaceForm` fetches
+pending effects for the tournament (`GET /inventory/tournament/{id}/pending-effects`)
+and proposes them automatically on the next race involving the target, resolving
+the log's `race_id` on save (`POST /inventory/card-usage/{id}/resolve`,
+`resolve_pending_card_usage` in `app/services/cards/inventory.py`).
 
 These phase/group columns are populated automatically when the card is used with
 a `race_id` (derived from the race's phase/group_name), or can be set explicitly
@@ -103,10 +123,11 @@ Admin-grant tracking columns:
 - `admin_note` → mandatory note explaining why an admin granted the card
 - `granted_by_user_id` → which admin user granted it (FK to `users`)
 
-**Usage limit**: regardless of `card_type` or `tournament.tournament_format`, a
-player may consume **at most 1 card in total per tournament** — enforced by
-`_check_player_card_limit` in `app/controllers/cards/inventory.py` (see
-[`REGOLAMENTO.md`](REGOLAMENTO.md) §3e).
+**Usage limit**: per-card, via `uses_remaining` (Master 1, Blue Shell up to 3) —
+enforced by `_check_card_available` in `app/controllers/cards/inventory.py`. A
+partially-used card is locked to whichever tournament it was first used in
+(`_check_activation_tournament`, same file): its remaining uses cannot be spent in
+a different tournament. See [`REGOLAMENTO.md`](REGOLAMENTO.md) §7.
 
 ## Relazioni cross-dominio degne di nota
 

@@ -103,9 +103,7 @@ In caso di parità nel girone, l'ordine è determinato da:
 
 ### 3e. Carte Potere
 
-- **Tutti i formati** (Classifica Unica e A Gironi): max **1 carta in totale** per giocatore per torneo, indipendentemente dal tipo di carta (Master o Guscio Blu) e dal formato del torneo
-- Le Card non possono essere usate nelle gare di spareggio/duello
-- Le carte vinte in un gioco non possono essere usate in un altro gioco
+Vedi sezione 7 per gli effetti e i limiti d'uso — valgono identici per entrambi i formati.
 
 ### 3f. Chiusura schedine
 
@@ -167,7 +165,34 @@ Il badge di un gioco non influenza quello di un altro: si può essere Leggenda s
 
 ---
 
-## 7. Note di compatibilità
+## 7. Carte Potere
+
+Assegnate automaticamente alla chiusura delle schedine: **Carta Master** al/i vincitore/i della schedina (anche in caso di parità), **Guscio Blu** all'ultimo classificato (e al penultimo, con 7+ partecipanti).
+
+### 7a. Carta Master — 1 uso, tre effetti a scelta
+
+Chi la possiede sceglie **uno** dei tre effetti al momento dell'uso:
+
+1. **Annulla pista** — invalida la pista scelta da un **avversario** per la sua prossima gara e la sostituisce con quella scelta dal possessore della carta
+2. **Impone personaggio** — obbliga un **avversario** a usare, per una gara, il personaggio scelto dal possessore della carta
+3. **Gara extra** — aggiunge una gara a fine torneo (nessun bersaglio)
+
+Gli effetti 1 e 2 possono essere dichiarati **prima ancora che la gara che devono influenzare esista**: l'admin registra l'effetto (bersaglio + pista/personaggio imposto) e resta "in sospeso" finché non viene creata la prossima gara che coinvolge quel bersaglio, momento in cui viene applicato e la carta risulta consumata.
+
+### 7b. Guscio Blu — fino a 3 usi nello stesso torneo, un solo effetto
+
+Effetto: **tutti i giocatori tranne chi usa la carta restano fermi per un giro** — chi la usa parte con un giro pieno di vantaggio, gli altri partono quando il primo inizia il secondo giro. È una regola di gioco dal vivo: il tracker si limita a registrare l'uso collegandolo alla gara.
+
+Il Guscio Blu può essere usato **fino a 3 volte nello stesso torneo**. Una volta usato per la prima volta ("attivato") in un torneo, gli usi restanti restano vincolati a **quello stesso torneo** — non possono essere risparmiati per un torneo successivo.
+
+### 7c. Limiti generali
+
+- Le Card non possono essere usate nelle gare di spareggio/duello
+- Le carte vinte in un gioco non possono essere usate in un altro gioco
+
+---
+
+## 8. Note di compatibilità
 
 - Il campo `vittima_del_caos_id` è ancora presente nello schema della schedina classic per compatibilità, ma **non genera punteggio**.
 - La tabella `schedine_torneo_deluxe` ospita le schedine del formato a gironi: il nome è mantenuto per compatibilità.

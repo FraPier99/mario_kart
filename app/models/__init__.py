@@ -40,7 +40,7 @@ from app.models.schedine.models import (
     SchedinaTorneoGroupStage,
     PremioTorneo,
 )
-from app.models.cards.models import UserInventory
+from app.models.cards.models import UserInventory, CardUsageLog
 
 __all__ = [
     "Base",
@@ -65,6 +65,7 @@ __all__ = [
     "SchedinaTorneoGroupStage",
     "PremioTorneo",
     "UserInventory",
+    "CardUsageLog",
     "UserGameOwnership",
     "UserConsoleOwnership",
     "UserR4Device",
