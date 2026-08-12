@@ -211,6 +211,13 @@ const TournamentDetail = () => {
     }, [showClassicPodium, tournament?.standings, charactersById])
     const classicTableRows = showClassicPodium ? (tournament?.standings ?? []).slice(3) : (tournament?.standings ?? [])
 
+    // Stessa condizione di visibilità di PointAdjustmentsPanel (solo classic,
+    // sempre visibile al superadmin, agli altri solo se esistono rettifiche)
+    // — serve qui per non renderizzare un contenitore a bg solido vuoto
+    // quando il pannello stesso decide di non mostrare nulla.
+    const showPointAdjustments = tournament?.tournament_format !== 'group_stage'
+        && (isSuperadmin || (tournament?.pointAdjustments?.length ?? 0) > 0)
+
     // Un Admin che è anche partecipante al torneo vede di default la vista
     // giocatore (schedina/classifica/proprio girone) e può passare alla vista
     // gestionale con il toggle "Modalità Admin". Il SuperAdmin non partecipa
@@ -559,7 +566,11 @@ const TournamentDetail = () => {
                                 </div>
                             )}
 
-                            <PointAdjustmentsPanel tournament={tournament} participants={activeTournamentParticipants} isSuperadmin={isSuperadmin} onChanged={refresh} />
+                            {showPointAdjustments && (
+                                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-4 shadow-sm">
+                                    <PointAdjustmentsPanel tournament={tournament} participants={activeTournamentParticipants} isSuperadmin={isSuperadmin} onChanged={refresh} />
+                                </div>
+                            )}
 
                             <TournamentResolutionNotes tournament={tournament} />
 
@@ -1224,9 +1235,11 @@ const TournamentDetail = () => {
                                         onPlayerClick={handlePlayerClick}
                                     />
                                 </div>
-                                <div className="p-4">
-                                    <PointAdjustmentsPanel tournament={tournament} participants={activeTournamentParticipants} isSuperadmin={isSuperadmin} onChanged={refresh} />
-                                </div>
+                                {showPointAdjustments && (
+                                    <div className="border-t border-slate-100 dark:border-border px-5 py-4">
+                                        <PointAdjustmentsPanel tournament={tournament} participants={activeTournamentParticipants} isSuperadmin={isSuperadmin} onChanged={refresh} />
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
