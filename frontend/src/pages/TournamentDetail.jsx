@@ -1065,6 +1065,49 @@ const TournamentDetail = () => {
                         </div>
                     </div>
                 </div>
+                </div>
+
+                {/* Tab Classifica: fuori dalla card "Gestione torneo" — stessa
+                larghezza/stile della vista player, così l'unica differenza tra
+                le due viste resta la barra di navigazione admin sopra. */}
+                {activeSection === 'leaderboard' && (
+                    <div className="mx-auto max-w-5xl space-y-4">
+                        {tournament.tournament_format === 'group_stage' ? (
+                            <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm">
+                                <div className="mb-4 flex items-center justify-between gap-3">
+                                    <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400 dark:text-muted-foreground">Classifiche · per fase</p>
+                                    <RefreshButton onClick={refresh} loading={loading} />
+                                </div>
+                                <GroupPlancia tournament={tournament} players={players} results={results} highlightPlayerId={myPlayerId} />
+                            </div>
+                        ) : (
+                            <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden shadow-sm">
+                                <div className="px-5 py-4 border-b border-slate-100 dark:border-border flex items-center justify-between">
+                                    <p className="text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Classifica</p>
+                                    <RefreshButton onClick={refresh} loading={loading} />
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <LeaderboardTable
+                                        rows={tournament.standings}
+                                        showTournamentWins={false}
+                                        charactersById={charactersById}
+                                        highlightPlayerId={user?.player_id ?? user?.player?.id ?? null}
+                                        isSuperadmin={isSuperadmin}
+                                        onPlayerClick={handlePlayerClick}
+                                    />
+                                </div>
+                                {showPointAdjustments && (
+                                    <div className="border-t border-slate-100 dark:border-border px-5 py-4">
+                                        <PointAdjustmentsPanel tournament={tournament} participants={activeTournamentParticipants} isSuperadmin={isSuperadmin} onChanged={refresh} />
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {activeSection !== 'leaderboard' && (
+                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white/90 dark:bg-card/90 backdrop-blur-sm p-6 md:p-8">
 
                 {isAdmin && activeSection === 'setup' && (
                     <div className="space-y-4">
@@ -1206,42 +1249,6 @@ const TournamentDetail = () => {
                                 </div>
                             )}
                         </CollapsibleSection>
-                    </div>
-                )}
-
-                {activeSection === 'leaderboard' && (
-                    <div className="space-y-4">
-                        {tournament.tournament_format === 'group_stage' ? (
-                            <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm">
-                                <div className="mb-4 flex items-center justify-between gap-3">
-                                    <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400 dark:text-muted-foreground">Classifiche · per fase</p>
-                                    <RefreshButton onClick={refresh} loading={loading} />
-                                </div>
-                                <GroupPlancia tournament={tournament} players={players} results={results} highlightPlayerId={myPlayerId} />
-                            </div>
-                        ) : (
-                            <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden shadow-sm">
-                                <div className="px-5 py-4 border-b border-slate-100 dark:border-border flex items-center justify-between">
-                                    <p className="text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Classifica</p>
-                                    <RefreshButton onClick={refresh} loading={loading} />
-                                </div>
-                                <div className="overflow-x-auto">
-                                    <LeaderboardTable
-                                        rows={tournament.standings}
-                                        showTournamentWins={false}
-                                        charactersById={charactersById}
-                                        highlightPlayerId={user?.player_id ?? user?.player?.id ?? null}
-                                        isSuperadmin={isSuperadmin}
-                                        onPlayerClick={handlePlayerClick}
-                                    />
-                                </div>
-                                {showPointAdjustments && (
-                                    <div className="border-t border-slate-100 dark:border-border px-5 py-4">
-                                        <PointAdjustmentsPanel tournament={tournament} participants={activeTournamentParticipants} isSuperadmin={isSuperadmin} onChanged={refresh} />
-                                    </div>
-                                )}
-                            </div>
-                        )}
                     </div>
                 )}
 
@@ -1422,6 +1429,7 @@ const TournamentDetail = () => {
                 )}
 
                 </div>
+                )}
 
             </section>
         </AppLayout>
