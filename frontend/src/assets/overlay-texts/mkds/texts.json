@@ -1,13 +1,13 @@
 {
-    "thankyou": "Grazie a tutti i partecipanti per questo fantastico torneo! Ci vediamo al prossimo appuntamento.",
+    "thankyou": "L'ULTIMO TORNEO DELLA 1^ SEASON DI MKDS È FINITO! GRAZIE A TUTTI PER AVER PARTECIPATO!",
     "countdown": {
-        "start": "Sveliamo la classifica...(DI SICURO HA VINTO JOSH VISTO CHE MANCA FEDE)",
-        "transition": "E ora il podio...",
-        "championReveal": "E il nostro Campione è...",
+        "start": "ECCO LA CLASSIFICA! JOSH SEI TROPPO FORTE!",
+        "transition": "ORA IL PODIO!",
+        "championReveal": "IL NOSTRO CAMPIONE(JOSH PALESE) È...",
         "labels": {
             "campione": "⭐ CAMPIONE! ⭐",
-            "winner": "CAMPIONE!"
+            "winner": "🏆 VINCITORE! 🏆"
         }
     },
-    "derapata": "{name} è giunto al termine"
+    "derapata": "{name} TERMINATO"
 }
