@@ -2,6 +2,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import Header from "@/components/layout/Header";
 import Hero from "@/components/layout/Hero";
 import ApiBanner from '@/components/common/ApiBanner'
+import PenaltyRulesAnnouncement from '@/components/tournaments/PenaltyRulesAnnouncement'
 import { useAppData } from '@/context/AppDataContext'
 
 const Home = () =>{
@@ -10,7 +11,8 @@ const Home = () =>{
     return (
         <AppLayout>
             <Header />
-            <div className="mx-auto max-w-7xl px-4">
+            <div className="mx-auto max-w-7xl px-4 space-y-4">
+                <PenaltyRulesAnnouncement />
                 <ApiBanner
                     title="Dati backend non disponibili"
                     message={errorMessage}
