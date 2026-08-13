@@ -16,10 +16,11 @@ import { createPortal } from 'react-dom'
 import { Search, ChevronDown, X } from 'lucide-react'
 
 const MAX_MENU_HEIGHT = 300
+const MAX_MENU_WIDTH = 288
 const VIEWPORT_MARGIN = 12
 
 const useDropdownPosition = (triggerRef, menuRef, open) => {
-    const [menuPos, setMenuPos] = useState({ top: 0, right: 0, maxHeight: MAX_MENU_HEIGHT, ready: false })
+    const [menuPos, setMenuPos] = useState({ top: 0, right: 0, width: MAX_MENU_WIDTH, maxHeight: MAX_MENU_HEIGHT, ready: false })
 
     useEffect(() => {
         if (!open) {
@@ -32,15 +33,23 @@ const useDropdownPosition = (triggerRef, menuRef, open) => {
             if (!triggerRef.current) return
             const rect = triggerRef.current.getBoundingClientRect()
             const menuHeight = menuRef.current?.offsetHeight || MAX_MENU_HEIGHT
-            const right = window.innerWidth - rect.right
+            // Larghezza e posizione (ancorata a destra del trigger, come uno
+            // "sposta a sinistra se serve") vanno vincolate al viewport reale:
+            // su schermi stretti un trigger vicino al bordo sinistro spingeva
+            // il menu (larghezza fissa) fuori dallo schermo a sinistra, con
+            // parte della griglia personaggi non raggiungibile al tocco.
+            const width = Math.min(MAX_MENU_WIDTH, window.innerWidth - VIEWPORT_MARGIN * 2)
+            const rawRight = window.innerWidth - rect.right
+            const maxRight = window.innerWidth - width - VIEWPORT_MARGIN
+            const right = Math.min(Math.max(rawRight, VIEWPORT_MARGIN), Math.max(maxRight, VIEWPORT_MARGIN))
 
             if (rect.top > menuHeight + 8) {
                 const maxHeight = Math.min(MAX_MENU_HEIGHT, rect.top - VIEWPORT_MARGIN)
-                setMenuPos({ top: rect.top - Math.min(menuHeight, maxHeight) - 4, right, maxHeight, ready: true })
+                setMenuPos({ top: rect.top - Math.min(menuHeight, maxHeight) - 4, right, width, maxHeight, ready: true })
             }
             else {
                 const maxHeight = Math.min(MAX_MENU_HEIGHT, window.innerHeight - rect.bottom - 4 - VIEWPORT_MARGIN)
-                setMenuPos({ top: rect.bottom + 4, right, maxHeight, ready: true })
+                setMenuPos({ top: rect.bottom + 4, right, width, maxHeight, ready: true })
             }
         }
 
@@ -99,7 +108,7 @@ const CharacterPicker = ({ characters = [], value, onChange, disabled }) => {
             {open && createPortal(
                 <div
                     ref={menuRef}
-                    style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, maxHeight: menuPos.maxHeight, width: 288, zIndex: 9999, visibility: menuPos.ready ? 'visible' : 'hidden' }}
+                    style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, maxHeight: menuPos.maxHeight, width: menuPos.width, zIndex: 9999, visibility: menuPos.ready ? 'visible' : 'hidden' }}
                     className="flex flex-col rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-2xl p-3 space-y-2"
                 >
                     {/* Search */}

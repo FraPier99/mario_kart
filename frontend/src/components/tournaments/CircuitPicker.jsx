@@ -17,6 +17,7 @@ const getCupStyle = (description = '') => {
 }
 
 const MAX_MENU_HEIGHT = 420
+const MIN_MENU_WIDTH = 360
 const VIEWPORT_MARGIN = 12
 
 const useDropdownPosition = (triggerRef, menuRef, open) => {
@@ -34,6 +35,14 @@ const useDropdownPosition = (triggerRef, menuRef, open) => {
             const rect = triggerRef.current.getBoundingClientRect()
             const menuHeight = menuRef.current?.offsetHeight || MAX_MENU_HEIGHT
 
+            // Larghezza minima 360 pensata per desktop: su schermi più
+            // stretti del bottone-trigger (mobile) va vincolata al viewport,
+            // altrimenti il menu sborda a destra e la sua metà finisce fuori
+            // schermo, non raggiungibile al tocco. `left` va vincolato di
+            // conseguenza (mai oltre innerWidth - width - margine).
+            const width = Math.min(Math.max(rect.width, MIN_MENU_WIDTH), window.innerWidth - VIEWPORT_MARGIN * 2)
+            const left = Math.min(Math.max(rect.left, VIEWPORT_MARGIN), window.innerWidth - width - VIEWPORT_MARGIN)
+
             // Il popover è position:fixed: se lo spazio reale sopra/sotto il
             // trigger è minore dell'altezza del contenuto, la parte in
             // eccesso finisce fuori dal viewport e non è raggiungibile né
@@ -44,11 +53,11 @@ const useDropdownPosition = (triggerRef, menuRef, open) => {
             // interamente scrollabile.
             if (rect.top > menuHeight + 8) {
                 const maxHeight = Math.min(MAX_MENU_HEIGHT, rect.top - VIEWPORT_MARGIN)
-                setMenuPos({ top: rect.top - Math.min(menuHeight, maxHeight) - 4, left: rect.left, width: rect.width, maxHeight, ready: true })
+                setMenuPos({ top: rect.top - Math.min(menuHeight, maxHeight) - 4, left, width, maxHeight, ready: true })
             }
             else {
                 const maxHeight = Math.min(MAX_MENU_HEIGHT, window.innerHeight - rect.bottom - 4 - VIEWPORT_MARGIN)
-                setMenuPos({ top: rect.bottom + 4, left: rect.left, width: rect.width, maxHeight, ready: true })
+                setMenuPos({ top: rect.bottom + 4, left, width, maxHeight, ready: true })
             }
         }
 
@@ -168,7 +177,7 @@ const CircuitPicker = ({ circuits = [], value, onChange, disabled = false, usedC
             {open && createPortal(
                 <div
                     ref={menuRef}
-                    style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, width: Math.max(menuPos.width, 360), maxHeight: menuPos.maxHeight, zIndex: 9999, visibility: menuPos.ready ? 'visible' : 'hidden' }}
+                    style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, width: menuPos.width, maxHeight: menuPos.maxHeight, zIndex: 9999, visibility: menuPos.ready ? 'visible' : 'hidden' }}
                     className="flex flex-col rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl overflow-hidden"
                 >
                     <div className="flex shrink-0 items-center gap-2 border-b border-slate-100 dark:border-slate-700 px-3 py-2">
