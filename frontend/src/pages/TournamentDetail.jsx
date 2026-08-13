@@ -1080,7 +1080,7 @@ const TournamentDetail = () => {
                 larghezza/stile della vista player, così l'unica differenza tra
                 le due viste resta la barra di navigazione admin sopra. */}
                 {activeSection === 'leaderboard' && (
-                    <div className="mx-auto max-w-5xl space-y-4">
+                    <div className="mx-auto max-w-5xl px-4 space-y-4">
                         {tournament.tournament_format === 'group_stage' ? (
                             <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm">
                                 <div className="mb-4 flex items-center justify-between gap-3">
