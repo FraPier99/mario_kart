@@ -319,7 +319,53 @@ const TournamentDetail = () => {
         goToPlayerProfile(row.playerId)
     }
 
+    // Contenuto del tab Classifica per tornei classic — un unico blocco
+    // condiviso tra vista player e tab "Classifica" admin, così le due
+    // viste non possono più disallinearsi silenziosamente (causa del
+    // problema di dimensioni/contenuto diversi visto in precedenza, quando
+    // ognuna aveva la propria copia della stessa card).
+    const classicClassificaBlock = (
+        <>
+            {tournamentStatus === 'in_corso' && (
+                <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 p-5 flex items-center gap-3 shadow-sm">
+                    <Clock size={20} className="shrink-0 text-amber-500 dark:text-amber-400" />
+                    <div>
+                        <p className="text-sm font-black uppercase tracking-widest text-amber-700 dark:text-amber-300">Torneo in corso</p>
+                        <p className="text-xs text-amber-600 dark:text-amber-400">La classifica è provvisoria fino al termine del torneo.</p>
+                    </div>
+                </div>
+            )}
 
+            {(tournament?.standings?.length ?? 0) > 0 && (
+                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden shadow-sm">
+                    <div className="px-5 py-4 border-b border-slate-100 dark:border-border flex items-center justify-between">
+                        <p className="text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Classifica</p>
+                        <RefreshButton onClick={refresh} loading={loading} />
+                    </div>
+                    {showClassicPodium && (
+                        <div className="p-5 pb-0">
+                            <PodiumSteps players={classicPodiumPlayers} onPlayerClick={(p) => goToPlayerProfile(p.playerId)} />
+                        </div>
+                    )}
+                    <LeaderboardTable
+                        rows={classicTableRows}
+                        startIndex={showClassicPodium ? 3 : 0}
+                        showTournamentWins={false}
+                        charactersById={charactersById}
+                        highlightPlayerId={user?.player?.id ?? null}
+                        isSuperadmin={false}
+                        onPlayerClick={handlePlayerClick}
+                    />
+                </div>
+            )}
+
+            {showPointAdjustments && (
+                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-4 shadow-sm">
+                    <PointAdjustmentsPanel tournament={tournament} participants={activeTournamentParticipants} isSuperadmin={isSuperadmin} onChanged={refresh} />
+                </div>
+            )}
+        </>
+    )
 
     const handleFinalized = useCallback(async () => {
         const standingsSnap = groupStageStandingsOrdered ?? tournament?.standings ?? []
@@ -533,44 +579,7 @@ const TournamentDetail = () => {
                     {/* ── TAB: Classifica ── */}
                     {userTab === 'classifica' && (
                         <div className="space-y-6">
-                            {tournamentStatus === 'in_corso' && (
-                                <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 p-5 flex items-center gap-3 shadow-sm">
-                                    <Clock size={20} className="shrink-0 text-amber-500 dark:text-amber-400" />
-                                    <div>
-                                        <p className="text-sm font-black uppercase tracking-widest text-amber-700 dark:text-amber-300">Torneo in corso</p>
-                                        <p className="text-xs text-amber-600 dark:text-amber-400">La classifica è provvisoria fino al termine del torneo.</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {(tournament.standings?.length ?? 0) > 0 && (
-                                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden shadow-sm">
-                                    <div className="px-5 py-4 border-b border-slate-100 dark:border-border flex items-center justify-between">
-                                        <p className="text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Classifica</p>
-                                        <RefreshButton onClick={refresh} loading={loading} />
-                                    </div>
-                                    {showClassicPodium && (
-                                        <div className="p-5 pb-0">
-                                            <PodiumSteps players={classicPodiumPlayers} onPlayerClick={(p) => goToPlayerProfile(p.playerId)} />
-                                        </div>
-                                    )}
-                                    <LeaderboardTable
-                                        rows={classicTableRows}
-                                        startIndex={showClassicPodium ? 3 : 0}
-                                        showTournamentWins={false}
-                                        charactersById={charactersById}
-                                        highlightPlayerId={user?.player?.id ?? null}
-                                        isSuperadmin={false}
-                                        onPlayerClick={handlePlayerClick}
-                                    />
-                                </div>
-                            )}
-
-                            {showPointAdjustments && (
-                                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-4 shadow-sm">
-                                    <PointAdjustmentsPanel tournament={tournament} participants={activeTournamentParticipants} isSuperadmin={isSuperadmin} onChanged={refresh} />
-                                </div>
-                            )}
+                            {classicClassificaBlock}
 
                             <TournamentResolutionNotes tournament={tournament} />
 
@@ -1081,27 +1090,7 @@ const TournamentDetail = () => {
                                 <GroupPlancia tournament={tournament} players={players} results={results} highlightPlayerId={myPlayerId} />
                             </div>
                         ) : (
-                            <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden shadow-sm">
-                                <div className="px-5 py-4 border-b border-slate-100 dark:border-border flex items-center justify-between">
-                                    <p className="text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Classifica</p>
-                                    <RefreshButton onClick={refresh} loading={loading} />
-                                </div>
-                                <div className="overflow-x-auto">
-                                    <LeaderboardTable
-                                        rows={tournament.standings}
-                                        showTournamentWins={false}
-                                        charactersById={charactersById}
-                                        highlightPlayerId={user?.player_id ?? user?.player?.id ?? null}
-                                        isSuperadmin={isSuperadmin}
-                                        onPlayerClick={handlePlayerClick}
-                                    />
-                                </div>
-                                {showPointAdjustments && (
-                                    <div className="border-t border-slate-100 dark:border-border px-5 py-4">
-                                        <PointAdjustmentsPanel tournament={tournament} participants={activeTournamentParticipants} isSuperadmin={isSuperadmin} onChanged={refresh} />
-                                    </div>
-                                )}
-                            </div>
+                            classicClassificaBlock
                         )}
                     </div>
                 )}
