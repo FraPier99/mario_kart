@@ -336,6 +336,16 @@ const TournamentDetail = () => {
                 </div>
             )}
 
+            {tournamentStatus === 'da_svolgere' && (
+                <div className="rounded-3xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-5 flex items-center gap-3 shadow-sm">
+                    <Flag size={20} className="shrink-0 text-slate-400 dark:text-muted-foreground" />
+                    <div>
+                        <p className="text-sm font-black uppercase tracking-widest text-slate-600 dark:text-foreground">Torneo non ancora iniziato</p>
+                        <p className="text-xs text-slate-500 dark:text-muted-foreground">La classifica sarà disponibile non appena verranno disputate le prime gare.</p>
+                    </div>
+                </div>
+            )}
+
             {(tournament?.standings?.length ?? 0) > 0 && (
                 <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden shadow-sm">
                     <div className="px-5 py-4 border-b border-slate-100 dark:border-border flex items-center justify-between">
