@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
-    Flag, Trophy, Swords, ScrollText, Zap,
+    Flag, Trophy, Swords, ScrollText, Zap, Scale,
     Crown, Star, Flame, Flag as FlagIcon, ChevronDown,
 } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
@@ -51,6 +52,7 @@ const SECTIONS = [
         ],
     },
     { key: 'card', label: 'Card', icon: Zap },
+    { key: 'penalita', label: 'Penalità e Bonus', icon: Scale },
 ]
 
 const SectionHeading = ({ children }) => (
@@ -61,9 +63,18 @@ const SubHeading = ({ children }) => (
     <h3 className="mt-8 mb-3 text-sm font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">{children}</h3>
 )
 
+// Chiavi valide cliccabili (esclude le voci-gruppo senza `key`, es. "Tornei"/"Schedina").
+const VALID_SECTION_KEYS = new Set(
+    SECTIONS.flatMap((item) => (item.children ? item.children.map((c) => c.key) : [item.key]))
+)
+
 const Faq = () => {
     const { players } = useAppData()
-    const [activeSection, setActiveSection] = useState('lega')
+    const [searchParams] = useSearchParams()
+    const requestedSection = searchParams.get('section')
+    const [activeSection, setActiveSection] = useState(
+        VALID_SECTION_KEYS.has(requestedSection) ? requestedSection : 'lega'
+    )
     const [images, setImages] = useState({})
     const [flippedCard, setFlippedCard] = useState(null)
     // Quali gruppi (Tornei/Schedina) sono espansi in sidebar — cliccando
@@ -388,6 +399,63 @@ const Faq = () => {
                                     <li><strong className="text-slate-900 dark:text-foreground">Niente spareggi:</strong> le carte non si possono usare nelle gare di Duello/spareggio.</li>
                                 </ul>
                                 <p className="mt-5 text-center text-[10px] text-slate-400 dark:text-slate-500">Le carte vengono attivate dall'organizzatore nella pagina di gestione del torneo. Una volta esauriti tutti gli usi non sono più recuperabili.</p>
+                            </div>
+                        )}
+
+                        {activeSection === 'penalita' && (
+                            <div>
+                                <SectionHeading>Penalità e Bonus</SectionHeading>
+                                <p className="mt-3 text-sm text-slate-600 dark:text-muted-foreground">
+                                    Regolamento delle penalità e dei bonus applicabili ai partecipanti in caso di
+                                    ritardi, assenze, abbandoni anticipati, comportamenti non conformi allo spirito
+                                    della competizione, o contributi all'organizzazione. Le penalità/bonus vengono
+                                    applicate come rettifiche punti, visibili nella classifica del torneo interessato
+                                    con il motivo dell'assegnazione.
+                                </p>
+
+                                <SubHeading>1. Ritardo</SubHeading>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground">
+                                    Chi arriva in ritardo al torneo <strong className="text-slate-900 dark:text-foreground">senza una motivazione valida</strong> riceve
+                                    una penalità di <strong className="text-rose-600 dark:text-rose-400">-5 punti</strong>, applicata direttamente alla classifica del torneo in questione.
+                                </p>
+
+                                <SubHeading>2. Assenza ingiustificata</SubHeading>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground">
+                                    Chi <strong className="text-slate-900 dark:text-foreground">non si presenta al torneo senza una motivazione valida</strong> viene escluso dal <strong className="text-slate-900 dark:text-foreground">torneo successivo</strong>.
+                                    In caso di recidiva il provvedimento si aggrava: al <strong className="text-slate-900 dark:text-foreground">terzo</strong> provvedimento di esclusione per assenza ingiustificata scatta il <strong className="text-rose-600 dark:text-rose-400">ban dalla Lega</strong>.
+                                </p>
+
+                                <SubHeading>3. Abbandono anticipato</SubHeading>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground">
+                                    Chi <strong className="text-slate-900 dark:text-foreground">abbandona il torneo prima della sua conclusione senza una motivazione valida</strong> riceve un <strong className="text-slate-900 dark:text-foreground">richiamo ufficiale</strong>.
+                                    Al <strong className="text-slate-900 dark:text-foreground">terzo</strong> richiamo per abbandono anticipato ingiustificato scatta il <strong className="text-rose-600 dark:text-rose-400">ban dalla Lega</strong>.
+                                </p>
+
+                                <SubHeading>4. Comportamenti offensivi o antisportivi</SubHeading>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground">
+                                    Qualsiasi comportamento offensivo, provocatorio o gravemente antisportivo verso uno o più partecipanti comporta <strong className="text-rose-600 dark:text-rose-400">-20 punti</strong>.
+                                    Nei casi ritenuti particolarmente gravi o eccessivi, l'organizzazione può disporre anche l'<strong className="text-slate-900 dark:text-foreground">esclusione immediata dal torneo in corso</strong> più un <strong className="text-slate-900 dark:text-foreground">richiamo ufficiale</strong>, fino a provvedimenti più severi — incluso il <strong className="text-rose-600 dark:text-rose-400">ban dalla Lega</strong> — nei casi più gravi.
+                                </p>
+
+                                <SubHeading>5. Bonus Fair Play</SubHeading>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground">
+                                    Chi durante il torneo dimostra un comportamento particolarmente corretto, rispettoso e sportivo può ricevere <strong className="text-emerald-600 dark:text-emerald-400">+5 punti</strong>, assegnati esclusivamente quando l'organizzazione lo ritiene meritevole.
+                                </p>
+
+                                <SubHeading>6. Bonus per aiuto nell'organizzazione</SubHeading>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground">
+                                    Chi fornisce un aiuto concreto nell'organizzazione o nella gestione del torneo può ricevere <strong className="text-emerald-600 dark:text-emerald-400">+2 punti</strong>, in base al contributo effettivamente fornito.
+                                </p>
+
+                                <SubHeading>7. Motivazioni valide</SubHeading>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground">
+                                    Per "motivazione valida" si intendono circostanze personali, familiari, lavorative, di salute o altre situazioni impreviste che rendano ragionevolmente impossibile rispettare gli impegni presi. La validità viene valutata dall'organizzazione della Lega.
+                                </p>
+
+                                <SubHeading>8. Recidività e provvedimenti disciplinari</SubHeading>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground">
+                                    Penalità e richiami vengono registrati nello storico disciplinare di ciascun partecipante e la recidività viene considerata nell'applicazione dei provvedimenti. Per situazioni non espressamente disciplinate, l'organizzazione può valutare il comportamento e adottare un provvedimento proporzionato alla gravità del caso.
+                                </p>
                             </div>
                         )}
                     </div>

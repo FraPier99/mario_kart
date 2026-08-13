@@ -25,6 +25,7 @@ import ClassicPodiumDuelCard from '@/components/tournaments/ClassicPodiumDuelCar
 import CollapsibleSection from '@/components/tournaments/CollapsibleSection'
 import TournamentResolutionNotes from '@/components/tournaments/TournamentResolutionNotes'
 import PointAdjustmentsPanel from '@/components/tournaments/PointAdjustmentsPanel'
+import PenaltyRulesAnnouncement from '@/components/tournaments/PenaltyRulesAnnouncement'
 import GroupPlancia, { GroupCard } from '@/components/tournaments/GroupPlancia'
 import PhaseCircuitsCard from '@/components/tournaments/PhaseCircuitsCard'
 import SpareggioEsitiList from '@/components/tournaments/SpareggioEsitiList'
@@ -482,6 +483,8 @@ const TournamentDetail = () => {
         return (
             <AppLayout>
                 <section className="mx-auto max-w-5xl px-4 py-8 space-y-6 animate-fade-in">
+                    <PenaltyRulesAnnouncement />
+
                     {/* Back navigation — standalone, outside the card */}
                     <button type="button" onClick={() => navigate('/history')}
                         className="font-title inline-flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-slate-400 dark:text-muted-foreground transition hover:text-slate-600 dark:hover:text-foreground">
@@ -969,6 +972,7 @@ const TournamentDetail = () => {
             )}
             <section className="mx-auto max-w-7xl px-4 py-12 space-y-6">
                 <ApiBanner title="Errore caricamento torneo" message={errorMessage} />
+                <PenaltyRulesAnnouncement />
 
                 {/* Back navigation — standalone */}
                 <button type="button" onClick={() => navigate('/history')}

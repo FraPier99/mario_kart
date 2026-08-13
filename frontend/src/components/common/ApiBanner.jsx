@@ -1,6 +1,7 @@
 const toneClasses = {
     error: 'border-red-300 bg-red-50 text-red-900 dark:border-red-700 dark:bg-red-950 dark:text-red-200',
     info: 'border-slate-300 dark:border-border bg-slate-50 dark:bg-muted text-slate-700 dark:text-muted-foreground',
+    warning: 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200',
 }
 
 const ApiBanner = ({ title, message, tone = 'error', action }) => {

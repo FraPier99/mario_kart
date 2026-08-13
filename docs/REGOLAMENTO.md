@@ -196,3 +196,18 @@ Il Guscio Blu può essere usato **fino a 3 volte nello stesso torneo**. Una volt
 
 - Il campo `vittima_del_caos_id` è ancora presente nello schema della schedina classic per compatibilità, ma **non genera punteggio**.
 - La tabella `schedine_torneo_deluxe` ospita le schedine del formato a gironi: il nome è mantenuto per compatibilità.
+
+---
+
+## 9. Penalità e Bonus
+
+Disciplina i provvedimenti in punti applicabili ai partecipanti in caso di ritardi, assenze, abbandoni, comportamenti scorretti o contributi all'organizzazione. Applicati come rettifica punti manuale (vedi sezione "Rettifiche punti" della classifica torneo), con motivo sempre visibile.
+
+- **Ritardo** senza motivazione valida: **-5 punti** sul torneo in questione.
+- **Assenza ingiustificata**: esclusione dal torneo successivo. Al 3° provvedimento di questo tipo: **ban dalla Lega**.
+- **Abbandono anticipato** ingiustificato: richiamo ufficiale. Al 3° richiamo: **ban dalla Lega**.
+- **Comportamento offensivo o antisportivo**: **-20 punti**; nei casi gravi anche esclusione immediata dal torneo in corso + richiamo ufficiale, fino al ban nei casi più gravi.
+- **Bonus Fair Play** (comportamento particolarmente corretto e sportivo): **+5 punti**, a discrezione dell'organizzazione.
+- **Bonus aiuto organizzativo**: **+2 punti**, in base al contributo effettivo.
+- **Motivazione valida**: circostanze personali/familiari/lavorative/di salute o impreviste che rendano ragionevolmente impossibile rispettare gli impegni presi — valutate dall'organizzazione.
+- Penalità e richiami sono registrati nello storico disciplinare del partecipante; la recidività pesa sui provvedimenti successivi. Casi non previsti sono valutati caso per caso dall'organizzazione.
