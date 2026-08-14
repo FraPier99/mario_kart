@@ -41,7 +41,7 @@ def update_my_ownership(
 
 @router.get("/all")
 def read_all_ownership(
-    current_user=Depends(require_roles("superadmin")),
+    current_user=Depends(require_roles("superadmin", "admin")),
     db: Session = Depends(get_db),
 ):
     return get_all_ownership(db)

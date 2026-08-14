@@ -77,7 +77,11 @@ const AppRouter = () =>{
                         <Route path='/admin' element={<AdminDashboard />} />
                         <Route path='/tournaments/new' element={<NewTournament />} />
                     </Route>
-                    <Route element={<RequireAuth roles={['superadmin']} />}>
+                    {/* Admin (non solo superadmin) può entrare in /superadmin —
+                    SuperAdminPanel.jsx filtra le tab in base al ruolo, mostrando
+                    ad un admin solo Carte/Possessi/Circuiti (le altre restano
+                    superadmin-only). */}
+                    <Route element={<RequireAuth roles={['superadmin', 'admin']} />}>
                         <Route path='/superadmin' element={<SuperAdminPanel />} />
                     </Route>
                     <Route path='/tournaments' element={<Navigate to='/history' replace />} />

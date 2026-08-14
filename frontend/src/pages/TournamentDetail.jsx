@@ -212,11 +212,11 @@ const TournamentDetail = () => {
     const classicTableRows = showClassicPodium ? (tournament?.standings ?? []).slice(3) : (tournament?.standings ?? [])
 
     // Stessa condizione di visibilità di PointAdjustmentsPanel (solo classic,
-    // sempre visibile al superadmin, agli altri solo se esistono rettifiche)
-    // — serve qui per non renderizzare un contenitore a bg solido vuoto
-    // quando il pannello stesso decide di non mostrare nulla.
+    // sempre visibile ad admin/superadmin, agli altri solo se esistono
+    // rettifiche) — serve qui per non renderizzare un contenitore a bg
+    // solido vuoto quando il pannello stesso decide di non mostrare nulla.
     const showPointAdjustments = tournament?.tournament_format !== 'group_stage'
-        && (isSuperadmin || (tournament?.pointAdjustments?.length ?? 0) > 0)
+        && (isAdmin || (tournament?.pointAdjustments?.length ?? 0) > 0)
 
     // Un Admin che è anche partecipante al torneo vede di default la vista
     // giocatore (schedina/classifica/proprio girone) e può passare alla vista
@@ -371,7 +371,7 @@ const TournamentDetail = () => {
 
             {showPointAdjustments && (
                 <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-4 shadow-sm">
-                    <PointAdjustmentsPanel tournament={tournament} participants={activeTournamentParticipants} isSuperadmin={isSuperadmin} onChanged={refresh} />
+                    <PointAdjustmentsPanel tournament={tournament} participants={activeTournamentParticipants} canManage={isAdmin} onChanged={refresh} />
                 </div>
             )}
         </>

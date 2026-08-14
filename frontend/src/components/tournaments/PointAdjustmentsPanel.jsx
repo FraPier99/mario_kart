@@ -1,9 +1,11 @@
 /**
- * PointAdjustmentsPanel — Rettifiche punti manuali del superadmin per un
- * torneo classic (bonus/penalità fuori dalle gare). La lista è sempre
- * pubblica quando esistono rettifiche (giocatore, punti, motivo, chi/quando
- * — stesso registro di TournamentResolutionNotes.jsx); il form per crearne
- * di nuove è visibile solo al superadmin.
+ * PointAdjustmentsPanel — Rettifiche punti manuali per un torneo classic
+ * (bonus/penalità fuori dalle gare, es. regolamento Penalità e Bonus). La
+ * lista è sempre pubblica quando esistono rettifiche (giocatore, punti,
+ * motivo, chi/quando — stesso registro di TournamentResolutionNotes.jsx);
+ * il form per crearne di nuove (e il bottone di rimozione) è visibile solo
+ * ad admin/superadmin (`canManage`, backend: require_roles("superadmin",
+ * "admin") su POST/DELETE /point-adjustments).
  *
  * Solo tornei classic: nei tornei a gironi non esiste un totale punti unico
  * per l'intero torneo (i punti non si sommano tra girone/semifinale/finale),
@@ -20,7 +22,7 @@ const formatDate = (iso) => {
     return new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-const PointAdjustmentsPanel = ({ tournament, participants = [], isSuperadmin = false, onChanged }) => {
+const PointAdjustmentsPanel = ({ tournament, participants = [], canManage = false, onChanged }) => {
     const [playerId, setPlayerId] = useState('')
     const [points, setPoints] = useState('')
     const [reason, setReason] = useState('')
@@ -29,7 +31,7 @@ const PointAdjustmentsPanel = ({ tournament, participants = [], isSuperadmin = f
     const adjustments = tournament?.pointAdjustments ?? []
 
     if (tournament?.tournament_format === 'group_stage') return null
-    if (!isSuperadmin && adjustments.length === 0) return null
+    if (!canManage && adjustments.length === 0) return null
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -92,7 +94,7 @@ const PointAdjustmentsPanel = ({ tournament, participants = [], isSuperadmin = f
                                     {a.created_by_username} · {formatDate(a.created_at)}
                                 </span>
                             </p>
-                            {isSuperadmin && (
+                            {canManage && (
                                 <button
                                     type="button"
                                     onClick={() => handleDelete(a.id)}
@@ -107,7 +109,7 @@ const PointAdjustmentsPanel = ({ tournament, participants = [], isSuperadmin = f
                 </ul>
             )}
 
-            {isSuperadmin && (
+            {canManage && (
                 <form onSubmit={handleSubmit} className="grid gap-2 border-t border-violet-100 dark:border-violet-500/20 pt-3 sm:grid-cols-[1fr_5rem_2fr_auto]">
                     <select
                         value={playerId}

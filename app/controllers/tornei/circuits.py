@@ -38,7 +38,7 @@ def update_circuit_by_id(
     circuit_id: int,
     payload: UpdateCircuit,
     db: Session = Depends(get_db),
-    current_user=Depends(require_roles("superadmin")),
+    current_user=Depends(require_roles("superadmin", "admin")),
 ):
     try:
         updated = update_circuit(db, payload, circuit_id)

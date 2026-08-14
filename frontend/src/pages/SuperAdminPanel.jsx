@@ -258,9 +258,15 @@ const TournamentTimeline = ({ tournament }) => {
 
 // ── component ────────────────────────────────────────────────────────
 export default function SuperAdminPanel() {
-    const { user } = useAuth()
-    const { tournaments, players, games, circuits, refresh, homeMetrics, charactersById } = useAppData()
-    const [activeTab, setActiveTab] = useState('panoramica')
+    const { user, isSuperadmin } = useAuth()
+    const { tournaments, players, games, circuits, refresh, homeMetrics, charactersById, communityUsers } = useAppData()
+    // Un admin (non superadmin) può entrare in questa pagina ma vede solo le
+    // tab Carte/Possessi/Circuiti — Utenti/Tornei/Panoramica/Database/Audit
+    // Log restano riservate al superadmin (accesso ad account, DB grezzo,
+    // log di sistema).
+    const ADMIN_VISIBLE_TAB_KEYS = ['carte', 'possessi', 'circuiti']
+    const visibleTabs = isSuperadmin ? TABS : TABS.filter((t) => ADMIN_VISIBLE_TAB_KEYS.includes(t.key))
+    const [activeTab, setActiveTab] = useState(() => (isSuperadmin ? 'panoramica' : ADMIN_VISIBLE_TAB_KEYS[0]))
 
     // Users
     const [users, setUsers] = useState([])
@@ -355,10 +361,14 @@ export default function SuperAdminPanel() {
     }
 
     useEffect(() => {
+        // /auth/users e /audit-log restano superadmin-only lato backend — un
+        // admin che carica questa pagina otterrebbe solo un 403 e un toast
+        // d'errore per una tab (Utenti/Audit Log) che non vede nemmeno.
+        if (!isSuperadmin) return
         // eslint-disable-next-line react-hooks/set-state-in-effect
         loadUsers()
         loadAuditLogs()
-    }, [])
+    }, [isSuperadmin])
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -523,7 +533,11 @@ export default function SuperAdminPanel() {
         if (!cardTargetPlayerId) { toast.error('Seleziona un giocatore'); return }
         if (!cardGameId) { toast.error('Seleziona un gioco'); return }
         if (!cardNote.trim()) { toast.error('Inserisci una nota sul motivo dell\'assegnazione'); return }
-        const targetUser = users.find(u => String(u.player_id) === String(cardTargetPlayerId))
+        // communityUsers (pubblico, /auth/community/users) invece di `users`
+        // (/auth/users, superadmin-only): un admin che assegna carte non ha
+        // accesso alla lista utenti completa, ma questa gli basta per
+        // risalire allo user_id collegato al giocatore selezionato.
+        const targetUser = communityUsers.find(u => String(u.player_id) === String(cardTargetPlayerId))
         if (!targetUser) { toast.error('Nessun account collegato a questo giocatore'); return }
         setCardGranting(true)
         try {
@@ -557,8 +571,8 @@ export default function SuperAdminPanel() {
                             </div>
                             <div>
                                 <p className="font-title text-[10px] tracking-wide text-amber-600 dark:text-amber-400">Pannello di controllo</p>
-                                <h1 className="mt-0.5 text-2xl font-black text-slate-900 dark:text-foreground">SuperAdmin</h1>
-                                <p className="text-sm text-slate-500 dark:text-muted-foreground">Accesso completo · {user?.username}</p>
+                                <h1 className="mt-0.5 text-2xl font-black text-slate-900 dark:text-foreground">{isSuperadmin ? 'SuperAdmin' : 'Gestione'}</h1>
+                                <p className="text-sm text-slate-500 dark:text-muted-foreground">{isSuperadmin ? 'Accesso completo' : 'Carte, Possessi e Circuiti'} · {user?.username}</p>
                             </div>
                         </div>
                     </div>
@@ -566,7 +580,7 @@ export default function SuperAdminPanel() {
                     {/* Tab bar */}
                     <div className="border-t border-slate-100 dark:border-border px-6">
                         <div className="flex gap-0.5 overflow-x-auto">
-                            {TABS.map(({ key, label, icon: Icon }) => (
+                            {visibleTabs.map(({ key, label, icon: Icon }) => (
                                 <button key={key} type="button" onClick={() => setActiveTab(key)}
                                     className={`flex shrink-0 items-center gap-2 px-4 py-3 font-title text-[10px] tracking-wide border-b-2 transition active:translate-y-px ${activeTab === key ? 'border-amber-500 text-amber-600 dark:text-amber-400' : 'border-transparent text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'}`}>
                                     <Icon size={13} />
@@ -1118,7 +1132,7 @@ export default function SuperAdminPanel() {
                                         className="w-full rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5 text-sm text-slate-900 dark:text-foreground outline-none focus:border-amber-500 transition">
                                         <option value="">Seleziona giocatore...</option>
                                         {players.map(p => {
-                                            const linked = users.some(u => u.player_id === p.id)
+                                            const linked = communityUsers.some(u => u.player_id === p.id)
                                             return <option key={p.id} value={p.id} disabled={!linked}>{p.nickname}{!linked ? ' (no account)' : ''}</option>
                                         })}
                                     </select>

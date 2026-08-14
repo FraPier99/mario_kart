@@ -27,7 +27,7 @@ def all_point_adjustments(db: Session = Depends(get_db)):
 def insert_point_adjustment(
     payload: CreatePointAdjustment,
     db: Session = Depends(get_db),
-    current_user=Depends(require_roles("superadmin")),
+    current_user=Depends(require_roles("superadmin", "admin")),
 ):
     try:
         return create_point_adjustment(
@@ -46,7 +46,7 @@ def insert_point_adjustment(
 def delete_point_adjustment_by_id(
     adjustment_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_roles("superadmin")),
+    current_user=Depends(require_roles("superadmin", "admin")),
 ):
     deleted = delete_point_adjustment(db, adjustment_id)
     if not deleted:
