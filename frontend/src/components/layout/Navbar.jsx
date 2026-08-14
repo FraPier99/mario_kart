@@ -57,6 +57,7 @@ export default function Navbar() {
     { name: 'Dashboard Admin',    path: '/admin',         icon: <BarChart3 size={15} /> },
     { name: 'Crea Torneo',        path: '/tournaments/new', icon: <Plus size={15} /> },
     { name: 'Gestione Giocatori', path: '/admin/players', icon: <Users size={15} /> },
+    { name: 'Carte, Possessi e Circuiti', path: '/superadmin', icon: <Shield size={15} /> },
   ]
 
   const player = user?.player ?? null
@@ -387,6 +388,9 @@ export default function Navbar() {
                       <p className="font-title px-3 py-1 text-[8px] tracking-wide text-slate-500">Admin</p>
                       <Link to="/admin" className="font-title flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide text-slate-300 transition hover:bg-white/8 hover:text-white">
                         <LayoutDashboard size={13} /> Dashboard Admin
+                      </Link>
+                      <Link to="/superadmin" className="font-title flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide text-amber-300 transition hover:bg-amber-500/10 hover:text-amber-200">
+                        <Shield size={13} /> Carte, Possessi e Circuiti
                       </Link>
                     </>
                   )}
