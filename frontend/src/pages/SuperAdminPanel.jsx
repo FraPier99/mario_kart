@@ -1246,6 +1246,7 @@ export default function SuperAdminPanel() {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Utente</TableHead>
+                                        <TableHead>Stato</TableHead>
                                         {games.map((g) => (
                                             <TableHead key={g.id}>{g.name}</TableHead>
                                         ))}
@@ -1254,46 +1255,70 @@ export default function SuperAdminPanel() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {ownershipRows.map((row) => (
-                                        <TableRow key={row.user_id}>
+                                    {ownershipRows.map((row) => {
+                                        // Senza questo flag "quantità 0" e "scheda mai compilata"
+                                        // sono indistinguibili — entrambe renderizzavano "—".
+                                        const hasDeclared = row.has_declared
+                                        return (
+                                        <TableRow key={row.user_id} className={hasDeclared ? undefined : 'opacity-60'}>
                                             <TableCell>
                                                 <p className="font-bold text-slate-900 dark:text-foreground">{row.player_nickname ?? row.username}</p>
                                                 <p className="text-xs text-slate-400">{row.username}</p>
+                                            </TableCell>
+                                            <TableCell>
+                                                {hasDeclared ? (
+                                                    <span className="rounded-full bg-emerald-100 dark:bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">Dichiarato</span>
+                                                ) : (
+                                                    <span className="rounded-full bg-amber-100 dark:bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300">Non compilato</span>
+                                                )}
                                             </TableCell>
                                             {games.map((g) => {
                                                 const quantity = row.games.find((rg) => rg.game_id === g.id)?.quantity ?? 0
                                                 return (
                                                     <TableCell key={g.id}>
-                                                        <span className={quantity > 0 ? 'text-emerald-600 dark:text-emerald-400 font-black' : 'text-slate-400'}>
-                                                            {quantity > 0 ? quantity : '—'}
-                                                        </span>
+                                                        {!hasDeclared ? (
+                                                            <span className="text-slate-300 dark:text-slate-600 italic">n.d.</span>
+                                                        ) : (
+                                                            <span className={quantity > 0 ? 'text-emerald-600 dark:text-emerald-400 font-black' : 'text-slate-400'}>
+                                                                {quantity > 0 ? quantity : '—'}
+                                                            </span>
+                                                        )}
                                                     </TableCell>
                                                 )
                                             })}
                                             <TableCell>
-                                                <div className="flex flex-wrap gap-1">
-                                                    {row.consoles.length === 0 ? (
-                                                        <span className="text-slate-400">—</span>
-                                                    ) : row.consoles.map(({ key, quantity }) => (
-                                                        <span key={key} className="rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-[10px] font-bold text-slate-700 dark:text-slate-200">
-                                                            {consoleLabel(key)} ×{quantity}
-                                                        </span>
-                                                    ))}
-                                                </div>
+                                                {!hasDeclared ? (
+                                                    <span className="text-slate-300 dark:text-slate-600 italic">n.d.</span>
+                                                ) : (
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {row.consoles.length === 0 ? (
+                                                            <span className="text-slate-400">—</span>
+                                                        ) : row.consoles.map(({ key, quantity }) => (
+                                                            <span key={key} className="rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-[10px] font-bold text-slate-700 dark:text-slate-200">
+                                                                {consoleLabel(key)} ×{quantity}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </TableCell>
                                             <TableCell>
-                                                <div className="flex flex-wrap gap-1">
-                                                    {row.r4_devices.length === 0 ? (
-                                                        <span className="text-slate-400">—</span>
-                                                    ) : row.r4_devices.map(({ key, quantity }) => (
-                                                        <span key={key} className="rounded-full bg-amber-100 dark:bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300">
-                                                            {consoleLabel(key)} ×{quantity}
-                                                        </span>
-                                                    ))}
-                                                </div>
+                                                {!hasDeclared ? (
+                                                    <span className="text-slate-300 dark:text-slate-600 italic">n.d.</span>
+                                                ) : (
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {row.r4_devices.length === 0 ? (
+                                                            <span className="text-slate-400">—</span>
+                                                        ) : row.r4_devices.map(({ key, quantity }) => (
+                                                            <span key={key} className="rounded-full bg-amber-100 dark:bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300">
+                                                                {consoleLabel(key)} ×{quantity}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </TableCell>
                                         </TableRow>
-                                    ))}
+                                        )
+                                    })}
                                 </TableBody>
                             </Table>
                         )}

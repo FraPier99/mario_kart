@@ -164,7 +164,13 @@ def replace_my_ownership(
 
 def get_all_ownership(db: Session) -> list[dict]:
     """Panoramica per il superadmin: un record per ogni utente con le
-    quantità di giochi, console e dispositivi R4 dichiarate."""
+    quantità di giochi, console e dispositivi R4 dichiarate.
+
+    Include `has_declared` (derivato da `ownership_declared_at`, popolato
+    solo al primo salvataggio del form "Possiedi") perché senza di esso il
+    superadmin non può distinguere "l'utente possiede 0 copie di questo
+    gioco" da "l'utente non ha mai compilato la scheda" — entrambi i casi
+    producono le stesse quantità a 0/liste vuote."""
     from app.models import User, Game, UserGameOwnership, UserConsoleOwnership, UserR4Device
 
     games = db.query(Game).order_by(Game.id.asc()).all()
@@ -204,6 +210,7 @@ def get_all_ownership(db: Session) -> list[dict]:
                 ],
                 "consoles": consoles_by_user.get(user.id, []),
                 "r4_devices": r4_by_user.get(user.id, []),
+                "has_declared": user.ownership_declared_at is not None,
             }
         )
     return result
