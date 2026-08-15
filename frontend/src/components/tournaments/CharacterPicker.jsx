@@ -10,6 +10,15 @@
  * ancora di poter scrollare fino in fondo — stesso problema già risolto per
  * CircuitPicker. L'altezza massima si adatta allo spazio reale disponibile
  * sopra/sotto il bottone, allineato a destra come nella versione originale.
+ *
+ * Su mobile (<640px) il popover a larghezza fissa (288px) copriva solo
+ * parzialmente la card sottostante (es. "Risultati"), lasciandone visibili i
+ * bordi/l'header attorno — con un roster numeroso (es. MK8 Deluxe) l'effetto
+ * era un riquadro che sembrava "tagliato"/disordinato invece di un elemento
+ * a sé stante. Sotto i 640px il popover usa quasi tutta la larghezza
+ * disponibile ed è accompagnato da un overlay di sfondo (tap per chiudere,
+ * stesso pattern di una bottom sheet) così si legge come un pannello
+ * intenzionale invece che come un box che si sovrappone male al resto.
  */
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
@@ -18,9 +27,11 @@ import { Search, ChevronDown, X } from 'lucide-react'
 const MAX_MENU_HEIGHT = 300
 const MAX_MENU_WIDTH = 288
 const VIEWPORT_MARGIN = 12
+const MOBILE_BREAKPOINT = 640
+const MOBILE_MAX_HEIGHT_RATIO = 0.6
 
 const useDropdownPosition = (triggerRef, menuRef, open) => {
-    const [menuPos, setMenuPos] = useState({ top: 0, right: 0, width: MAX_MENU_WIDTH, maxHeight: MAX_MENU_HEIGHT, ready: false })
+    const [menuPos, setMenuPos] = useState({ top: 0, right: 0, width: MAX_MENU_WIDTH, maxHeight: MAX_MENU_HEIGHT, ready: false, isMobile: false })
 
     useEffect(() => {
         if (!open) {
@@ -32,24 +43,30 @@ const useDropdownPosition = (triggerRef, menuRef, open) => {
         const measure = () => {
             if (!triggerRef.current) return
             const rect = triggerRef.current.getBoundingClientRect()
+            const isMobile = window.innerWidth < MOBILE_BREAKPOINT
             const menuHeight = menuRef.current?.offsetHeight || MAX_MENU_HEIGHT
             // Larghezza e posizione (ancorata a destra del trigger, come uno
             // "sposta a sinistra se serve") vanno vincolate al viewport reale:
             // su schermi stretti un trigger vicino al bordo sinistro spingeva
             // il menu (larghezza fissa) fuori dallo schermo a sinistra, con
-            // parte della griglia personaggi non raggiungibile al tocco.
-            const width = Math.min(MAX_MENU_WIDTH, window.innerWidth - VIEWPORT_MARGIN * 2)
+            // parte della griglia personaggi non raggiungibile al tocco. Su
+            // mobile, invece del cap fisso a 288px, riempie quasi tutta la
+            // larghezza disponibile (vedi nota in testa al file).
+            const width = isMobile
+                ? window.innerWidth - VIEWPORT_MARGIN * 2
+                : Math.min(MAX_MENU_WIDTH, window.innerWidth - VIEWPORT_MARGIN * 2)
             const rawRight = window.innerWidth - rect.right
             const maxRight = window.innerWidth - width - VIEWPORT_MARGIN
             const right = Math.min(Math.max(rawRight, VIEWPORT_MARGIN), Math.max(maxRight, VIEWPORT_MARGIN))
+            const menuHeightCap = isMobile ? Math.max(MAX_MENU_HEIGHT, window.innerHeight * MOBILE_MAX_HEIGHT_RATIO) : MAX_MENU_HEIGHT
 
             if (rect.top > menuHeight + 8) {
-                const maxHeight = Math.min(MAX_MENU_HEIGHT, rect.top - VIEWPORT_MARGIN)
-                setMenuPos({ top: rect.top - Math.min(menuHeight, maxHeight) - 4, right, width, maxHeight, ready: true })
+                const maxHeight = Math.min(menuHeightCap, rect.top - VIEWPORT_MARGIN)
+                setMenuPos({ top: rect.top - Math.min(menuHeight, maxHeight) - 4, right, width, maxHeight, ready: true, isMobile })
             }
             else {
-                const maxHeight = Math.min(MAX_MENU_HEIGHT, window.innerHeight - rect.bottom - 4 - VIEWPORT_MARGIN)
-                setMenuPos({ top: rect.bottom + 4, right, width, maxHeight, ready: true })
+                const maxHeight = Math.min(menuHeightCap, window.innerHeight - rect.bottom - 4 - VIEWPORT_MARGIN)
+                setMenuPos({ top: rect.bottom + 4, right, width, maxHeight, ready: true, isMobile })
             }
         }
 
@@ -106,11 +123,25 @@ const CharacterPicker = ({ characters = [], value, onChange, disabled }) => {
             </button>
 
             {open && createPortal(
-                <div
-                    ref={menuRef}
-                    style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, maxHeight: menuPos.maxHeight, width: menuPos.width, zIndex: 9999, visibility: menuPos.ready ? 'visible' : 'hidden' }}
-                    className="flex flex-col rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-2xl p-3 space-y-2"
-                >
+                <>
+                    {/* Overlay solo su mobile: senza, il popover (quasi a piena
+                    larghezza lì) copriva solo in parte la card sottostante,
+                    lasciandone visibili bordi/header attorno — un tap fuori la
+                    chiude, stesso pattern di una bottom sheet. Su desktop il
+                    popover è più piccolo e ancorato al trigger, un overlay a
+                    piena pagina sarebbe fuori posto lì. */}
+                    {menuPos.isMobile && (
+                        <div
+                            style={{ position: 'fixed', inset: 0, zIndex: 9998 }}
+                            className="bg-black/40"
+                            onClick={() => setOpen(false)}
+                        />
+                    )}
+                    <div
+                        ref={menuRef}
+                        style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, maxHeight: menuPos.maxHeight, width: menuPos.width, zIndex: 9999, visibility: menuPos.ready ? 'visible' : 'hidden' }}
+                        className="flex flex-col rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-2xl p-3 space-y-2"
+                    >
                     {/* Search */}
                     <div className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2">
                         <Search size={12} className="text-slate-400 shrink-0" />
@@ -129,10 +160,12 @@ const CharacterPicker = ({ characters = [], value, onChange, disabled }) => {
                         )}
                     </div>
 
-                    {/* Grid */}
-                    <div className="min-h-0 flex-1 grid grid-cols-4 gap-1 overflow-y-auto content-start">
+                    {/* Grid — su mobile qualche colonna in più, dato che il
+                    popover ora usa quasi tutta la larghezza disponibile
+                    invece del cap fisso a 288px. */}
+                    <div className={`min-h-0 flex-1 grid gap-1 overflow-y-auto content-start ${menuPos.isMobile ? 'grid-cols-5' : 'grid-cols-4'}`}>
                         {filtered.length === 0 && (
-                            <p className="col-span-4 text-center text-[10px] text-slate-400 py-3">Nessun personaggio trovato</p>
+                            <p className="col-span-full text-center text-[10px] text-slate-400 py-3">Nessun personaggio trovato</p>
                         )}
                         {filtered.map((c) => (
                             <button
@@ -153,7 +186,8 @@ const CharacterPicker = ({ characters = [], value, onChange, disabled }) => {
                             </button>
                         ))}
                     </div>
-                </div>,
+                    </div>
+                </>,
                 document.body
             )}
         </div>
