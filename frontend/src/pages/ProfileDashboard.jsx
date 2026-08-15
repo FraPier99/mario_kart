@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Check, ChevronDown, Image as ImageIcon, PenLine, Search, Upload, X, Clock, AlertTriangle, Zap, Shield, Trophy, Flag, BarChart3, Star, Crown } from 'lucide-react'
 import PowerCard from '@/components/cards/PowerCard'
 import { toast } from 'sonner'
@@ -331,7 +331,12 @@ const Dashboard = () => {
     const goldBorder = effectiveCardStyle?.cardBorder ?? 'border-slate-200 dark:border-border'
     const goldBg = effectiveCardStyle?.cardBg ?? 'bg-white dark:bg-card'
 
-    const [profileTab, setProfileTab] = useState('profilo')
+    const [searchParams] = useSearchParams()
+    const requestedProfileTab = searchParams.get('tab')
+    const validProfileTabKeys = new Set(['profilo', 'sicurezza', ...(!isSuperadmin ? ['statistiche', 'carte', 'possiedi'] : [])])
+    const [profileTab, setProfileTab] = useState(() => (
+        validProfileTabKeys.has(requestedProfileTab) ? requestedProfileTab : 'profilo'
+    ))
     const [saving, setSaving] = useState(false)
     const [form, setForm] = useState({ first_name: '', last_name: '', nickname: '', favorite_character_id: '', img_url: '', bio: '' })
     const [imageFileName, setImageFileName] = useState('')

@@ -6,6 +6,7 @@ import { useProfileTheme } from '@/hooks/useProfileTheme'
 import { useTheme } from '@/context/ThemeContext'
 import GlobalCelebrationOverlay from '@/components/common/GlobalCelebrationOverlay'
 import PenaltyRulesAnnouncement from '@/components/tournaments/PenaltyRulesAnnouncement'
+import OwnershipReminderBanner from '@/components/common/OwnershipReminderBanner'
 import sfondo from '@/assets/sfondo.jpg'
 
 
@@ -27,8 +28,9 @@ const AppLayout  =({children})=>{
             <div className="pointer-events-none fixed inset-0" style={{ backgroundImage: 'var(--mk-page-overlay)' }} />
             <div className="relative z-10 flex min-h-screen flex-col">
                 <Navbar />
-                <div className="mx-auto w-full max-w-7xl px-4 pt-4">
+                <div className="mx-auto w-full max-w-7xl px-4 pt-4 space-y-2">
                     <PenaltyRulesAnnouncement />
+                    <OwnershipReminderBanner />
                 </div>
                 <main className="grow animate-fade-in">
                     {children}
