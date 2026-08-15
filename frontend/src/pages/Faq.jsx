@@ -126,7 +126,7 @@ const Faq = () => {
                                                 className={`flex w-full items-center gap-2 rounded-xl px-4 py-1.5 text-[11px] font-black uppercase tracking-widest transition ${groupActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-muted-foreground hover:text-slate-600 dark:hover:text-foreground'}`}
                                             >
                                                 <item.icon size={13} />
-                                                <span className="flex-1 text-left">{item.label}</span>
+                                                <span className="flex-1 text-left uppercase">{item.label}</span>
                                                 <ChevronDown size={13} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                                             </button>
                                             {isOpen && (
