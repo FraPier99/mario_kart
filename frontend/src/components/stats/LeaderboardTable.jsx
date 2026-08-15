@@ -178,12 +178,12 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                 <table className="min-w-[600px] w-full text-left">
                     <thead className="bg-slate-50 dark:bg-muted font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">
                         <tr>
-                            <th className="px-5 py-4">Pos</th>
-                            <th className="px-5 py-4">Giocatore</th>
-                            <th className="px-5 py-4 text-emerald-600 dark:text-emerald-400">{showTournamentWins ? 'Placement' : 'Punti'}</th>
-                            {showTournamentWins && <th className="px-5 py-4">Tornei vinti</th>}
-                            <th className="px-5 py-4">Gare vinte</th>
-                            <th className="px-5 py-4">Podi</th>
+                            <th className="px-5 py-4 text-center">Pos</th>
+                            <th className="px-5 py-4 text-center">Giocatore</th>
+                            <th className="px-5 py-4 text-center text-emerald-600 dark:text-emerald-400">{showTournamentWins ? 'Placement' : 'Punti'}</th>
+                            {showTournamentWins && <th className="px-5 py-4 text-center">Tornei vinti</th>}
+                            <th className="px-5 py-4 text-center">Gare vinte</th>
+                            <th className="px-5 py-4 text-center">Podi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -194,11 +194,13 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
 
                             return (
                                 <tr key={row.playerId} className={`border-b border-slate-200 dark:border-slate-800/50 ${isCurrentUser ? `${theme?.tailwind?.bgSoft ?? 'bg-amber-500/10'} border-l-4 ${theme?.tailwind?.border ?? 'border-amber-500'}` : podiumBg(absoluteIndex)}`}>
-                                    <td className="px-5 py-4 align-middle">
+                                    <td className="px-5 py-4 text-center align-middle">
                                         <PositionBadge index={absoluteIndex} size="lg" />
                                     </td>
-                                    <td className="px-5 py-4 align-middle w-[35%]">
-                                        <PlayerCell row={row} charactersUsed={charactersUsed} onPlayerClick={onPlayerClick} />
+                                    <td className="px-5 py-4 text-center align-middle w-[35%]">
+                                        <div className="flex justify-center">
+                                            <PlayerCell row={row} charactersUsed={charactersUsed} onPlayerClick={onPlayerClick} />
+                                        </div>
                                     </td>
                                     <td className="px-5 py-4 text-center align-middle">
                                         {showTournamentWins ? (

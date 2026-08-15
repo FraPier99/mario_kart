@@ -12,7 +12,6 @@ import Stats from '../pages/Stats'
 import NewTournament from '../pages/NewTournament'
 import TournamentDetail from '../pages/TournamentDetail'
 import TournamentStats from '../pages/TournamentStats'
-import AdminPlayers from '../pages/AdminPlayers'
 import AdminDashboard from '../pages/AdminDashboard'
 import SuperAdminPanel from '../pages/SuperAdminPanel'
 import Compare from '../pages/Compare'
@@ -73,15 +72,10 @@ const AppRouter = () =>{
                     <Route path='/tournaments/:tournamentId' element={<TournamentDetail />} />
                     <Route path='/tournaments/:tournamentId/stats' element={<TournamentStats />} />
                     <Route element={<RequireAuth roles={['superadmin', 'admin']} />}>
-                        <Route path='/admin/players' element={<AdminPlayers />} />
                         <Route path='/admin' element={<AdminDashboard />} />
                         <Route path='/tournaments/new' element={<NewTournament />} />
                     </Route>
-                    {/* Admin (non solo superadmin) può entrare in /superadmin —
-                    SuperAdminPanel.jsx filtra le tab in base al ruolo, mostrando
-                    ad un admin solo Carte/Possessi/Circuiti (le altre restano
-                    superadmin-only). */}
-                    <Route element={<RequireAuth roles={['superadmin', 'admin']} />}>
+                    <Route element={<RequireAuth roles={['superadmin']} />}>
                         <Route path='/superadmin' element={<SuperAdminPanel />} />
                     </Route>
                     <Route path='/tournaments' element={<Navigate to='/history' replace />} />

@@ -57,7 +57,7 @@ const getTournamentStatusBadge = (status) => {
 const TournamentDetail = () => {
     const { tournamentId } = useParams()
     const navigate = useNavigate()
-    const { getTournamentById, getTournamentDisplayNumber, players, games, refresh, loading, errorMessage, circuitsById, circuitsByGameId, charactersById, charactersByGameId, results } = useAppData()
+    const { getTournamentById, getTournamentDisplayNumber, players, games, refresh, loading, errorMessage, circuitsById, circuitsByGameId, charactersById, charactersByGameId, results, races } = useAppData()
     const { user, isAdmin, isSuperadmin } = useAuth()
     const { triggerCelebration } = useCelebration()
 
@@ -128,28 +128,36 @@ const TournamentDetail = () => {
     )
 
     // Statistiche per circuito (tab Circuiti, solo classic) — il mio miglior
-    // piazzamento e chi ha vinto di più su quel circuito in questo torneo,
-    // gestendo i pareggi (tutti i giocatori al conteggio massimo, non solo
-    // il primo trovato). Le gare di spareggio (is_duello) sono escluse,
-    // stesso criterio usato ovunque per punti/statistiche.
+    // piazzamento e chi ha vinto di più su quel circuito, gestendo i pareggi
+    // (tutti i giocatori al conteggio massimo, non solo il primo trovato).
+    // Calcolate su TUTTO lo storico (tutti i tornei), non solo quello
+    // corrente: per un circuito non ancora usato in questo torneo non
+    // esisterebbe altrimenti alcuna gara da cui derivare le statistiche —
+    // qui servono infatti da anteprima per chi sta per scegliere il
+    // circuito, non come riepilogo post-gara. Le gare di spareggio
+    // (is_duello) sono escluse, stesso criterio usato ovunque per
+    // punti/statistiche.
     const circuitStatsById = useMemo(() => {
         const perCircuit = new Map()
-        const races = (tournament?.races ?? []).filter((r) => !r.is_duello)
-        races.forEach((race) => {
-            if (race.circuit_id == null) return
+        const raceById = new Map(
+            (races ?? [])
+                .filter((r) => !r.is_duello && r.circuit_id != null)
+                .map((r) => [r.id, r])
+        )
+        ;(results ?? []).forEach((result) => {
+            const race = raceById.get(result.race_id)
+            if (!race) return
             let entry = perCircuit.get(race.circuit_id)
             if (!entry) {
                 entry = { myPositions: [], winCounts: new Map() }
                 perCircuit.set(race.circuit_id, entry)
             }
-            ;(race.results ?? []).forEach((result) => {
-                if (myPlayerId != null && result.player_id === myPlayerId && result.position != null) {
-                    entry.myPositions.push(result.position)
-                }
-                if (result.position === 1) {
-                    entry.winCounts.set(result.player_id, (entry.winCounts.get(result.player_id) ?? 0) + 1)
-                }
-            })
+            if (myPlayerId != null && result.player_id === myPlayerId && result.position != null) {
+                entry.myPositions.push(result.position)
+            }
+            if (result.position === 1) {
+                entry.winCounts.set(result.player_id, (entry.winCounts.get(result.player_id) ?? 0) + 1)
+            }
         })
         const out = new Map()
         perCircuit.forEach((entry, circuitId) => {
@@ -169,7 +177,7 @@ const TournamentDetail = () => {
             out.set(circuitId, { myBestPosition, topWinners })
         })
         return out
-    }, [tournament?.races, myPlayerId, playerMapById])
+    }, [races, results, myPlayerId, playerMapById])
 
     // Raggruppa le gare duello per group_name (es. duello_podio_1_2)
     const duelloGroups = useMemo(() => {
@@ -393,7 +401,7 @@ const TournamentDetail = () => {
     const classicClassificaBlock = (
         <>
             {tournamentStatus === 'in_corso' && (
-                <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 p-5 flex items-center gap-3 shadow-sm">
+                <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/40 p-5 flex items-center gap-3 shadow-sm">
                     <Clock size={20} className="shrink-0 text-amber-500 dark:text-amber-400" />
                     <div>
                         <p className="text-sm font-black uppercase tracking-widest text-amber-700 dark:text-amber-300">Torneo in corso</p>
@@ -413,12 +421,12 @@ const TournamentDetail = () => {
             )}
 
             {tournament?.status === 'concluso' && tournament?.winner_id != null && (
-                <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 p-5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+                <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/40 p-5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
                     <div className="flex items-center gap-3">
                         <PartyPopper size={20} className="shrink-0 text-amber-500 dark:text-amber-400" />
                         <div>
                             <p className="text-sm font-black uppercase tracking-widest text-amber-700 dark:text-amber-300">Torneo concluso</p>
-                            <p className="text-xs text-amber-600 dark:text-amber-400">Rivivi la premiazione quando vuoi — non solo l'admin.</p>
+                            <p className="text-xs text-amber-600 dark:text-amber-400">Rivivi la premiazione quando vuoi.</p>
                         </div>
                     </div>
                     <button
@@ -741,12 +749,12 @@ const TournamentDetail = () => {
                     {userTab === 'generale' && (
                         <div className="space-y-6">
                             {tournament?.status === 'concluso' && tournament?.winner_id != null && (
-                                <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 p-5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+                                <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/40 p-5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
                                     <div className="flex items-center gap-3">
                                         <PartyPopper size={20} className="shrink-0 text-amber-500 dark:text-amber-400" />
                                         <div>
                                             <p className="text-sm font-black uppercase tracking-widest text-amber-700 dark:text-amber-300">Torneo concluso</p>
-                                            <p className="text-xs text-amber-600 dark:text-amber-400">Rivivi la premiazione quando vuoi — non solo l'admin.</p>
+                                            <p className="text-xs text-amber-600 dark:text-amber-400">Rivivi la premiazione quando vuoi.</p>
                                         </div>
                                     </div>
                                     <button
@@ -1048,7 +1056,7 @@ const TournamentDetail = () => {
                     </button>
                 </div>
             )}
-            <section className="mx-auto max-w-7xl px-4 py-12 space-y-6">
+            <section className="mx-auto max-w-5xl px-4 py-12 space-y-6">
                 <ApiBanner title="Errore caricamento torneo" message={errorMessage} />
 
                 {/* Back navigation — standalone */}
@@ -1172,7 +1180,7 @@ const TournamentDetail = () => {
                 larghezza/stile della vista player, così l'unica differenza tra
                 le due viste resta la barra di navigazione admin sopra. */}
                 {activeSection === 'leaderboard' && (
-                    <div className="mx-auto max-w-5xl px-4 space-y-4">
+                    <div className="space-y-4">
                         {tournament.tournament_format === 'group_stage' ? (
                             <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm">
                                 <div className="mb-4 flex items-center justify-between gap-3">

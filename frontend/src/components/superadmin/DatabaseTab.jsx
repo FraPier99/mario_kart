@@ -311,7 +311,7 @@ export default function DatabaseTab({ players, tournaments, onRefresh, setConfir
                     onToggle={() => setPlayerSection(v => !v)}
                     badge={players.length}
                     action={
-                        <Link to="/admin/players"
+                        <Link to="/admin"
                             className="flex items-center gap-1 rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-2.5 py-1.5 text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 transition hover:text-slate-900 dark:hover:text-foreground">
                             <Plus size={11} /> Aggiungi
                         </Link>

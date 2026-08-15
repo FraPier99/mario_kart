@@ -56,8 +56,6 @@ export default function Navbar() {
   const adminItems = [
     { name: 'Dashboard Admin',    path: '/admin',         icon: <BarChart3 size={15} /> },
     { name: 'Crea Torneo',        path: '/tournaments/new', icon: <Plus size={15} /> },
-    { name: 'Gestione Giocatori', path: '/admin/players', icon: <Users size={15} /> },
-    { name: 'Carte, Possessi e Circuiti', path: '/superadmin', icon: <Shield size={15} /> },
   ]
 
   const player = user?.player ?? null
@@ -273,11 +271,11 @@ export default function Navbar() {
                         <Plus size={13} /> Crea Torneo
                       </Link>
                       <Link
-                        to="/admin/players"
+                        to="/admin"
                         onClick={() => setAdminOpen(false)}
                         className="font-title flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide text-slate-300 transition hover:bg-white/8 hover:text-white"
                       >
-                        <Users size={13} /> Gestisci Giocatori
+                        <Users size={13} /> Dashboard Admin
                       </Link>
                       <div className="my-1 border-t" style={{ borderColor: 'var(--mk-border)' }} />
                       <Link
@@ -388,9 +386,6 @@ export default function Navbar() {
                       <p className="font-title px-3 py-1 text-[8px] tracking-wide text-slate-500">Admin</p>
                       <Link to="/admin" className="font-title flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide text-slate-300 transition hover:bg-white/8 hover:text-white">
                         <LayoutDashboard size={13} /> Dashboard Admin
-                      </Link>
-                      <Link to="/superadmin" className="font-title flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide text-amber-300 transition hover:bg-amber-500/10 hover:text-amber-200">
-                        <Shield size={13} /> Carte, Possessi e Circuiti
                       </Link>
                     </>
                   )}
@@ -551,9 +546,9 @@ export default function Navbar() {
                       className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-black uppercase tracking-wider text-slate-300 transition hover:bg-white/5">
                       <Plus size={15} /> Crea Torneo
                     </Link>
-                    <Link to="/admin/players" onClick={() => setMobileOpen(false)}
+                    <Link to="/admin" onClick={() => setMobileOpen(false)}
                       className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-black uppercase tracking-wider text-slate-300 transition hover:bg-white/5">
-                      <Users size={15} /> Gestisci Giocatori
+                      <Users size={15} /> Dashboard Admin
                     </Link>
                     <div className="my-1 border-t border-white/8" />
                     <Link to="/superadmin" onClick={() => setMobileOpen(false)}

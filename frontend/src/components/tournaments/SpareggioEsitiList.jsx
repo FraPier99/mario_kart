@@ -19,7 +19,7 @@ const SpareggioEsitiList = ({ duelloGroups, playerMapById, circuitsById, charact
                     })
                 }
                 return (
-                    <div key={group.groupName} className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-900/10 p-5 shadow-sm space-y-4">
+                    <div key={group.groupName} className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-950/40 p-5 shadow-sm space-y-4">
                         <div className="flex items-center gap-2">
                             <Swords size={16} className="text-amber-500 shrink-0" />
                             <div>

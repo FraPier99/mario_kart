@@ -150,7 +150,7 @@ const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', coll
                                                     ) : (
                                                         <span className="text-[10px] font-black uppercase text-emerald-600/70 dark:text-emerald-400/60">Libera</span>
                                                     )}
-                                                    {stats && (
+                                                    {!isUsed && stats && (
                                                         <div className="mt-1.5 space-y-1 border-t border-slate-200/70 dark:border-border/70 pt-1.5">
                                                             <p className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-muted-foreground">
                                                                 <Medal size={10} className="shrink-0 text-blue-500" />

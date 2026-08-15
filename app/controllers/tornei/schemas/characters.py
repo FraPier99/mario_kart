@@ -12,3 +12,10 @@ class CharacterResponse(BaseModel):
     game_id: int
 
     model_config = {"from_attributes": True}
+
+
+class UpdateCharacter(BaseModel):
+    name: Optional[NormalizeStr] = None
+    img_url: Optional[str] = None
+
+    model_config = {"from_attributes": True}

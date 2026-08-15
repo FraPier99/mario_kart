@@ -1,14 +1,19 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
-    Users, Trophy, BarChart3, Shield, ExternalLink, ArrowRight,
-    Activity, Award, Plus, Flag, LayoutDashboard, Search,
-    Clock, Play,
+    Users, Trophy, BarChart3, Shield, ExternalLink,
+    Activity, Award, Plus, Flag, LayoutDashboard,
+    Clock, Play, UserSquare2, MapPin, Zap, Gamepad2,
 } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { authApi } from '@/services/apiClient'
+import PlayersTab from '@/components/admin/PlayersTab'
+import CharactersTab from '@/components/admin/CharactersTab'
+import CircuitsTab from '@/components/superadmin/CircuitsTab'
+import CarteTab from '@/components/admin/CarteTab'
+import PossessiTab from '@/components/admin/PossessiTab'
 
 // ── Sparkline ────────────────────────────────────────────────────
 const Sparkline = ({ data, color = '#10b981', height = 30, width = 72 }) => {
@@ -62,6 +67,10 @@ const TABS = [
     { key: 'panoramica', label: 'Panoramica', icon: LayoutDashboard },
     { key: 'tornei',     label: 'Tornei',     icon: Trophy },
     { key: 'giocatori',  label: 'Giocatori',  icon: Users },
+    { key: 'personaggi', label: 'Personaggi', icon: UserSquare2 },
+    { key: 'circuiti',   label: 'Circuiti',   icon: MapPin },
+    { key: 'carte',      label: 'Carte',      icon: Zap },
+    { key: 'possessi',   label: 'Possessi',   icon: Gamepad2 },
 ]
 
 const FILTERS = ['all', 'in_corso', 'da_svolgere', 'concluso']
@@ -237,7 +246,7 @@ const TournamentTimeline = ({ tournament }) => {
 
 // ── tabs ─────────────────────────────────────────────────────────
 
-const PanoramicaTab = ({ stats, tournaments, activeTournament, players, charactersById, user, homeMetrics }) => (
+const PanoramicaTab = ({ stats, tournaments, activeTournament, players, charactersById, user, homeMetrics, onGoToGiocatori }) => (
     <div className="space-y-6">
 
         {/* HERO GRID: Profilo | Metriche | Stat Cards */}
@@ -278,20 +287,31 @@ const PanoramicaTab = ({ stats, tournaments, activeTournament, players, characte
                         : { to: '/history', label: 'Storico tornei', desc: 'Classifiche e archivio completo', color: 'bg-linear-to-br from-emerald-500 to-green-600', icon: BarChart3 }
                     return [
                         { to: '/tournaments/new', label: 'Nuovo torneo', desc: 'Crea torneo con partecipanti e gare', color: 'bg-linear-to-br from-emerald-500 to-green-600', icon: Plus },
-                        { to: '/admin/players', label: 'Gestisci giocatori', desc: 'Aggiungi, modifica o rimuovi piloti', color: 'bg-linear-to-br from-blue-500 to-indigo-600', icon: Users },
+                        { onClick: onGoToGiocatori, label: 'Gestisci giocatori', desc: 'Aggiungi, modifica o rimuovi piloti', color: 'bg-linear-to-br from-blue-500 to-indigo-600', icon: Users },
                         thirdAction,
                     ]
-                })().map(({ to, label, desc, color, icon: Icon }) => (
-                    <Link key={to} to={to} className="group flex items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-4 transition hover:border-emerald-300 dark:hover:border-emerald-700" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${color}`}>
-                            <Icon size={16} className="text-white" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-black text-slate-900 dark:text-foreground">{label}</p>
-                            <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-snug">{desc}</p>
-                        </div>
-                    </Link>
-                ))}
+                })().map(({ to, onClick, label, desc, color, icon: Icon }) => {
+                    const content = (
+                        <>
+                            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${color}`}>
+                                <Icon size={16} className="text-white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-black text-slate-900 dark:text-foreground">{label}</p>
+                                <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-snug">{desc}</p>
+                            </div>
+                        </>
+                    )
+                    return to ? (
+                        <Link key={label} to={to} className="group flex items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-4 transition hover:border-emerald-300 dark:hover:border-emerald-700" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+                            {content}
+                        </Link>
+                    ) : (
+                        <button key={label} type="button" onClick={onClick} className="group flex w-full items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-4 text-left transition hover:border-emerald-300 dark:hover:border-emerald-700" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+                            {content}
+                        </button>
+                    )
+                })}
             </div>
 
             {/* Timeline widget */}
@@ -395,72 +415,9 @@ const TorneiTab = ({ tournaments }) => {
     )
 }
 
-const GiocatoriTab = ({ players }) => {
-    const [search, setSearch] = useState('')
-    const filtered = useMemo(() => {
-        const q = search.toLowerCase().trim()
-        if (!q) return players
-        return players.filter(p =>
-            (p.nickname ?? '').toLowerCase().includes(q) ||
-            (p.first_name ?? '').toLowerCase().includes(q) ||
-            (p.last_name ?? '').toLowerCase().includes(q)
-        )
-    }, [players, search])
-
-    return (
-        <div className="space-y-4">
-            <div className="flex gap-3">
-                <div className="relative flex-1">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        placeholder="Cerca giocatore..."
-                        className="w-full rounded-xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-foreground placeholder:text-slate-400 outline-none focus:border-emerald-500 transition"
-                    />
-                </div>
-                <Link to="/admin/players"
-                    className="flex items-center gap-1.5 rounded-xl bg-blue-500 px-3 py-2.5 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-blue-400">
-                    <Plus size={12} /> Aggiungi
-                </Link>
-            </div>
-
-            <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
-                <div className="grid gap-px">
-                    {filtered.map((p, i) => (
-                        <div key={p.id} className={`flex items-center gap-3 px-4 py-3 transition hover:bg-slate-50 dark:hover:bg-white/3 ${i > 0 ? 'border-t border-slate-100 dark:border-white/5' : ''}`}>
-                            <div className="h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-muted">
-                                {p.img_url
-                                    ? <img src={p.img_url} alt={p.nickname} className="h-full w-full object-cover" />
-                                    : <div className="flex h-full w-full items-center justify-center text-xs font-black text-slate-500 dark:text-slate-400">
-                                        {(p.nickname ?? '?').charAt(0).toUpperCase()}
-                                      </div>
-                                }
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-black text-slate-900 dark:text-foreground truncate capitalize">{p.nickname}</p>
-                                <p className="text-xs capitalize text-slate-500 dark:text-muted-foreground truncate">{p.first_name} {p.last_name}</p>
-                            </div>
-                        </div>
-                    ))}
-                    {filtered.length === 0 && (
-                        <p className="px-5 py-8 text-center text-sm text-slate-400">Nessun giocatore trovato.</p>
-                    )}
-                </div>
-            </div>
-
-            <Link to="/admin/players"
-                className="flex items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-3 font-title text-xs tracking-wide text-slate-600 dark:text-slate-400 transition active:translate-y-px hover:text-slate-900 dark:hover:text-foreground hover:border-emerald-300">
-                <Users size={14} /> Gestione completa giocatori
-                <ArrowRight size={13} className="ml-auto" />
-            </Link>
-        </div>
-    )
-}
-
 // ── main component ───────────────────────────────────────────────
 export default function AdminDashboard() {
-    const { tournaments, players, loading, homeMetrics, charactersById } = useAppData()
+    const { tournaments, players, loading, homeMetrics, charactersById, characters, circuits, games, refresh } = useAppData()
     const { user, isSuperadmin } = useAuth()
     const [activeTab, setActiveTab] = useState('panoramica')
     const [users, setUsers] = useState([])
@@ -553,13 +510,26 @@ export default function AdminDashboard() {
                         charactersById={charactersById}
                         user={user}
                         homeMetrics={homeMetrics}
+                        onGoToGiocatori={() => setActiveTab('giocatori')}
                     />
                 )}
                 {activeTab === 'tornei' && (
                     <TorneiTab tournaments={tournaments} />
                 )}
                 {activeTab === 'giocatori' && (
-                    <GiocatoriTab players={players} />
+                    <PlayersTab />
+                )}
+                {activeTab === 'personaggi' && (
+                    <CharactersTab characters={characters} games={games} onRefresh={refresh} />
+                )}
+                {activeTab === 'circuiti' && (
+                    <CircuitsTab circuits={circuits} games={games} onRefresh={refresh} />
+                )}
+                {activeTab === 'carte' && (
+                    <CarteTab />
+                )}
+                {activeTab === 'possessi' && (
+                    <PossessiTab />
                 )}
                 </div>
             </section>

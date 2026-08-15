@@ -75,7 +75,7 @@ const PointAdjustmentsPanel = ({ tournament, participants = [], canManage = fals
     }
 
     return (
-        <div className="rounded-2xl border border-violet-200 dark:border-violet-500/30 bg-violet-50/60 dark:bg-violet-900/10 p-4 space-y-3">
+        <div className="rounded-2xl border border-violet-200 dark:border-violet-500/30 bg-violet-50/60 dark:bg-violet-950/40 p-4 space-y-3">
             <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400">
                 <Coins size={14} />
                 <p className="text-xs font-black uppercase tracking-[0.3em]">Rettifiche punti</p>
