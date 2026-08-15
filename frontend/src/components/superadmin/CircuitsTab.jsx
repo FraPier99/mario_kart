@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { Edit2, Save, Upload, X } from 'lucide-react'
+import { Edit2, Save, Search, Upload, X } from 'lucide-react'
 import { toast } from 'sonner'
 import CircuitThumbnail from '@/components/common/CircuitThumbnail'
 import { compressImage } from '@/lib/imageCompression'
@@ -143,11 +143,15 @@ const CircuitRow = ({ circuit, onSaved }) => {
 // ── CircuitsTab ─────────────────────────────────────────────────────
 export default function CircuitsTab({ circuits = [], games = [], onRefresh }) {
     const [selectedGameId, setSelectedGameId] = useState(() => games[0]?.id ?? null)
+    const [search, setSearch] = useState('')
 
-    const gameCircuits = useMemo(
-        () => circuits.filter((c) => c.game_id === selectedGameId),
-        [circuits, selectedGameId]
-    )
+    const gameCircuits = useMemo(() => {
+        const query = search.trim().toLowerCase()
+        return circuits.filter((c) =>
+            c.game_id === selectedGameId &&
+            (!query || c.name.toLowerCase().includes(query))
+        )
+    }, [circuits, selectedGameId, search])
 
     const groups = useMemo(() => {
         const map = new Map()
@@ -182,8 +186,20 @@ export default function CircuitsTab({ circuits = [], games = [], onRefresh }) {
                     ))}
                 </div>
 
+                <div className="relative mb-4">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder="Cerca circuito..."
+                        className="w-full rounded-xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-foreground placeholder:text-slate-400 outline-none focus:border-blue-500 transition"
+                    />
+                </div>
+
                 {groups.length === 0 ? (
-                    <p className="text-sm text-slate-500 dark:text-muted-foreground">Nessun circuito per questo gioco.</p>
+                    <p className="text-sm text-slate-500 dark:text-muted-foreground">
+                        {search.trim() ? 'Nessun circuito corrisponde alla ricerca.' : 'Nessun circuito per questo gioco.'}
+                    </p>
                 ) : (
                     <div className="space-y-5">
                         {groups.map(({ trophy, items }) => (

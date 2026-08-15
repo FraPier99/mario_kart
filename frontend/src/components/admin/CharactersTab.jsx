@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { Edit2, Save, Upload, X } from 'lucide-react'
+import { Edit2, Save, Search, Upload, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { compressImage } from '@/lib/imageCompression'
 import { charactersApi, getApiErrorMessage } from '@/services/apiClient'
@@ -146,11 +146,15 @@ const CharacterRow = ({ character, onSaved }) => {
 // ── CharactersTab ───────────────────────────────────────────────────
 export default function CharactersTab({ characters = [], games = [], onRefresh }) {
     const [selectedGameId, setSelectedGameId] = useState(() => games[0]?.id ?? null)
+    const [search, setSearch] = useState('')
 
-    const gameCharacters = useMemo(
-        () => characters.filter((c) => c.game_id === selectedGameId),
-        [characters, selectedGameId]
-    )
+    const gameCharacters = useMemo(() => {
+        const query = search.trim().toLowerCase()
+        return characters.filter((c) =>
+            c.game_id === selectedGameId &&
+            (!query || c.name.toLowerCase().includes(query))
+        )
+    }, [characters, selectedGameId, search])
 
     return (
         <div className="space-y-4">
@@ -175,8 +179,20 @@ export default function CharactersTab({ characters = [], games = [], onRefresh }
                     ))}
                 </div>
 
+                <div className="relative mb-4">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder="Cerca personaggio..."
+                        className="w-full rounded-xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-foreground placeholder:text-slate-400 outline-none focus:border-blue-500 transition"
+                    />
+                </div>
+
                 {gameCharacters.length === 0 ? (
-                    <p className="text-sm text-slate-500 dark:text-muted-foreground">Nessun personaggio per questo gioco.</p>
+                    <p className="text-sm text-slate-500 dark:text-muted-foreground">
+                        {search.trim() ? 'Nessun personaggio corrisponde alla ricerca.' : 'Nessun personaggio per questo gioco.'}
+                    </p>
                 ) : (
                     <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                         {gameCharacters.map((character) => (
