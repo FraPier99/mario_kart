@@ -187,6 +187,27 @@ def rename_mkds_circuits_to_italian():
             )
 
 
+def ensure_mkds_dry_bones_character():
+    """Aggiunge Dry Bones al roster di Mario Kart DS (game_id=1) — presente
+    in DB solo per MK8 Deluxe (game_id=2), mancava per MKDS nonostante sia
+    un personaggio giocabile reale del gioco. Idempotente via il vincolo
+    unique_character_per_game (name, game_id)."""
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO characters (name, description, game_id, img_url)"
+                " VALUES (:name, :description, :game_id, :img_url)"
+                " ON CONFLICT (name, game_id) DO NOTHING"
+            ),
+            {
+                "name": "Dry Bones",
+                "description": "Lo scheletro corazzato dei Koopa, leggero e con un'ottima manovrabilità.",
+                "game_id": 1,
+                "img_url": "https://mario.wiki.gallery/images/thumb/b/bb/MKDS_Dry_Bones_Artwork.png/120px-MKDS_Dry_Bones_Artwork.png",
+            },
+        )
+
+
 def backfill_circuit_image_urls():
     """Aggiorna image_url per i circuiti esistenti (MKDS game_id=1 e MK8D game_id=2)."""
     with engine.begin() as connection:
@@ -974,6 +995,7 @@ def bootstrap_database():
     seed_mk8d_data()
     rename_mkds_circuits_to_italian()
     backfill_circuit_image_urls()
+    ensure_mkds_dry_bones_character()
     ensure_default_superadmin()
 
 
