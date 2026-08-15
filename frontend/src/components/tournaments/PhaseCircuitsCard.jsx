@@ -13,12 +13,19 @@
  * dal colore/opacità senza dover scorrere una lista lunga.
  */
 import { useMemo, useState } from 'react'
-import { MapPin, Check, Shuffle, Info, ChevronDown } from 'lucide-react'
+import { MapPin, Check, Shuffle, Info, ChevronDown, Search, Trophy, Medal } from 'lucide-react'
 import CircuitThumbnail from '@/components/common/CircuitThumbnail'
 import RefreshButton from '@/components/common/RefreshButton'
 
-const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', collapsible = false, defaultOpen = true, onRefresh = null, refreshing = false }) => {
+const ordinal = (n) => `${n}°`
+
+// searchable/statsByCircuitId sono opt-in (default off): le chiamate esistenti
+// nei tab a gironi/fase non li passano e restano visivamente identiche a
+// prima — solo il tab Circuiti classic (e la sua controparte in vista admin)
+// li attiva.
+const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', collapsible = false, defaultOpen = true, onRefresh = null, refreshing = false, searchable = false, statsByCircuitId = null }) => {
     const [open, setOpen] = useState(defaultOpen)
+    const [search, setSearch] = useState('')
     const usedByCircuitId = useMemo(() => {
         const map = new Map()
         races
@@ -34,17 +41,23 @@ const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', coll
 
     const availableCount = circuits.length - usedByCircuitId.size
 
+    const filteredCircuits = useMemo(() => {
+        if (!searchable || !search.trim()) return circuits
+        const q = search.trim().toLowerCase()
+        return circuits.filter((c) => c.name?.toLowerCase().includes(q))
+    }, [circuits, search, searchable])
+
     // Raggruppa per trofeo (circuit.description), preservando l'ordine di
     // comparizione nell'array — i circuiti arrivano già ordinati per trofeo.
     const groups = useMemo(() => {
         const map = new Map()
-        circuits.forEach((circuit) => {
+        filteredCircuits.forEach((circuit) => {
             const key = circuit.description || 'Altri circuiti'
             if (!map.has(key)) map.set(key, [])
             map.get(key).push(circuit)
         })
         return Array.from(map.entries()).map(([trophy, items]) => ({ trophy, items }))
-    }, [circuits])
+    }, [filteredCircuits])
 
     if (circuits.length === 0) return null
 
@@ -90,18 +103,36 @@ const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', coll
 
             {(!collapsible || open) && (
                 <>
+                    {searchable && (
+                        <div className="relative">
+                            <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Cerca un circuito..."
+                                className="w-full rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted py-2 pl-9 pr-3 text-sm text-slate-900 dark:text-foreground outline-none focus:border-emerald-500"
+                            />
+                        </div>
+                    )}
+
+                    {searchable && filteredCircuits.length === 0 && (
+                        <p className="text-center text-xs text-slate-400 dark:text-muted-foreground py-4">Nessun circuito trovato per &quot;{search}&quot;.</p>
+                    )}
+
                     <div className="space-y-4">
                         {groups.map(({ trophy, items }) => (
                             <div key={trophy} className="space-y-2">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">{trophy}</p>
-                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                                <div className={`grid gap-2 ${statsByCircuitId ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
                                     {items.map((circuit) => {
                                         const race = usedByCircuitId.get(circuit.id)
                                         const isUsed = !!race
+                                        const stats = statsByCircuitId?.get(circuit.id)
                                         return (
                                             <div
                                                 key={circuit.id}
-                                                className={`flex items-center gap-2 rounded-xl border px-2 py-2 ${isUsed
+                                                className={`flex items-start gap-2 rounded-xl border px-2 py-2 ${isUsed
                                                     ? 'border-slate-200 dark:border-border bg-slate-50 dark:bg-muted opacity-60'
                                                     : 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10'}`}
                                             >
@@ -118,6 +149,26 @@ const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', coll
                                                         </span>
                                                     ) : (
                                                         <span className="text-[10px] font-black uppercase text-emerald-600/70 dark:text-emerald-400/60">Libera</span>
+                                                    )}
+                                                    {stats && (
+                                                        <div className="mt-1.5 space-y-1 border-t border-slate-200/70 dark:border-border/70 pt-1.5">
+                                                            <p className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-muted-foreground">
+                                                                <Medal size={10} className="shrink-0 text-blue-500" />
+                                                                {stats.myBestPosition != null
+                                                                    ? <>Il mio miglior piazzamento: <strong className="text-slate-700 dark:text-foreground">{ordinal(stats.myBestPosition)}</strong></>
+                                                                    : 'Non ci hai ancora corso'}
+                                                            </p>
+                                                            {stats.topWinners.length > 0 && (
+                                                                <p className="flex items-start gap-1 text-[10px] text-slate-500 dark:text-muted-foreground">
+                                                                    <Trophy size={10} className="mt-0.5 shrink-0 text-amber-500" />
+                                                                    <span>
+                                                                        Più vittorie: <strong className="text-slate-700 dark:text-foreground">
+                                                                            {stats.topWinners.map((w) => w.nickname).join(', ')}
+                                                                        </strong> ({stats.topWinners[0].wins}×)
+                                                                    </span>
+                                                                </p>
+                                                            )}
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>

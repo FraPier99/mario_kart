@@ -1,6 +1,6 @@
 ﻿import { useMemo, useState, useEffect, useCallback } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { Crown, Trophy, Trash2, Shield, Ban, Zap, AlertCircle, Settings, Users, Flag, Swords, Clock, BarChart3, ListChecks, MapPin } from 'lucide-react'
+import { Crown, Trophy, Trash2, Shield, Ban, Zap, AlertCircle, Settings, Users, Flag, Swords, Clock, BarChart3, ListChecks, MapPin, PartyPopper } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import PortalSelect from '@/components/common/PortalSelect'
 import RefreshButton from '@/components/common/RefreshButton'
@@ -126,6 +126,50 @@ const TournamentDetail = () => {
         () => new Map((players ?? []).map((p) => [p.id, p])),
         [players]
     )
+
+    // Statistiche per circuito (tab Circuiti, solo classic) — il mio miglior
+    // piazzamento e chi ha vinto di più su quel circuito in questo torneo,
+    // gestendo i pareggi (tutti i giocatori al conteggio massimo, non solo
+    // il primo trovato). Le gare di spareggio (is_duello) sono escluse,
+    // stesso criterio usato ovunque per punti/statistiche.
+    const circuitStatsById = useMemo(() => {
+        const perCircuit = new Map()
+        const races = (tournament?.races ?? []).filter((r) => !r.is_duello)
+        races.forEach((race) => {
+            if (race.circuit_id == null) return
+            let entry = perCircuit.get(race.circuit_id)
+            if (!entry) {
+                entry = { myPositions: [], winCounts: new Map() }
+                perCircuit.set(race.circuit_id, entry)
+            }
+            ;(race.results ?? []).forEach((result) => {
+                if (myPlayerId != null && result.player_id === myPlayerId && result.position != null) {
+                    entry.myPositions.push(result.position)
+                }
+                if (result.position === 1) {
+                    entry.winCounts.set(result.player_id, (entry.winCounts.get(result.player_id) ?? 0) + 1)
+                }
+            })
+        })
+        const out = new Map()
+        perCircuit.forEach((entry, circuitId) => {
+            const myBestPosition = entry.myPositions.length ? Math.min(...entry.myPositions) : null
+            let topWinners = []
+            if (entry.winCounts.size > 0) {
+                const maxWins = Math.max(...entry.winCounts.values())
+                topWinners = Array.from(entry.winCounts.entries())
+                    .filter(([, wins]) => wins === maxWins)
+                    .map(([playerId, wins]) => ({
+                        playerId,
+                        nickname: playerMapById.get(playerId)?.nickname ?? `#${playerId}`,
+                        wins,
+                    }))
+                    .sort((a, b) => a.nickname.localeCompare(b.nickname))
+            }
+            out.set(circuitId, { myBestPosition, topWinners })
+        })
+        return out
+    }, [tournament?.races, myPlayerId, playerMapById])
 
     // Raggruppa le gare duello per group_name (es. duello_podio_1_2)
     const duelloGroups = useMemo(() => {
@@ -319,6 +363,28 @@ const TournamentDetail = () => {
         goToPlayerProfile(row.playerId)
     }
 
+    const handleFinalized = useCallback(async () => {
+        const standingsSnap = groupStageStandingsOrdered ?? tournament?.standings ?? []
+        await refresh()
+        const leader = standingsSnap[0] ?? currentLeader
+        if (leader) {
+            triggerCelebration(leader, standingsSnap, tournament)
+        }
+    }, [refresh, currentLeader, triggerCelebration, tournament, groupStageStandingsOrdered])
+
+    const handleReplayCelebration = useCallback(() => {
+        const standingsSnap = groupStageStandingsOrdered ?? tournament?.standings ?? []
+        // standingsSnap[0] ha già i campi camelCase lastCharacterId/
+        // favoriteCharacterId che l'overlay si aspetta — tournament.winner è
+        // l'oggetto Player grezzo (favorite_character_id snake_case) e va
+        // usato solo come ultima risorsa, altrimenti la replica perde
+        // personaggio e verso.
+        const winner = standingsSnap[0] ?? tournament?.winner ?? currentLeader
+        if (winner) {
+            triggerCelebration(winner, standingsSnap, tournament)
+        }
+    }, [currentLeader, tournament, triggerCelebration, groupStageStandingsOrdered])
+
     // Contenuto del tab Classifica per tornei classic — un unico blocco
     // condiviso tra vista player e tab "Classifica" admin, così le due
     // viste non possono più disallinearsi silenziosamente (causa del
@@ -343,6 +409,25 @@ const TournamentDetail = () => {
                         <p className="text-sm font-black uppercase tracking-widest text-slate-600 dark:text-foreground">Torneo non ancora iniziato</p>
                         <p className="text-xs text-slate-500 dark:text-muted-foreground">La classifica sarà disponibile non appena verranno disputate le prime gare.</p>
                     </div>
+                </div>
+            )}
+
+            {tournament?.status === 'concluso' && tournament?.winner_id != null && (
+                <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 p-5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+                    <div className="flex items-center gap-3">
+                        <PartyPopper size={20} className="shrink-0 text-amber-500 dark:text-amber-400" />
+                        <div>
+                            <p className="text-sm font-black uppercase tracking-widest text-amber-700 dark:text-amber-300">Torneo concluso</p>
+                            <p className="text-xs text-amber-600 dark:text-amber-400">Rivivi la premiazione quando vuoi — non solo l'admin.</p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={handleReplayCelebration}
+                        className="font-title shrink-0 rounded-xl bg-amber-500 px-4 py-2.5 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-amber-400"
+                    >
+                        Rivedi i festeggiamenti
+                    </button>
                 </div>
             )}
 
@@ -376,28 +461,6 @@ const TournamentDetail = () => {
             )}
         </>
     )
-
-    const handleFinalized = useCallback(async () => {
-        const standingsSnap = groupStageStandingsOrdered ?? tournament?.standings ?? []
-        await refresh()
-        const leader = standingsSnap[0] ?? currentLeader
-        if (leader) {
-            triggerCelebration(leader, standingsSnap, tournament)
-        }
-    }, [refresh, currentLeader, triggerCelebration, tournament, groupStageStandingsOrdered])
-
-    const handleReplayCelebration = useCallback(() => {
-        const standingsSnap = groupStageStandingsOrdered ?? tournament?.standings ?? []
-        // standingsSnap[0] ha già i campi camelCase lastCharacterId/
-        // favoriteCharacterId che l'overlay si aspetta — tournament.winner è
-        // l'oggetto Player grezzo (favorite_character_id snake_case) e va
-        // usato solo come ultima risorsa, altrimenti la replica perde
-        // personaggio e verso.
-        const winner = standingsSnap[0] ?? tournament?.winner ?? currentLeader
-        if (winner) {
-            triggerCelebration(winner, standingsSnap, tournament)
-        }
-    }, [currentLeader, tournament, triggerCelebration, groupStageStandingsOrdered])
 
 
 
@@ -677,6 +740,24 @@ const TournamentDetail = () => {
                     {/* ── TAB: Classifica Generale — solo gironi, combina Finale + Consolazione ── */}
                     {userTab === 'generale' && (
                         <div className="space-y-6">
+                            {tournament?.status === 'concluso' && tournament?.winner_id != null && (
+                                <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 p-5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+                                    <div className="flex items-center gap-3">
+                                        <PartyPopper size={20} className="shrink-0 text-amber-500 dark:text-amber-400" />
+                                        <div>
+                                            <p className="text-sm font-black uppercase tracking-widest text-amber-700 dark:text-amber-300">Torneo concluso</p>
+                                            <p className="text-xs text-amber-600 dark:text-amber-400">Rivivi la premiazione quando vuoi — non solo l'admin.</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleReplayCelebration}
+                                        className="font-title shrink-0 rounded-xl bg-amber-500 px-4 py-2.5 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-amber-400"
+                                    >
+                                        Rivedi i festeggiamenti
+                                    </button>
+                                </div>
+                            )}
                             <OverallClassificaCard tournament={tournament} playerMap={playerMapById} highlightPlayerId={myPlayerId} />
                         </div>
                     )}
@@ -708,7 +789,7 @@ const TournamentDetail = () => {
                     {userTab === 'circuiti' && (
                         <div className="space-y-6">
                             {myCircuitsView && (
-                                <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} onRefresh={refresh} refreshing={loading} />
+                                <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} onRefresh={refresh} refreshing={loading} searchable statsByCircuitId={circuitStatsById} />
                             )}
                         </div>
                     )}
@@ -1063,6 +1144,7 @@ const TournamentDetail = () => {
                                 { key: 'leaderboard', label: 'Classifica', icon: BarChart3 },
                                 { key: 'carte', label: 'Carte', icon: Zap },
                                 { key: 'races', label: 'Gare', icon: ListChecks },
+                                ...(tournament.tournament_format !== 'group_stage' ? [{ key: 'circuiti', label: 'Circuiti', icon: MapPin }] : []),
                                 ...(isAdmin ? [{ key: 'setup', label: 'Impostazioni', icon: Settings }] : []),
                                 ...(isAdmin && tournament.tournament_format !== 'group_stage' ? [
                                     { key: 'duelli', label: 'Duelli', icon: Swords },
@@ -1277,6 +1359,23 @@ const TournamentDetail = () => {
                                 })}
                             </div>
                         )}
+                    </div>
+                )}
+
+                {/* ── TAB: Circuiti (admin) — stessi dati/statistiche del tab player,
+                raggiungibile senza dover uscire da Modalità Admin. Solo classic:
+                i gironi mostrano già i circuiti per fase nei loro tab dedicati. */}
+                {activeSection === 'circuiti' && (
+                    <div className="space-y-6">
+                        <PhaseCircuitsCard
+                            circuits={tournamentCircuits}
+                            races={(tournament.races ?? []).filter((r) => !r.is_duello)}
+                            title="Circuiti"
+                            onRefresh={refresh}
+                            refreshing={loading}
+                            searchable
+                            statsByCircuitId={circuitStatsById}
+                        />
                     </div>
                 )}
 
