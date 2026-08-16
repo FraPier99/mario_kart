@@ -188,20 +188,23 @@ def rename_mkds_circuits_to_italian():
 
 
 def ensure_mkds_dry_bones_character():
-    """Aggiunge Dry Bones al roster di Mario Kart DS (game_id=1) — presente
-    in DB solo per MK8 Deluxe (game_id=2), mancava per MKDS nonostante sia
-    un personaggio giocabile reale del gioco. Controllo case-insensitive
-    (non il solo vincolo unique_character_per_game, case-sensitive): un
-    admin che rinomina il personaggio esistente cambiandone la
-    capitalizzazione (es. "Dry Bones" → "dry bones") farebbe fallire il
-    match esatto dell'ON CONFLICT e questo INSERT ne creerebbe un secondo
-    duplicato ad ogni riavvio del backend — già successo una volta."""
+    """Aggiunge Tartosso (Dry Bones) al roster di Mario Kart DS (game_id=1)
+    — presente in DB solo per MK8 Deluxe (game_id=2), mancava per MKDS
+    nonostante sia un personaggio giocabile reale del gioco. Controllo
+    case-insensitive su entrambi i nomi noti (non il solo vincolo
+    unique_character_per_game, case-sensitive): un admin che rinomina il
+    personaggio esistente cambiandone la capitalizzazione farebbe fallire
+    il match esatto dell'ON CONFLICT e questo INSERT ne creerebbe un
+    secondo duplicato ad ogni riavvio del backend — già successo una volta.
+    Il nome del personaggio in lega è "Tartosso" (non l'inglese "Dry
+    Bones", per coerenza col mapping dei versi audio in mkdsSounds.js)."""
     with engine.begin() as connection:
         existing = connection.execute(
             text(
-                "SELECT 1 FROM characters WHERE game_id = :game_id AND LOWER(name) = LOWER(:name)"
+                "SELECT 1 FROM characters WHERE game_id = :game_id"
+                " AND (LOWER(name) = LOWER(:name) OR LOWER(name) = LOWER(:legacy_name))"
             ),
-            {"name": "Dry Bones", "game_id": 1},
+            {"name": "Tartosso", "legacy_name": "Dry Bones", "game_id": 1},
         ).first()
         if existing:
             return
@@ -212,7 +215,7 @@ def ensure_mkds_dry_bones_character():
                 " ON CONFLICT (name, game_id) DO NOTHING"
             ),
             {
-                "name": "Dry Bones",
+                "name": "Tartosso",
                 "description": "Lo scheletro corazzato dei Koopa, leggero e con un'ottima manovrabilità.",
                 "game_id": 1,
                 "img_url": "https://mario.wiki.gallery/images/thumb/b/bb/MKDS_Dry_Bones_Artwork.png/120px-MKDS_Dry_Bones_Artwork.png",
