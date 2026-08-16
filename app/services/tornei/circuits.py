@@ -8,6 +8,27 @@ def get_circuit_by_id(db: Session, circuit_id: int):
     return db.query(Circuit).filter(Circuit.id == int(circuit_id)).first()
 
 
+def delete_circuit(db: Session, circuit_id: int):
+    from app.models import Race
+
+    circuit = db.query(Circuit).filter(Circuit.id == circuit_id).first()
+    if not circuit:
+        return None
+
+    # Race.circuit_id è NOT NULL: un circuito già usato in almeno una gara
+    # non può essere eliminato senza lasciare gare orfane — l'admin deve
+    # prima rimuovere/riassegnare quelle gare.
+    used_in_race = db.query(Race).filter(Race.circuit_id == circuit_id).first()
+    if used_in_race:
+        raise ValueError(
+            "Questo circuito è già stato usato in una gara e non può essere eliminato"
+        )
+
+    db.delete(circuit)
+    db.commit()
+    return circuit
+
+
 def update_circuit(db: Session, circuit_data: UpdateCircuit, circuit_id: int):
     circuit = db.query(Circuit).filter(Circuit.id == circuit_id).first()
     if not circuit:

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.core.media import decode_data_url
 from app.core.security import require_roles
-from app.services.tornei.circuits import get_all_circuits, get_circuit_by_id, update_circuit, create_circuit
+from app.services.tornei.circuits import get_all_circuits, get_circuit_by_id, update_circuit, create_circuit, delete_circuit
 from app.controllers.tornei.schemas.circuits import CircuitResponse, CreateCircuit, UpdateCircuit
 
 
@@ -69,6 +69,23 @@ def update_circuit_by_id(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Esiste già un circuito con questo nome per questo gioco",
         )
+    except ValueError as error:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
+
+
+@router.delete("/{circuit_id}", status_code=204)
+def delete_circuit_by_id(
+    circuit_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_roles("superadmin", "admin")),
+):
+    try:
+        deleted = delete_circuit(db, circuit_id)
+        if not deleted:
+            raise HTTPException(
+                status_code=404, detail=f"circuit with id {circuit_id} not found"
+            )
     except ValueError as error:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))

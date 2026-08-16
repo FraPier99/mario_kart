@@ -71,12 +71,14 @@ const NO_TROPHY = '__none__'
 
 // ── Circuit inline editor ──────────────────────────────────────────
 const CircuitRow = ({ circuit, existingTrophies }) => {
-    const { patchCircuit } = useAppData()
+    const { patchCircuit, removeCircuit } = useAppData()
     const [editing, setEditing] = useState(false)
     const [saving, setSaving] = useState(false)
     const [form, setForm] = useState({ name: circuit.name ?? '', image_url: circuit.image_url ?? '', requires_pass: circuit.requires_pass ?? false, description: circuit.description ?? NO_TROPHY })
     const [movingToNewTrophy, setMovingToNewTrophy] = useState(false)
     const [newTrophyDraft, setNewTrophyDraft] = useState('')
+    const [confirmingDelete, setConfirmingDelete] = useState(false)
+    const [deleting, setDeleting] = useState(false)
 
     const reset = () => {
         setForm({ name: circuit.name ?? '', image_url: circuit.image_url ?? '', requires_pass: circuit.requires_pass ?? false, description: circuit.description ?? NO_TROPHY })
@@ -119,21 +121,60 @@ const CircuitRow = ({ circuit, existingTrophies }) => {
         }
     }
 
+    const handleDelete = async () => {
+        setDeleting(true)
+        try {
+            await circuitsApi.remove(circuit.id)
+            removeCircuit(circuit.id)
+            toast.success(`${circuit.name} eliminato`)
+        } catch (err) {
+            // Il backend rifiuta l'eliminazione se il circuito è già stato
+            // usato in una gara (FK Race.circuit_id) — errore atteso, non un
+            // guasto: mostrato via toast invece di un crash.
+            toast.error('Eliminazione fallita', { description: getApiErrorMessage(err) })
+        } finally {
+            setDeleting(false)
+            setConfirmingDelete(false)
+        }
+    }
+
     return (
         <div className="rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted overflow-hidden">
-            <div className="flex items-center justify-between gap-3 px-3 py-2.5">
-                <div className="flex items-center gap-2.5 min-w-0">
-                    <CircuitThumbnail circuit={circuit} size="md" />
-                    <p className="truncate capitalize text-sm font-bold text-slate-900 dark:text-foreground">{circuit.name}</p>
-                    {circuit.requires_pass && (
-                        <Lock size={12} className="shrink-0 text-amber-500" title="Richiede pass/DLC" />
-                    )}
+            {confirmingDelete ? (
+                <div className="flex flex-wrap items-center gap-2 px-3 py-2.5 bg-rose-50/50 dark:bg-rose-500/5">
+                    <span className="flex-1 min-w-35 text-[10px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400">
+                        Eliminare &quot;{circuit.name}&quot;?
+                    </span>
+                    <button type="button" onClick={() => setConfirmingDelete(false)}
+                        className="shrink-0 rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 transition hover:bg-slate-100">
+                        Annulla
+                    </button>
+                    <button type="button" onClick={handleDelete} disabled={deleting}
+                        className="shrink-0 rounded-lg bg-rose-600 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-rose-500 disabled:opacity-60">
+                        {deleting ? 'Elimino...' : 'Sì, elimina'}
+                    </button>
                 </div>
-                <button type="button" onClick={() => setEditing(v => !v)}
-                    className="flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 transition hover:text-blue-600 hover:border-blue-300 dark:hover:text-blue-400">
-                    <Edit2 size={10} /> {editing ? 'Annulla' : 'Modifica'}
-                </button>
-            </div>
+            ) : (
+                <div className="flex items-center justify-between gap-3 px-3 py-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                        <CircuitThumbnail circuit={circuit} size="md" />
+                        <p className="truncate capitalize text-sm font-bold text-slate-900 dark:text-foreground">{circuit.name}</p>
+                        {circuit.requires_pass && (
+                            <Lock size={12} className="shrink-0 text-amber-500" title="Richiede pass/DLC" />
+                        )}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1.5">
+                        <button type="button" onClick={() => setEditing(v => !v)}
+                            className="flex items-center gap-1 rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 transition hover:text-blue-600 hover:border-blue-300 dark:hover:text-blue-400">
+                            <Edit2 size={10} /> {editing ? 'Annulla' : 'Modifica'}
+                        </button>
+                        <button type="button" onClick={() => setConfirmingDelete(true)} title="Elimina circuito"
+                            className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card p-1.5 text-slate-400 transition hover:text-rose-500 hover:border-rose-300">
+                            <Trash2 size={10} />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {editing && (
                 <div className="border-t border-slate-200 dark:border-border bg-white dark:bg-card px-3 py-3 space-y-2.5">

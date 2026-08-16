@@ -500,6 +500,13 @@ export function AppDataProvider({ children }) {
         setCircuits((prev) => [...prev, circuit])
     }, [])
 
+    // Stesso principio di patchCircuit/addCircuit, per l'eliminazione di un
+    // circuito dal pannello admin: rimuove localmente invece di rifare
+    // l'intero refresh().
+    const removeCircuit = useCallback((circuitId) => {
+        setCircuits((prev) => prev.filter((c) => c.id !== circuitId))
+    }, [])
+
     const addCharacter = useCallback((character) => {
         setCharacters((prev) => [...prev, character])
     }, [])
@@ -699,6 +706,7 @@ export function AppDataProvider({ children }) {
         patchCircuit,
         patchCharacter,
         addCircuit,
+        removeCircuit,
         addCharacter,
         getTournamentById,
         getLeaderboardByGame,
