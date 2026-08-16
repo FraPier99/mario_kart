@@ -445,6 +445,9 @@ const AddCircuitForm = ({ gameId, existingTrophies, initialTrophy = null, onClos
 export default function CircuitsTab({ circuits = [], games = [] }) {
     const [selectedGameId, setSelectedGameId] = useState(() => games[0]?.id ?? null)
     const [search, setSearch] = useState('')
+    // '' = tutti i trofei, NO_TROPHY = solo i circuiti senza trofeo ("Altri
+    // circuiti"), altrimenti il nome esatto di un trofeo.
+    const [trophyFilter, setTrophyFilter] = useState('')
     const [showAddForm, setShowAddForm] = useState(false)
     const [addFormInitialTrophy, setAddFormInitialTrophy] = useState(null)
     const [showAddTrophyForm, setShowAddTrophyForm] = useState(false)
@@ -459,11 +462,14 @@ export default function CircuitsTab({ circuits = [], games = [] }) {
 
     const gameCircuits = useMemo(() => {
         const query = search.trim().toLowerCase()
-        return circuits.filter((c) =>
-            c.game_id === selectedGameId &&
-            (!query || c.name.toLowerCase().includes(query))
-        )
-    }, [circuits, selectedGameId, search])
+        return circuits.filter((c) => {
+            if (c.game_id !== selectedGameId) return false
+            if (query && !c.name.toLowerCase().includes(query)) return false
+            if (trophyFilter === NO_TROPHY) return !c.description
+            if (trophyFilter) return c.description === trophyFilter
+            return true
+        })
+    }, [circuits, selectedGameId, search, trophyFilter])
 
     const groups = useMemo(() => {
         const map = new Map()
@@ -494,10 +500,10 @@ export default function CircuitsTab({ circuits = [], games = [] }) {
     // quando non c'è una ricerca attiva (un gruppo vuoto non può comparire
     // tra risultati di ricerca per nome circuito).
     const emptyPendingTrophies = useMemo(() => {
-        if (search.trim()) return []
+        if (search.trim() || trophyFilter) return []
         const realTrophyNames = new Set(groups.map((g) => g.trophy.toLowerCase()))
         return pendingTrophies.filter((t) => t.gameId === selectedGameId && !realTrophyNames.has(t.name.toLowerCase()))
-    }, [pendingTrophies, selectedGameId, groups, search])
+    }, [pendingTrophies, selectedGameId, groups, search, trophyFilter])
 
     return (
         <div className="space-y-4">
@@ -510,7 +516,7 @@ export default function CircuitsTab({ circuits = [], games = [] }) {
                         <button
                             key={game.id}
                             type="button"
-                            onClick={() => setSelectedGameId(game.id)}
+                            onClick={() => { setSelectedGameId(game.id); setTrophyFilter('') }}
                             className={`rounded-xl border-2 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition ${
                                 selectedGameId === game.id
                                     ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300'
@@ -522,8 +528,8 @@ export default function CircuitsTab({ circuits = [], games = [] }) {
                     ))}
                 </div>
 
-                <div className="flex gap-2 mb-4">
-                    <div className="relative flex-1">
+                <div className="flex flex-wrap gap-2 mb-4">
+                    <div className="relative flex-1 min-w-40">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input
                             value={search}
@@ -532,6 +538,15 @@ export default function CircuitsTab({ circuits = [], games = [] }) {
                             className="w-full rounded-xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-foreground placeholder:text-slate-400 outline-none focus:border-blue-500 transition"
                         />
                     </div>
+                    <select
+                        value={trophyFilter}
+                        onChange={(e) => setTrophyFilter(e.target.value)}
+                        className="shrink-0 rounded-xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card px-3 py-2.5 text-sm text-slate-900 dark:text-foreground outline-none focus:border-blue-500 transition"
+                    >
+                        <option value="">Tutti i trofei</option>
+                        {existingTrophies.map((t) => <option key={t} value={t}>{t}</option>)}
+                        <option value={NO_TROPHY}>Altri circuiti</option>
+                    </select>
                     <button type="button" onClick={() => { setShowAddTrophyForm((v) => !v); setNewTrophyDraft('') }}
                         className="flex shrink-0 items-center gap-1.5 rounded-xl border-2 border-blue-500 px-3 py-2.5 text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-300 transition hover:bg-blue-50 dark:hover:bg-blue-500/10">
                         <Plus size={13} /> Nuovo trofeo
@@ -584,7 +599,7 @@ export default function CircuitsTab({ circuits = [], games = [] }) {
 
                 {groups.length === 0 && emptyPendingTrophies.length === 0 ? (
                     <p className="text-sm text-slate-500 dark:text-muted-foreground">
-                        {search.trim() ? 'Nessun circuito corrisponde alla ricerca.' : 'Nessun circuito per questo gioco.'}
+                        {search.trim() || trophyFilter ? 'Nessun circuito corrisponde ai filtri.' : 'Nessun circuito per questo gioco.'}
                     </p>
                 ) : (
                     <div className="space-y-5">
