@@ -2,19 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown, Search, Shuffle } from 'lucide-react'
 import CircuitThumbnail from '@/components/common/CircuitThumbnail'
-
-const getCupStyle = (description = '') => {
-    const d = description.toLowerCase()
-    if (d.includes('mushroom')) return { dot: 'bg-amber-400', badge: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30', label: 'text-amber-500 dark:text-amber-400' }
-    if (d.includes('flower'))   return { dot: 'bg-rose-400',   badge: 'bg-rose-50   dark:bg-rose-500/10   text-rose-700   dark:text-rose-300   border-rose-200   dark:border-rose-500/30',   label: 'text-rose-500   dark:text-rose-400' }
-    if (d.includes('star'))     return { dot: 'bg-yellow-400', badge: 'bg-yellow-50 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-500/30', label: 'text-yellow-500 dark:text-yellow-400' }
-    if (d.includes('special'))  return { dot: 'bg-purple-400', badge: 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-500/30', label: 'text-purple-500 dark:text-purple-400' }
-    if (d.includes('shell'))    return { dot: 'bg-sky-400',    badge: 'bg-sky-50    dark:bg-sky-500/10    text-sky-700    dark:text-sky-300    border-sky-200    dark:border-sky-500/30',    label: 'text-sky-500    dark:text-sky-400' }
-    if (d.includes('banana'))   return { dot: 'bg-yellow-300', badge: 'bg-yellow-50 dark:bg-yellow-500/10 text-yellow-600 dark:text-yellow-200 border-yellow-200 dark:border-yellow-500/30', label: 'text-yellow-400 dark:text-yellow-300' }
-    if (d.includes('leaf'))     return { dot: 'bg-emerald-400',badge: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30', label: 'text-emerald-500 dark:text-emerald-400' }
-    if (d.includes('lightning'))return { dot: 'bg-blue-400',   badge: 'bg-blue-50   dark:bg-blue-500/10   text-blue-700   dark:text-blue-300   border-blue-200   dark:border-blue-500/30',   label: 'text-blue-500   dark:text-blue-400' }
-    return { dot: 'bg-slate-400', badge: 'bg-slate-100 dark:bg-muted text-slate-600 dark:text-muted-foreground border-slate-200 dark:border-border', label: 'text-slate-400 dark:text-slate-500' }
-}
+import { DEFAULT_TROPHY_COLOR, trophyColor } from '@/lib/trophyColors'
 
 const MAX_MENU_HEIGHT = 420
 const MIN_MENU_WIDTH = 360
@@ -93,6 +81,16 @@ const CircuitPicker = ({ circuits = [], value, onChange, disabled = false, usedC
         return Array.from(groups.entries()).sort(([left], [right]) => left.localeCompare(right))
     }, [circuits])
 
+    // Colore per trofeo assegnato per posizione nell'elenco ordinato
+    // (stesso principio del catalogo circuiti admin) — calcolato sull'elenco
+    // completo, non su quello filtrato dalla ricerca, così i colori restano
+    // stabili mentre l'utente digita nella barra di ricerca.
+    const groupColorByName = useMemo(() => {
+        const map = new Map()
+        groupedCircuits.forEach(([groupName], index) => map.set(groupName, trophyColor(index)))
+        return map
+    }, [groupedCircuits])
+
     const filteredGroups = useMemo(() => {
         if (!query.trim()) return groupedCircuits
 
@@ -152,7 +150,7 @@ const CircuitPicker = ({ circuits = [], value, onChange, disabled = false, usedC
                             <>
                                 <CircuitThumbnail circuit={selectedCircuit} size="lg" />
                                 <span className="truncate">{selectedCircuit.name}</span>
-                                <span className={`hidden sm:inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${getCupStyle(selectedCircuit.description).badge}`}>
+                                <span className={`hidden sm:inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${(groupColorByName.get(selectedCircuit.description || 'Altro') ?? DEFAULT_TROPHY_COLOR).badge}`}>
                                     {selectedCircuit.description ?? 'Cup'}
                                 </span>
                             </>
@@ -195,9 +193,9 @@ const CircuitPicker = ({ circuits = [], value, onChange, disabled = false, usedC
                     <div className="min-h-0 flex-1 overflow-y-auto p-3">
                         <div className="space-y-4">
                             {filteredGroups.map(([groupName, groupCircuits]) => {
-                                const cupStyle = getCupStyle(groupName)
+                                const cupStyle = groupColorByName.get(groupName) ?? DEFAULT_TROPHY_COLOR
                                 return (
-                                <div key={groupName} className="space-y-1.5">
+                                <div key={groupName} className={`space-y-1.5 border-l-4 pl-2 ${cupStyle.border}`}>
                                     <div className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.35em] ${cupStyle.label}`}>
                                         <span className={`h-1.5 w-1.5 rounded-full ${cupStyle.dot}`} />
                                         {groupName}

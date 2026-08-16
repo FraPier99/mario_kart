@@ -5,21 +5,7 @@ import CircuitThumbnail from '@/components/common/CircuitThumbnail'
 import { compressImage } from '@/lib/imageCompression'
 import { circuitsApi, getApiErrorMessage } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
-
-// ── Colori per trofeo — assegnati per posizione nell'elenco ordinato dei
-// trofei del gioco corrente (stabile finché l'ordine dei circuiti non
-// cambia), non legati al concetto di "girone" di lib/groupStage.js.
-const TROPHY_PALETTE = [
-    { border: 'border-l-blue-400 dark:border-l-blue-500', dot: 'bg-blue-400' },
-    { border: 'border-l-violet-400 dark:border-l-violet-500', dot: 'bg-violet-400' },
-    { border: 'border-l-emerald-400 dark:border-l-emerald-500', dot: 'bg-emerald-400' },
-    { border: 'border-l-rose-400 dark:border-l-rose-500', dot: 'bg-rose-400' },
-    { border: 'border-l-cyan-400 dark:border-l-cyan-500', dot: 'bg-cyan-400' },
-    { border: 'border-l-fuchsia-400 dark:border-l-fuchsia-500', dot: 'bg-fuchsia-400' },
-    { border: 'border-l-lime-400 dark:border-l-lime-500', dot: 'bg-lime-400' },
-    { border: 'border-l-orange-400 dark:border-l-orange-500', dot: 'bg-orange-400' },
-]
-const trophyColor = (index) => TROPHY_PALETTE[index % TROPHY_PALETTE.length]
+import { trophyColor } from '@/lib/trophyColors'
 
 // ── Mini image picker (hides raw base64) — mirror di DatabaseTab.jsx,
 // solo con preview rettangolare invece che circolare (thumbnail circuiti).

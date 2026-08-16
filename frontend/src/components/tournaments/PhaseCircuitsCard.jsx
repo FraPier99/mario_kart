@@ -13,9 +13,10 @@
  * dal colore/opacità senza dover scorrere una lista lunga.
  */
 import { useMemo, useState } from 'react'
-import { MapPin, Check, Shuffle, Info, ChevronDown, Lock, Search, Trophy, Medal } from 'lucide-react'
+import { MapPin, Check, Shuffle, Info, ChevronDown, Lock, Search, Trophy, Medal, Sparkles } from 'lucide-react'
 import CircuitThumbnail from '@/components/common/CircuitThumbnail'
 import RefreshButton from '@/components/common/RefreshButton'
+import { trophyColor } from '@/lib/trophyColors'
 
 const ordinal = (n) => `${n}°`
 
@@ -67,6 +68,34 @@ const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', coll
         return Array.from(map.entries()).map(([trophy, items]) => ({ trophy, items }))
     }, [filteredCircuits])
 
+    // Indice di colore per trofeo — calcolato sull'elenco completo (non
+    // filtrato dalla ricerca) così il colore di un trofeo resta stabile
+    // mentre si digita nella barra di ricerca, stesso principio del
+    // catalogo circuiti admin (CircuitsTab.jsx) e di CircuitPicker.jsx.
+    const trophyColorIndex = useMemo(() => {
+        const map = new Map()
+        visibleCircuits.forEach((circuit) => {
+            const key = circuit.description || 'Altri circuiti'
+            if (!map.has(key)) map.set(key, map.size)
+        })
+        return map
+    }, [visibleCircuits])
+
+    // "Suggeriti per te" — i 3-4 circuiti dove il giocatore che guarda ha
+    // ottenuto il miglior piazzamento in assoluto (storico completo, non
+    // solo il torneo corrente — vedi circuitStatsById in TournamentDetail.jsx).
+    // Se non ha mai giocato una gara per questo gioco, statsByCircuitId non
+    // produce alcuna voce con myBestPosition valorizzato e la sezione resta
+    // nascosta, invece di mostrare un blocco vuoto.
+    const suggestedCircuits = useMemo(() => {
+        if (!statsByCircuitId) return []
+        return visibleCircuits
+            .map((circuit) => ({ circuit, stats: statsByCircuitId.get(circuit.id) }))
+            .filter(({ stats }) => stats?.myBestPosition != null)
+            .sort((a, b) => a.stats.myBestPosition - b.stats.myBestPosition)
+            .slice(0, 4)
+    }, [visibleCircuits, statsByCircuitId])
+
     if (circuits.length === 0) return null
 
     const titleBlock = (
@@ -111,6 +140,26 @@ const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', coll
 
             {(!collapsible || open) && (
                 <>
+                    {suggestedCircuits.length > 0 && (
+                        <div className="rounded-xl border-2 border-amber-200 dark:border-amber-500/30 bg-amber-50/50 dark:bg-amber-500/5 p-3 space-y-2">
+                            <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                                <Sparkles size={13} />
+                                <p className="text-[10px] font-black uppercase tracking-widest">Suggeriti per te</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                {suggestedCircuits.map(({ circuit, stats }) => (
+                                    <div key={circuit.id} className="flex items-center gap-2 rounded-lg border border-amber-200/70 dark:border-amber-500/20 bg-white dark:bg-card px-2 py-2">
+                                        <CircuitThumbnail circuit={circuit} size="md" />
+                                        <div className="min-w-0">
+                                            <p className="truncate capitalize text-xs font-bold text-slate-900 dark:text-foreground">{circuit.name}</p>
+                                            <p className="text-[10px] font-black text-amber-600 dark:text-amber-400">Miglior: {ordinal(stats.myBestPosition)}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {searchable && (
                         <div className="relative">
                             <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -129,9 +178,14 @@ const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', coll
                     )}
 
                     <div className="space-y-4">
-                        {groups.map(({ trophy, items }) => (
-                            <div key={trophy} className="space-y-2">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">{trophy}</p>
+                        {groups.map(({ trophy, items }) => {
+                            const color = trophyColor(trophyColorIndex.get(trophy) ?? 0)
+                            return (
+                            <div key={trophy} className={`space-y-2 border-l-4 pl-3 ${color.border}`}>
+                                <div className="flex items-center gap-1.5">
+                                    <span className={`h-2 w-2 shrink-0 rounded-full ${color.dot}`} />
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">{trophy}</p>
+                                </div>
                                 <div className={`grid gap-2 ${statsByCircuitId ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
                                     {items.map((circuit) => {
                                         const race = usedByCircuitId.get(circuit.id)
@@ -185,7 +239,8 @@ const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', coll
                                     })}
                                 </div>
                             </div>
-                        ))}
+                            )
+                        })}
                     </div>
 
                     <div className="rounded-xl border border-slate-200 dark:border-border bg-slate-50/60 dark:bg-muted/30 p-3 text-xs text-slate-500 dark:text-muted-foreground flex items-start gap-2">
