@@ -3,6 +3,28 @@ import { Edit2, Save, Search, Upload, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { compressImage } from '@/lib/imageCompression'
 import { charactersApi, getApiErrorMessage } from '@/services/apiClient'
+import { MKDS_VOICE_NAME_MAP } from '@/lib/mkdsSounds'
+import { MK8D_VOICE_NAME_MAP } from '@/lib/mk8dSounds'
+
+// Il verso audio (mkdsSounds.js/mk8dSounds.js) e, per Mario Kart DS, la
+// mugshot (mugshots.js) risolvono il personaggio cercando il nome esatto
+// (maiuscole/minuscole non contano) dentro queste stesse mappe — non c'è
+// altra fonte di verità, quindi la si interroga direttamente invece di
+// duplicarne il contenuto qui.
+const findExpectedVoiceName = (name) => {
+    if (!name?.trim()) return { status: 'empty' }
+    const lower = name.trim().toLowerCase()
+    for (const map of [MKDS_VOICE_NAME_MAP, MK8D_VOICE_NAME_MAP]) {
+        for (const key of Object.keys(map)) {
+            if (key.toLowerCase() === lower) {
+                return map[key] == null
+                    ? { status: 'no-voice', expectedName: key }
+                    : { status: 'match', expectedName: key }
+            }
+        }
+    }
+    return { status: 'unknown' }
+}
 
 // ── Mini image picker (hides raw base64) — identico a CircuitsTab.jsx
 const MiniImagePicker = ({ value, onChange }) => {
@@ -65,6 +87,7 @@ const CharacterRow = ({ character, onSaved }) => {
     const [editing, setEditing] = useState(false)
     const [saving, setSaving] = useState(false)
     const [form, setForm] = useState({ name: character.name ?? '', img_url: character.img_url ?? '' })
+    const voiceInfo = useMemo(() => findExpectedVoiceName(form.name), [form.name])
 
     const reset = () => {
         setForm({ name: character.name ?? '', img_url: character.img_url ?? '' })
@@ -112,9 +135,21 @@ const CharacterRow = ({ character, onSaved }) => {
 
             {editing && (
                 <div className="border-t border-slate-200 dark:border-border bg-white dark:bg-card px-3 py-3 space-y-2.5">
-                    <p className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-2 text-[10px] leading-snug text-amber-700 dark:text-amber-300">
-                        Attenzione: il verso audio (e, per Mario Kart DS, anche la mugshot) di questo personaggio sono associati al nome esatto, non all'ID. Cambiare il nome può interromperli finché non viene aggiornata anche la relativa mappatura nel codice frontend.
-                    </p>
+                    {voiceInfo.status === 'match' && (
+                        <p className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-2 text-[10px] leading-snug text-amber-700 dark:text-amber-300">
+                            Il verso audio (e, per Mario Kart DS, anche la mugshot) sono associati al nome esatto, non all'ID. Nome atteso: <strong>"{voiceInfo.expectedName}"</strong> (maiuscole/minuscole non contano). Cambiando il nome in qualcosa di diverso li interrompi.
+                        </p>
+                    )}
+                    {voiceInfo.status === 'no-voice' && (
+                        <p className="rounded-lg border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-2.5 py-2 text-[10px] leading-snug text-slate-500 dark:text-muted-foreground">
+                            Questo personaggio ("{voiceInfo.expectedName}") non ha un verso audio assegnato.
+                        </p>
+                    )}
+                    {voiceInfo.status === 'unknown' && (
+                        <p className="rounded-lg border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-950/40 px-2.5 py-2 text-[10px] leading-snug text-rose-700 dark:text-rose-300">
+                            Con questo nome non risulta nessun verso audio (né, per Mario Kart DS, una mugshot) — verifica l'esatta corrispondenza prima di salvare.
+                        </p>
+                    )}
                     <label className="block space-y-0.5">
                         <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Nome</span>
                         <input

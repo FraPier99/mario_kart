@@ -11,7 +11,7 @@ import TournamentMilestonesPanel from '@/components/layout/TournamentMilestonesP
 import CollapsibleSection from '@/components/tournaments/CollapsibleSection'
 import { detectTournamentMilestones } from '@/lib/milestones'
 import { statsApi } from '@/services/apiClient'
-import { pickBestBadge, getProfileCardStyle, PROFILE_CARD_STYLES } from '@/lib/playerBadges'
+import { pickBestBadge, getProfileCardStyle } from '@/lib/playerBadges'
 
 const formatChampionDate = (value) => {
     if (!value) return null
@@ -21,7 +21,7 @@ const formatChampionDate = (value) => {
 
 const Hero = () => {
     const { statsByPlayerId, charactersById, detailedTournaments, games } = useAppData()
-    const { user, isSuperadmin } = useAuth()
+    const { user } = useAuth()
     const { dark } = useTheme()
     const theme = getProfileTheme(user, charactersById, dark)
     const player = user?.player ?? null
@@ -45,14 +45,16 @@ const Hero = () => {
         typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches
     ))
     // Stile "carta speciale" guidato dal tier reale del badge migliore
-    // (leggenda/campione/veterano), non più da "ha vinto almeno un torneo".
+    // (leggenda/campione/veterano) — un superadmin non ha badge per
+    // game_id (non gioca), quindi niente trattamento dorato automatico:
+    // stessa regola già applicata in CommunityUserPage.jsx.
     const cardStyle = getProfileCardStyle(bestBadge?.tier)
-    const cardTier = cardStyle ? bestBadge.tier : (isSuperadmin ? 'leggenda' : null)
-    const effectiveCardStyle = cardStyle ?? (isSuperadmin ? PROFILE_CARD_STYLES.leggenda : null)
+    const cardTier = cardStyle ? bestBadge.tier : null
+    const effectiveCardStyle = cardStyle
     const goldCard = Boolean(effectiveCardStyle)
-    // Gradiente coerente col tier: oro per leggenda/campione (e superadmin),
-    // blu per veterano — stessa palette di PROFILE_CARD_STYLES ma come
-    // inline style perché qui il resto della card usa già `style.background`
+    // Gradiente coerente col tier: oro per leggenda/campione, blu per
+    // veterano — stessa palette di PROFILE_CARD_STYLES ma come inline
+    // style perché qui il resto della card usa già `style.background`
     // anziché classi Tailwind.
     const goldBackground = cardTier === 'veterano'
         ? (dark

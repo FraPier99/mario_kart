@@ -26,7 +26,10 @@ const UI_SOUND_URLS = {
 
 const VOICE_GLOB = import.meta.glob('../assets/sounds/mkds/characters/**/*.wav', { query: '?url', import: 'default' })
 
-const ITALIAN_TO_ENGLISH = {
+// Esportata così l'admin (CharactersTab.jsx) può mostrare il nome esatto
+// atteso dal verso audio prima di rinominare un personaggio — le chiavi
+// sono l'unica fonte di verità per il match (resolveVoiceDir sotto).
+export const MKDS_VOICE_NAME_MAP = {
     'Mario': 'mario',
     'Luigi': 'luigi',
     'Peach': 'peach',
@@ -169,7 +172,7 @@ export const preloadCharacterVoice = async (charDir) => {
 const resolveVoiceDir = (characterName) => {
     if (!characterName) return null
     const lowerName = characterName.toLowerCase()
-    for (const [key, dir] of Object.entries(ITALIAN_TO_ENGLISH)) {
+    for (const [key, dir] of Object.entries(MKDS_VOICE_NAME_MAP)) {
         if (key.toLowerCase() === lowerName) return dir
     }
     return null

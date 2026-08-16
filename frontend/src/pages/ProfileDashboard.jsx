@@ -12,7 +12,7 @@ import ApiBanner from '@/components/common/ApiBanner'
 import PlayerTournamentHistory from '@/components/community/PlayerTournamentHistory'
 import PlayerBadge from '@/components/community/PlayerBadge'
 import RoleBadge from '@/components/community/RoleBadge'
-import { pickBestBadge, getProfileCardStyle, PROFILE_CARD_STYLES } from '@/lib/playerBadges'
+import { pickBestBadge, getProfileCardStyle } from '@/lib/playerBadges'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { authApi, schedineApi, inventoryApi, ownershipApi, statsApi, getApiErrorMessage } from '@/services/apiClient'
@@ -309,11 +309,11 @@ const Dashboard = () => {
     }, [player])
     const bestBadge = useMemo(() => pickBestBadge(badges), [badges])
     // Stile "carta speciale" guidato dal tier reale del badge migliore
-    // (leggenda/campione/veterano), non più da un flag binario "ha vinto
-    // un torneo". I superadmin non hanno un Player/badge: mantengono lo
-    // stile oro fisso di sempre (variante "leggenda"), indipendente dai badge.
+    // (leggenda/campione/veterano) — un superadmin non ha badge per
+    // game_id (non gioca), quindi niente trattamento dorato automatico:
+    // stessa regola già applicata in CommunityUserPage.jsx.
     const cardStyle = getProfileCardStyle(bestBadge?.tier)
-    const effectiveCardStyle = cardStyle ?? (isSuperadmin ? PROFILE_CARD_STYLES.leggenda : null)
+    const effectiveCardStyle = cardStyle
     const [selectedGameId, setSelectedGameId] = useState('')
     const activeBadge = useMemo(() => {
         if (!selectedGameId) return bestBadge

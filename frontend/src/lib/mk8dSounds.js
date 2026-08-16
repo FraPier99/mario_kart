@@ -6,7 +6,10 @@ const MAX_VOICE_DURATION = 2.0
 const VOICE_GLOB_MK8D = import.meta.glob('../assets/sounds/mk8d/characters/**/*.wav', { query: '?url', import: 'default' })
 const VOICE_GLOB_MKDS = import.meta.glob('../assets/sounds/mkds/characters/**/*.wav', { query: '?url', import: 'default' })
 
-const ITALIAN_TO_ENGLISH_MK8D = {
+// Esportata così l'admin (CharactersTab.jsx) può mostrare il nome esatto
+// atteso dal verso audio prima di rinominare un personaggio — le chiavi
+// sono l'unica fonte di verità per il match (resolveVoiceDir sotto).
+export const MK8D_VOICE_NAME_MAP = {
     // ── DLC characters (MK8D native voices) ──
     'Birdo': { dir: 'birdo', source: 'mk8d' },
     'Diddy Kong': { dir: 'diddy_kong', source: 'mk8d' },
@@ -119,7 +122,7 @@ export const unlockMk8dAudio = () => {
 const resolveVoiceDir = (characterName) => {
     if (!characterName) return null
     const lowerName = characterName.toLowerCase()
-    for (const [key, value] of Object.entries(ITALIAN_TO_ENGLISH_MK8D)) {
+    for (const [key, value] of Object.entries(MK8D_VOICE_NAME_MAP)) {
         if (key.toLowerCase() === lowerName) return value
     }
     return null
