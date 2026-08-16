@@ -13,7 +13,7 @@
  * dal colore/opacità senza dover scorrere una lista lunga.
  */
 import { useMemo, useState } from 'react'
-import { MapPin, Check, Shuffle, Info, ChevronDown, Search, Trophy, Medal } from 'lucide-react'
+import { MapPin, Check, Shuffle, Info, ChevronDown, Lock, Search, Trophy, Medal } from 'lucide-react'
 import CircuitThumbnail from '@/components/common/CircuitThumbnail'
 import RefreshButton from '@/components/common/RefreshButton'
 
@@ -23,9 +23,17 @@ const ordinal = (n) => `${n}°`
 // nei tab a gironi/fase non li passano e restano visivamente identiche a
 // prima — solo il tab Circuiti classic (e la sua controparte in vista admin)
 // li attiva.
-const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', collapsible = false, defaultOpen = true, onRefresh = null, refreshing = false, searchable = false, statsByCircuitId = null }) => {
+// passEnabled = false esclude i circuiti a pass/DLC dall'intera card (pool
+// disponibile, conteggio, gruppi) — non solo un badge informativo: se
+// disattivato per questa fase/girone, quei circuiti non devono comparire
+// da nessuna parte per chi la guarda.
+const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', collapsible = false, defaultOpen = true, onRefresh = null, refreshing = false, searchable = false, statsByCircuitId = null, passEnabled = true }) => {
     const [open, setOpen] = useState(defaultOpen)
     const [search, setSearch] = useState('')
+    const visibleCircuits = useMemo(
+        () => passEnabled ? circuits : circuits.filter((c) => !c.requires_pass),
+        [circuits, passEnabled]
+    )
     const usedByCircuitId = useMemo(() => {
         const map = new Map()
         races
@@ -39,13 +47,13 @@ const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', coll
         return map
     }, [races])
 
-    const availableCount = circuits.length - usedByCircuitId.size
+    const availableCount = visibleCircuits.length - usedByCircuitId.size
 
     const filteredCircuits = useMemo(() => {
-        if (!searchable || !search.trim()) return circuits
+        if (!searchable || !search.trim()) return visibleCircuits
         const q = search.trim().toLowerCase()
-        return circuits.filter((c) => c.name?.toLowerCase().includes(q))
-    }, [circuits, search, searchable])
+        return visibleCircuits.filter((c) => c.name?.toLowerCase().includes(q))
+    }, [visibleCircuits, search, searchable])
 
     // Raggruppa per trofeo (circuit.description), preservando l'ordine di
     // comparizione nell'array — i circuiti arrivano già ordinati per trofeo.
@@ -138,8 +146,9 @@ const PhaseCircuitsCard = ({ circuits = [], races = [], title = 'Circuiti', coll
                                             >
                                                 <CircuitThumbnail circuit={circuit} size="md" />
                                                 <div className="min-w-0 flex-1">
-                                                    <p className={`truncate capitalize text-sm font-bold ${isUsed ? 'text-slate-500 dark:text-muted-foreground line-through' : 'text-emerald-700 dark:text-emerald-300'}`}>
+                                                    <p className={`flex items-center gap-1 truncate capitalize text-sm font-bold ${isUsed ? 'text-slate-500 dark:text-muted-foreground line-through' : 'text-emerald-700 dark:text-emerald-300'}`}>
                                                         {circuit.name}
+                                                        {circuit.requires_pass && <Lock size={10} className="shrink-0 text-amber-500" title="Richiede pass/DLC" />}
                                                     </p>
                                                     {isUsed ? (
                                                         <span className="flex items-center gap-1 text-[10px] font-black uppercase text-slate-400 dark:text-muted-foreground">

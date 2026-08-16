@@ -17,6 +17,7 @@ class CircuitResponse(BaseModel):
     description: NormalizeStr
     game_id: int
     image_url: Optional[str] = None
+    requires_pass: bool = False
 
     model_config = {"from_attributes": True}
 
@@ -29,5 +30,6 @@ class CircuitResponse(BaseModel):
 class UpdateCircuit(BaseModel):
     name: Optional[NormalizeStr] = None
     image_url: Optional[str] = None
+    requires_pass: Optional[bool] = None
 
     model_config = {"from_attributes": True}

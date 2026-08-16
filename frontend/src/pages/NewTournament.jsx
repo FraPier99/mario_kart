@@ -9,7 +9,7 @@ import ApiBanner from '@/components/common/ApiBanner'
 
 const NewTournament = () => {
     const navigate = useNavigate()
-    const { players, games, tournaments, loading, refresh, errorMessage } = useAppData()
+    const { players, games, tournaments, loading, refresh, errorMessage, circuitsByGameId } = useAppData()
 
     const [users, setUsers] = useState([])
     const [usersLoading, setUsersLoading] = useState(true)
@@ -75,6 +75,7 @@ const NewTournament = () => {
                 <TournamentForm
                     players={players}
                     games={games}
+                    circuitsByGameId={circuitsByGameId}
                     onSubmit={handleCreateTournament}
                     submitLabel={(loading || usersLoading) ? 'Caricamento...' : 'Crea torneo'}
                     loading={loading || usersLoading}

@@ -35,6 +35,10 @@ class CreateTournament(BaseModel):
         default_factory=list, description="IDs dei giocatori partecipanti"
     )
     tournament_format: TournamentFormat = "classic"
+    include_locked_circuits: Optional[bool] = Field(
+        default=None,
+        description="Solo torneo classic: include i circuiti a pass/DLC nel pool disponibile (default True se non specificato)",
+    )
 
 
 class TournamentResponse(BaseModel):
@@ -91,3 +95,8 @@ class SetPlayerWithdrawal(BaseModel):
 
 class CompleteGroupRequest(BaseModel):
     group_key: str
+
+
+class PassCircuitsRequest(BaseModel):
+    scope_key: str
+    enabled: bool

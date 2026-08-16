@@ -470,6 +470,16 @@ export function AppDataProvider({ children }) {
         refresh()
     }, [refresh])
 
+    // Applica localmente i campi già noti di un torneo (es. la risposta di
+    // una mutazione mirata come PUT/POST su un singolo torneo) senza
+    // aspettare un nuovo giro di refresh(): GET /tournaments ha una cache
+    // HTTP breve (10s, vedi commento sul controller) pensata per il polling
+    // periodico, che altrimenti farebbe sembrare "non salvata" una modifica
+    // appena fatta finché la cache non scade.
+    const patchTournament = useCallback((tournamentId, patch) => {
+        setTournaments((prev) => prev.map((t) => (t.id === tournamentId ? { ...t, ...patch } : t)))
+    }, [])
+
     const playersById = useMemo(() => {
         return new Map(players.map((player) => [player.id, player]))
     }, [players])
@@ -661,6 +671,7 @@ export function AppDataProvider({ children }) {
         error,
         errorMessage,
         refresh,
+        patchTournament,
         getTournamentById,
         getLeaderboardByGame,
         getTournamentsByGame,

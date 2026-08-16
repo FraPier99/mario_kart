@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { Edit2, Save, Search, Upload, X } from 'lucide-react'
+import { Edit2, Lock, Save, Search, Upload, X } from 'lucide-react'
 import { toast } from 'sonner'
 import CircuitThumbnail from '@/components/common/CircuitThumbnail'
 import { compressImage } from '@/lib/imageCompression'
@@ -66,10 +66,10 @@ const MiniImagePicker = ({ value, onChange }) => {
 const CircuitRow = ({ circuit, onSaved }) => {
     const [editing, setEditing] = useState(false)
     const [saving, setSaving] = useState(false)
-    const [form, setForm] = useState({ name: circuit.name ?? '', image_url: circuit.image_url ?? '' })
+    const [form, setForm] = useState({ name: circuit.name ?? '', image_url: circuit.image_url ?? '', requires_pass: circuit.requires_pass ?? false })
 
     const reset = () => {
-        setForm({ name: circuit.name ?? '', image_url: circuit.image_url ?? '' })
+        setForm({ name: circuit.name ?? '', image_url: circuit.image_url ?? '', requires_pass: circuit.requires_pass ?? false })
         setEditing(false)
     }
 
@@ -83,6 +83,7 @@ const CircuitRow = ({ circuit, onSaved }) => {
             await circuitsApi.update(circuit.id, {
                 name: form.name.trim(),
                 image_url: form.image_url.trim() || null,
+                requires_pass: form.requires_pass,
             })
             toast.success(`${form.name || circuit.name} aggiornato`)
             setEditing(false)
@@ -100,6 +101,9 @@ const CircuitRow = ({ circuit, onSaved }) => {
                 <div className="flex items-center gap-2.5 min-w-0">
                     <CircuitThumbnail circuit={circuit} size="md" />
                     <p className="truncate capitalize text-sm font-bold text-slate-900 dark:text-foreground">{circuit.name}</p>
+                    {circuit.requires_pass && (
+                        <Lock size={12} className="shrink-0 text-amber-500" title="Richiede pass/DLC" />
+                    )}
                 </div>
                 <button type="button" onClick={() => setEditing(v => !v)}
                     className="flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 transition hover:text-blue-600 hover:border-blue-300 dark:hover:text-blue-400">
@@ -123,6 +127,15 @@ const CircuitRow = ({ circuit, onSaved }) => {
                             value={form.image_url}
                             onChange={val => setForm(f => ({ ...f, image_url: val }))}
                         />
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={form.requires_pass}
+                            onChange={e => setForm(f => ({ ...f, requires_pass: e.target.checked }))}
+                            className="h-4 w-4 rounded border-slate-300 dark:border-border accent-amber-500"
+                        />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">Richiede pass/DLC</span>
                     </label>
                     <div className="flex gap-2 pt-1">
                         <button type="button" onClick={reset}

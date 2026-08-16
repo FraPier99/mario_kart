@@ -12,11 +12,13 @@ const emptyForm = {
     game_id: '',
     tournament_format: 'classic',
     n_races: '',
+    include_locked_circuits: true,
 }
 
 const TournamentForm = ({
     players,
     games,
+    circuitsByGameId = new Map(),
     initialValues,
     submitLabel,
     onSubmit,
@@ -35,6 +37,14 @@ const TournamentForm = ({
         return players.filter((p) => !excl.has(p.id))
     }, [players, excludePlayerIds])
 
+    // Checkbox "includi circuiti a pass/DLC" mostrata solo per il formato
+    // classic e solo se il gioco selezionato ha almeno un circuito a pass —
+    // così la feature resta generica, non legata a un game_id specifico.
+    const gameHasPassCircuits = useMemo(() => {
+        const circuits = circuitsByGameId.get(Number(formState.game_id)) ?? []
+        return circuits.some((c) => c.requires_pass)
+    }, [circuitsByGameId, formState.game_id])
+
     useEffect(() => {
         const nextValues = initialValues ?? emptyForm
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -44,6 +54,7 @@ const TournamentForm = ({
             game_id: nextValues.game_id ?? (games[0]?.id ?? ''),
             tournament_format: nextValues.tournament_format ?? 'classic',
             n_races: nextValues.n_races ?? '',
+            include_locked_circuits: nextValues.include_locked_circuits ?? true,
         })
         if (nextValues.participantIds?.length) {
             setSelectedPlayerIds(nextValues.participantIds)
@@ -118,6 +129,7 @@ const TournamentForm = ({
             participant_ids: selectedPlayerIds,
             tournament_format: formState.tournament_format,
             ...(nRaces ? { n_races: nRaces } : {}),
+            ...(!isGroupStage && gameHasPassCircuits ? { include_locked_circuits: formState.include_locked_circuits } : {}),
         })
     }
 
@@ -207,6 +219,19 @@ const TournamentForm = ({
                             placeholder="Default 20 se lasciato vuoto"
                         />
                         <p className="text-[10px] text-slate-400 dark:text-muted-foreground">Minimo 8, massimo 32 — qualunque numero, anche dispari. Modificabile in seguito.</p>
+                    </label>
+                )}
+
+                {/* CIRCUITI A PASS/DLC (solo classico, solo se il gioco ne ha) */}
+                {formState.tournament_format === 'classic' && gameHasPassCircuits && (
+                    <label className="flex items-center gap-2.5 cursor-pointer md:col-span-2">
+                        <input
+                            type="checkbox"
+                            checked={formState.include_locked_circuits}
+                            onChange={(e) => setFormState((c) => ({ ...c, include_locked_circuits: e.target.checked }))}
+                            className="h-4 w-4 rounded border-slate-300 dark:border-border accent-emerald-500"
+                        />
+                        <span className="text-sm text-slate-700 dark:text-foreground">Includi i circuiti a pass/DLC nel pool disponibile per le gare</span>
                     </label>
                 )}
 

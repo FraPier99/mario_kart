@@ -13,9 +13,10 @@
  *   5. Classifica Finale — podio Final 4, spareggi di podio e vincitore
  */
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { Shuffle, Trophy, Medal, Loader2, CheckCircle2, AlertCircle, Swords, Dices, Flag, Users, Lock, Unlock, Settings } from 'lucide-react'
+import { Shuffle, Trophy, Medal, Loader2, CheckCircle2, AlertCircle, Swords, Dices, Flag, Users, Lock, Unlock, Settings, CreditCard } from 'lucide-react'
 import { toast } from 'sonner'
 import { tournamentsApi, getApiErrorMessage } from '@/services/apiClient'
+import { useAppData } from '@/context/AppDataContext'
 import CollapsibleSection from './CollapsibleSection'
 import GroupRaceForm from './GroupRaceForm'
 import PhaseCircuitsCard from './PhaseCircuitsCard'
@@ -25,7 +26,7 @@ import ConsolationPodiumDuelCard from './ConsolationPodiumDuelCard'
 import TournamentResolutionNotes from './TournamentResolutionNotes'
 import OverallClassificaCard from './OverallClassificaCard'
 import WinnerFinalizeCard from './WinnerFinalizeCard'
-import { consolationHeatKeysFromFormatData, groupColor, groupKeysFromFormatData, groupLabel, semifinalKeysFromFormatData } from '@/lib/groupStage'
+import { consolationHeatKeysFromFormatData, groupColor, groupKeysFromFormatData, groupLabel, semifinalKeysFromFormatData, passScopeKey, isPassEnabledForScope } from '@/lib/groupStage'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -200,6 +201,34 @@ const PhaseRaceEntry = ({ tournament, players, circuits, characters, results, ph
         [tournament.races, phase, activeGroup]
     )
 
+    // Inclusione circuiti a pass/DLC — indipendente per ogni girone/fase,
+    // modificabile dall'admin in qualsiasi momento del torneo.
+    const passScope = passScopeKey(phase, activeGroup)
+    const passEnabled = isPassEnabledForScope(tournament.format_data, passScope)
+    const gameHasPassCircuits = circuits.some((c) => c.requires_pass)
+    const [togglingPass, setTogglingPass] = useState(false)
+    const { patchTournament } = useAppData()
+    const visibleCircuitsForForm = useMemo(
+        () => passEnabled ? circuits : circuits.filter((c) => !c.requires_pass),
+        [circuits, passEnabled]
+    )
+
+    const handleTogglePass = async () => {
+        setTogglingPass(true)
+        try {
+            const res = await tournamentsApi.setPassCircuits(tournament.id, passScope, !passEnabled)
+            // Niente onRefresh() qui: GET /tournaments ha una cache HTTP di
+            // 10s (vedi commento sul controller) che riporterebbe indietro
+            // il valore appena cambiato — l'aggiornamento locale via
+            // patchTournament basta, format_data non tocca altri dati.
+            patchTournament(tournament.id, { format_data: res.data.format_data })
+        } catch (err) {
+            toast.error('Aggiornamento non riuscito', { description: getApiErrorMessage(err) })
+        } finally {
+            setTogglingPass(false)
+        }
+    }
+
     return (
         <div className="space-y-4">
             {groups.length > 1 && (
@@ -219,7 +248,23 @@ const PhaseRaceEntry = ({ tournament, players, circuits, characters, results, ph
                 </div>
             )}
 
-            <PhaseCircuitsCard circuits={circuits} races={phaseGroupRaces} title={`Circuiti · ${groupLabel(activeGroup)}`} />
+            {gameHasPassCircuits && (
+                <button
+                    type="button"
+                    onClick={handleTogglePass}
+                    disabled={togglingPass}
+                    className={`flex w-full items-center justify-center gap-2 rounded-2xl border-2 px-3 py-2 text-xs font-black uppercase tracking-widest transition disabled:opacity-60 ${passEnabled
+                        ? 'border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
+                        : 'border-slate-200 dark:border-border bg-slate-50 dark:bg-muted text-slate-500 dark:text-muted-foreground'}`}
+                >
+                    <CreditCard size={13} />
+                    {passEnabled
+                        ? `Circuiti a pass/DLC inclusi per ${groupLabel(activeGroup)} — tocca per escluderli`
+                        : `Circuiti a pass/DLC esclusi per ${groupLabel(activeGroup)} — tocca per includerli`}
+                </button>
+            )}
+
+            <PhaseCircuitsCard circuits={circuits} races={phaseGroupRaces} title={`Circuiti · ${groupLabel(activeGroup)}`} passEnabled={passEnabled} />
 
             {completedGroups.has(activeGroup) ? (
                 <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-900/10 px-4 py-3">
@@ -243,7 +288,7 @@ const PhaseRaceEntry = ({ tournament, players, circuits, characters, results, ph
                 <GroupRaceForm
                     tournament={tournament}
                     activeGroupPlayers={activeGroupPlayers}
-                    circuits={circuits}
+                    circuits={visibleCircuitsForForm}
                     characters={characters}
                     phase={phase}
                     groupName={activeGroup}
@@ -592,20 +637,24 @@ const SpareggioGironiCard = ({ tournament, players, circuits, characters, onRefr
                         >
                             <Dices size={14} /> {isOpen ? 'Annulla' : `Genera gara di spareggio (pista random)${duelRaces.length > 0 ? ` — gara ${duelRaces.length + 1}` : ''}`}
                         </button>
-                        {isOpen && (
-                            <div className="rounded-2xl border border-slate-200 dark:border-border bg-slate-50/60 dark:bg-muted/30 p-4">
-                                <GroupRaceForm
-                                    tournament={tournament}
-                                    activeGroupPlayers={tiedPlayers}
-                                    circuits={circuits}
-                                    characters={characters}
-                                    phase={data.phase}
-                                    groupName={key}
-                                    randomizeCircuit
-                                    onCreated={() => { setActiveTieKey(null); onRefresh() }}
-                                />
-                            </div>
-                        )}
+                        {isOpen && (() => {
+                            const tiePassEnabled = isPassEnabledForScope(tournament.format_data, passScopeKey(data.phase, key))
+                            const tieCircuits = tiePassEnabled ? circuits : circuits.filter((c) => !c.requires_pass)
+                            return (
+                                <div className="rounded-2xl border border-slate-200 dark:border-border bg-slate-50/60 dark:bg-muted/30 p-4">
+                                    <GroupRaceForm
+                                        tournament={tournament}
+                                        activeGroupPlayers={tiedPlayers}
+                                        circuits={tieCircuits}
+                                        characters={characters}
+                                        phase={data.phase}
+                                        groupName={key}
+                                        randomizeCircuit
+                                        onCreated={() => { setActiveTieKey(null); onRefresh() }}
+                                    />
+                                </div>
+                            )
+                        })()}
                     </div>
                 )
             })}

@@ -30,7 +30,7 @@ import PhaseCircuitsCard from '@/components/tournaments/PhaseCircuitsCard'
 import SpareggioEsitiList from '@/components/tournaments/SpareggioEsitiList'
 import CardLogPanel from '@/components/tournaments/CardLogPanel'
 import OverallClassificaCard from '@/components/tournaments/OverallClassificaCard'
-import { findPlayerGroup, groupLabel, isPodiumDuelKey } from '@/lib/groupStage'
+import { findPlayerGroup, groupLabel, isPodiumDuelKey, isPassEnabledForScope, passScopeKey } from '@/lib/groupStage'
 import { useTournamentCards, MASTER_EFFECTS, SHELL_EFFECTS } from '@/hooks/useTournamentCards'
 import { getApiErrorMessage, tournamentsApi, authApi, schedineApi } from '@/services/apiClient'
 import { toast } from 'sonner'
@@ -57,13 +57,25 @@ const getTournamentStatusBadge = (status) => {
 const TournamentDetail = () => {
     const { tournamentId } = useParams()
     const navigate = useNavigate()
-    const { getTournamentById, getTournamentDisplayNumber, players, games, refresh, loading, errorMessage, circuitsById, circuitsByGameId, charactersById, charactersByGameId, results, races } = useAppData()
+    const { getTournamentById, getTournamentDisplayNumber, players, games, refresh, patchTournament, loading, errorMessage, circuitsById, circuitsByGameId, charactersById, charactersByGameId, results, races } = useAppData()
     const { user, isAdmin, isSuperadmin } = useAuth()
     const { triggerCelebration } = useCelebration()
 
     const tournament = getTournamentById(tournamentId)
 
-    const tournamentCircuits = circuitsByGameId.get(tournament?.game_id ?? 0) ?? []
+    // Per i tornei classic, esclude i circuiti a pass/DLC quando lo scope
+    // "classic" è disattivato — unico punto da cui derivano tutti i pool di
+    // circuiti disponibili (picker manuale, estrazione random, form
+    // risultato, tab Circuiti), quindi il filtro qui si propaga ovunque
+    // senza dover toccare altri componenti. Per i gironi il filtro è
+    // invece per-fase/girone e avviene più a valle (GroupManagementSection),
+    // quindi qui la lista resta non filtrata.
+    const tournamentCircuits = useMemo(() => {
+        const all = circuitsByGameId.get(tournament?.game_id ?? 0) ?? []
+        if (tournament?.tournament_format !== 'classic') return all
+        if (isPassEnabledForScope(tournament?.format_data, 'classic')) return all
+        return all.filter((c) => !c.requires_pass)
+    }, [circuitsByGameId, tournament?.game_id, tournament?.tournament_format, tournament?.format_data])
     const myPlayerId = user?.player_id ?? user?.player?.id ?? null
 
     // Per i tornei a gironi, tournament.standings è un aggregato cross-fase
@@ -114,11 +126,13 @@ const TournamentDetail = () => {
             return {
                 title: `Circuiti · ${groupLabel(myGroup.groupName)}`,
                 races: (tournament.races ?? []).filter((r) => r.phase === myGroup.phase && r.group_name === myGroup.groupName),
+                passEnabled: isPassEnabledForScope(tournament.format_data, passScopeKey(myGroup.phase, myGroup.groupName)),
             }
         }
         return {
             title: 'Circuiti',
             races: (tournament.races ?? []).filter((r) => !r.is_duello),
+            passEnabled: true,
         }
     }, [tournament, myPlayerId])
 
@@ -691,7 +705,7 @@ const TournamentDetail = () => {
                             />
                             <TournamentResolutionNotes tournament={tournament} phaseFilter={myGroup.phase} />
                             {myCircuitsView && (
-                                <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} onRefresh={refresh} refreshing={loading} />
+                                <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} onRefresh={refresh} refreshing={loading} passEnabled={myCircuitsView.passEnabled} />
                             )}
                         </div>
                     )}
@@ -731,7 +745,7 @@ const TournamentDetail = () => {
                                     refreshing={loading}
                                 />
                                 {myCircuitsView && (
-                                    <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} onRefresh={refresh} refreshing={loading} />
+                                    <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} onRefresh={refresh} refreshing={loading} passEnabled={myCircuitsView.passEnabled} />
                                 )}
                                 <SpareggioEsitiList
                                     duelloGroups={bracketDuelloGroups}
@@ -797,7 +811,7 @@ const TournamentDetail = () => {
                     {userTab === 'circuiti' && (
                         <div className="space-y-6">
                             {myCircuitsView && (
-                                <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} onRefresh={refresh} refreshing={loading} searchable statsByCircuitId={circuitStatsById} />
+                                <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} onRefresh={refresh} refreshing={loading} searchable statsByCircuitId={circuitStatsById} passEnabled={myCircuitsView.passEnabled} />
                             )}
                         </div>
                     )}
@@ -1203,6 +1217,31 @@ const TournamentDetail = () => {
                         <CollapsibleSection title="Stato torneo" icon={<Settings size={16} />} defaultOpen>
                             <TournamentStatusManager tournament={tournament} disabled={!isAdmin} onUpdated={refresh} />
                         </CollapsibleSection>
+
+                        {tournament.tournament_format === 'classic' && (circuitsByGameId.get(tournament?.game_id ?? 0) ?? []).some((c) => c.requires_pass) && (
+                            <CollapsibleSection title="Circuiti a pass/DLC" icon={<MapPin size={16} />}>
+                                <label className="flex items-center gap-2.5 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={isPassEnabledForScope(tournament.format_data, 'classic')}
+                                        onChange={async (e) => {
+                                            try {
+                                                const res = await tournamentsApi.setPassCircuits(tournament.id, 'classic', e.target.checked)
+                                                // Niente refresh() qui: GET /tournaments ha una cache HTTP di 10s
+                                                // (vedi commento sul controller) che riporterebbe indietro il
+                                                // valore appena cambiato — l'aggiornamento locale via
+                                                // patchTournament basta, format_data non tocca altri dati.
+                                                patchTournament(tournament.id, { format_data: res.data.format_data })
+                                            } catch (err) {
+                                                toast.error('Aggiornamento non riuscito', { description: getApiErrorMessage(err) })
+                                            }
+                                        }}
+                                        className="h-4 w-4 rounded border-slate-300 dark:border-border accent-amber-500"
+                                    />
+                                    <span className="text-sm text-slate-700 dark:text-foreground">Includi i circuiti a pass/DLC nel pool disponibile per le gare</span>
+                                </label>
+                            </CollapsibleSection>
+                        )}
 
                         <CollapsibleSection
                             title="Partecipanti"

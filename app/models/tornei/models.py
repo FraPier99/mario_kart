@@ -65,6 +65,11 @@ class Circuit(Base):
     description = Column(String)
     image_url = Column(Text, nullable=True)
     game_id = Column(Integer, ForeignKey("games.id"), nullable=False)
+    # Circuito sbloccabile solo con un pass/DLC a pagamento (es. Booster
+    # Course Pass di Mario Kart 8 Deluxe) — generico, non legato a un
+    # game_id specifico, così altri giochi con lo stesso meccanismo lo
+    # riusano senza modifiche.
+    requires_pass = Column(Boolean, nullable=False, default=False)
     game = relationship("Game", back_populates="circuits")
     races = relationship("Race", back_populates="circuit")
     __table_args__ = (

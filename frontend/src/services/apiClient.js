@@ -117,6 +117,7 @@ export const tournamentsApi = {
     seedGroups: (tournamentId) => _post(`/tournaments/${tournamentId}/group-stage/seed`, {}),
     completeGroup: (tournamentId, groupKey) => _post(`/tournaments/${tournamentId}/group-stage/complete-group`, { group_key: groupKey }),
     reopenGroup: (tournamentId, groupKey) => _post(`/tournaments/${tournamentId}/group-stage/reopen-group`, { group_key: groupKey }),
+    setPassCircuits: (tournamentId, scopeKey, enabled) => _post(`/tournaments/${tournamentId}/pass-circuits`, { scope_key: scopeKey, enabled }),
     groupStageTies: (tournamentId) => _get(`/tournaments/${tournamentId}/group-stage/ties`),
     groupStageClassifiche: (tournamentId) => _get(`/tournaments/${tournamentId}/group-stage/classifiche`),
     classicTies: (tournamentId) => _get(`/tournaments/${tournamentId}/classic-ties`),

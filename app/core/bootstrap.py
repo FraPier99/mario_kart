@@ -433,6 +433,20 @@ def ensure_circuit_image_url_column():
             connection.execute(text("ALTER TABLE circuits ADD COLUMN image_url TEXT"))
 
 
+def ensure_circuit_requires_pass_column():
+    """Aggiunge il flag 'requires_pass' ai circuiti (es. Booster Course Pass
+    di Mario Kart 8 Deluxe) — generico, non legato a un game_id specifico."""
+    inspector = inspect(engine)
+    circuit_columns = {col["name"] for col in inspector.get_columns("circuits")}
+    if "requires_pass" not in circuit_columns:
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    "ALTER TABLE circuits ADD COLUMN requires_pass BOOLEAN NOT NULL DEFAULT FALSE"
+                )
+            )
+
+
 def ensure_photo_comment_edit_columns():
     inspector = inspect(engine)
     if "photo_comments" not in inspector.get_table_names():
@@ -987,6 +1001,7 @@ def bootstrap_database():
     ensure_inventory_consumed_columns()
     ensure_inventory_admin_grant_columns()
     ensure_circuit_image_url_column()
+    ensure_circuit_requires_pass_column()
     ensure_photo_comment_edit_columns()
     ensure_notifications_table()
     ensure_notification_source_tournament_column()

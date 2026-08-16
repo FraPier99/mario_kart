@@ -100,6 +100,26 @@ export function consolationHeatKeysFromFormatData(formatData) {
  * `{ phase, groupName }` oppure `null` se il giocatore non è ancora
  * assegnato a nessun girone.
  */
+/**
+ * Chiave di scope usata in format_data.pass_enabled per attivare/
+ * disattivare l'inclusione dei circuiti a pass/DLC — un torneo classic ha
+ * un unico scope fisso "classic"; un torneo a gironi ha uno scope
+ * indipendente per ogni girone/batteria/fase (stesso vocabolario
+ * phase/groupName già usato in tutto questo file).
+ */
+export function passScopeKey(phase, groupName) {
+    if (phase === 'group') return `group:${groupName}`
+    if (phase === 'semifinal') return `semifinal:${groupName}`
+    if (phase === 'finals') return `finals:${groupName}`
+    return 'classic'
+}
+
+/** True (default, se lo scope non è mai stato impostato) se i circuiti a
+ * pass/DLC sono inclusi per quello scope. */
+export function isPassEnabledForScope(formatData, scopeKey) {
+    return formatData?.pass_enabled?.[scopeKey] ?? true
+}
+
 export function findPlayerGroup(formatData, playerId) {
     if (playerId == null) return null
     const fd = formatData ?? {}

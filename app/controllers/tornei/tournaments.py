@@ -21,6 +21,7 @@ from app.services.tornei.tournaments import (
     generate_group_stage_finals,
     seed_group_stage,
     set_player_withdrawal,
+    set_tournament_pass_enabled,
     get_group_stage_ties,
     get_group_stage_classifiche,
     get_classic_podium_ties,
@@ -35,6 +36,7 @@ from app.services.tornei.tournaments import (
 from app.controllers.tornei.schemas.tournaments import (
     CompleteGroupRequest,
     CreateTournament,
+    PassCircuitsRequest,
     SetPlayerWithdrawal,
     TournamentPlayoffRequest,
     TournamentResponse,
@@ -251,6 +253,27 @@ def set_playoff_winner(
             detail="Selected players are not part of this tournament",
         )
 
+    return tournament
+
+
+@router.post("/{tournament_id}/pass-circuits", response_model=TournamentResponse)
+def set_pass_circuits_endpoint(
+    tournament_id: int,
+    body: PassCircuitsRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_roles("superadmin", "admin")),
+):
+    """
+    Attiva/disattiva l'inclusione dei circuiti a pass/DLC per uno scope
+    (torneo classic: 'classic'; torneo a gironi: 'group:<key>',
+    'semifinal:<key>', 'finals:top'/'finals:bottom'). Utilizzabile in
+    qualsiasi momento del torneo, per entrambi i formati.
+    """
+    tournament = set_tournament_pass_enabled(
+        db, tournament_id, body.scope_key, body.enabled
+    )
+    if not tournament:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Torneo non trovato")
     return tournament
 
 

@@ -229,6 +229,7 @@ def create_tournament(
             "n_races_group_stage",
             "n_races_semifinals",
             "n_races_final",
+            "include_locked_circuits",
         }
     )
     data["n_races"] = (
@@ -288,6 +289,16 @@ def create_tournament(
             }
             db.commit()
             db.refresh(new_tournament)
+    elif tmentData.include_locked_circuits is not None:
+        # Torneo classic: scelta se includere i circuiti a pass/DLC nel
+        # pool disponibile, fatta una volta in creazione (modificabile poi
+        # in qualsiasi momento via set_tournament_pass_enabled).
+        new_tournament.format_data = {
+            **(new_tournament.format_data or {}),
+            "pass_enabled": {"classic": tmentData.include_locked_circuits},
+        }
+        db.commit()
+        db.refresh(new_tournament)
 
     # Notifiche: nuovo torneo + schedina da compilare (classico)
     try:
@@ -1170,6 +1181,29 @@ def _persist_format_data(db: Session, torneo: Tournament, **updates) -> None:
     torneo.format_data = new_fd
     db.commit()
     db.refresh(torneo)
+
+
+def set_tournament_pass_enabled(
+    db: Session, tournament_id: int, scope_key: str, enabled: bool
+) -> Tournament | None:
+    """Attiva/disattiva l'inclusione dei circuiti a pass/DLC per uno scope
+    (torneo classic: 'classic'; torneo a gironi: 'group:<key>',
+    'semifinal:<key>', 'finals:top'/'finals:bottom' — vedi
+    lib/groupStage.js::passScopeKey sul frontend). Merge sicuro sulla sola
+    chiave dello scope, non tocca gli altri scope già impostati (a
+    differenza di _persist_format_data, che sostituisce l'intero dict
+    passato)."""
+    torneo = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+    if not torneo:
+        return None
+    fd = dict(torneo.format_data or {})
+    pass_enabled = dict(fd.get("pass_enabled") or {})
+    pass_enabled[scope_key] = enabled
+    fd["pass_enabled"] = pass_enabled
+    torneo.format_data = fd
+    db.commit()
+    db.refresh(torneo)
+    return torneo
 
 
 def complete_group_stage_group(db: Session, tournament_id: int, group_key: str) -> dict:
@@ -2374,7 +2408,9 @@ def seed_group_stage(db: Session, tournament_id: int) -> dict:
         group_key = str((idx % n_groups) + 1)
         groups[group_key].append(pid)
 
-    torneo.format_data = {"groups": groups}
+    # Merge (non replace): preserva eventuali chiavi già presenti in
+    # format_data (es. pass_enabled) invece di sovrascriverle.
+    torneo.format_data = {**(torneo.format_data or {}), "groups": groups}
     db.commit()
     db.refresh(torneo)
 
