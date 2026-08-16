@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { Check, Edit2, Lock, Plus, Save, Search, Upload, X } from 'lucide-react'
+import { Check, Edit2, Lock, Plus, Save, Search, Trash2, Upload, X } from 'lucide-react'
 import { toast } from 'sonner'
 import CircuitThumbnail from '@/components/common/CircuitThumbnail'
 import { compressImage } from '@/lib/imageCompression'
@@ -64,15 +64,24 @@ const MiniImagePicker = ({ value, onChange }) => {
     )
 }
 
+// Valore convenzionale per "nessun trofeo" nel select di spostamento —
+// distinto da qualunque nome reale di trofeo, mappato a description: null
+// al salvataggio (il circuito ricade nel gruppo "Altri circuiti").
+const NO_TROPHY = '__none__'
+
 // ── Circuit inline editor ──────────────────────────────────────────
-const CircuitRow = ({ circuit }) => {
+const CircuitRow = ({ circuit, existingTrophies }) => {
     const { patchCircuit } = useAppData()
     const [editing, setEditing] = useState(false)
     const [saving, setSaving] = useState(false)
-    const [form, setForm] = useState({ name: circuit.name ?? '', image_url: circuit.image_url ?? '', requires_pass: circuit.requires_pass ?? false })
+    const [form, setForm] = useState({ name: circuit.name ?? '', image_url: circuit.image_url ?? '', requires_pass: circuit.requires_pass ?? false, description: circuit.description ?? NO_TROPHY })
+    const [movingToNewTrophy, setMovingToNewTrophy] = useState(false)
+    const [newTrophyDraft, setNewTrophyDraft] = useState('')
 
     const reset = () => {
-        setForm({ name: circuit.name ?? '', image_url: circuit.image_url ?? '', requires_pass: circuit.requires_pass ?? false })
+        setForm({ name: circuit.name ?? '', image_url: circuit.image_url ?? '', requires_pass: circuit.requires_pass ?? false, description: circuit.description ?? NO_TROPHY })
+        setMovingToNewTrophy(false)
+        setNewTrophyDraft('')
         setEditing(false)
     }
 
@@ -81,12 +90,20 @@ const CircuitRow = ({ circuit }) => {
             toast.error('Il nome non può essere vuoto')
             return
         }
+        const description = movingToNewTrophy
+            ? newTrophyDraft.trim()
+            : (form.description === NO_TROPHY ? null : form.description)
+        if (movingToNewTrophy && !description) {
+            toast.error('Inserisci il nome del nuovo trofeo')
+            return
+        }
         setSaving(true)
         try {
             const res = await circuitsApi.update(circuit.id, {
                 name: form.name.trim(),
                 image_url: form.image_url.trim() || null,
                 requires_pass: form.requires_pass,
+                description,
             })
             // Aggiorna solo questo circuito nello stato locale invece di un
             // refresh() completo (rifetch di tutto il dataset): evita che un
@@ -135,6 +152,38 @@ const CircuitRow = ({ circuit }) => {
                             onChange={val => setForm(f => ({ ...f, image_url: val }))}
                         />
                     </label>
+                    <label className="block space-y-0.5">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Trofeo</span>
+                        {!movingToNewTrophy ? (
+                            <div className="flex gap-2">
+                                <select
+                                    value={form.description}
+                                    onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                                    className="flex-1 rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 transition"
+                                >
+                                    <option value={NO_TROPHY}>Nessuno (Altri circuiti)</option>
+                                    {existingTrophies.map((t) => <option key={t} value={t}>{t}</option>)}
+                                </select>
+                                <button type="button" onClick={() => setMovingToNewTrophy(true)}
+                                    className="shrink-0 rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-slate-800 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 transition hover:text-blue-600">
+                                    Nuovo…
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex gap-2">
+                                <input
+                                    value={newTrophyDraft}
+                                    onChange={e => setNewTrophyDraft(e.target.value)}
+                                    placeholder="Nome nuovo trofeo"
+                                    className="flex-1 rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 outline-none focus:border-blue-500 transition"
+                                />
+                                <button type="button" onClick={() => setMovingToNewTrophy(false)}
+                                    className="shrink-0 rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-slate-800 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 transition hover:text-blue-600">
+                                    Esistente…
+                                </button>
+                            </div>
+                        )}
+                    </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                         <input
                             type="checkbox"
@@ -160,12 +209,16 @@ const CircuitRow = ({ circuit }) => {
     )
 }
 
-// ── Header di gruppo trofeo, con rinomina inline ────────────────────
-const TrophyGroupHeader = ({ trophy, items, color }) => {
+// ── Header di gruppo trofeo, con rinomina inline e rimozione (sposta i
+// circuiti del gruppo altrove, poi il gruppo sparisce da sé perché non
+// esiste come entità a parte) ────────────────────────────────────────
+const TrophyGroupHeader = ({ trophy, items, color, otherTrophies }) => {
     const { patchCircuit } = useAppData()
     const [editing, setEditing] = useState(false)
     const [draft, setDraft] = useState(trophy)
     const [saving, setSaving] = useState(false)
+    const [removing, setRemoving] = useState(false)
+    const [moveTarget, setMoveTarget] = useState(NO_TROPHY)
 
     const startEdit = () => {
         setDraft(trophy)
@@ -194,6 +247,50 @@ const TrophyGroupHeader = ({ trophy, items, color }) => {
         }
     }
 
+    const handleRemove = async () => {
+        const description = moveTarget === NO_TROPHY ? null : moveTarget
+        setSaving(true)
+        try {
+            // "Rimuovere" il trofeo vuol dire spostare tutti i suoi circuiti
+            // altrove — il gruppo non è un'entità a parte, quindi sparisce
+            // da solo una volta che nessun circuito ha più questa description.
+            await Promise.all(items.map((c) => circuitsApi.update(c.id, { description })))
+            items.forEach((c) => patchCircuit(c.id, { description }))
+            toast.success(`Trofeo "${trophy}" rimosso`)
+            setRemoving(false)
+        } catch (err) {
+            toast.error('Rimozione fallita', { description: getApiErrorMessage(err) })
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    if (removing) {
+        return (
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border-2 border-rose-200 dark:border-rose-500/30 bg-rose-50/50 dark:bg-rose-500/5 px-3 py-2.5">
+                <span className="text-[10px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400">
+                    Sposta i {items.length} circuiti in:
+                </span>
+                <select
+                    value={moveTarget}
+                    onChange={(e) => setMoveTarget(e.target.value)}
+                    className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-slate-800 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500 transition"
+                >
+                    <option value={NO_TROPHY}>Nessuno (Altri circuiti)</option>
+                    {otherTrophies.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+                <button type="button" onClick={handleRemove} disabled={saving}
+                    className="shrink-0 rounded-lg p-1 text-emerald-600 dark:text-emerald-400 transition hover:bg-emerald-50 dark:hover:bg-emerald-500/10 disabled:opacity-60">
+                    <Check size={12} />
+                </button>
+                <button type="button" onClick={() => setRemoving(false)}
+                    className="shrink-0 rounded-lg p-1 text-slate-400 transition hover:text-rose-500">
+                    <X size={12} />
+                </button>
+            </div>
+        )
+    }
+
     if (editing) {
         return (
             <div className="flex items-center gap-1.5">
@@ -218,11 +315,18 @@ const TrophyGroupHeader = ({ trophy, items, color }) => {
     }
 
     return (
-        <button type="button" onClick={startEdit} className="group flex items-center gap-1.5">
-            <span className={`h-2 w-2 shrink-0 rounded-full ${color.dot}`} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">{trophy}</p>
-            <Edit2 size={10} className="shrink-0 text-slate-300 dark:text-slate-600 opacity-0 transition group-hover:opacity-100" />
-        </button>
+        <div className="group flex items-center gap-1.5">
+            <button type="button" onClick={startEdit} className="flex items-center gap-1.5">
+                <span className={`h-2 w-2 shrink-0 rounded-full ${color.dot}`} />
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">{trophy}</p>
+                <Edit2 size={10} className="shrink-0 text-slate-300 dark:text-slate-600 opacity-0 transition group-hover:opacity-100" />
+            </button>
+            <button type="button" onClick={() => { setMoveTarget(otherTrophies[0] ?? NO_TROPHY); setRemoving(true) }}
+                title="Rimuovi trofeo"
+                className="shrink-0 rounded p-0.5 text-slate-300 dark:text-slate-600 opacity-0 transition group-hover:opacity-100 hover:text-rose-500">
+                <Trash2 size={10} />
+            </button>
+        </div>
     )
 }
 
@@ -486,12 +590,13 @@ export default function CircuitsTab({ circuits = [], games = [] }) {
                     <div className="space-y-5">
                         {groups.map(({ trophy, items }, index) => {
                             const color = trophyColor(index)
+                            const otherTrophies = existingTrophies.filter((t) => t.toLowerCase() !== trophy.toLowerCase())
                             return (
                                 <div key={trophy} className={`space-y-2 border-l-4 pl-3 ${color.border}`}>
-                                    <TrophyGroupHeader trophy={trophy} items={items} color={color} />
+                                    <TrophyGroupHeader trophy={trophy} items={items} color={color} otherTrophies={otherTrophies} />
                                     <div className="grid items-start gap-2 sm:grid-cols-2 lg:grid-cols-3">
                                         {items.map((circuit) => (
-                                            <CircuitRow key={circuit.id} circuit={circuit} />
+                                            <CircuitRow key={circuit.id} circuit={circuit} existingTrophies={existingTrophies} />
                                         ))}
                                     </div>
                                 </div>
@@ -510,6 +615,11 @@ export default function CircuitsTab({ circuits = [], games = [] }) {
                                         <button type="button" onClick={() => { setAddFormInitialTrophy(t.name); setShowAddForm(true) }}
                                             className="shrink-0 flex items-center gap-1 rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 transition hover:text-blue-600 hover:border-blue-300">
                                             <Plus size={10} /> Aggiungi qui
+                                        </button>
+                                        <button type="button" onClick={() => setPendingTrophies((prev) => prev.filter((p) => !(p.gameId === t.gameId && p.name === t.name)))}
+                                            title="Rimuovi trofeo"
+                                            className="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:text-rose-500">
+                                            <Trash2 size={12} />
                                         </button>
                                     </div>
                                 </div>

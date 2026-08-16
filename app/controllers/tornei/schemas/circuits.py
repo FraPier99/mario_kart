@@ -17,7 +17,7 @@ class CreateCircuit(BaseModel):
 class CircuitResponse(BaseModel):
     id: int
     name: NormalizeStr
-    description: NormalizeStr
+    description: Optional[NormalizeStr] = None
     game_id: int
     image_url: Optional[str] = None
     requires_pass: bool = False
