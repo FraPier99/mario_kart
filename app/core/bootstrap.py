@@ -190,9 +190,21 @@ def rename_mkds_circuits_to_italian():
 def ensure_mkds_dry_bones_character():
     """Aggiunge Dry Bones al roster di Mario Kart DS (game_id=1) — presente
     in DB solo per MK8 Deluxe (game_id=2), mancava per MKDS nonostante sia
-    un personaggio giocabile reale del gioco. Idempotente via il vincolo
-    unique_character_per_game (name, game_id)."""
+    un personaggio giocabile reale del gioco. Controllo case-insensitive
+    (non il solo vincolo unique_character_per_game, case-sensitive): un
+    admin che rinomina il personaggio esistente cambiandone la
+    capitalizzazione (es. "Dry Bones" → "dry bones") farebbe fallire il
+    match esatto dell'ON CONFLICT e questo INSERT ne creerebbe un secondo
+    duplicato ad ogni riavvio del backend — già successo una volta."""
     with engine.begin() as connection:
+        existing = connection.execute(
+            text(
+                "SELECT 1 FROM characters WHERE game_id = :game_id AND LOWER(name) = LOWER(:name)"
+            ),
+            {"name": "Dry Bones", "game_id": 1},
+        ).first()
+        if existing:
+            return
         connection.execute(
             text(
                 "INSERT INTO characters (name, description, game_id, img_url)"

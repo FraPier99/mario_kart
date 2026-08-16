@@ -112,6 +112,9 @@ const CharacterRow = ({ character, onSaved }) => {
 
             {editing && (
                 <div className="border-t border-slate-200 dark:border-border bg-white dark:bg-card px-3 py-3 space-y-2.5">
+                    <p className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-2 text-[10px] leading-snug text-amber-700 dark:text-amber-300">
+                        Attenzione: il verso audio (e, per Mario Kart DS, anche la mugshot) di questo personaggio sono associati al nome esatto, non all'ID. Cambiare il nome può interromperli finché non viene aggiornata anche la relativa mappatura nel codice frontend.
+                    </p>
                     <label className="block space-y-0.5">
                         <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Nome</span>
                         <input

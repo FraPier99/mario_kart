@@ -13,11 +13,26 @@ from app.services.utenti.players import (
     get_player,
     update_player,
 )
+from app.services.utenti.users import get_user_by_player_id
 from app.models import Player
 from app.controllers.utenti.schemas.players import CreatePlayer, PlayerResponse, UpdatePlayer
 
 
 router = APIRouter(prefix="/players", tags=["Players"])
+
+
+def _reject_admin_editing_privileged_player(db: Session, current_user, player_id: int):
+    """Un admin (non superadmin) può modificare/eliminare solo giocatori
+    collegati a account 'user' — non altri admin/superadmin. Solo il
+    superadmin può farlo per chiunque."""
+    if current_user.role == "superadmin":
+        return
+    linked_user = get_user_by_player_id(db, player_id)
+    if linked_user and linked_user.role in ("admin", "superadmin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo un superadmin può modificare un giocatore collegato a un account admin o superadmin",
+        )
 
 
 @router.get("", response_model=list[PlayerResponse])
@@ -52,6 +67,7 @@ def delete_player_by_id(
     db: Session = Depends(get_db),
     current_user=Depends(require_roles("superadmin", "admin")),
 ):
+    _reject_admin_editing_privileged_player(db, current_user, player_id)
     deleted_player = delete_player(db, player_id)
 
     if not deleted_player:
@@ -110,6 +126,7 @@ def update_player_by_id(
     db: Session = Depends(get_db),
     current_user=Depends(require_roles("superadmin", "admin")),
 ):
+    _reject_admin_editing_privileged_player(db, current_user, player_id)
     try:
         updated_player = update_player(db, player, player_id)
 

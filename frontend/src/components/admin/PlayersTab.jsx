@@ -1,9 +1,10 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react'
-import { PencilLine, Plus, Search, Trash2, UserSquare2, Trophy, Sparkles, Star, Crown, Upload, X as XIcon } from 'lucide-react'
+import { PencilLine, Plus, Search, Shield, Trash2, UserSquare2, Trophy, Sparkles, Star, Crown, Upload, X as XIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
 import PlayerAvatar from '@/components/common/PlayerAvatar'
 import { useAppData } from '@/context/AppDataContext'
+import { useAuth } from '@/context/AuthContext'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import { compressImage } from '@/lib/imageCompression'
 import { getApiErrorMessage, playersApi } from '@/services/apiClient'
@@ -122,7 +123,8 @@ const emptyForm = {
 }
 
 export default function PlayersTab() {
-  const { players, characters, charactersById, gamesById, loading, refresh } = useAppData()
+  const { players, characters, charactersById, gamesById, communityUsers, loading, refresh } = useAppData()
+  const { isSuperadmin } = useAuth()
   const [form, setForm] = useState(emptyForm)
   const [selectedPlayerId, setSelectedPlayerId] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -169,6 +171,18 @@ export default function PlayersTab() {
       if (celebrateTimerRef.current) clearTimeout(celebrateTimerRef.current)
     }
   }, [])
+
+  // Un admin (non superadmin) non può modificare/eliminare un giocatore
+  // collegato a un account admin o superadmin — stesso vincolo applicato
+  // lato backend (PUT/DELETE /players/{id}), qui solo per nascondere i
+  // pulsanti invece di far scoprire il 403 dopo il click.
+  const privilegedPlayerIds = useMemo(() => {
+    const set = new Set()
+    communityUsers.forEach((u) => {
+      if (u.player_id && (u.role === 'admin' || u.role === 'superadmin')) set.add(u.player_id)
+    })
+    return set
+  }, [communityUsers])
 
   const sortedPlayers = useMemo(() => {
     let result = players.slice().sort((left, right) => left.nickname.localeCompare(right.nickname))
@@ -539,6 +553,7 @@ export default function PlayersTab() {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {sortedPlayers.map((player) => {
             const preferredCharacter = charactersById.get(player.favorite_character_id)
+            const isLocked = !isSuperadmin && privilegedPlayerIds.has(player.id)
             return (
               <div key={player.id} className="flex flex-col gap-3 rounded-2xl border-2 border-slate-200 dark:border-white/10 bg-white dark:bg-card p-4" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                 <div className="flex items-center gap-3">
@@ -561,24 +576,34 @@ export default function PlayersTab() {
                     />
                   )}
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => startEdit(player)}
-                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-emerald-500/30 dark:border-emerald-400/20 bg-emerald-500/10 dark:bg-emerald-400/10 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-200 transition active:translate-y-px hover:bg-emerald-500/20 dark:hover:bg-emerald-400/20"
+                {isLocked ? (
+                  <div
+                    title="Solo un superadmin può modificare un giocatore collegato a un account admin/superadmin"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border-2 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500"
                   >
-                    <PencilLine className="h-3.5 w-3.5" />
-                    Modifica
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setConfirmDelete(player)}
-                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-rose-500/30 dark:border-rose-400/20 bg-rose-500/10 dark:bg-rose-400/10 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-rose-700 dark:text-rose-200 transition active:translate-y-px hover:bg-rose-500/20 dark:hover:bg-rose-400/20"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    Elimina
-                  </button>
-                </div>
+                    <Shield className="h-3.5 w-3.5" />
+                    Account protetto
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => startEdit(player)}
+                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-emerald-500/30 dark:border-emerald-400/20 bg-emerald-500/10 dark:bg-emerald-400/10 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-200 transition active:translate-y-px hover:bg-emerald-500/20 dark:hover:bg-emerald-400/20"
+                    >
+                      <PencilLine className="h-3.5 w-3.5" />
+                      Modifica
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDelete(player)}
+                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-rose-500/30 dark:border-rose-400/20 bg-rose-500/10 dark:bg-rose-400/10 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-rose-700 dark:text-rose-200 transition active:translate-y-px hover:bg-rose-500/20 dark:hover:bg-rose-400/20"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Elimina
+                    </button>
+                  </div>
+                )}
               </div>
             )
           })}
