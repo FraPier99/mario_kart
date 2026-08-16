@@ -1,10 +1,25 @@
 import { useMemo, useRef, useState } from 'react'
-import { Edit2, Lock, Save, Search, Upload, X } from 'lucide-react'
+import { Check, Edit2, Lock, Plus, Save, Search, Upload, X } from 'lucide-react'
 import { toast } from 'sonner'
 import CircuitThumbnail from '@/components/common/CircuitThumbnail'
 import { compressImage } from '@/lib/imageCompression'
 import { circuitsApi, getApiErrorMessage } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
+
+// ── Colori per trofeo — assegnati per posizione nell'elenco ordinato dei
+// trofei del gioco corrente (stabile finché l'ordine dei circuiti non
+// cambia), non legati al concetto di "girone" di lib/groupStage.js.
+const TROPHY_PALETTE = [
+    { border: 'border-l-blue-400 dark:border-l-blue-500', dot: 'bg-blue-400' },
+    { border: 'border-l-violet-400 dark:border-l-violet-500', dot: 'bg-violet-400' },
+    { border: 'border-l-emerald-400 dark:border-l-emerald-500', dot: 'bg-emerald-400' },
+    { border: 'border-l-rose-400 dark:border-l-rose-500', dot: 'bg-rose-400' },
+    { border: 'border-l-cyan-400 dark:border-l-cyan-500', dot: 'bg-cyan-400' },
+    { border: 'border-l-fuchsia-400 dark:border-l-fuchsia-500', dot: 'bg-fuchsia-400' },
+    { border: 'border-l-lime-400 dark:border-l-lime-500', dot: 'bg-lime-400' },
+    { border: 'border-l-orange-400 dark:border-l-orange-500', dot: 'bg-orange-400' },
+]
+const trophyColor = (index) => TROPHY_PALETTE[index % TROPHY_PALETTE.length]
 
 // ── Mini image picker (hides raw base64) — mirror di DatabaseTab.jsx,
 // solo con preview rettangolare invece che circolare (thumbnail circuiti).
@@ -159,10 +174,188 @@ const CircuitRow = ({ circuit }) => {
     )
 }
 
+// ── Header di gruppo trofeo, con rinomina inline ────────────────────
+const TrophyGroupHeader = ({ trophy, items, color }) => {
+    const { patchCircuit } = useAppData()
+    const [editing, setEditing] = useState(false)
+    const [draft, setDraft] = useState(trophy)
+    const [saving, setSaving] = useState(false)
+
+    const startEdit = () => {
+        setDraft(trophy)
+        setEditing(true)
+    }
+
+    const handleRename = async () => {
+        const newName = draft.trim()
+        if (!newName || newName.toLowerCase() === trophy.toLowerCase()) {
+            setEditing(false)
+            return
+        }
+        setSaving(true)
+        try {
+            // Il trofeo è solo il campo `description` condiviso da più
+            // circuiti — rinominarlo vuol dire aggiornarlo su tutti i
+            // circuiti del gruppo in un colpo solo, non un'entità a parte.
+            await Promise.all(items.map((c) => circuitsApi.update(c.id, { description: newName })))
+            items.forEach((c) => patchCircuit(c.id, { description: newName }))
+            toast.success(`Trofeo rinominato in "${newName}"`)
+            setEditing(false)
+        } catch (err) {
+            toast.error('Rinomina fallita', { description: getApiErrorMessage(err) })
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    if (editing) {
+        return (
+            <div className="flex items-center gap-1.5">
+                <span className={`h-2 w-2 shrink-0 rounded-full ${color.dot}`} />
+                <input
+                    autoFocus
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleRename()}
+                    className="flex-1 rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-slate-800 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500 transition"
+                />
+                <button type="button" onClick={handleRename} disabled={saving}
+                    className="shrink-0 rounded-lg p-1 text-emerald-600 dark:text-emerald-400 transition hover:bg-emerald-50 dark:hover:bg-emerald-500/10 disabled:opacity-60">
+                    <Check size={12} />
+                </button>
+                <button type="button" onClick={() => setEditing(false)}
+                    className="shrink-0 rounded-lg p-1 text-slate-400 transition hover:text-rose-500">
+                    <X size={12} />
+                </button>
+            </div>
+        )
+    }
+
+    return (
+        <button type="button" onClick={startEdit} className="group flex items-center gap-1.5">
+            <span className={`h-2 w-2 shrink-0 rounded-full ${color.dot}`} />
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">{trophy}</p>
+            <Edit2 size={10} className="shrink-0 text-slate-300 dark:text-slate-600 opacity-0 transition group-hover:opacity-100" />
+        </button>
+    )
+}
+
+// ── Form "aggiungi circuito" ────────────────────────────────────────
+const AddCircuitForm = ({ gameId, existingTrophies, onClose }) => {
+    const { addCircuit } = useAppData()
+    const [saving, setSaving] = useState(false)
+    const [form, setForm] = useState({ name: '', description: existingTrophies[0] ?? '', newTrophy: '', image_url: '', requires_pass: false })
+    const [creatingNewTrophy, setCreatingNewTrophy] = useState(existingTrophies.length === 0)
+
+    const handleCreate = async () => {
+        const name = form.name.trim()
+        const description = (creatingNewTrophy ? form.newTrophy : form.description).trim()
+        if (!name) {
+            toast.error('Il nome non può essere vuoto')
+            return
+        }
+        if (!description) {
+            toast.error('Seleziona o inserisci un trofeo')
+            return
+        }
+        setSaving(true)
+        try {
+            const res = await circuitsApi.create({
+                name,
+                description,
+                game_id: gameId,
+                image_url: form.image_url.trim() || null,
+                requires_pass: form.requires_pass,
+            })
+            addCircuit(res.data)
+            toast.success(`${name} creato`)
+            onClose()
+        } catch (err) {
+            toast.error('Creazione fallita', { description: getApiErrorMessage(err) })
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    return (
+        <div className="rounded-xl border-2 border-blue-200 dark:border-blue-500/30 bg-blue-50/50 dark:bg-blue-500/5 px-3 py-3 space-y-2.5">
+            <label className="block space-y-0.5">
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Nome</span>
+                <input
+                    autoFocus
+                    value={form.name}
+                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                    className="w-full rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 outline-none focus:border-blue-500 transition"
+                />
+            </label>
+            <label className="block space-y-0.5">
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Trofeo</span>
+                {!creatingNewTrophy ? (
+                    <div className="flex gap-2">
+                        <select
+                            value={form.description}
+                            onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                            className="flex-1 rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 transition"
+                        >
+                            {existingTrophies.map((t) => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                        <button type="button" onClick={() => setCreatingNewTrophy(true)}
+                            className="shrink-0 rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-slate-800 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 transition hover:text-blue-600">
+                            Nuovo…
+                        </button>
+                    </div>
+                ) : (
+                    <div className="flex gap-2">
+                        <input
+                            value={form.newTrophy}
+                            onChange={e => setForm(f => ({ ...f, newTrophy: e.target.value }))}
+                            placeholder="Nome nuovo trofeo"
+                            className="flex-1 rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 outline-none focus:border-blue-500 transition"
+                        />
+                        {existingTrophies.length > 0 && (
+                            <button type="button" onClick={() => setCreatingNewTrophy(false)}
+                                className="shrink-0 rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-slate-800 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 transition hover:text-blue-600">
+                                Esistente…
+                            </button>
+                        )}
+                    </div>
+                )}
+            </label>
+            <label className="block space-y-0.5">
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Foto</span>
+                <MiniImagePicker
+                    value={form.image_url}
+                    onChange={val => setForm(f => ({ ...f, image_url: val }))}
+                />
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                    type="checkbox"
+                    checked={form.requires_pass}
+                    onChange={e => setForm(f => ({ ...f, requires_pass: e.target.checked }))}
+                    className="h-4 w-4 rounded border-slate-300 dark:border-border accent-amber-500"
+                />
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">Richiede pass/DLC</span>
+            </label>
+            <div className="flex gap-2 pt-1">
+                <button type="button" onClick={onClose}
+                    className="flex items-center gap-1 rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-muted px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 transition hover:bg-slate-100">
+                    <X size={10} /> Annulla
+                </button>
+                <button type="button" onClick={handleCreate} disabled={saving}
+                    className="flex items-center gap-1 rounded-xl bg-blue-600 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-blue-500 disabled:opacity-60">
+                    <Save size={10} /> {saving ? 'Creo...' : 'Crea circuito'}
+                </button>
+            </div>
+        </div>
+    )
+}
+
 // ── CircuitsTab ─────────────────────────────────────────────────────
 export default function CircuitsTab({ circuits = [], games = [] }) {
     const [selectedGameId, setSelectedGameId] = useState(() => games[0]?.id ?? null)
     const [search, setSearch] = useState('')
+    const [showAddForm, setShowAddForm] = useState(false)
 
     const gameCircuits = useMemo(() => {
         const query = search.trim().toLowerCase()
@@ -181,6 +374,15 @@ export default function CircuitsTab({ circuits = [], games = [] }) {
         })
         return Array.from(map.entries()).map(([trophy, items]) => ({ trophy, items }))
     }, [gameCircuits])
+
+    // Trofei esistenti per il gioco selezionato, non influenzati dalla
+    // ricerca testuale — servono al form "aggiungi circuito" per popolare
+    // il menu a tendina anche quando l'utente ha un filtro di ricerca attivo.
+    const existingTrophies = useMemo(() => {
+        const set = new Set()
+        circuits.forEach((c) => { if (c.game_id === selectedGameId && c.description) set.add(c.description) })
+        return Array.from(set)
+    }, [circuits, selectedGameId])
 
     return (
         <div className="space-y-4">
@@ -205,15 +407,31 @@ export default function CircuitsTab({ circuits = [], games = [] }) {
                     ))}
                 </div>
 
-                <div className="relative mb-4">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        placeholder="Cerca circuito..."
-                        className="w-full rounded-xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-foreground placeholder:text-slate-400 outline-none focus:border-blue-500 transition"
-                    />
+                <div className="flex gap-2 mb-4">
+                    <div className="relative flex-1">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            placeholder="Cerca circuito..."
+                            className="w-full rounded-xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-foreground placeholder:text-slate-400 outline-none focus:border-blue-500 transition"
+                        />
+                    </div>
+                    <button type="button" onClick={() => setShowAddForm((v) => !v)}
+                        className="flex shrink-0 items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2.5 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-blue-500">
+                        <Plus size={13} /> Aggiungi circuito
+                    </button>
                 </div>
+
+                {showAddForm && selectedGameId != null && (
+                    <div className="mb-4">
+                        <AddCircuitForm
+                            gameId={selectedGameId}
+                            existingTrophies={existingTrophies}
+                            onClose={() => setShowAddForm(false)}
+                        />
+                    </div>
+                )}
 
                 {groups.length === 0 ? (
                     <p className="text-sm text-slate-500 dark:text-muted-foreground">
@@ -221,16 +439,19 @@ export default function CircuitsTab({ circuits = [], games = [] }) {
                     </p>
                 ) : (
                     <div className="space-y-5">
-                        {groups.map(({ trophy, items }) => (
-                            <div key={trophy} className="space-y-2">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">{trophy}</p>
-                                <div className="grid items-start gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                                    {items.map((circuit) => (
-                                        <CircuitRow key={circuit.id} circuit={circuit} />
-                                    ))}
+                        {groups.map(({ trophy, items }, index) => {
+                            const color = trophyColor(index)
+                            return (
+                                <div key={trophy} className={`space-y-2 border-l-4 pl-3 ${color.border}`}>
+                                    <TrophyGroupHeader trophy={trophy} items={items} color={color} />
+                                    <div className="grid items-start gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                                        {items.map((circuit) => (
+                                            <CircuitRow key={circuit.id} circuit={circuit} />
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
                 )}
             </div>

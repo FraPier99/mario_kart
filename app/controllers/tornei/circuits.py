@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.core.media import decode_data_url
 from app.core.security import require_roles
-from app.services.tornei.circuits import get_all_circuits, get_circuit_by_id, update_circuit
-from app.controllers.tornei.schemas.circuits import CircuitResponse, UpdateCircuit
+from app.services.tornei.circuits import get_all_circuits, get_circuit_by_id, update_circuit, create_circuit
+from app.controllers.tornei.schemas.circuits import CircuitResponse, CreateCircuit, UpdateCircuit
 
 
 router = APIRouter(prefix="/circuits", tags=["Circuits"])
@@ -16,6 +16,22 @@ router = APIRouter(prefix="/circuits", tags=["Circuits"])
 @router.get("", response_model=list[CircuitResponse])
 def list_circuits(game_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
     return get_all_circuits(db, game_id=game_id)
+
+
+@router.post("", response_model=CircuitResponse, status_code=201)
+def insert_circuit(
+    payload: CreateCircuit,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_roles("superadmin", "admin")),
+):
+    try:
+        return create_circuit(db, payload.model_dump())
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Esiste già un circuito con questo nome per questo gioco",
+        )
 
 
 @router.get("/{circuit_id}/photo")

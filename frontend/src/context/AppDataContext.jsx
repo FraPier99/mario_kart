@@ -493,6 +493,17 @@ export function AppDataProvider({ children }) {
         setCharacters((prev) => prev.map((c) => (c.id === characterId ? { ...c, ...patch } : c)))
     }, [])
 
+    // Stesso principio delle patch sopra, per l'aggiunta di un nuovo
+    // circuito/personaggio dal pannello admin: appende localmente invece
+    // di rifare l'intero refresh().
+    const addCircuit = useCallback((circuit) => {
+        setCircuits((prev) => [...prev, circuit])
+    }, [])
+
+    const addCharacter = useCallback((character) => {
+        setCharacters((prev) => [...prev, character])
+    }, [])
+
     const playersById = useMemo(() => {
         return new Map(players.map((player) => [player.id, player]))
     }, [players])
@@ -687,6 +698,8 @@ export function AppDataProvider({ children }) {
         patchTournament,
         patchCircuit,
         patchCharacter,
+        addCircuit,
+        addCharacter,
         getTournamentById,
         getLeaderboardByGame,
         getTournamentsByGame,

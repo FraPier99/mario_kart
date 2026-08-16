@@ -4,6 +4,14 @@ from typing import Annotated, Optional
 NormalizeStr = Annotated[str, StringConstraints(strip_whitespace=True, to_lower=True)]
 
 
+class CreateCharacter(BaseModel):
+    name: NormalizeStr
+    img_url: Optional[str] = None
+    game_id: int
+
+    model_config = {"from_attributes": True}
+
+
 class CharacterResponse(BaseModel):
     id: int
     name: NormalizeStr

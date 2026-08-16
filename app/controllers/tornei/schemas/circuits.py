@@ -9,6 +9,9 @@ NormalizeStr = Annotated[str, StringConstraints(strip_whitespace=True, to_lower=
 class CreateCircuit(BaseModel):
     name: NormalizeStr
     description: NormalizeStr
+    game_id: int
+    image_url: Optional[str] = None
+    requires_pass: bool = False
 
 
 class CircuitResponse(BaseModel):
@@ -29,6 +32,7 @@ class CircuitResponse(BaseModel):
 
 class UpdateCircuit(BaseModel):
     name: Optional[NormalizeStr] = None
+    description: Optional[NormalizeStr] = None
     image_url: Optional[str] = None
     requires_pass: Optional[bool] = None
 

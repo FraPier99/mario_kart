@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.security import require_roles
-from app.services.tornei.characters import get_character, get_characters, update_character
-from app.controllers.tornei.schemas.characters import CharacterResponse, UpdateCharacter
+from app.services.tornei.characters import get_character, get_characters, update_character, create_character
+from app.controllers.tornei.schemas.characters import CharacterResponse, CreateCharacter, UpdateCharacter
 
 
 router = APIRouter(prefix="/characters", tags=["Characters"])
@@ -15,6 +15,22 @@ router = APIRouter(prefix="/characters", tags=["Characters"])
 @router.get("", response_model=list[CharacterResponse])
 def all_characters(game_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
     return get_characters(db, game_id=game_id)
+
+
+@router.post("", response_model=CharacterResponse, status_code=201)
+def insert_character(
+    payload: CreateCharacter,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_roles("superadmin", "admin")),
+):
+    try:
+        return create_character(db, payload)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Esiste già un personaggio con questo nome per questo gioco",
+        )
 
 
 @router.get("/{character_id}", response_model=CharacterResponse)
