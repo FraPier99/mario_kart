@@ -241,10 +241,10 @@ const TrophyGroupHeader = ({ trophy, items, color }) => {
 }
 
 // ── Form "aggiungi circuito" ────────────────────────────────────────
-const AddCircuitForm = ({ gameId, existingTrophies, onClose }) => {
+const AddCircuitForm = ({ gameId, existingTrophies, initialTrophy = null, onClose }) => {
     const { addCircuit } = useAppData()
     const [saving, setSaving] = useState(false)
-    const [form, setForm] = useState({ name: '', description: existingTrophies[0] ?? '', newTrophy: '', image_url: '', requires_pass: false })
+    const [form, setForm] = useState({ name: '', description: initialTrophy ?? existingTrophies[0] ?? '', newTrophy: '', image_url: '', requires_pass: false })
     const [creatingNewTrophy, setCreatingNewTrophy] = useState(existingTrophies.length === 0)
 
     const handleCreate = async () => {
@@ -356,6 +356,16 @@ export default function CircuitsTab({ circuits = [], games = [] }) {
     const [selectedGameId, setSelectedGameId] = useState(() => games[0]?.id ?? null)
     const [search, setSearch] = useState('')
     const [showAddForm, setShowAddForm] = useState(false)
+    const [addFormInitialTrophy, setAddFormInitialTrophy] = useState(null)
+    const [showAddTrophyForm, setShowAddTrophyForm] = useState(false)
+    const [newTrophyDraft, setNewTrophyDraft] = useState('')
+    // Trofei creati "a vuoto" (nessun circuito ancora) — non esiste un
+    // modello Trofeo a parte in DB (è solo Circuit.description condiviso),
+    // quindi finché non gli si assegna almeno un circuito questi esistono
+    // solo qui, lato client. Una volta creato il primo circuito con quel
+    // trofeo, diventa un gruppo "vero" derivato dai circuiti e questa voce
+    // diventa ridondante (filtrata sotto).
+    const [pendingTrophies, setPendingTrophies] = useState([])
 
     const gameCircuits = useMemo(() => {
         const query = search.trim().toLowerCase()
@@ -378,11 +388,26 @@ export default function CircuitsTab({ circuits = [], games = [] }) {
     // Trofei esistenti per il gioco selezionato, non influenzati dalla
     // ricerca testuale — servono al form "aggiungi circuito" per popolare
     // il menu a tendina anche quando l'utente ha un filtro di ricerca attivo.
+    // Include anche i trofei creati "a vuoto" (pendingTrophies) non ancora
+    // assegnati a nessun circuito.
     const existingTrophies = useMemo(() => {
         const set = new Set()
         circuits.forEach((c) => { if (c.game_id === selectedGameId && c.description) set.add(c.description) })
+        pendingTrophies
+            .filter((t) => t.gameId === selectedGameId)
+            .forEach((t) => set.add(t.name))
         return Array.from(set)
-    }, [circuits, selectedGameId])
+    }, [circuits, selectedGameId, pendingTrophies])
+
+    // Trofei vuoti da mostrare come gruppo a parte — solo quelli non ancora
+    // "diventati veri" (nessun circuito con quella description) e solo
+    // quando non c'è una ricerca attiva (un gruppo vuoto non può comparire
+    // tra risultati di ricerca per nome circuito).
+    const emptyPendingTrophies = useMemo(() => {
+        if (search.trim()) return []
+        const realTrophyNames = new Set(groups.map((g) => g.trophy.toLowerCase()))
+        return pendingTrophies.filter((t) => t.gameId === selectedGameId && !realTrophyNames.has(t.name.toLowerCase()))
+    }, [pendingTrophies, selectedGameId, groups, search])
 
     return (
         <div className="space-y-4">
@@ -417,23 +442,57 @@ export default function CircuitsTab({ circuits = [], games = [] }) {
                             className="w-full rounded-xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-foreground placeholder:text-slate-400 outline-none focus:border-blue-500 transition"
                         />
                     </div>
-                    <button type="button" onClick={() => setShowAddForm((v) => !v)}
+                    <button type="button" onClick={() => { setShowAddTrophyForm((v) => !v); setNewTrophyDraft('') }}
+                        className="flex shrink-0 items-center gap-1.5 rounded-xl border-2 border-blue-500 px-3 py-2.5 text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-300 transition hover:bg-blue-50 dark:hover:bg-blue-500/10">
+                        <Plus size={13} /> Nuovo trofeo
+                    </button>
+                    <button type="button" onClick={() => { setAddFormInitialTrophy(null); setShowAddForm((v) => !v) }}
                         className="flex shrink-0 items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2.5 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-blue-500">
                         <Plus size={13} /> Aggiungi circuito
                     </button>
                 </div>
+
+                {showAddTrophyForm && selectedGameId != null && (
+                    <div className="mb-4 flex items-center gap-2 rounded-xl border-2 border-blue-200 dark:border-blue-500/30 bg-blue-50/50 dark:bg-blue-500/5 px-3 py-2.5">
+                        <input
+                            autoFocus
+                            value={newTrophyDraft}
+                            onChange={(e) => setNewTrophyDraft(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key !== 'Enter') return
+                                const name = newTrophyDraft.trim()
+                                if (!name) return
+                                if (existingTrophies.some((t) => t.toLowerCase() === name.toLowerCase())) {
+                                    toast.error('Esiste già un trofeo con questo nome')
+                                    return
+                                }
+                                setPendingTrophies((prev) => [...prev, { gameId: selectedGameId, name }])
+                                toast.success(`Trofeo "${name}" creato — aggiungi un circuito per popolarlo`)
+                                setShowAddTrophyForm(false)
+                                setNewTrophyDraft('')
+                            }}
+                            placeholder="Nome del nuovo trofeo (Invio per confermare)"
+                            className="flex-1 rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 outline-none focus:border-blue-500 transition"
+                        />
+                        <button type="button" onClick={() => setShowAddTrophyForm(false)}
+                            className="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:text-rose-500">
+                            <X size={14} />
+                        </button>
+                    </div>
+                )}
 
                 {showAddForm && selectedGameId != null && (
                     <div className="mb-4">
                         <AddCircuitForm
                             gameId={selectedGameId}
                             existingTrophies={existingTrophies}
+                            initialTrophy={addFormInitialTrophy}
                             onClose={() => setShowAddForm(false)}
                         />
                     </div>
                 )}
 
-                {groups.length === 0 ? (
+                {groups.length === 0 && emptyPendingTrophies.length === 0 ? (
                     <p className="text-sm text-slate-500 dark:text-muted-foreground">
                         {search.trim() ? 'Nessun circuito corrisponde alla ricerca.' : 'Nessun circuito per questo gioco.'}
                     </p>
@@ -448,6 +507,24 @@ export default function CircuitsTab({ circuits = [], games = [] }) {
                                         {items.map((circuit) => (
                                             <CircuitRow key={circuit.id} circuit={circuit} />
                                         ))}
+                                    </div>
+                                </div>
+                            )
+                        })}
+                        {emptyPendingTrophies.map((t, i) => {
+                            const color = trophyColor(groups.length + i)
+                            return (
+                                <div key={t.name} className={`space-y-2 border-l-4 pl-3 ${color.border}`}>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className={`h-2 w-2 shrink-0 rounded-full ${color.dot}`} />
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">{t.name}</p>
+                                    </div>
+                                    <div className="flex items-center gap-3 rounded-xl border border-dashed border-slate-200 dark:border-border px-3 py-3">
+                                        <p className="flex-1 text-xs text-slate-400 dark:text-muted-foreground">Nessun circuito ancora in questo trofeo.</p>
+                                        <button type="button" onClick={() => { setAddFormInitialTrophy(t.name); setShowAddForm(true) }}
+                                            className="shrink-0 flex items-center gap-1 rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 transition hover:text-blue-600 hover:border-blue-300">
+                                            <Plus size={10} /> Aggiungi qui
+                                        </button>
                                     </div>
                                 </div>
                             )
