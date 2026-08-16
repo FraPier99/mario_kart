@@ -3,6 +3,7 @@ import { Edit2, Save, Search, Upload, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { compressImage } from '@/lib/imageCompression'
 import { charactersApi, getApiErrorMessage } from '@/services/apiClient'
+import { useAppData } from '@/context/AppDataContext'
 import { MKDS_VOICE_NAME_MAP } from '@/lib/mkdsSounds'
 import { MK8D_VOICE_NAME_MAP } from '@/lib/mk8dSounds'
 
@@ -83,7 +84,8 @@ const MiniImagePicker = ({ value, onChange }) => {
 }
 
 // ── Character inline editor ────────────────────────────────────────
-const CharacterRow = ({ character, onSaved }) => {
+const CharacterRow = ({ character }) => {
+    const { patchCharacter } = useAppData()
     const [editing, setEditing] = useState(false)
     const [saving, setSaving] = useState(false)
     const [form, setForm] = useState({ name: character.name ?? '', img_url: character.img_url ?? '' })
@@ -101,13 +103,16 @@ const CharacterRow = ({ character, onSaved }) => {
         }
         setSaving(true)
         try {
-            await charactersApi.update(character.id, {
+            const res = await charactersApi.update(character.id, {
                 name: form.name.trim(),
                 img_url: form.img_url.trim() || null,
             })
+            // Aggiorna solo questo personaggio nello stato locale invece di
+            // un refresh() completo: evita che un salvataggio su una singola
+            // riga ricarichi visibilmente l'intera pagina.
+            patchCharacter(character.id, res.data)
             toast.success(`${form.name || character.name} aggiornato`)
             setEditing(false)
-            onSaved()
         } catch (err) {
             toast.error('Salvataggio fallito', { description: getApiErrorMessage(err) })
         } finally {
@@ -182,7 +187,7 @@ const CharacterRow = ({ character, onSaved }) => {
 }
 
 // ── CharactersTab ───────────────────────────────────────────────────
-export default function CharactersTab({ characters = [], games = [], onRefresh }) {
+export default function CharactersTab({ characters = [], games = [] }) {
     const [selectedGameId, setSelectedGameId] = useState(() => games[0]?.id ?? null)
     const [search, setSearch] = useState('')
 
@@ -232,9 +237,9 @@ export default function CharactersTab({ characters = [], games = [], onRefresh }
                         {search.trim() ? 'Nessun personaggio corrisponde alla ricerca.' : 'Nessun personaggio per questo gioco.'}
                     </p>
                 ) : (
-                    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid items-start gap-2 sm:grid-cols-2 lg:grid-cols-3">
                         {gameCharacters.map((character) => (
-                            <CharacterRow key={character.id} character={character} onSaved={onRefresh} />
+                            <CharacterRow key={character.id} character={character} />
                         ))}
                     </div>
                 )}

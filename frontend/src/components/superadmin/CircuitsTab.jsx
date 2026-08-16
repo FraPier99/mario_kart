@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import CircuitThumbnail from '@/components/common/CircuitThumbnail'
 import { compressImage } from '@/lib/imageCompression'
 import { circuitsApi, getApiErrorMessage } from '@/services/apiClient'
+import { useAppData } from '@/context/AppDataContext'
 
 // ── Mini image picker (hides raw base64) — mirror di DatabaseTab.jsx,
 // solo con preview rettangolare invece che circolare (thumbnail circuiti).
@@ -63,7 +64,8 @@ const MiniImagePicker = ({ value, onChange }) => {
 }
 
 // ── Circuit inline editor ──────────────────────────────────────────
-const CircuitRow = ({ circuit, onSaved }) => {
+const CircuitRow = ({ circuit }) => {
+    const { patchCircuit } = useAppData()
     const [editing, setEditing] = useState(false)
     const [saving, setSaving] = useState(false)
     const [form, setForm] = useState({ name: circuit.name ?? '', image_url: circuit.image_url ?? '', requires_pass: circuit.requires_pass ?? false })
@@ -80,14 +82,18 @@ const CircuitRow = ({ circuit, onSaved }) => {
         }
         setSaving(true)
         try {
-            await circuitsApi.update(circuit.id, {
+            const res = await circuitsApi.update(circuit.id, {
                 name: form.name.trim(),
                 image_url: form.image_url.trim() || null,
                 requires_pass: form.requires_pass,
             })
+            // Aggiorna solo questo circuito nello stato locale invece di un
+            // refresh() completo (rifetch di tutto il dataset): evita che un
+            // salvataggio su una singola riga ricarichi visibilmente l'intera
+            // pagina.
+            patchCircuit(circuit.id, res.data)
             toast.success(`${form.name || circuit.name} aggiornato`)
             setEditing(false)
-            onSaved()
         } catch (err) {
             toast.error('Salvataggio fallito', { description: getApiErrorMessage(err) })
         } finally {
@@ -154,7 +160,7 @@ const CircuitRow = ({ circuit, onSaved }) => {
 }
 
 // ── CircuitsTab ─────────────────────────────────────────────────────
-export default function CircuitsTab({ circuits = [], games = [], onRefresh }) {
+export default function CircuitsTab({ circuits = [], games = [] }) {
     const [selectedGameId, setSelectedGameId] = useState(() => games[0]?.id ?? null)
     const [search, setSearch] = useState('')
 
@@ -218,9 +224,9 @@ export default function CircuitsTab({ circuits = [], games = [], onRefresh }) {
                         {groups.map(({ trophy, items }) => (
                             <div key={trophy} className="space-y-2">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">{trophy}</p>
-                                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                                <div className="grid items-start gap-2 sm:grid-cols-2 lg:grid-cols-3">
                                     {items.map((circuit) => (
-                                        <CircuitRow key={circuit.id} circuit={circuit} onSaved={onRefresh} />
+                                        <CircuitRow key={circuit.id} circuit={circuit} />
                                     ))}
                                 </div>
                             </div>

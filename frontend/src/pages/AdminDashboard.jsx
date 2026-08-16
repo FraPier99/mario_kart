@@ -417,7 +417,7 @@ const TorneiTab = ({ tournaments }) => {
 
 // ── main component ───────────────────────────────────────────────
 export default function AdminDashboard() {
-    const { tournaments, players, loading, homeMetrics, charactersById, characters, circuits, games, refresh } = useAppData()
+    const { tournaments, players, loading, homeMetrics, charactersById, characters, circuits, games } = useAppData()
     const { user, isSuperadmin } = useAuth()
     const [activeTab, setActiveTab] = useState('panoramica')
     const [users, setUsers] = useState([])
@@ -520,10 +520,10 @@ export default function AdminDashboard() {
                     <PlayersTab />
                 )}
                 {activeTab === 'personaggi' && (
-                    <CharactersTab characters={characters} games={games} onRefresh={refresh} />
+                    <CharactersTab characters={characters} games={games} />
                 )}
                 {activeTab === 'circuiti' && (
-                    <CircuitsTab circuits={circuits} games={games} onRefresh={refresh} />
+                    <CircuitsTab circuits={circuits} games={games} />
                 )}
                 {activeTab === 'carte' && (
                     <CarteTab />

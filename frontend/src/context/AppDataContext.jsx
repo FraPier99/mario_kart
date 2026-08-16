@@ -480,6 +480,19 @@ export function AppDataProvider({ children }) {
         setTournaments((prev) => prev.map((t) => (t.id === tournamentId ? { ...t, ...patch } : t)))
     }, [])
 
+    // Stesso principio di patchTournament, per le modifiche inline di
+    // circuiti/personaggi nel pannello admin: senza questo, ogni salvataggio
+    // richiamava l'intero refresh() (rifetch di giocatori, tornei, gare,
+    // risultati, ecc. — tutto il dataset), causando un ricaricamento
+    // percepibile dell'intera pagina per una modifica di una singola riga.
+    const patchCircuit = useCallback((circuitId, patch) => {
+        setCircuits((prev) => prev.map((c) => (c.id === circuitId ? { ...c, ...patch } : c)))
+    }, [])
+
+    const patchCharacter = useCallback((characterId, patch) => {
+        setCharacters((prev) => prev.map((c) => (c.id === characterId ? { ...c, ...patch } : c)))
+    }, [])
+
     const playersById = useMemo(() => {
         return new Map(players.map((player) => [player.id, player]))
     }, [players])
@@ -672,6 +685,8 @@ export function AppDataProvider({ children }) {
         errorMessage,
         refresh,
         patchTournament,
+        patchCircuit,
+        patchCharacter,
         getTournamentById,
         getLeaderboardByGame,
         getTournamentsByGame,
