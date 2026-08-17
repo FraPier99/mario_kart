@@ -39,6 +39,10 @@ class CreateTournament(BaseModel):
         default=None,
         description="Solo torneo classic: include i circuiti a pass/DLC nel pool disponibile (default True se non specificato)",
     )
+    is_friendly: bool = Field(
+        default=False,
+        description="Torneo amichevole: niente carte, schedine, statistiche/badge né notifica di chiusura, solo gare",
+    )
 
 
 class TournamentResponse(BaseModel):
@@ -63,6 +67,7 @@ class TournamentResponse(BaseModel):
     )
     consolation_winner_id: Optional[int] = None
     last_phase_change_at: Optional[datetime] = None
+    is_friendly: bool = False
 
     model_config = {"from_attributes": True}
 

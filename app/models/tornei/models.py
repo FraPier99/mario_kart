@@ -94,6 +94,10 @@ class Tournament(Base):
     status = Column(String, nullable=False, default="da_svolgere")
     # Formato competitivo: "classic" (tutti insieme) | "group_stage" (gironi)
     tournament_format = Column(String, nullable=False, default="classic")
+    # Torneo "amichevole" — ortogonale a tournament_format: niente carte,
+    # schedine, statistiche/badge né notifica di chiusura, solo gare e
+    # classifica per divertimento. Immutabile dopo la creazione.
+    is_friendly = Column(Boolean, nullable=False, default=False)
 
     # Chiusura schedine a evento (non più a countdown temporale rigido):
     # diventa True quando l'Admin inserisce la prima gara oppure quando il

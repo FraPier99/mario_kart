@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
     Flag, Trophy, Swords, ScrollText, Zap, Scale,
-    Crown, Star, Flame, Flag as FlagIcon, ChevronDown,
+    Crown, Star, Flame, Flag as FlagIcon, ChevronDown, PartyPopper,
 } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import PlayerLink from '@/components/common/PlayerLink'
@@ -44,6 +44,7 @@ const SECTIONS = [
             { key: 'tornei-gironi', label: 'Gironi' },
         ],
     },
+    { key: 'amichevoli', label: 'Amichevoli', icon: PartyPopper },
     { key: 'badge', label: 'Badge', icon: Crown },
     {
         label: 'Schedina', icon: ScrollText, children: [
@@ -284,6 +285,25 @@ const Faq = () => {
                                 <p className="text-sm text-slate-700 dark:text-muted-foreground">
                                     Ogni carta ha un numero di usi proprio (Carta Master 1 uso, Guscio Blu fino a 3 nello stesso torneo — vedi la sezione <strong>Card</strong>), le carte non si possono usare nelle gare di spareggio/duello, e la schedina si chiude quando il torneo inizia (nessuna deadline automatica a tempo — decide l'admin).
                                 </p>
+                            </div>
+                        )}
+
+                        {activeSection === 'amichevoli' && (
+                            <div>
+                                <SectionHeading>Amichevoli</SectionHeading>
+                                <p className="mt-3 text-sm text-slate-600 dark:text-muted-foreground">
+                                    Un torneo può essere marcato come <strong className="text-slate-900 dark:text-foreground">amichevole</strong> —
+                                    in stile "fight club": si gioca per divertimento, senza niente in palio. Un modo in più
+                                    per far girare il sito anche fuori dai tornei ufficiali.
+                                </p>
+                                <ul className="list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-muted-foreground">
+                                    <li>Nessuna <strong className="text-slate-900 dark:text-foreground">Card</strong>, nessuna <strong className="text-slate-900 dark:text-foreground">Schedina</strong>.</li>
+                                    <li>Non conta per <strong className="text-slate-900 dark:text-foreground">Badge</strong>, classifiche o statistiche aggregate.</li>
+                                    <li>Nessuna notifica di chiusura a tutti i partecipanti.</li>
+                                    <li>Nessun vincitore ufficiale da decretare: il torneo si chiude semplicemente segnandolo come concluso — restano comunque gare e classifica in tempo reale come in un torneo normale.</li>
+                                    <li>Funziona sia in Classifica Unica che a Gironi, con lo stesso numero minimo di partecipanti già previsto per ciascun formato.</li>
+                                </ul>
+                                <p className="mt-5 text-center text-[10px] text-slate-400 dark:text-slate-500">Per ora un torneo amichevole può essere creato solo dagli amministratori.</p>
                             </div>
                         )}
 

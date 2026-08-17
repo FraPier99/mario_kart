@@ -300,27 +300,30 @@ def create_tournament(
         db.commit()
         db.refresh(new_tournament)
 
-    # Notifiche: nuovo torneo + schedina da compilare (classico)
-    try:
-        from app.services.utenti.notifications import create_tournament_notifications
+    # Notifiche: nuovo torneo + schedina da compilare (classico) — saltate
+    # per i tornei amichevoli, che non hanno schedine e non devono
+    # "disturbare" tutti per una partita per divertimento.
+    if not new_tournament.is_friendly:
+        try:
+            from app.services.utenti.notifications import create_tournament_notifications
 
-        game_name = new_tournament.game.name if new_tournament.game else "torneo"
-        create_tournament_notifications(
-            db,
-            new_tournament.id,
-            "new_tournament",
-            f"Nuovo torneo: '{new_tournament.name}' ({game_name})",
-        )
-        if new_tournament.tournament_format == "classic":
+            game_name = new_tournament.game.name if new_tournament.game else "torneo"
             create_tournament_notifications(
                 db,
                 new_tournament.id,
-                "schedina_pending",
-                f"Compila la schedina per '{new_tournament.name}'",
+                "new_tournament",
+                f"Nuovo torneo: '{new_tournament.name}' ({game_name})",
             )
-        db.commit()
-    except Exception:
-        pass
+            if new_tournament.tournament_format == "classic":
+                create_tournament_notifications(
+                    db,
+                    new_tournament.id,
+                    "schedina_pending",
+                    f"Compila la schedina per '{new_tournament.name}'",
+                )
+            db.commit()
+        except Exception:
+            pass
 
     return _normalize_tournament_status(new_tournament)
 
@@ -434,6 +437,7 @@ def update_tournament(db: Session, tmentData: UpdateTournament, tournament_id: i
         tmentData.winner_id is not None
         and previous_winner_id is None
         and t.tournament_format == "group_stage"
+        and not t.is_friendly
     ):
         fd = t.format_data or {}
         finals = fd.get("finals") or {}
@@ -478,7 +482,12 @@ def update_tournament(db: Session, tmentData: UpdateTournament, tournament_id: i
 
     if t.winner_id is not None:
         t.status = "concluso"
-    elif t.status == "concluso":
+    # Normalmente "concluso" senza vincitore è uno stato spurio (raggiunto
+    # solo tramite Decreta Vincitore, che imposta sempre winner_id insieme)
+    # e va riportato al legacy "finito". Per i tornei amichevoli invece è lo
+    # stato valido e voluto: "concluso" significa solo "abbiamo finito di
+    # giocare", senza un vincitore ufficiale da impostare.
+    elif t.status == "concluso" and not t.is_friendly:
         t.status = "finito"
 
     # Avanzando a "in_corso" le schedine si chiudono definitivamente (non più
@@ -498,9 +507,10 @@ def update_tournament(db: Session, tmentData: UpdateTournament, tournament_id: i
             link = TournamentPlayer(tournament_id=tournament_id, player_id=pid)
             db.add(link)
 
-    should_settle_schedine = (
-        previous_status != "concluso" and t.status == "concluso"
-    ) or (previous_winner_id is None and t.winner_id is not None)
+    should_settle_schedine = (not t.is_friendly) and (
+        (previous_status != "concluso" and t.status == "concluso")
+        or (previous_winner_id is None and t.winner_id is not None)
+    )
 
     if should_settle_schedine:
         if t.tournament_format == "group_stage":
@@ -640,63 +650,65 @@ def set_tournament_playoff_winner(
 
     tournament.winner_id = playoffData.winner_id
     tournament.status = "concluso"
-    if tournament.tournament_format == "group_stage":
-        from app.services.schedine.schedine_deluxe import settle_deluxe_schedine
+    if not tournament.is_friendly:
+        if tournament.tournament_format == "group_stage":
+            from app.services.schedine.schedine_deluxe import settle_deluxe_schedine
 
-        try:
-            settle_deluxe_schedine(db, tournament_id)
-        except ValueError:
-            logger.exception(
-                "settle_deluxe_schedine fallita per torneo %s (playoff): "
-                "vincitore_schedina_id resta non impostato, nessuna Card Master assegnata.",
-                tournament_id,
-            )
-    else:
-        settle_tournament_schedine(db, tournament_id)
+            try:
+                settle_deluxe_schedine(db, tournament_id)
+            except ValueError:
+                logger.exception(
+                    "settle_deluxe_schedine fallita per torneo %s (playoff): "
+                    "vincitore_schedina_id resta non impostato, nessuna Card Master assegnata.",
+                    tournament_id,
+                )
+        else:
+            settle_tournament_schedine(db, tournament_id)
     db.commit()
     db.refresh(tournament)
     _load_participants(db, tournament)
 
-    try:
-        from app.services.utenti.notifications import create_tournament_notifications
-
-        winner = db.query(Player).filter(Player.id == playoffData.winner_id).first()
-        winner_name = winner.nickname if winner else "—"
-        create_tournament_notifications(
-            db,
-            tournament_id,
-            "tournament_ended",
-            f"Torneo '{tournament.name}' concluso! Vincitore: {winner_name}",
-        )
-        _touch_phase_change(
-            db,
-            tournament,
-            None,
-            action="tournament_concluded",
-            description=f"Il torneo '{tournament.name}' è concluso. Vincitore: {winner_name}.",
-        )
-        db.commit()
-
+    if not tournament.is_friendly:
         try:
-            from app.realtime.manager import broadcast_tournament_winner_sync
+            from app.services.utenti.notifications import create_tournament_notifications
 
-            winner_img = to_image_url(f"/players/{winner.id}/avatar", winner.img_url) if winner else None
-            broadcast_tournament_winner_sync(
+            winner = db.query(Player).filter(Player.id == playoffData.winner_id).first()
+            winner_name = winner.nickname if winner else "—"
+            create_tournament_notifications(
                 db,
                 tournament_id,
-                {
-                    "tournament_id": tournament_id,
-                    "tournament_name": tournament.name,
-                    "winner_id": tournament.winner_id,
-                    "winner_nickname": winner_name,
-                    "winner_img_url": winner_img,
-                    "winner_favorite_character_id": winner.favorite_character_id if winner else None,
-                },
+                "tournament_ended",
+                f"Torneo '{tournament.name}' concluso! Vincitore: {winner_name}",
             )
+            _touch_phase_change(
+                db,
+                tournament,
+                None,
+                action="tournament_concluded",
+                description=f"Il torneo '{tournament.name}' è concluso. Vincitore: {winner_name}.",
+            )
+            db.commit()
+
+            try:
+                from app.realtime.manager import broadcast_tournament_winner_sync
+
+                winner_img = to_image_url(f"/players/{winner.id}/avatar", winner.img_url) if winner else None
+                broadcast_tournament_winner_sync(
+                    db,
+                    tournament_id,
+                    {
+                        "tournament_id": tournament_id,
+                        "tournament_name": tournament.name,
+                        "winner_id": tournament.winner_id,
+                        "winner_nickname": winner_name,
+                        "winner_img_url": winner_img,
+                        "winner_favorite_character_id": winner.favorite_character_id if winner else None,
+                    },
+                )
+            except Exception:
+                pass
         except Exception:
             pass
-    except Exception:
-        pass
 
     return _normalize_tournament_status(tournament), "ok"
 
@@ -739,7 +751,7 @@ def undo_last_playoff(db: Session, tournament_id: int):
         tournament.winner_id = None
         tournament.status = "da_svolgere"
 
-    if tournament.status == "concluso":
+    if tournament.status == "concluso" and not tournament.is_friendly:
         settle_tournament_schedine(db, tournament_id)
 
     db.commit()

@@ -582,11 +582,27 @@ export function AppDataProvider({ children }) {
         return buildTournamentDetails(tournaments, races, results, playersById, pointAdjustments)
     }, [tournaments, races, results, playersById, pointAdjustments])
 
-    const { statsByPlayerId } = useMemo(() => {
-        return buildPlayerStats(players, tournaments, results, races)
-    }, [players, tournaments, results, races])
+    // I tornei amichevoli non contano per nessuna statistica/classifica
+    // aggregata (niente in palio) — esclusi qui prima di calcolare le stats
+    // per giocatore, così "non fanno punti statistici" vale ovunque questo
+    // aggregato viene consumato (leaderboard, profilo, ecc.), senza dover
+    // toccare detailedTournaments (che invece serve intatto per far
+    // funzionare la pagina di dettaglio del singolo torneo amichevole).
+    const statsTournaments = useMemo(() => tournaments.filter((t) => !t.is_friendly), [tournaments])
+    const statsRaces = useMemo(() => {
+        const statsTournamentIds = new Set(statsTournaments.map((t) => t.id))
+        return races.filter((r) => statsTournamentIds.has(r.tournament_id))
+    }, [races, statsTournaments])
+    const statsResults = useMemo(() => {
+        const statsRaceIds = new Set(statsRaces.map((r) => r.id))
+        return results.filter((r) => statsRaceIds.has(r.race_id))
+    }, [results, statsRaces])
 
-    const latestTournament = detailedTournaments[0] ?? null
+    const { statsByPlayerId } = useMemo(() => {
+        return buildPlayerStats(players, statsTournaments, statsResults, statsRaces)
+    }, [players, statsTournaments, statsResults, statsRaces])
+
+    const latestTournament = detailedTournaments.find((t) => !t.is_friendly) ?? null
     const lastWinner = latestTournament?.winner ?? null
     const lastWinnerStats = lastWinner ? statsByPlayerId.get(lastWinner.id) ?? null : null
 
@@ -628,16 +644,16 @@ export function AppDataProvider({ children }) {
         return {
             activePlayers: players.length,
             completedRaces: races.length,
-            trophiesWon: tournaments.filter((tournament) => Boolean(tournament.winner_id)).length,
+            trophiesWon: statsTournaments.filter((tournament) => Boolean(tournament.winner_id)).length,
         }
-    }, [players, races, tournaments])
+    }, [players, races, statsTournaments])
 
     const getTournamentById = (tournamentId) => {
         return detailedTournaments.find((tournament) => tournament.id === Number(tournamentId)) ?? null
     }
 
     const getLeaderboardByGame = useCallback((gameId) => {
-        const filteredTourns = tournaments.filter((t) => t.game_id === Number(gameId))
+        const filteredTourns = statsTournaments.filter((t) => t.game_id === Number(gameId))
         const filteredRaces = races.filter((r) => filteredTourns.some((t) => t.id === r.tournament_id))
         const filteredRaceIds = new Set(filteredRaces.map((r) => r.id))
         const filteredResults = results.filter((r) => filteredRaceIds.has(r.race_id))
@@ -655,7 +671,7 @@ export function AppDataProvider({ children }) {
                 return { ...ps, nickname: player.nickname, first_name: player.first_name, last_name: player.last_name, img_url: player.img_url, favorite_character_id: player.favorite_character_id }
             })
             .sort(sortLeaderboard)
-    }, [players, tournaments, races, results])
+    }, [players, statsTournaments, races, results])
 
     const getTournamentsByGame = useCallback((gameId) => {
         return detailedTournaments.filter((t) => t.game_id === Number(gameId))
@@ -667,7 +683,7 @@ export function AppDataProvider({ children }) {
         return {
             activePlayers: new Set(filteredTourns.flatMap((t) => t.participant_ids ?? [])).size || players.length,
             completedRaces: filteredRaces.length,
-            trophiesWon: filteredTourns.filter((t) => Boolean(t.winner_id)).length,
+            trophiesWon: filteredTourns.filter((t) => !t.is_friendly && Boolean(t.winner_id)).length,
         }
     }, [players, tournaments, races])
 

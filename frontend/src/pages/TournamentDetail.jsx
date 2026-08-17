@@ -555,13 +555,13 @@ const TournamentDetail = () => {
             ? [
                 ...(myGroup ? [{ key: myPhaseTabKey, label: groupLabel(myGroup.groupName), icon: myGroup.phase === 'finals' ? Trophy : Users }] : []),
                 { key: 'generale', label: 'Classifica Generale', icon: BarChart3 },
-                ...(hasCardHistory ? [{ key: 'carte', label: 'Carte', icon: Zap }] : []),
+                ...(!tournament.is_friendly && hasCardHistory ? [{ key: 'carte', label: 'Carte', icon: Zap }] : []),
             ]
             : [
                 { key: 'classifica', label: 'Classifica', icon: BarChart3 },
                 { key: 'gare', label: 'Gare', icon: ListChecks },
                 { key: 'circuiti', label: 'Circuiti', icon: MapPin },
-                ...(hasCardHistory ? [{ key: 'carte', label: 'Carte', icon: Zap }] : []),
+                ...(!tournament.is_friendly && hasCardHistory ? [{ key: 'carte', label: 'Carte', icon: Zap }] : []),
             ]
 
         return (
@@ -599,6 +599,11 @@ const TournamentDetail = () => {
                                     <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest ${getTournamentStatusBadge(tournamentStatus)}`}>
                                         {getTournamentStatusLabel(tournamentStatus)}
                                     </span>
+                                    {tournament.is_friendly && (
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-400">
+                                            <PartyPopper size={11} /> Amichevole
+                                        </span>
+                                    )}
                                 </div>
                             </div>
 
@@ -606,11 +611,13 @@ const TournamentDetail = () => {
                             <div className="flex flex-col items-end gap-2">
                                 {/* Primary CTAs */}
                                 <div className="flex items-center gap-2">
-                                    <button type="button" onClick={() => navigate(`/schedina/${tournamentId}`, { state: { fromAdmin: adminModeOn } })}
-                                        className="font-title rounded-xl border-2 border-emerald-800/30 bg-emerald-600 px-4 py-2.5 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-500"
-                                        style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                                        Schedina
-                                    </button>
+                                    {!tournament.is_friendly && (
+                                        <button type="button" onClick={() => navigate(`/schedina/${tournamentId}`, { state: { fromAdmin: adminModeOn } })}
+                                            className="font-title rounded-xl border-2 border-emerald-800/30 bg-emerald-600 px-4 py-2.5 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-500"
+                                            style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+                                            Schedina
+                                        </button>
+                                    )}
                                     <button type="button" onClick={() => navigate(`/tournaments/${tournamentId}/stats`)}
                                         className="font-title rounded-xl border-2 border-slate-300 dark:border-border bg-slate-50 dark:bg-muted px-4 py-2.5 text-[10px] tracking-wide text-slate-700 dark:text-foreground transition active:translate-y-px hover:border-slate-400 dark:hover:border-slate-500">
                                         Stats
@@ -618,7 +625,7 @@ const TournamentDetail = () => {
                                 </div>
                                 {/* Informational badges + admin toggle */}
                                 <div className="flex flex-wrap items-center justify-end gap-2">
-                                    {userHasPredicted !== null && (
+                                    {!tournament.is_friendly && userHasPredicted !== null && (
                                         <span className={`font-title flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[9px] tracking-wide ${userHasPredicted ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20'}`}>
                                             {userHasPredicted ? '✓ Schedina compilata' : '○ Schedina da compilare'}
                                         </span>
@@ -1098,10 +1105,17 @@ const TournamentDetail = () => {
                                 <span className={`font-title whitespace-nowrap rounded-full px-3 py-1 text-[10px] tracking-wide border-2 ${getTournamentStatusBadge(tournamentStatus)}`}>
                                     Stato: {getTournamentStatusLabel(tournamentStatus)}
                                 </span>
-                                <span className="whitespace-nowrap rounded-full bg-amber-50 dark:bg-amber-400/20 px-3 py-1 font-black text-amber-700 dark:text-amber-300 border-2 border-amber-300 dark:border-amber-500/20">
-                                    <Crown size={14} className="-mt-0.5 me-1 inline" />
-                                    Vincitore: {tournament.winner?.nickname ?? '—'}
-                                </span>
+                                {tournament.is_friendly && (
+                                    <span className="font-title inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-amber-50 dark:bg-amber-400/10 px-3 py-1 text-[10px] tracking-wide text-amber-700 dark:text-amber-300 border-2 border-amber-300 dark:border-amber-500/20">
+                                        <PartyPopper size={12} /> Amichevole
+                                    </span>
+                                )}
+                                {!tournament.is_friendly && (
+                                    <span className="whitespace-nowrap rounded-full bg-amber-50 dark:bg-amber-400/20 px-3 py-1 font-black text-amber-700 dark:text-amber-300 border-2 border-amber-300 dark:border-amber-500/20">
+                                        <Crown size={14} className="-mt-0.5 me-1 inline" />
+                                        Vincitore: {tournament.winner?.nickname ?? '—'}
+                                    </span>
+                                )}
                             </div>
                             {/* Partecipanti con avatar */}
                             {tournamentParticipants.length > 0 && (
@@ -1164,15 +1178,15 @@ const TournamentDetail = () => {
                                         : [{ key: 'gare', label: 'Risultati', icon: Flag }]
                                 ) : []),
                                 { key: 'leaderboard', label: 'Classifica', icon: BarChart3 },
-                                { key: 'carte', label: 'Carte', icon: Zap },
+                                ...(!tournament.is_friendly ? [{ key: 'carte', label: 'Carte', icon: Zap }] : []),
                                 { key: 'races', label: 'Gare', icon: ListChecks },
                                 ...(tournament.tournament_format !== 'group_stage' ? [{ key: 'circuiti', label: 'Circuiti', icon: MapPin }] : []),
                                 ...(isAdmin ? [{ key: 'setup', label: 'Impostazioni', icon: Settings }] : []),
-                                ...(isAdmin && tournament.tournament_format !== 'group_stage' ? [
+                                ...(isAdmin && tournament.tournament_format !== 'group_stage' && !tournament.is_friendly ? [
                                     { key: 'duelli', label: 'Duelli', icon: Swords },
                                     { key: 'finale', label: 'Verdetto', icon: Crown },
                                 ] : []),
-                                ...(isAdmin ? [{ key: 'schedina', label: 'Schedine', icon: ListChecks }] : []),
+                                ...(isAdmin && !tournament.is_friendly ? [{ key: 'schedina', label: 'Schedine', icon: ListChecks }] : []),
                             ].map(({ key, label, icon: Icon }) => (
                                 <button key={key} type="button" onClick={() => setActiveSection(key)}
                                     className={`font-title flex items-center gap-1.5 rounded-lg px-3 py-2 text-[10px] tracking-wide whitespace-nowrap transition ${activeSection === key ? 'bg-slate-700 dark:bg-slate-600 text-white shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
@@ -1215,7 +1229,7 @@ const TournamentDetail = () => {
                 {isAdmin && activeSection === 'setup' && (
                     <div className="space-y-4">
                         <CollapsibleSection title="Stato torneo" icon={<Settings size={16} />} defaultOpen>
-                            <TournamentStatusManager tournament={tournament} disabled={!isAdmin} onUpdated={refresh} />
+                            <TournamentStatusManager tournament={tournament} disabled={!isAdmin} onUpdated={refresh} allowDirectConclusion={tournament.is_friendly} />
                         </CollapsibleSection>
 
                         {tournament.tournament_format === 'classic' && (circuitsByGameId.get(tournament?.game_id ?? 0) ?? []).some((c) => c.requires_pass) && (

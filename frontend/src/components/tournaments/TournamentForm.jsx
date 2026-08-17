@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, CalendarDays, Check, Gamepad2, Users } from 'lucide-react'
+import { AlertTriangle, CalendarDays, Check, Gamepad2, PartyPopper, Users } from 'lucide-react'
 
 const todayIso = () => {
     const d = new Date()
@@ -13,6 +13,7 @@ const emptyForm = {
     tournament_format: 'classic',
     n_races: '',
     include_locked_circuits: true,
+    is_friendly: false,
 }
 
 const TournamentForm = ({
@@ -55,6 +56,7 @@ const TournamentForm = ({
             tournament_format: nextValues.tournament_format ?? 'classic',
             n_races: nextValues.n_races ?? '',
             include_locked_circuits: nextValues.include_locked_circuits ?? true,
+            is_friendly: nextValues.is_friendly ?? false,
         })
         if (nextValues.participantIds?.length) {
             setSelectedPlayerIds(nextValues.participantIds)
@@ -128,6 +130,7 @@ const TournamentForm = ({
             n_players: selectedPlayerIds.length || selectablePlayers.length || 1,
             participant_ids: selectedPlayerIds,
             tournament_format: formState.tournament_format,
+            is_friendly: formState.is_friendly,
             ...(nRaces ? { n_races: nRaces } : {}),
             ...(!isGroupStage && gameHasPassCircuits ? { include_locked_circuits: formState.include_locked_circuits } : {}),
         })
@@ -283,6 +286,24 @@ const TournamentForm = ({
                         </p>
                     )}
                 </div>
+
+                {/* TORNEO AMICHEVOLE */}
+                <label className={`flex items-start gap-3 rounded-2xl border-2 p-3.5 cursor-pointer transition-all md:col-span-2 ${formState.is_friendly ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20' : 'border-slate-200 dark:border-border bg-slate-50 dark:bg-muted'}`}>
+                    <input
+                        type="checkbox"
+                        checked={formState.is_friendly}
+                        onChange={(e) => setFormState((c) => ({ ...c, is_friendly: e.target.checked }))}
+                        className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 dark:border-border accent-amber-500"
+                    />
+                    <div className="min-w-0">
+                        <span className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-slate-800 dark:text-foreground">
+                            <PartyPopper size={14} className="text-amber-500" /> Torneo amichevole
+                        </span>
+                        <p className="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-muted-foreground">
+                            Nessuna carta, schedina, statistica o badge — solo gare e classifica, per giocare per divertimento. Non modificabile dopo la creazione.
+                        </p>
+                    </div>
+                </label>
 
             </div>
 

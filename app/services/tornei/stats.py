@@ -75,6 +75,7 @@ def _head_to_head_base_query(db: Session, game_id: int, player_a_id: int, player
             rb.player_id == player_b_id,
             Race.is_duello.is_(False),
             Tournament.game_id == game_id,
+            Tournament.is_friendly.is_(False),
         )
     )
 
@@ -170,7 +171,7 @@ def get_circuit_stats_list(db: Session, game_id: int):
         )
         .join(Result, Result.race_id == Race.id)
         .join(Tournament, Tournament.id == Race.tournament_id)
-        .filter(Race.is_duello.is_(False), Tournament.game_id == game_id)
+        .filter(Race.is_duello.is_(False), Tournament.game_id == game_id, Tournament.is_friendly.is_(False))
         .group_by(Race.circuit_id)
         .all()
     )
@@ -187,7 +188,7 @@ def get_circuit_stats_list(db: Session, game_id: int):
         .join(Result, Result.race_id == Race.id)
         .join(Player, Player.id == Result.player_id)
         .join(Tournament, Tournament.id == Race.tournament_id)
-        .filter(Race.is_duello.is_(False), Tournament.game_id == game_id, Result.position == 1)
+        .filter(Race.is_duello.is_(False), Tournament.game_id == game_id, Tournament.is_friendly.is_(False), Result.position == 1)
         .group_by(Race.circuit_id, Player.id, Player.nickname)
         .all()
     )
@@ -234,7 +235,8 @@ def get_circuit_stats_detail(db: Session, circuit_id: int):
         )
         .join(Result, Result.player_id == Player.id)
         .join(Race, Race.id == Result.race_id)
-        .filter(Race.circuit_id == circuit_id, Race.is_duello.is_(False))
+        .join(Tournament, Tournament.id == Race.tournament_id)
+        .filter(Race.circuit_id == circuit_id, Race.is_duello.is_(False), Tournament.is_friendly.is_(False))
         .group_by(Player.id, Player.nickname)
         .order_by(
             func.sum(case((Result.position == 1, 1), else_=0)).desc(),
@@ -327,6 +329,7 @@ def get_player_game_badge(db: Session, player_id: int, game_id: int) -> dict:
             Result.player_id == player_id,
             Tournament.game_id == game_id,
             Tournament.winner_id.isnot(None),
+            Tournament.is_friendly.is_(False),
             Race.is_duello.is_(False),
         )
         .distinct()

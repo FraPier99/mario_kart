@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Crown, ChevronDown, Users, Flag, ArrowRight } from 'lucide-react'
+import { Crown, ChevronDown, Users, Flag, ArrowRight, PartyPopper } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useAppData } from '@/context/AppDataContext'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
@@ -44,11 +44,22 @@ const TournamentHistoryCard = ({ tournament }) => {
                         <span>{tournament.raceCount}/{tournament.n_races} GARE</span>
                         <span>·</span>
                         <span>{statusLabel}</span>
-                        <span>·</span>
-                        <span className="flex items-center gap-1">
-                            <Crown size={12} className="text-amber-500" />
-                            {tournament.winner?.nickname?.toUpperCase() ?? 'N/D'}
-                        </span>
+                        {tournament.is_friendly ? (
+                            <>
+                                <span>·</span>
+                                <span className="flex items-center gap-1 font-black text-amber-600 dark:text-amber-400">
+                                    <PartyPopper size={12} /> AMICHEVOLE
+                                </span>
+                            </>
+                        ) : (
+                            <>
+                                <span>·</span>
+                                <span className="flex items-center gap-1">
+                                    <Crown size={12} className="text-amber-500" />
+                                    {tournament.winner?.nickname?.toUpperCase() ?? 'N/D'}
+                                </span>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -79,13 +90,15 @@ const TournamentHistoryCard = ({ tournament }) => {
                             Gestisci
                         </Link>
                     )}
-                    <Link
-                        to={`/schedina/${tournament.id}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="rounded-xl border-2 border-emerald-300 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-4 py-2 font-title text-[10px] tracking-wide text-emerald-700 dark:text-emerald-300 transition active:translate-y-px hover:border-emerald-400 dark:hover:border-emerald-500/50 hover:bg-emerald-100 dark:hover:bg-emerald-500/20"
-                    >
-                        Esito schedina
-                    </Link>
+                    {!tournament.is_friendly && (
+                        <Link
+                            to={`/schedina/${tournament.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="rounded-xl border-2 border-emerald-300 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-4 py-2 font-title text-[10px] tracking-wide text-emerald-700 dark:text-emerald-300 transition active:translate-y-px hover:border-emerald-400 dark:hover:border-emerald-500/50 hover:bg-emerald-100 dark:hover:bg-emerald-500/20"
+                        >
+                            Esito schedina
+                        </Link>
+                    )}
                     <ChevronDown
                         size={20}
                         className={`text-slate-400 transition-transform duration-300 shrink-0 ${expanded ? 'rotate-180' : ''}`}

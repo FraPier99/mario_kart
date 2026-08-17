@@ -152,6 +152,19 @@ def _check_not_duello_race(db: Session, race_id: int | None) -> None:
         )
 
 
+def _check_not_friendly_tournament(db: Session, tournament_id: int | None) -> None:
+    """Nei tornei amichevoli non c'è alcun meta-game in palio: le Card non
+    sono utilizzabili."""
+    if tournament_id is None:
+        return
+    tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+    if tournament and tournament.is_friendly:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Le Card non sono disponibili nei tornei amichevoli.",
+        )
+
+
 class UseItemRequest(BaseModel):
     race_id: int | None = None
     effect: str | None = None
@@ -444,6 +457,7 @@ def admin_use_inventory_item(
     _check_card_available(item)
     _check_activation_tournament(db, item, body.tournament_id)
     _check_not_duello_race(db, body.race_id)
+    _check_not_friendly_tournament(db, _resolve_tournament_id(db, body.tournament_id, body.race_id))
 
     item, log = record_card_usage(
         db,
@@ -651,6 +665,7 @@ def use_inventory_item(
     _check_card_available(item)
     _check_activation_tournament(db, item, resolved_tournament_id)
     _check_not_duello_race(db, body.race_id)
+    _check_not_friendly_tournament(db, resolved_tournament_id)
     item = consume_inventory_item(
         db, item_id, current_user.id,
         tournament_id=resolved_tournament_id, race_id=body.race_id, effect=body.effect,

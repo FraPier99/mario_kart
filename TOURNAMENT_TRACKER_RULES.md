@@ -194,3 +194,26 @@ il proprio girone, e dopo l'avanzamento solo la fase in cui si trova
 | Punteggio gare (griglia dinamica) | `app/data/punteggi.py` (`PUNTEGGI_CONFIG`) |
 | Punteggio schedine | `PUNTI_PRONOSTICO = 3` — `app/services/schedine/*` |
 | Standings per-girone lato frontend | `GroupCard`, `computeGroupStandings` — `frontend/src/components/tournaments/GroupPlancia.jsx` |
+| Torneo amichevole (flag, non un terzo formato) | `Tournament.is_friendly` — `app/models/tornei/models.py`; guardie in `update_tournament`/`set_tournament_playoff_winner`/`undo_last_playoff` (`app/services/tornei/tournaments.py`), `_check_not_friendly_tournament` (`app/controllers/cards/inventory.py`), `create_schedina`/`create_schedina_deluxe` (`app/services/schedine/*`), filtri in `app/services/tornei/stats.py` |
+
+---
+
+## 6. Torneo amichevole — ortogonale al formato, non un terzo tipo
+
+`Tournament.is_friendly` è un flag booleano indipendente da
+`tournament_format` (deciso alla creazione, immutabile dopo): un torneo
+amichevole usa la stessa identica macchina gare/risultati/classifiche di un
+torneo normale, in entrambi i formati — cambia solo cosa viene **disattivato**:
+
+- **Niente** Carte Potere, Schedine, notifica di chiusura "torneo concluso"
+  a tutti i partecipanti, assegnazione Carta Master/Guscio Blu
+- **Niente** contributo a badge giocatore, leaderboard, classifiche di
+  circuito/testa a testa (filtro `Tournament.is_friendly.is_(False)` nelle
+  query aggregate cross-torneo di `stats.py` — **non** nel leaderboard
+  del singolo torneo, che deve continuare a mostrare la propria classifica)
+- **Nessun** "Decreta Vincitore": lo stato può avanzare direttamente a
+  `concluso` dalla pipeline (`TournamentStatusManager`, prop
+  `allowDirectConclusion`), senza passare per un vincitore ufficiale
+- Creabile per ora solo da admin/superadmin (stessa gate di sempre su
+  `POST /tournaments`) — apertura a utenti normali con approvazione admin è
+  fuori scope, prevista in futuro

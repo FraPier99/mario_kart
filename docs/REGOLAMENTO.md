@@ -192,14 +192,28 @@ Il Guscio Blu può essere usato **fino a 3 volte nello stesso torneo**. Una volt
 
 ---
 
-## 8. Note di compatibilità
+## 8. Tornei Amichevoli
+
+Un torneo può essere marcato come **amichevole** (`Tournament.is_friendly`, deciso alla creazione, non modificabile in seguito) — in stile "fight club": si gioca per divertimento, senza niente in palio.
+
+- Nessuna **Carta Potere**, nessuna **Schedina**
+- Non contribuisce a **statistiche aggregate**, **Badge Giocatore** o classifiche di circuito/testa a testa
+- Nessuna notifica di chiusura torneo a tutti i partecipanti
+- Nessun "Decreta Vincitore": il torneo si chiude semplicemente portando lo stato su **Concluso**, senza un vincitore ufficiale
+- Funziona in entrambi i formati (Classifica Unica, A Gironi) e con lo stesso minimo di partecipanti già previsto per ciascun formato — restano gare e classifica live come in un torneo normale
+
+Per ora creabile solo dagli amministratori.
+
+---
+
+## 9. Note di compatibilità
 
 - Il campo `vittima_del_caos_id` è ancora presente nello schema della schedina classic per compatibilità, ma **non genera punteggio**.
 - La tabella `schedine_torneo_deluxe` ospita le schedine del formato a gironi: il nome è mantenuto per compatibilità.
 
 ---
 
-## 9. Penalità e Bonus
+## 10. Penalità e Bonus
 
 Disciplina i provvedimenti in punti applicabili ai partecipanti in caso di ritardi, assenze, abbandoni, comportamenti scorretti o contributi all'organizzazione. Applicati come rettifica punti manuale (vedi sezione "Rettifiche punti" della classifica torneo), con motivo sempre visibile.
 

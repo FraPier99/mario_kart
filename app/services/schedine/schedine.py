@@ -51,6 +51,8 @@ def create_schedina(db: Session, user_id: int, payload: SchedinaCreate):
 
     if tournament.tournament_format != "classic":
         raise ValueError("Questo torneo non è in formato classic")
+    if tournament.is_friendly:
+        raise ValueError("Le schedine non sono disponibili per i tornei amichevoli")
     # Chiusura a evento: schedine aperte solo finché non sono bloccate
     # (1° gara inserita / "Chiudi Schedine" / torneo avviato).
     if tournament.schedine_locked or tournament.status != "da_svolgere":

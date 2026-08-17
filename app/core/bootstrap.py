@@ -802,6 +802,20 @@ def ensure_tournament_audit_columns():
             )
 
 
+def ensure_tournament_is_friendly_column():
+    """Aggiunge il flag 'is_friendly' (torneo amichevole: niente carte,
+    schedine, statistiche/badge né notifica di chiusura — solo gare)."""
+    inspector = inspect(engine)
+    cols = {c["name"] for c in inspector.get_columns("tournaments")}
+    if "is_friendly" not in cols:
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    "ALTER TABLE tournaments ADD COLUMN is_friendly BOOLEAN NOT NULL DEFAULT FALSE"
+                )
+            )
+
+
 def ensure_schedina_deluxe_vincitori_gironi_column():
     """Aggiunge la colonna 'vincitori_gironi' (legacy, sostituita da 'classifiche_gironi')."""
     inspector = inspect(engine)
@@ -1021,6 +1035,7 @@ def bootstrap_database():
     ensure_user_ownership_declared_at_column()
     ensure_result_position_constraint_deferrable()
     ensure_inventory_uses_columns()
+    ensure_tournament_is_friendly_column()
     # seed_circuits()
     seed_mk8d_data()
     rename_mkds_circuits_to_italian()

@@ -78,14 +78,18 @@ const buildWarnings = (tournament, targetStatus) => {
     }
 
     if (targetStatus === 'concluso') {
-        const winner = tournament.winner ?? tournament.winner_id
-        if (!winner) {
-            warnings.push({
-                level: 'critical',
-                icon: '🏆',
-                title: 'Nessun vincitore impostato',
-                body: 'Non è stato ancora decretato un vincitore. Usa il pulsante "Decreta vincitore" per impostarlo — questo cambierà lo stato a concluso automaticamente.',
-            })
+        // I tornei amichevoli non hanno un vincitore ufficiale da decretare —
+        // "concluso" significa solo "abbiamo finito di giocare".
+        if (!tournament.is_friendly) {
+            const winner = tournament.winner ?? tournament.winner_id
+            if (!winner) {
+                warnings.push({
+                    level: 'critical',
+                    icon: '🏆',
+                    title: 'Nessun vincitore impostato',
+                    body: 'Non è stato ancora decretato un vincitore. Usa il pulsante "Decreta vincitore" per impostarlo — questo cambierà lo stato a concluso automaticamente.',
+                })
+            }
         }
         if (!isGroupStage) {
             const raceCount = tournament.raceCount ?? tournament.races?.length ?? 0
@@ -157,7 +161,7 @@ const SafetyModal = ({ warnings, targetLabel, onConfirm, onCancel }) => {
     )
 }
 
-const TournamentStatusManager = ({ tournament, disabled = false, onUpdated }) => {
+const TournamentStatusManager = ({ tournament, disabled = false, onUpdated, allowDirectConclusion = false }) => {
     const rawStatus = tournament?.status ?? 'da_svolgere'
     const [saving, setSaving] = useState(false)
     const [closingSchedine, setClosingSchedine] = useState(false)
@@ -167,6 +171,14 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated }) =>
     const safeIndex = currentIndex >= 0 ? currentIndex : 0
     const currentStep = PIPELINE[safeIndex]
     const nextStep = safeIndex < PIPELINE.length - 1 ? PIPELINE[safeIndex + 1] : null
+
+    // Il torneo amichevole non ha un vincitore da decretare: la descrizione
+    // dello step "concluso" della pipeline statica (PIPELINE, sopra) non si
+    // applica, va sovrascritta qui invece di duplicare l'intera pipeline.
+    const describeStep = (step) =>
+        step?.value === 'concluso' && allowDirectConclusion
+            ? 'Avete finito di giocare. Il torneo è chiuso — nessun vincitore ufficiale da impostare.'
+            : step?.description
 
     const doSetStatus = async (value) => {
         setSaving(true)
@@ -242,10 +254,12 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated }) =>
                                 <button
                                     type="button"
                                     // "concluso" non è raggiungibile a mano: ci si arriva
-                                    // solo decretando il vincitore (Decreta Vincitore).
-                                    disabled={disabled || saving || isConcluded || step.value === rawStatus || step.value === 'concluso'}
+                                    // solo decretando il vincitore (Decreta Vincitore) — tranne
+                                    // per i tornei amichevoli, che non hanno quel passaggio e
+                                    // possono chiudersi direttamente da qui.
+                                    disabled={disabled || saving || isConcluded || step.value === rawStatus || (step.value === 'concluso' && !allowDirectConclusion)}
                                     onClick={() => requestSetStatus(step.value)}
-                                    title={step.value === 'concluso' ? 'Si conclude decretando il vincitore (Decreta Vincitore)' : step.description}
+                                    title={step.value === 'concluso' && !allowDirectConclusion ? 'Si conclude decretando il vincitore (Decreta Vincitore)' : describeStep(step)}
                                     className={`flex flex-col items-center gap-1.5 rounded-2xl px-3 py-2.5 text-center transition-all min-w-22.5 ${
                                         isActive
                                             ? `${step.activeBg} ${step.activeText} shadow-md ring-2 ring-offset-1 ${step.ring} dark:ring-offset-slate-900`
@@ -274,7 +288,7 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated }) =>
                         'bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300'
                     }`}>
                         <p className="font-black uppercase tracking-wider text-[10px] mb-0.5 opacity-70">Stato attuale</p>
-                        <p className="font-bold">{currentStep?.description}</p>
+                        <p className="font-bold">{describeStep(currentStep)}</p>
                         {rawStatus === 'finito' && (
                             <p className="mt-1 text-[10px] opacity-60 italic">Stato legacy "finito" — clicca sulla pipeline per aggiornare.</p>
                         )}
@@ -317,13 +331,15 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated }) =>
                     passa da qui: avviene tramite "Decreta Vincitore" (che imposta
                     vincitore + stato concluso e salda le schedine). Un "Avanza"
                     verso "concluso" sarebbe fuorviante e, senza vincitore,
-                    imposterebbe solo lo stato legacy "finito". */}
-                {nextStep && nextStep.value !== 'concluso' && !isConcluded && !disabled && (
+                    imposterebbe solo lo stato legacy "finito" — eccetto per i
+                    tornei amichevoli, che non hanno un vincitore da decretare e
+                    possono avanzare a "concluso" direttamente da qui. */}
+                {nextStep && (nextStep.value !== 'concluso' || allowDirectConclusion) && !isConcluded && !disabled && (
                     <div className="flex flex-wrap items-start sm:items-center justify-between gap-3 rounded-2xl border-2 border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 p-3">
                         <div className="min-w-0">
                             <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700/70 dark:text-emerald-400/70">Prossimo step</p>
                             <p className="text-sm font-black text-emerald-900 dark:text-emerald-200 mt-0.5">{nextStep.label}</p>
-                            <p className="text-[10px] text-emerald-700/70 dark:text-emerald-400/60 mt-0.5">{nextStep.description}</p>
+                            <p className="text-[10px] text-emerald-700/70 dark:text-emerald-400/60 mt-0.5">{describeStep(nextStep)}</p>
                         </div>
                         <button
                             type="button"
@@ -342,8 +358,10 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated }) =>
                 )}
 
                 {/* In corso: niente "Avanza" — il vincitore (e la conclusione) si
-                    decretano dalla sezione "Classifica Finale" → Decreta Vincitore. */}
-                {rawStatus === 'in_corso' && !disabled && (
+                    decretano dalla sezione "Classifica Finale" → Decreta Vincitore.
+                    I tornei amichevoli non hanno questo passaggio: l'"Avanza" sopra
+                    porta già direttamente a "Concluso". */}
+                {rawStatus === 'in_corso' && !disabled && !allowDirectConclusion && (
                     <div className="flex items-center gap-2 rounded-2xl border border-dashed border-amber-200 dark:border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/10 px-4 py-3 text-xs text-amber-700 dark:text-amber-300">
                         <Trophy size={14} className="shrink-0" />
                         Per concludere il torneo usa <span className="font-black">Decreta Vincitore</span> nella sezione Classifica Finale.
@@ -353,7 +371,7 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated }) =>
                 {isConcluded && (
                     <div className="flex items-center gap-2 rounded-2xl bg-amber-50 dark:bg-amber-950/20 px-4 py-3 text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-300">
                         <Trophy size={14} />
-                        Torneo concluso — vincitore impostato
+                        {allowDirectConclusion ? 'Torneo amichevole concluso' : 'Torneo concluso — vincitore impostato'}
                     </div>
                 )}
 

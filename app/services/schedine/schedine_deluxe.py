@@ -337,6 +337,8 @@ def create_schedina_deluxe(
         raise ValueError("Torneo non trovato")
     if torneo.tournament_format != "group_stage":
         raise ValueError("Questo torneo non è in formato group_stage")
+    if torneo.is_friendly:
+        raise ValueError("Le schedine non sono disponibili per i tornei amichevoli")
     # Chiusura a evento: schedine aperte solo finché non sono bloccate
     # (1° gara inserita / "Chiudi Schedine" / torneo avviato).
     if torneo.schedine_locked or torneo.status != "da_svolgere":
