@@ -97,7 +97,9 @@ const Cards = () => {
     const [loading, setLoading] = useState(true)
     const [usingCardId, setUsingCardId] = useState(null)
 
-    const activeLiveTournament = useMemo(() => tournaments.find(t => t.status === 'in_corso') ?? null, [tournaments])
+    // Le carte non sono mai attive nei tornei amichevoli — esclusi qui, così
+    // uno amichevole in corso non diventa il target di default per l'uso carte.
+    const activeLiveTournament = useMemo(() => tournaments.find(t => t.status === 'in_corso' && !t.is_friendly) ?? null, [tournaments])
 
     // Inventario globale raggruppato per gioco e poi per tipologia di carta,
     // così la tabella non è più un'unica lista lunghissima.

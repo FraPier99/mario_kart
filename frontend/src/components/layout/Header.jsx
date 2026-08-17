@@ -23,8 +23,10 @@ const Header = () => {
     // "Continua torneo": il primo torneo NON concluso (in corso o da svolgere)
     // nell'elenco ordinato per data desc. Se il più recente è già concluso (o
     // non esistono tornei) non c'è nulla da "continuare" — si passa alle CTA
-    // di fallback (Classifica/Profilo).
-    const activeTournament = detailedTournaments.find((t) => t.status !== 'concluso' && !t.winner_id) ?? null
+    // di fallback (Classifica/Profilo). I tornei amichevoli non vengono
+    // proposti qui: sono partite per divertimento, non "da continuare" come
+    // priorità in home.
+    const activeTournament = detailedTournaments.find((t) => t.status !== 'concluso' && !t.winner_id && !t.is_friendly) ?? null
     const isScheduled = activeTournament?.status === 'da_svolgere'
     const tournamentLink = activeTournament ? `/tournaments/${activeTournament.id}` : null
     const greeting = getTimeGreeting()

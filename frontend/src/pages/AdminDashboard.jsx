@@ -442,7 +442,7 @@ export default function AdminDashboard() {
     }), [tournaments, players, users])
 
     const activeTournament = useMemo(
-        () => tournaments.find(t => t.status === 'in_corso') ?? null,
+        () => tournaments.find(t => t.status === 'in_corso' && !t.is_friendly) ?? null,
         [tournaments]
     )
 

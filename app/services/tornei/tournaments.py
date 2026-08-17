@@ -2426,19 +2426,21 @@ def seed_group_stage(db: Session, tournament_id: int) -> dict:
     db.commit()
     db.refresh(torneo)
 
-    # Notifica schedina disponibile ora che i gironi sono definiti
-    try:
-        from app.services.utenti.notifications import create_tournament_notifications
+    # Notifica schedina disponibile ora che i gironi sono definiti — saltata
+    # per i tornei amichevoli, che non hanno schedine.
+    if not torneo.is_friendly:
+        try:
+            from app.services.utenti.notifications import create_tournament_notifications
 
-        create_tournament_notifications(
-            db,
-            tournament_id,
-            "schedina_pending",
-            f"Compila la schedina per '{torneo.name}' — gironi assegnati!",
-        )
-        db.commit()
-    except Exception:
-        pass
+            create_tournament_notifications(
+                db,
+                tournament_id,
+                "schedina_pending",
+                f"Compila la schedina per '{torneo.name}' — gironi assegnati!",
+            )
+            db.commit()
+        except Exception:
+            pass
 
     riepilogo = ", ".join(
         f"Girone {key} ({len(ids)} giocatori)" for key, ids in groups.items()

@@ -519,7 +519,7 @@ export default function SuperAdminPanel() {
                             {/* Quick Actions */}
                             <div className="grid gap-3 sm:grid-cols-3">
                                 {(() => {
-                                    const activeTournament = tournaments.find(t => t.status === 'in_corso')
+                                    const activeTournament = tournaments.find(t => t.status === 'in_corso' && !t.is_friendly)
                                     const thirdAction = activeTournament
                                         ? { to: `/tournaments/${activeTournament.id}`, label: 'Gestisci gare', desc: `${activeTournament.name} · in corso`, color: 'bg-linear-to-br from-amber-500 to-orange-500', icon: Flag }
                                         : { to: '/history', label: 'Storico tornei', desc: 'Classifiche e archivio completo', color: 'bg-linear-to-br from-amber-500 to-orange-600', icon: BarChart3 }
@@ -543,7 +543,7 @@ export default function SuperAdminPanel() {
 
                             {/* Timeline widget */}
                             <TournamentTimeline
-                                tournament={tournaments.find(t => t.status === 'in_corso') ?? tournaments[0] ?? null}
+                                tournament={tournaments.find(t => t.status === 'in_corso' && !t.is_friendly) ?? tournaments[0] ?? null}
                             />
                         </div>
 
