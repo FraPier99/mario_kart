@@ -1,8 +1,17 @@
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
+from app.core.timezone import now_rome
 from app.models import Notification, PhotoComment, Player, User
+
+# Le notifiche più vecchie di questa soglia vengono eliminate opportunisticamente
+# ad ogni lettura (vedi delete_stale_notifications) — evita che la campanella si
+# riempia di roba vecchia/irrilevante (es. tornei amichevoli conclusi da tempo),
+# senza bisogno di un job schedulato: non esiste infrastruttura di scheduling in
+# questo backend, quindi la pulizia avviene "a costo zero" agganciata al normale
+# polling del frontend (ogni 45s, vedi NotificationsContext.jsx).
+NOTIFICATION_RETENTION_HOURS = 10
 
 
 def _parse_mentions(text: str) -> list[str]:
@@ -160,7 +169,23 @@ def create_single_notification(
     db.flush()
 
 
+def delete_stale_notifications(db: Session, user_id: int) -> int:
+    """Elimina le notifiche dell'utente più vecchie di NOTIFICATION_RETENTION_HOURS,
+    lette o no — pulizia opportunistica, chiamata ad ogni fetch (vedi
+    get_user_notifications)."""
+    cutoff = now_rome() - timedelta(hours=NOTIFICATION_RETENTION_HOURS)
+    deleted = (
+        db.query(Notification)
+        .filter(Notification.user_id == user_id, Notification.created_at < cutoff)
+        .delete(synchronize_session=False)
+    )
+    if deleted:
+        db.commit()
+    return deleted
+
+
 def get_user_notifications(db: Session, user_id: int) -> list[dict]:
+    delete_stale_notifications(db, user_id)
     notifs = (
         db.query(Notification)
         .filter(Notification.user_id == user_id)
