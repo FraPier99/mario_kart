@@ -106,6 +106,7 @@ def get_pending_notifications(
         .filter(
             Tournament.id.in_(subquery_partecipanti),
             Tournament.status == "da_svolgere",
+            Tournament.is_friendly.is_(False),
             # The tournament must have a schedina feature
             or_(
                 Tournament.deadline_lock.isnot(None),
