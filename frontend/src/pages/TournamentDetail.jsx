@@ -1,5 +1,5 @@
 ﻿import { useMemo, useState, useEffect, useCallback } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Crown, Trophy, Trash2, Shield, Ban, Zap, AlertCircle, Settings, Users, Flag, Swords, Clock, BarChart3, ListChecks, MapPin, PartyPopper } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import PortalSelect from '@/components/common/PortalSelect'
@@ -284,15 +284,6 @@ const TournamentDetail = () => {
     const showPointAdjustments = tournament?.tournament_format !== 'group_stage'
         && (isAdmin || (tournament?.pointAdjustments?.length ?? 0) > 0)
 
-    // Un Admin che è anche partecipante al torneo vede di default la vista
-    // giocatore (schedina/classifica/proprio girone) e può passare alla vista
-    // gestionale con il toggle "Modalità Admin". Il SuperAdmin non partecipa
-    // mai e vede sempre e solo la vista gestionale, senza toggle.
-    const isParticipantAdmin = isAdmin && !isSuperadmin && myPlayerId != null && (tournament?.participant_ids ?? []).includes(myPlayerId)
-
-    // adminModeOn può essere attivato da navigation state (es. da Schedina)
-    const location = useLocation()
-    const [adminModeOn, setAdminModeOn] = useState(location.state?.adminMode === true)
 
     const [confirmDeleteTournament, setConfirmDeleteTournament] = useState(false)
     const [deleting, setDeleting] = useState(false)
@@ -528,7 +519,9 @@ const TournamentDetail = () => {
     }
 
     // ── READ-ONLY VIEW (regular users) ──────────────────────────────────────
-    if ((!isAdmin && !isSuperadmin) || (isParticipantAdmin && !adminModeOn)) {
+    // Un Admin è sempre e solo in vista gestionale, anche quando è a sua
+    // volta partecipante: ha già tutti i tool, non serve uno switch.
+    if (!isAdmin && !isSuperadmin) {
         const raceProgress = tournament.n_races > 0
             ? Math.round(((tournament.raceCount ?? 0) / tournament.n_races) * 100)
             : 0
@@ -612,7 +605,7 @@ const TournamentDetail = () => {
                                 {/* Primary CTAs */}
                                 <div className="flex items-center gap-2">
                                     {!tournament.is_friendly && (
-                                        <button type="button" onClick={() => navigate(`/schedina/${tournamentId}`, { state: { fromAdmin: adminModeOn } })}
+                                        <button type="button" onClick={() => navigate(`/schedina/${tournamentId}`)}
                                             className="font-title rounded-xl border-2 border-emerald-800/30 bg-emerald-600 px-4 py-2.5 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-500"
                                             style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                             Schedina
@@ -629,12 +622,6 @@ const TournamentDetail = () => {
                                         <span className={`font-title flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[9px] tracking-wide ${userHasPredicted ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20'}`}>
                                             {userHasPredicted ? '✓ Schedina compilata' : '○ Schedina da compilare'}
                                         </span>
-                                    )}
-                                    {isParticipantAdmin && (
-                                        <button type="button" onClick={() => setAdminModeOn(true)}
-                                            className="font-title flex items-center gap-1.5 rounded-lg border border-violet-200 dark:border-violet-500/20 bg-violet-50 dark:bg-violet-500/10 px-3 py-1 text-[9px] tracking-wide text-violet-600 dark:text-violet-300 transition active:translate-y-px hover:bg-violet-100">
-                                            <Settings size={11} /> Admin
-                                        </button>
                                     )}
                                 </div>
                             </div>
@@ -1058,25 +1045,6 @@ const TournamentDetail = () => {
         )}
 
         <AppLayout>
-            {isParticipantAdmin && (
-                <div
-                    role="alert"
-                    className="sticky top-14 z-40 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 border-b-2 border-amber-600/40 bg-amber-500 px-4 py-2 text-center shadow-md"
-                >
-                    <span className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wide text-amber-950">
-                        <AlertCircle size={14} className="shrink-0" />
-                        Modalità Admin attiva — le modifiche incidono sui dati del torneo
-                    </span>
-                    <button
-                        type="button"
-                        onClick={() => setAdminModeOn(false)}
-                        className="font-title shrink-0 rounded-lg border-2 border-amber-950/20 bg-amber-950 px-3 py-1 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-amber-900"
-                    >
-                        <Settings size={11} className="inline -mt-0.5 me-1" />
-                        Esci
-                    </button>
-                </div>
-            )}
             <section className="mx-auto max-w-5xl px-4 py-12 space-y-6">
                 <ApiBanner title="Errore caricamento torneo" message={errorMessage} />
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { FileText, Trophy, Users, PenLine, Clock, AlertTriangle, ScrollText, ArrowLeft, Sparkles, Star, ChevronDown } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import ApiBanner from '@/components/common/ApiBanner'
@@ -51,8 +51,6 @@ const getCategoryCorrect = (breakdown, category) => {
 
 const Schedina = () => {
     const { tournamentId } = useParams()
-    const location = useLocation()
-    const fromAdmin = location.state?.fromAdmin === true
     const { getTournamentById, getTournamentDisplayNumber } = useAppData()
     const { user, isAdmin, isSuperadmin } = useAuth()
     const isPrivileged = isAdmin || isSuperadmin
@@ -478,7 +476,7 @@ const Schedina = () => {
                                     <p className="text-xs text-slate-400 dark:text-muted-foreground">{formatDate(tournamentDetail?.tournament_date ?? tournament?.date)}</p>
                                 </div>
                             </div>
-                            <Link to={`/tournaments/${tournamentId}`} state={fromAdmin ? { adminMode: true } : undefined} className="shrink-0 inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-black uppercase tracking-widest text-slate-600 transition hover:border-slate-300 dark:border-border dark:bg-card dark:text-foreground">
+                            <Link to={`/tournaments/${tournamentId}`} className="shrink-0 inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-black uppercase tracking-widest text-slate-600 transition hover:border-slate-300 dark:border-border dark:bg-card dark:text-foreground">
                                 <ArrowLeft size={13} /> Torna al torneo
                             </Link>
                         </div>

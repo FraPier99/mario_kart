@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { toast } from 'sonner'
-import { Clock, Play, Trophy, ChevronRight, AlertTriangle, Shield, X, Lock } from 'lucide-react'
+import { Clock, Play, Trophy, ChevronRight, AlertTriangle, Shield, X, Lock, Info } from 'lucide-react'
 import { getApiErrorMessage, tournamentsApi } from '@/services/apiClient'
 
 const PIPELINE = [
@@ -241,6 +241,23 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated, allo
                     <p className="text-xs font-black uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400">Stato torneo</p>
                     <h3 className="mt-1 text-xl font-black text-slate-900 dark:text-foreground">Ciclo di vita del torneo</h3>
                 </div>
+
+                {/* Torneo appena creato: nessuno dei due passaggi qui sotto è
+                    obbligatorio né bloccante, ma un ordine consigliato aiuta a
+                    non chiudersi fuori (es. avviare prima di aver verificato i
+                    partecipanti). Sparisce da sola appena si esce da "da svolgere". */}
+                {rawStatus === 'da_svolgere' && !disabled && (
+                    <div className="flex items-start gap-2 rounded-2xl border border-dashed border-sky-200 dark:border-sky-500/30 bg-sky-50/50 dark:bg-sky-950/10 px-4 py-3 text-xs text-sky-700 dark:text-sky-300">
+                        <Info size={14} className="shrink-0 mt-0.5" />
+                        <p>
+                            <span className="font-black">Ordine consigliato:</span> verifica i partecipanti nella sezione qui sotto,
+                            {!tournament?.is_friendly && (
+                                <> poi quando i pronostici sono pronti premi <span className="font-black">Chiudi Schedine</span>,</>
+                            )}
+                            {' '}infine <span className="font-black">Avanza</span> per avviare il torneo e iniziare a inserire le gare.
+                        </p>
+                    </div>
+                )}
 
                 {/* PIPELINE VISUALE */}
                 <div className="flex items-center gap-1 overflow-x-auto pb-1">
