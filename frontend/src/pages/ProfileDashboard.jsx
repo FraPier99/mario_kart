@@ -17,7 +17,7 @@ import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { authApi, schedineApi, inventoryApi, ownershipApi, statsApi, getApiErrorMessage } from '@/services/apiClient'
 import { compressImage } from '@/lib/imageCompression'
-import { CONSOLE_LIST, R4_DEVICE_LIST, MKDS_GAME_ID } from '@/lib/consoles'
+import { CONSOLE_LIST, R4_DEVICE_LIST } from '@/lib/consoles'
 
 const FavoriteCharacterPicker = ({ value, onChange, characters }) => {
     const [open, setOpen] = useState(false)
@@ -490,20 +490,17 @@ const Dashboard = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated, isSuperadmin])
 
-    const mkdsQuantityInDraft = ownershipDraft.gamesById[MKDS_GAME_ID] ?? 0
+    // Una R4 gira su una console, non richiede la cartuccia originale del
+    // gioco (è proprio l'alternativa a possederla): la sezione si sblocca
+    // possedendo una console della famiglia DS/3DS, non MKDS.
+    const hasR4CompatibleConsole = R4_DEVICE_LIST.some((c) => (ownershipDraft.consolesByKey[c.key] ?? 0) > 0)
 
     const setGameQuantity = (gameId, quantity) => {
         const nextQuantity = Math.max(0, quantity)
-        setOwnershipDraft((current) => {
-            const nextGamesById = { ...current.gamesById, [gameId]: nextQuantity }
-            const mkdsCleared = gameId === MKDS_GAME_ID && nextQuantity === 0
-            return {
-                ...current,
-                gamesById: nextGamesById,
-                r4DevicesByKey: mkdsCleared ? {} : current.r4DevicesByKey,
-                hasR4: mkdsCleared ? false : current.hasR4,
-            }
-        })
+        setOwnershipDraft((current) => ({
+            ...current,
+            gamesById: { ...current.gamesById, [gameId]: nextQuantity },
+        }))
     }
 
     const toggleHasR4 = () => {
@@ -516,10 +513,21 @@ const Dashboard = () => {
 
     const setConsoleQuantity = (key, quantity) => {
         const nextQuantity = Math.max(0, quantity)
-        setOwnershipDraft((current) => ({
-            ...current,
-            consolesByKey: { ...current.consolesByKey, [key]: nextQuantity },
-        }))
+        setOwnershipDraft((current) => {
+            const nextConsolesByKey = { ...current.consolesByKey, [key]: nextQuantity }
+            // Rimuovere l'ultima console compatibile azzera anche le R4
+            // dichiarate per quella console — non avrebbe più senso averle.
+            const consoleCleared = nextQuantity === 0 && (current.r4DevicesByKey[key] ?? 0) > 0
+            const nextR4ByKey = consoleCleared
+                ? Object.fromEntries(Object.entries(current.r4DevicesByKey).filter(([k]) => k !== key))
+                : current.r4DevicesByKey
+            return {
+                ...current,
+                consolesByKey: nextConsolesByKey,
+                r4DevicesByKey: nextR4ByKey,
+                hasR4: consoleCleared ? Object.values(nextR4ByKey).some((q) => q > 0) : current.hasR4,
+            }
+        })
     }
 
     const setR4DeviceQuantity = (key, quantity) => {
@@ -1052,7 +1060,7 @@ const Dashboard = () => {
                                     </div>
                                 </div>
 
-                                {mkdsQuantityInDraft > 0 && (
+                                {hasR4CompatibleConsole && (
                                     <div className="space-y-3">
                                         <span className="font-title text-[9px] tracking-wide text-slate-400">R4 compatibile</span>
                                         <label className="flex items-center gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3 cursor-pointer">
@@ -1062,14 +1070,14 @@ const Dashboard = () => {
                                                 onChange={toggleHasR4}
                                                 className="h-4 w-4 rounded accent-amber-500 shrink-0"
                                             />
-                                            <span className="text-sm font-bold text-slate-900 dark:text-foreground">Possiedo una o più R4 compatibili con Mario Kart DS</span>
+                                            <span className="text-sm font-bold text-slate-900 dark:text-foreground">Gioco Mario Kart DS tramite una o più R4 (senza cartuccia originale)</span>
                                         </label>
 
                                         {ownershipDraft.hasR4 && (
                                             <div className="space-y-2">
-                                                <p className="text-[11px] text-slate-400">Quante ne possiedi, per tipo di device?</p>
+                                                <p className="text-[11px] text-slate-400">Su quali console, e quante R4 per ciascuna? Non serve possedere la cartuccia di Mario Kart DS.</p>
                                                 <div className="grid gap-2 sm:grid-cols-2">
-                                                    {R4_DEVICE_LIST.map((c) => (
+                                                    {R4_DEVICE_LIST.filter((c) => (ownershipDraft.consolesByKey[c.key] ?? 0) > 0).map((c) => (
                                                         <QuantityRow
                                                             key={c.key}
                                                             label={c.label}

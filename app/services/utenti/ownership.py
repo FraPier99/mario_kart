@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.core.timezone import now_rome
-from app.data.consoles import CONSOLE_KEYS, R4_DEVICE_KEYS, MKDS_GAME_ID
+from app.data.consoles import CONSOLE_KEYS, R4_DEVICE_KEYS
 
 
 def get_my_ownership(db: Session, user_id: int) -> dict:
@@ -92,26 +92,14 @@ def replace_my_ownership(
         if quantity < 0:
             raise ValueError("La quantità non può essere negativa")
 
-    # I dispositivi R4 richiedono il possesso di MKDS nello stato risultante:
-    # il payload vince sullo stato esistente se game_id 1 è presente nella richiesta.
-    if MKDS_GAME_ID in games:
-        mkds_quantity = games[MKDS_GAME_ID]
-    else:
-        existing_mkds = (
-            db.query(UserGameOwnership.quantity)
-            .filter(
-                UserGameOwnership.user_id == user_id,
-                UserGameOwnership.game_id == MKDS_GAME_ID,
+    # Un dispositivo R4 gira su una console, non richiede la cartuccia
+    # originale del gioco (è proprio l'alternativa a possederla): l'unico
+    # vincolo sensato è possedere la console di quel tipo, non MKDS.
+    for device_type, quantity in r4_device_quantities.items():
+        if quantity > 0 and merged_consoles.get(device_type, 0) <= 0:
+            raise ValueError(
+                f"Devi possedere una console {device_type} per aggiungere una R4 compatibile per quella console"
             )
-            .scalar()
-        )
-        mkds_quantity = existing_mkds or 0
-
-    has_r4_requested = any(q > 0 for q in r4_device_quantities.values())
-    if has_r4_requested and mkds_quantity <= 0:
-        raise ValueError(
-            "Devi possedere Mario Kart DS per aggiungere dispositivi R4 compatibili"
-        )
 
     for game_id, quantity in games.items():
         row = (
