@@ -32,7 +32,7 @@ const PlayerTournamentHistory = ({ playerId }) => {
     const [groupStagePositions, setGroupStagePositions] = useState({})
 
     const myTournaments = useMemo(
-        () => (detailedTournaments ?? []).filter((t) => (t.standings ?? []).some((s) => s.playerId === playerId)),
+        () => (detailedTournaments ?? []).filter((t) => !t.is_friendly && (t.standings ?? []).some((s) => s.playerId === playerId)),
         [detailedTournaments, playerId]
     )
 

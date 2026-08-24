@@ -197,7 +197,7 @@ Il Guscio Blu può essere usato **fino a 3 volte nello stesso torneo**. Una volt
 Un torneo può essere marcato come **amichevole** (`Tournament.is_friendly`, deciso alla creazione, non modificabile in seguito) — in stile "fight club": si gioca per divertimento, senza niente in palio.
 
 - Nessuna **Carta Potere**, nessuna **Schedina**
-- Non contribuisce a **statistiche aggregate**, **Badge Giocatore** o classifiche di circuito/testa a testa
+- Non contribuisce a **statistiche aggregate**, **Badge Giocatore** o classifiche di circuito/testa a testa, e non compare nello **storico tornei personale** del profilo giocatore
 - Nessuna notifica di chiusura torneo a tutti i partecipanti
 - Nessun "Decreta Vincitore": il torneo si chiude semplicemente portando lo stato su **Concluso**, senza un vincitore ufficiale
 - Funziona in entrambi i formati (Classifica Unica, A Gironi) e con lo stesso minimo di partecipanti già previsto per ciascun formato — restano gare e classifica live come in un torneo normale

@@ -211,6 +211,12 @@ torneo normale, in entrambi i formati — cambia solo cosa viene **disattivato**
   circuito/testa a testa (filtro `Tournament.is_friendly.is_(False)` nelle
   query aggregate cross-torneo di `stats.py` — **non** nel leaderboard
   del singolo torneo, che deve continuare a mostrare la propria classifica)
+- **Non compare** nello storico tornei personale del profilo giocatore
+  (`PlayerTournamentHistory.jsx`, filtro `!t.is_friendly` — stesso principio
+  del punto sopra, ma lato frontend perché non esiste un endpoint backend
+  dedicato allo storico-per-giocatore: viene derivato client-side da
+  `detailedTournaments`, che include deliberatamente anche i tornei
+  amichevoli perché serve anche alla pagina di dettaglio del singolo torneo)
 - **Nessun** "Decreta Vincitore": lo stato può avanzare direttamente a
   `concluso` dalla pipeline (`TournamentStatusManager`, prop
   `allowDirectConclusion`), senza passare per un vincitore ufficiale
