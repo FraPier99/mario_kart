@@ -45,3 +45,32 @@ def read_all_ownership(
     db: Session = Depends(get_db),
 ):
     return get_all_ownership(db)
+
+
+@router.put("/{user_id}")
+def update_user_ownership(
+    user_id: int,
+    body: UpdateOwnershipRequest,
+    current_user=Depends(require_roles("superadmin")),
+    db: Session = Depends(get_db),
+):
+    from app.models import User
+
+    target_user = db.query(User).filter(User.id == user_id).first()
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Utente non trovato")
+    if target_user.role == "superadmin":
+        raise HTTPException(
+            status_code=400, detail="I superadmin non hanno una scheda possessi"
+        )
+    try:
+        return replace_my_ownership(
+            db,
+            user_id,
+            games=body.games,
+            consoles=body.consoles,
+            r4_device_quantities=body.r4_devices,
+        )
+    except ValueError as error:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(error))

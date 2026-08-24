@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 
 from app.core.timezone import now_rome
-from app.data.consoles import CONSOLE_KEYS, R4_DEVICE_KEYS
 
 
 def get_my_ownership(db: Session, user_id: int) -> dict:
@@ -55,7 +54,7 @@ def replace_my_ownership(
 ) -> dict:
     """Sostituzione completa dello stato di possesso di un utente. Solleva
     ValueError su input non valido (il controller lo converte in HTTP 400)."""
-    from app.models import User, Game, UserGameOwnership, UserConsoleOwnership, UserR4Device
+    from app.models import User, Game, Console, UserGameOwnership, UserConsoleOwnership, UserR4Device
 
     valid_game_ids = {game_id for (game_id,) in db.query(Game.id).all()}
     for game_id, quantity in games.items():
@@ -64,7 +63,8 @@ def replace_my_ownership(
         if quantity < 0:
             raise ValueError("La quantità non può essere negativa")
 
-    invalid_consoles = set(consoles) - CONSOLE_KEYS
+    valid_console_keys = {key for (key,) in db.query(Console.key).all()}
+    invalid_consoles = set(consoles) - valid_console_keys
     if invalid_consoles:
         raise ValueError(f"Console non valide: {', '.join(sorted(invalid_consoles))}")
     for quantity in consoles.values():
@@ -83,7 +83,8 @@ def replace_my_ownership(
     if not any(quantity > 0 for quantity in merged_consoles.values()):
         raise ValueError("Seleziona almeno una console che possiedi")
 
-    invalid_r4 = set(r4_device_quantities) - R4_DEVICE_KEYS
+    valid_r4_keys = {key for (key,) in db.query(Console.key).filter(Console.is_r4_compatible.is_(True)).all()}
+    invalid_r4 = set(r4_device_quantities) - valid_r4_keys
     if invalid_r4:
         raise ValueError(
             f"Dispositivi R4 non validi: {', '.join(sorted(invalid_r4))}"
@@ -162,7 +163,14 @@ def get_all_ownership(db: Session) -> list[dict]:
     from app.models import User, Game, UserGameOwnership, UserConsoleOwnership, UserR4Device
 
     games = db.query(Game).order_by(Game.id.asc()).all()
-    users = db.query(User).order_by(User.username.asc()).all()
+    # I superadmin non hanno un Player collegato e non giocano: non hanno
+    # senso in una scheda "possessi", quindi non compaiono nell'overview.
+    users = (
+        db.query(User)
+        .filter(User.role != "superadmin")
+        .order_by(User.username.asc())
+        .all()
+    )
 
     games_by_user: dict[int, dict[int, int]] = {}
     for row in db.query(UserGameOwnership).all():

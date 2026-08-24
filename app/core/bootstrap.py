@@ -4,6 +4,7 @@ from app.core.db import engine
 from app.core.config import DEFAULT_SUPERADMIN_PASSWORD, DEFAULT_SUPERADMIN_USERNAME
 from app.data.circuits import all_circuits as SEED_CIRCUITS
 from app.data.mk8deluxe import MK8D_CIRCUITS, MK8D_GAME_NAME, MK8D_GAME_DESCRIPTION
+from app.data.consoles import SEED_CONSOLES
 from app.models import Base
 from app.services.utenti.users import create_user, get_user_by_username
 from app.controllers.utenti.schemas.auth import CreateUser
@@ -118,6 +119,26 @@ def seed_mk8d_data():
             print(f"[BOOTSTRAP] MK8D circuits seeded ({len(MK8D_CIRCUITS)} inserted)")
         else:
             print(f"[BOOTSTRAP] MK8D circuits already present ({count} found)")
+
+
+def seed_consoles():
+    """Inserisce il catalogo console iniziale (ex CONSOLE_CHOICES/R4_DEVICE_CHOICES
+    hardcoded) se la tabella è vuota — dopo il primo avvio il superadmin
+    gestisce il catalogo da UI, questa funzione non tocca più righe esistenti."""
+    with engine.begin() as connection:
+        count = connection.execute(text("SELECT COUNT(*) FROM consoles")).scalar()
+        if count == 0:
+            for order, (key, label, is_r4) in enumerate(SEED_CONSOLES):
+                connection.execute(
+                    text(
+                        "INSERT INTO consoles (key, label, is_r4_compatible, sort_order)"
+                        " VALUES (:key, :label, :is_r4, :order) ON CONFLICT (key) DO NOTHING"
+                    ),
+                    {"key": key, "label": label, "is_r4": is_r4, "order": order},
+                )
+            print(f"[BOOTSTRAP] Consoles seeded ({len(SEED_CONSOLES)} inserted)")
+        else:
+            print(f"[BOOTSTRAP] Consoles already present ({count} found)")
 
 
 # Vecchio nome inglese -> nuovo nome italiano, circuiti MKDS (game_id=1).
@@ -1038,6 +1059,7 @@ def bootstrap_database():
     ensure_tournament_is_friendly_column()
     # seed_circuits()
     seed_mk8d_data()
+    seed_consoles()
     rename_mkds_circuits_to_italian()
     backfill_circuit_image_urls()
     ensure_mkds_dry_bones_character()

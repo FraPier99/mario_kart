@@ -34,6 +34,24 @@ class Game(Base):
 
 
 # -------------------
+# CONSOLE
+# -------------------
+class Console(Base):
+    """Catalogo console gestibile da superadmin per la scheda "Possiedi"
+    (`UserConsoleOwnership.console_key` / `UserR4Device.device_type`
+    referenziano `key` come stringa, senza FK reale — stesso principio
+    "nessun enum a DB" applicato altrove, qui derogato solo perché la
+    gestibilità da UI è il requisito esplicito)."""
+    __tablename__ = "consoles"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    key = Column(String, nullable=False, unique=True)
+    label = Column(String, nullable=False)
+    is_r4_compatible = Column(Boolean, nullable=False, default=False)
+    sort_order = Column(Integer, nullable=False, default=0)
+
+
+# -------------------
 # CHARACTER
 # -------------------
 class Character(Base):

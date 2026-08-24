@@ -3,6 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
+from app.core.security import require_roles
 from app.services.tornei.games import (
     create_game,
     delete_game,
@@ -17,7 +18,11 @@ router = APIRouter(prefix="/games", tags=["Games"])
 
 
 @router.post("", response_model=GameResponse, status_code=201)
-def insert_game(gameData: CreateGame, db: Session = Depends(get_db)):
+def insert_game(
+    gameData: CreateGame,
+    current_user=Depends(require_roles("superadmin")),
+    db: Session = Depends(get_db),
+):
     try:
         return create_game(db, gameData)
     except IntegrityError:
@@ -43,7 +48,10 @@ def get_game_by_id(game_id: int, db: Session = Depends(get_db)):
 
 @router.put("/{game_id}", response_model=GameResponse)
 def update_game_by_id(
-    game_id: int, gameData: UpdateGame, db: Session = Depends(get_db)
+    game_id: int,
+    gameData: UpdateGame,
+    current_user=Depends(require_roles("superadmin")),
+    db: Session = Depends(get_db),
 ):
     try:
         game = update_game(db, gameData, game_id)
@@ -69,7 +77,11 @@ def get_games(db: Session = Depends(get_db)):
 
 
 @router.delete("/{game_id}")
-def delete_game_by_id(game_id: int, db: Session = Depends(get_db)):
+def delete_game_by_id(
+    game_id: int,
+    current_user=Depends(require_roles("superadmin")),
+    db: Session = Depends(get_db),
+):
     game = delete_game(db, game_id)
 
     if not game:

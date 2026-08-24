@@ -245,7 +245,10 @@ export const ownershipApi = {
     me: () => _get('/ownership/me'),
     updateMe: (payload) => _put('/ownership/me', payload),
     all: () => _get('/ownership/all'),
+    updateForUser: (userId, payload) => _put(`/ownership/${userId}`, payload),
 }
+
+export const consolesApi = createCrudApi('/consoles')
 
 export const statsApi = {
     headToHead: (gameId, playerAId, playerBId) => _get(`/stats/head-to-head?game_id=${gameId}&player_a_id=${playerAId}&player_b_id=${playerBId}`),

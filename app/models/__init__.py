@@ -25,6 +25,7 @@ from app.models.utenti.models import (
 )
 from app.models.tornei.models import (
     Game,
+    Console,
     Character,
     Circuit,
     Tournament,
@@ -53,6 +54,7 @@ __all__ = [
     "AuditLog",
     "TempPassword",
     "Game",
+    "Console",
     "Character",
     "Circuit",
     "Tournament",

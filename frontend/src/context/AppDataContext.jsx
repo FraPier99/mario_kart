@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { authApi, charactersApi, circuitsApi, gamesApi, playersApi, pointAdjustmentsApi, racesApi, resultsApi, tournamentsApi } from '@/services/apiClient'
+import { authApi, charactersApi, circuitsApi, consolesApi, gamesApi, playersApi, pointAdjustmentsApi, racesApi, resultsApi, tournamentsApi } from '@/services/apiClient'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/services/apiClient'
 
@@ -27,6 +27,7 @@ const fetchAllTournamentData = () => Promise.all([
     resultsApi.list(),
     circuitsApi.list(),
     pointAdjustmentsApi.list(),
+    consolesApi.list(),
 ])
 
 const fetchAllWithRetry = async () => {
@@ -412,6 +413,7 @@ export function AppDataProvider({ children }) {
     const [results, setResults] = useState([])
     const [circuits, setCircuits] = useState([])
     const [pointAdjustments, setPointAdjustments] = useState([])
+    const [consoles, setConsoles] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [errorMessage, setErrorMessage] = useState('')
@@ -438,7 +440,7 @@ export function AppDataProvider({ children }) {
         setErrorMessage('')
 
         try {
-            const [playersResponse, charactersResponse, gamesResponse, tournamentsResponse, racesResponse, resultsResponse, circuitsResponse, pointAdjustmentsResponse] = await fetchAllWithRetry()
+            const [playersResponse, charactersResponse, gamesResponse, tournamentsResponse, racesResponse, resultsResponse, circuitsResponse, pointAdjustmentsResponse, consolesResponse] = await fetchAllWithRetry()
 
             setPlayers(playersResponse.data ?? [])
             setCharacters(charactersResponse.data ?? [])
@@ -448,6 +450,7 @@ export function AppDataProvider({ children }) {
             setResults(resultsResponse.data ?? [])
             setCircuits(circuitsResponse.data ?? [])
             setPointAdjustments(pointAdjustmentsResponse.data ?? [])
+            setConsoles(consolesResponse.data ?? [])
         }
         catch (requestError) {
             const message = getApiErrorMessage(requestError, 'Impossibile caricare i dati del backend')
@@ -509,6 +512,32 @@ export function AppDataProvider({ children }) {
 
     const addCharacter = useCallback((character) => {
         setCharacters((prev) => [...prev, character])
+    }, [])
+
+    // Stesso principio di patchCircuit/addCircuit/removeCircuit, per la
+    // gestione superadmin del catalogo giochi/console (CatalogTab.jsx).
+    const patchGame = useCallback((gameId, patch) => {
+        setGames((prev) => prev.map((g) => (g.id === gameId ? { ...g, ...patch } : g)))
+    }, [])
+
+    const addGame = useCallback((game) => {
+        setGames((prev) => [...prev, game])
+    }, [])
+
+    const removeGame = useCallback((gameId) => {
+        setGames((prev) => prev.filter((g) => g.id !== gameId))
+    }, [])
+
+    const patchConsole = useCallback((consoleId, patch) => {
+        setConsoles((prev) => prev.map((c) => (c.id === consoleId ? { ...c, ...patch } : c)))
+    }, [])
+
+    const addConsole = useCallback((console) => {
+        setConsoles((prev) => [...prev, console])
+    }, [])
+
+    const removeConsole = useCallback((consoleId) => {
+        setConsoles((prev) => prev.filter((c) => c.id !== consoleId))
     }, [])
 
     const playersById = useMemo(() => {
@@ -691,6 +720,7 @@ export function AppDataProvider({ children }) {
         players,
         characters,
         games,
+        consoles,
         tournaments,
         races,
         results,
@@ -724,6 +754,12 @@ export function AppDataProvider({ children }) {
         addCircuit,
         removeCircuit,
         addCharacter,
+        patchGame,
+        addGame,
+        removeGame,
+        patchConsole,
+        addConsole,
+        removeConsole,
         getTournamentById,
         getLeaderboardByGame,
         getTournamentsByGame,

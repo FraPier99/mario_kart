@@ -26,6 +26,7 @@ from app.controllers.utenti.notifications import router as notifications_router
 from app.controllers.utenti.audit_log import router as audit_log_router
 from app.controllers.schedine.schedine_deluxe import router as schedine_deluxe_router
 from app.controllers.utenti.ownership import router as ownership_router
+from app.controllers.utenti.consoles import router as consoles_router
 from app.controllers.utenti.content_images import router as content_images_router
 
 
@@ -127,6 +128,7 @@ app.include_router(notifications_router)
 app.include_router(audit_log_router)
 app.include_router(schedine_deluxe_router)
 app.include_router(ownership_router)
+app.include_router(consoles_router)
 app.include_router(content_images_router)
 app.include_router(stats_router)
 

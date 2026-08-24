@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import {
     Users, Trophy, BarChart3, Shield, ExternalLink,
     Activity, Award, Plus, Flag, LayoutDashboard,
-    Clock, Play, UserSquare2, MapPin, Zap, Gamepad2,
+    Clock, Play, UserSquare2, MapPin, Zap, Gamepad2, Layers,
 } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import { useAppData } from '@/context/AppDataContext'
@@ -14,6 +14,7 @@ import CharactersTab from '@/components/admin/CharactersTab'
 import CircuitsTab from '@/components/superadmin/CircuitsTab'
 import CarteTab from '@/components/admin/CarteTab'
 import PossessiTab from '@/components/admin/PossessiTab'
+import CatalogTab from '@/components/superadmin/CatalogTab'
 
 // ── Sparkline ────────────────────────────────────────────────────
 const Sparkline = ({ data, color = '#10b981', height = 30, width = 72 }) => {
@@ -71,6 +72,7 @@ const TABS = [
     { key: 'circuiti',   label: 'Circuiti',   icon: MapPin },
     { key: 'carte',      label: 'Carte',      icon: Zap },
     { key: 'possessi',   label: 'Possessi',   icon: Gamepad2 },
+    { key: 'catalogo',   label: 'Catalogo',   icon: Layers, superadminOnly: true },
 ]
 
 const FILTERS = ['all', 'in_corso', 'da_svolgere', 'concluso']
@@ -490,7 +492,7 @@ export default function AdminDashboard() {
                     {/* Tab bar */}
                     <div className="border-t border-slate-100 dark:border-border px-6">
                         <div className="flex gap-0.5 overflow-x-auto">
-                            {TABS.map(({ key, label, icon: Icon }) => (
+                            {TABS.filter((tab) => !tab.superadminOnly || isSuperadmin).map(({ key, label, icon: Icon }) => (
                                 <button key={key} type="button" onClick={() => setActiveTab(key)}
                                     className={`flex shrink-0 items-center gap-2 px-4 py-3 font-title text-[10px] tracking-wide border-b-2 transition active:translate-y-px ${activeTab === key ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-transparent text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'}`}>
                                     <Icon size={13} />
@@ -530,6 +532,9 @@ export default function AdminDashboard() {
                 )}
                 {activeTab === 'possessi' && (
                     <PossessiTab />
+                )}
+                {activeTab === 'catalogo' && isSuperadmin && (
+                    <CatalogTab />
                 )}
                 </div>
             </section>
