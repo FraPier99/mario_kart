@@ -6,10 +6,10 @@
  * compilato non distingue "possiede 0" da "non ha mai compilato nulla").
  *
  * Sparisce da sola quando tutti e 3 i passi sono completi — altrimenti,
- * come prima, il dismiss è di SESSIONE (sessionStorage): chiudendola
- * sparisce solo fino alla prossima apertura del browser, per continuare a
- * ricordarla finché l'utente non completa davvero il profilo — un dismiss
- * per sempre vanificherebbe lo scopo del promemoria.
+ * il dismiss dura 24h (localStorage, sopravvive al riavvio del browser):
+ * chiudendola ricompare da sola il giorno dopo se il profilo non è ancora
+ * completo — un dismiss permanente/di sessione vanificherebbe lo scopo del
+ * promemoria per chi tiene il browser aperto per giorni.
  */
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -17,7 +17,8 @@ import { Check, X } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { ownershipApi } from '@/services/apiClient'
 
-const DISMISSED_KEY_PREFIX = 'kart_ownership_reminder_dismissed_'
+const DISMISSED_UNTIL_KEY_PREFIX = 'kart_ownership_reminder_dismissed_until_'
+const DISMISS_DURATION_MS = 24 * 60 * 60 * 1000
 
 const OnboardingStep = ({ done, label, to }) => (
     <Link
@@ -44,8 +45,9 @@ const OwnershipReminderBanner = () => {
 
     useEffect(() => {
         if (!user?.id || isSuperadmin) return
+        const storedUntil = localStorage.getItem(`${DISMISSED_UNTIL_KEY_PREFIX}${user.id}`)
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setDismissed(sessionStorage.getItem(`${DISMISSED_KEY_PREFIX}${user.id}`) === '1')
+        setDismissed(Boolean(storedUntil) && Date.now() < Number(storedUntil))
         ownershipApi.me()
             .then((res) => setHasDeclared(Boolean(res.data?.has_declared)))
             .catch(() => {})
@@ -63,7 +65,7 @@ const OwnershipReminderBanner = () => {
     if (!user?.id || isSuperadmin || !player || allDone || dismissed) return null
 
     const handleDismiss = () => {
-        sessionStorage.setItem(`${DISMISSED_KEY_PREFIX}${user.id}`, '1')
+        localStorage.setItem(`${DISMISSED_UNTIL_KEY_PREFIX}${user.id}`, String(Date.now() + DISMISS_DURATION_MS))
         setDismissed(true)
     }
 
@@ -78,7 +80,7 @@ const OwnershipReminderBanner = () => {
                     type="button"
                     onClick={handleDismiss}
                     className="shrink-0 rounded-lg p-1 text-slate-400 transition hover:text-slate-600 dark:hover:text-slate-200"
-                    title="Nascondi per questa sessione"
+                    title="Nascondi per 24 ore"
                 >
                     <X size={14} />
                 </button>

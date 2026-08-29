@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Trophy, Crown, Gamepad2, Users2, Calendar, ArrowRight, Sparkles, UserPlus } from 'lucide-react'
+import { Trophy, Crown, Gamepad2, Users2, Calendar, ArrowRight, Sparkles, UserPlus, ChevronDown } from 'lucide-react'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
@@ -50,6 +50,10 @@ const Hero = () => {
     const [detailsDefaultOpen] = useState(() => (
         typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches
     ))
+    // Card "Ultimo torneo" chiusa di default (nome+vincitore soli occupano
+    // molto meno spazio verticale di CTA+meta+podio+dettagli insieme) — si
+    // apre solo su richiesta, invece di essere sempre alta in home.
+    const [expanded, setExpanded] = useState(false)
     // Stile "carta speciale" guidato dal tier reale del badge migliore
     // (leggenda/campione/veterano) — un superadmin non ha badge per
     // game_id (non gioca), quindi niente trattamento dorato automatico:
@@ -183,110 +187,124 @@ const Hero = () => {
                                 </div>
                             </div>
 
-                            {/* ── 3. CTA — spostata subito dopo il vincitore (era in fondo alla
-                                colonna, dopo meta/podio/personaggi): l'azione principale va
-                                raggiunta senza dover scrollare oltre tutto il resto. ── */}
-                            <div className="mt-3">
-                                <Link
-                                    to={`/tournaments/${lastChampionTournament.id}`}
-                                    className="font-title flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-600/40 dark:border-amber-400/30 bg-white/40 dark:bg-black/20 px-4 py-3 text-[10px] tracking-wide text-amber-800 dark:text-amber-200 transition active:translate-y-px hover:bg-white/60 dark:hover:bg-black/30"
-                                >
-                                    Vai al torneo <ArrowRight size={14} />
-                                </Link>
-                            </div>
+                            {/* ── Toggle — chiusa di default mostra solo titolo+vincitore
+                                sopra; il resto (CTA, meta, podio, dettagli) si apre a
+                                richiesta invece di occupare sempre tutto questo spazio. ── */}
+                            <button
+                                type="button"
+                                onClick={() => setExpanded((v) => !v)}
+                                className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-amber-600/25 dark:border-amber-400/20 bg-white/20 dark:bg-black/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-amber-700/80 dark:text-amber-300/70 transition hover:bg-white/40 dark:hover:bg-black/20"
+                            >
+                                {expanded ? 'Mostra meno' : 'Mostra dettagli'}
+                                <ChevronDown size={12} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                            </button>
 
-                            {/* ── 4. Dettagli torneo ── */}
-                            <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-500 dark:text-muted-foreground">
-                                {lastChampionGame && (
-                                    <span className="inline-flex items-center gap-1"><Gamepad2 size={11} className="text-amber-500/80" /> <span className="capitalize font-semibold text-slate-700 dark:text-foreground">{lastChampionGame.name}</span></span>
-                                )}
-                                <span className="text-amber-400/40">·</span>
-                                <span className="font-medium text-slate-700 dark:text-foreground">{lastChampionFormatLabel}</span>
-                                {lastChampionParticipants > 0 && (
-                                    <>
-                                        <span className="text-amber-400/40">·</span>
-                                        <span className="inline-flex items-center gap-1"><Users2 size={11} className="text-amber-500/80" /> {lastChampionParticipants}</span>
-                                    </>
-                                )}
-                                {lastChampionDateLabel && (
-                                    <>
-                                        <span className="text-amber-400/40">·</span>
-                                        <span className="inline-flex items-center gap-1"><Calendar size={11} className="text-amber-500/80" /> {lastChampionDateLabel}</span>
-                                    </>
-                                )}
-                            </div>
-
-                            {/* ── 4. Podio — tre chip orizzontali a piena larghezza ── */}
-                            {lastChampionPodium.length > 0 && (
-                                <div className="mt-4">
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-amber-600/70 dark:text-amber-400/60">Podio</p>
-                                    <div className="mt-1.5 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                                        {lastChampionPodium.map((standing, idx) => (
-                                            <div key={standing.playerId} className="flex items-center gap-2.5 rounded-xl bg-white/30 dark:bg-black/15 px-3 py-2.5">
-                                                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-black ${idx === 0 ? 'bg-amber-400 text-amber-950' : idx === 1 ? 'bg-slate-300 text-slate-700' : 'bg-orange-400 text-orange-950'}`}>
-                                                    {idx + 1}
-                                                </span>
-                                                <img
-                                                    src={standing.img_url || buildAvatarPlaceholder(standing.nickname)}
-                                                    alt={standing.nickname}
-                                                    loading="lazy"
-                                                    decoding="async"
-                                                    className="h-9 w-9 shrink-0 rounded-full object-cover"
-                                                />
-                                                <span className="min-w-0 flex-1 truncate text-sm font-bold capitalize text-slate-800 dark:text-foreground">{standing.nickname}</span>
-                                                {standing.points != null && (
-                                                    <span className="text-xs font-black text-amber-600/80 dark:text-amber-400/70">{standing.points}pt</span>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
+                            {expanded && (
+                                <>
+                                {/* ── 3. CTA ── */}
+                                <div className="mt-3">
+                                    <Link
+                                        to={`/tournaments/${lastChampionTournament.id}`}
+                                        className="font-title flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-600/40 dark:border-amber-400/30 bg-white/40 dark:bg-black/20 px-4 py-3 text-[10px] tracking-wide text-amber-800 dark:text-amber-200 transition active:translate-y-px hover:bg-white/60 dark:hover:bg-black/30"
+                                    >
+                                        Vai al torneo <ArrowRight size={14} />
+                                    </Link>
                                 </div>
-                            )}
 
-                            {/* ── 5. Dettagli torneo — personaggi usati + premi + traguardi,
-                                raggruppati in un unico capitolo collassabile (chiuso di default
-                                su mobile, aperto su desktop dove lo spazio non manca): prima
-                                erano impilati per intero, costringendo a scorrere oltre podio e
-                                personaggi prima di arrivare a premi/traguardi. ── */}
-                            <div className="mt-4">
-                                <CollapsibleSection
-                                    title="Dettagli torneo"
-                                    subtitle="Personaggi usati, premi e traguardi"
-                                    icon={<Sparkles size={16} />}
-                                    defaultOpen={detailsDefaultOpen}
-                                >
-                                    {lastChampionCharacters.length > 0 && (
-                                        <div>
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">Personaggi usati dal vincitore</p>
-                                            <div className="mt-1.5 flex flex-wrap gap-2">
-                                                {lastChampionCharacters.slice(0, 8).map((character) => (
-                                                    <div key={character.id} className="flex items-center gap-1.5 rounded-full bg-slate-100 dark:bg-muted py-1 pl-1 pr-3">
-                                                        <div className="h-6 w-6 shrink-0 overflow-hidden rounded-full border border-white dark:border-card bg-slate-100 dark:bg-slate-700/60">
-                                                            {character.img_url ? (
-                                                                <img src={character.img_url} alt={character.name} className="h-full w-full object-cover" />
-                                                            ) : (
-                                                                <div className="flex h-full w-full items-center justify-center text-[10px] font-black text-slate-400">{character.name.charAt(0).toUpperCase()}</div>
-                                                            )}
-                                                        </div>
-                                                        <span className="max-w-24 truncate text-[10px] font-bold capitalize text-slate-700 dark:text-foreground">{character.name}</span>
-                                                    </div>
-                                                ))}
-                                                {lastChampionCharacters.length > 8 && (
-                                                    <div className="flex items-center rounded-full border border-dashed border-slate-300 dark:border-slate-600 px-3 py-1 text-[10px] font-black text-slate-500 dark:text-muted-foreground">
-                                                        +{lastChampionCharacters.length - 8} altri
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
+                                {/* ── 4. Dettagli torneo ── */}
+                                <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-500 dark:text-muted-foreground">
+                                    {lastChampionGame && (
+                                        <span className="inline-flex items-center gap-1"><Gamepad2 size={11} className="text-amber-500/80" /> <span className="capitalize font-semibold text-slate-700 dark:text-foreground">{lastChampionGame.name}</span></span>
                                     )}
-                                    <TournamentAwardsPanel
-                                        tournamentId={lastChampionTournament.id}
-                                        tournamentFormat={lastChampionTournament.tournament_format}
-                                        standings={lastChampionTournament.standings}
-                                    />
-                                    <TournamentMilestonesPanel milestones={lastChampionMilestones} />
-                                </CollapsibleSection>
-                            </div>
+                                    <span className="text-amber-400/40">·</span>
+                                    <span className="font-medium text-slate-700 dark:text-foreground">{lastChampionFormatLabel}</span>
+                                    {lastChampionParticipants > 0 && (
+                                        <>
+                                            <span className="text-amber-400/40">·</span>
+                                            <span className="inline-flex items-center gap-1"><Users2 size={11} className="text-amber-500/80" /> {lastChampionParticipants}</span>
+                                        </>
+                                    )}
+                                    {lastChampionDateLabel && (
+                                        <>
+                                            <span className="text-amber-400/40">·</span>
+                                            <span className="inline-flex items-center gap-1"><Calendar size={11} className="text-amber-500/80" /> {lastChampionDateLabel}</span>
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* ── 4. Podio — tre chip orizzontali a piena larghezza ── */}
+                                {lastChampionPodium.length > 0 && (
+                                    <div className="mt-4">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-amber-600/70 dark:text-amber-400/60">Podio</p>
+                                        <div className="mt-1.5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                            {lastChampionPodium.map((standing, idx) => (
+                                                <div key={standing.playerId} className="flex items-center gap-2.5 rounded-xl bg-white/30 dark:bg-black/15 px-3 py-2.5">
+                                                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-black ${idx === 0 ? 'bg-amber-400 text-amber-950' : idx === 1 ? 'bg-slate-300 text-slate-700' : 'bg-orange-400 text-orange-950'}`}>
+                                                        {idx + 1}
+                                                    </span>
+                                                    <img
+                                                        src={standing.img_url || buildAvatarPlaceholder(standing.nickname)}
+                                                        alt={standing.nickname}
+                                                        loading="lazy"
+                                                        decoding="async"
+                                                        className="h-9 w-9 shrink-0 rounded-full object-cover"
+                                                    />
+                                                    <span className="min-w-0 flex-1 truncate text-sm font-bold capitalize text-slate-800 dark:text-foreground">{standing.nickname}</span>
+                                                    {standing.points != null && (
+                                                        <span className="text-xs font-black text-amber-600/80 dark:text-amber-400/70">{standing.points}pt</span>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ── 5. Dettagli torneo — personaggi usati + premi + traguardi,
+                                    raggruppati in un unico capitolo collassabile (chiuso di default
+                                    su mobile, aperto su desktop dove lo spazio non manca): prima
+                                    erano impilati per intero, costringendo a scorrere oltre podio e
+                                    personaggi prima di arrivare a premi/traguardi. ── */}
+                                <div className="mt-4">
+                                    <CollapsibleSection
+                                        title="Dettagli torneo"
+                                        subtitle="Personaggi usati, premi e traguardi"
+                                        icon={<Sparkles size={16} />}
+                                        defaultOpen={detailsDefaultOpen}
+                                    >
+                                        {lastChampionCharacters.length > 0 && (
+                                            <div>
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">Personaggi usati dal vincitore</p>
+                                                <div className="mt-1.5 flex flex-wrap gap-2">
+                                                    {lastChampionCharacters.slice(0, 8).map((character) => (
+                                                        <div key={character.id} className="flex items-center gap-1.5 rounded-full bg-slate-100 dark:bg-muted py-1 pl-1 pr-3">
+                                                            <div className="h-6 w-6 shrink-0 overflow-hidden rounded-full border border-white dark:border-card bg-slate-100 dark:bg-slate-700/60">
+                                                                {character.img_url ? (
+                                                                    <img src={character.img_url} alt={character.name} className="h-full w-full object-cover" />
+                                                                ) : (
+                                                                    <div className="flex h-full w-full items-center justify-center text-[10px] font-black text-slate-400">{character.name.charAt(0).toUpperCase()}</div>
+                                                                )}
+                                                            </div>
+                                                            <span className="max-w-24 truncate text-[10px] font-bold capitalize text-slate-700 dark:text-foreground">{character.name}</span>
+                                                        </div>
+                                                    ))}
+                                                    {lastChampionCharacters.length > 8 && (
+                                                        <div className="flex items-center rounded-full border border-dashed border-slate-300 dark:border-slate-600 px-3 py-1 text-[10px] font-black text-slate-500 dark:text-muted-foreground">
+                                                            +{lastChampionCharacters.length - 8} altri
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                        <TournamentAwardsPanel
+                                            tournamentId={lastChampionTournament.id}
+                                            tournamentFormat={lastChampionTournament.tournament_format}
+                                            standings={lastChampionTournament.standings}
+                                        />
+                                        <TournamentMilestonesPanel milestones={lastChampionMilestones} />
+                                    </CollapsibleSection>
+                                </div>
+                                </>
+                            )}
                             </div>
                         </div>
                     ) : (

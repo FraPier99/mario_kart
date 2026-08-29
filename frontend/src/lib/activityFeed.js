@@ -6,6 +6,11 @@ import { detectTournamentMilestones } from '@/lib/milestones'
 // restano visibili come eventi "iniziato/concluso" ma sono esclusi da
 // traguardi e streak, per coerenza con badge/classifiche/statistiche che
 // li ignorano ovunque nell'app.
+//
+// Ogni evento separa `primary` (il giocatore protagonista, reso in
+// grassetto dal chiamante) da `secondary` (il resto della frase, peso
+// normale) invece di una stringa piatta unica — vedi ActivityFeed.jsx, che
+// usa anche `type`/`avatar` per il badge icona colorato e l'avatar cerchiato.
 const WIN_STREAK_THRESHOLD = 3
 
 export function buildActivityFeed({ detailedTournaments, statsByPlayerId, games, limit = 12 }) {
@@ -19,8 +24,10 @@ export function buildActivityFeed({ detailedTournaments, statsByPlayerId, games,
             events.push({
                 id: `won-${t.id}`,
                 date: t.date,
-                icon: '🏆',
-                text: `${t.winner.nickname} ha vinto ${t.name}`,
+                type: 'win',
+                avatar: t.winner.img_url,
+                primary: t.winner.nickname,
+                secondary: `ha vinto ${t.name}`,
                 tournamentId: t.id,
             })
 
@@ -36,8 +43,10 @@ export function buildActivityFeed({ detailedTournaments, statsByPlayerId, games,
                     events.push({
                         id: `milestone-${t.id}-${m.playerId}-${m.key}`,
                         date: t.date,
-                        icon: m.icon,
-                        text: `${m.nickname} — ${m.label}`,
+                        type: 'milestone',
+                        avatar: m.img_url,
+                        primary: m.nickname,
+                        secondary: m.label,
                         tournamentId: t.id,
                     })
                 })
@@ -46,8 +55,10 @@ export function buildActivityFeed({ detailedTournaments, statsByPlayerId, games,
             events.push({
                 id: `started-${t.id}`,
                 date: t.date,
-                icon: '🏁',
-                text: `È iniziato ${t.name}${t.is_friendly ? ' (Amichevole)' : ''}`,
+                type: 'started',
+                avatar: null,
+                primary: null,
+                secondary: `È iniziato ${t.name}${t.is_friendly ? ' (Amichevole)' : ''}`,
                 tournamentId: t.id,
             })
         }
@@ -78,8 +89,10 @@ export function buildActivityFeed({ detailedTournaments, statsByPlayerId, games,
             events.push({
                 id: `streak-${gameId}-${streakLastTournament.id}`,
                 date: streakLastTournament.date,
-                icon: '🔥',
-                text: `${streakLastTournament.winner?.nickname ?? '???'} ha vinto ${streakCount} tornei di fila${gameNameById.get(gameId) ? ` (${gameNameById.get(gameId)})` : ''}`,
+                type: 'streak',
+                avatar: streakLastTournament.winner?.img_url,
+                primary: streakLastTournament.winner?.nickname ?? '???',
+                secondary: `ha vinto ${streakCount} tornei di fila${gameNameById.get(gameId) ? ` (${gameNameById.get(gameId)})` : ''}`,
                 tournamentId: streakLastTournament.id,
             })
         }
