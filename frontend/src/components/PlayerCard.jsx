@@ -17,51 +17,56 @@ const PlayerCard = ({ players, bestBadgeByPlayerId, handlePlayerClick }) => {
                 const cardStyle = getProfileCardStyle(bestBadge?.tier)
 
                 return (
+                    // Bordo del grado esterno e più spesso (border-4), colore accento
+                    // come anello sottile annidato con un margine di respiro (p-1) —
+                    // stesso principio applicato agli avatar in ProfileDashboard.jsx/
+                    // CommunityUserPage.jsx, qui sull'intera card visto che non esiste
+                    // un ring avatar separato dal bordo card.
                     <div
                         key={p.id}
                         style={{
                             animationDelay: `${idx * 0.04}s`,
-                            boxShadow: [
-                                cardStyle ? 'var(--circuit-shadow-md)' : 'var(--circuit-shadow-sm)',
-                                p.accent_color ? `0 0 0 3px ${p.accent_color}` : null,
-                            ].filter(Boolean).join(', '),
+                            boxShadow: cardStyle ? 'var(--circuit-shadow-md)' : 'var(--circuit-shadow-sm)',
                         }}
-                        className={`animate-fade-in flex flex-col items-center overflow-hidden rounded-2xl border-2 transition-all duration-300 hover:scale-[1.03] ${
-                            cardStyle
-                                ? `border-circuit-ink ${cardStyle.cardBg}`
-                                : 'border-slate-300 dark:border-border bg-white dark:bg-card'
+                        className={`animate-fade-in overflow-hidden rounded-2xl border-4 p-1 transition-all duration-300 hover:scale-[1.03] ${
+                            cardStyle ? 'border-circuit-ink' : 'border-slate-300 dark:border-border'
                         }`}
                     >
-                        <div className="relative h-32 w-full bg-gradient-to-b from-slate-50 dark:from-muted to-slate-200 dark:to-muted pb-2">
-                            {cardStyle && (
-                                <div className={`absolute right-2 top-2 rounded-full border-2 border-circuit-ink p-1.5 ${cardStyle.badgeBg}`} style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                                    <cardStyle.Icon size={16} className={cardStyle.badgeIconColor} />
-                                </div>
-                            )}
-                            <img
-                                src={p.img_url || buildAvatarPlaceholder(p.nickname)}
-                                alt={p.first_name}
-                                className="h-full w-full rounded-2xl object-contain p-1"
-                            />
-                        </div>
+                        <div
+                            style={p.accent_color ? { border: `2px solid ${p.accent_color}` } : undefined}
+                            className={`flex h-full flex-col items-center overflow-hidden rounded-xl ${cardStyle ? cardStyle.cardBg : 'bg-white dark:bg-card'}`}
+                        >
+                            <div className="relative h-32 w-full bg-gradient-to-b from-slate-50 dark:from-muted to-slate-200 dark:to-muted pb-2">
+                                {cardStyle && (
+                                    <div className={`absolute right-2 top-2 rounded-full border-2 border-circuit-ink p-1.5 ${cardStyle.badgeBg}`} style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+                                        <cardStyle.Icon size={16} className={cardStyle.badgeIconColor} />
+                                    </div>
+                                )}
+                                <img
+                                    src={p.img_url || buildAvatarPlaceholder(p.nickname)}
+                                    alt={p.first_name}
+                                    className="h-full w-full rounded-2xl object-contain p-1"
+                                />
+                            </div>
 
-                        <div className="flex w-full grow flex-col items-center p-4 text-center">
-                            <span className="font-title mb-2 rounded-full border-2 border-emerald-700/30 bg-emerald-500 px-3 py-1 text-[9px] tracking-wide text-white">
-                                {p.nickname?.toUpperCase()}
-                            </span>
+                            <div className="flex w-full grow flex-col items-center p-4 text-center">
+                                <span className="font-title mb-2 rounded-full border-2 border-emerald-700/30 bg-emerald-500 px-3 py-1 text-[9px] tracking-wide text-white">
+                                    {p.nickname?.toUpperCase()}
+                                </span>
 
-                            <h3 className="mb-3 text-base font-black capitalize tracking-tight text-slate-800 dark:text-foreground">
-                                {p.first_name} {p.last_name}
-                            </h3>
+                                <h3 className="mb-3 text-base font-black capitalize tracking-tight text-slate-800 dark:text-foreground">
+                                    {p.first_name} {p.last_name}
+                                </h3>
 
-                            <button
-                                type="button"
-                                onClick={() => handlePlayerClick(p)}
-                                className="font-title mt-auto cursor-pointer rounded-xl border-2 border-blue-800/30 bg-blue-600 px-4 py-2 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-blue-700"
-                                style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
-                            >
-                                Visualizza Profilo
-                            </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handlePlayerClick(p)}
+                                    className="font-title mt-auto cursor-pointer rounded-xl border-2 border-blue-800/30 bg-blue-600 px-4 py-2 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-blue-700"
+                                    style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
+                                >
+                                    Visualizza Profilo
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )

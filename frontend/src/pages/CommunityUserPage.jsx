@@ -137,13 +137,18 @@ const CommunityUserPage = () => {
                         <div className="flex flex-row items-center gap-3 md:flex-col md:items-start">
                             <div className="relative shrink-0">
                                 <div className="absolute inset-0 rounded-2xl bg-emerald-400/20 blur-xl scale-125 pointer-events-none" />
-                                <div
-                                    className={`relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-2xl border-[2.5px] bg-gradient-to-br from-emerald-400 to-green-500 shadow-lg shadow-emerald-400/20 ${cardStyle ? cardStyle.avatarBorder : 'border-emerald-400'}`}
-                                    style={player?.accent_color ? { boxShadow: `0 0 0 3px ${player.accent_color}` } : undefined}
-                                >
-                                    {player?.img_url || communityUser?.img_url
-                                        ? <img src={player?.img_url || communityUser?.img_url} alt={player?.nickname ?? communityUser?.username} className="h-full w-full object-cover" />
-                                        : <UserCircle2 size={40} className="text-white" />}
+                                {/* Bordo del grado esterno e più spesso, colore accento come
+                                    anello sottile annidato con un margine di respiro — stesso
+                                    principio di ProfileDashboard.jsx. */}
+                                <div className={`relative h-28 w-28 rounded-2xl border-4 p-1 shadow-lg shadow-emerald-400/20 ${cardStyle ? cardStyle.avatarBorder : 'border-emerald-400'}`}>
+                                    <div
+                                        className="flex h-full w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-emerald-400 to-green-500"
+                                        style={player?.accent_color ? { border: `2px solid ${player.accent_color}` } : undefined}
+                                    >
+                                        {player?.img_url || communityUser?.img_url
+                                            ? <img src={player?.img_url || communityUser?.img_url} alt={player?.nickname ?? communityUser?.username} className="h-full w-full object-cover" />
+                                            : <UserCircle2 size={40} className="text-white" />}
+                                    </div>
                                 </div>
                                 {cardStyle && (
                                     <span className={`absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white dark:border-card shadow-md ${cardStyle.badgeBg}`}>

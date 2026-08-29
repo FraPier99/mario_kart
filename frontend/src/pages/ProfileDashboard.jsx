@@ -271,13 +271,19 @@ const SchedinaBadge = () => {
 // leggibile su sfondo chiaro/scuro e coerente con lo stile "pillola"
 // del resto dell'app, invece di lasciare scegliere un hex arbitrario.
 const ACCENT_PRESETS = [
+    { value: '#ef4444', label: 'Rosso' },
     { value: '#f43f5e', label: 'Rosa' },
+    { value: '#d946ef', label: 'Magenta' },
     { value: '#f97316', label: 'Arancione' },
     { value: '#eab308', label: 'Giallo' },
+    { value: '#84cc16', label: 'Lime' },
     { value: '#22c55e', label: 'Verde' },
+    { value: '#14b8a6', label: 'Teal' },
     { value: '#06b6d4', label: 'Ciano' },
     { value: '#3b82f6', label: 'Blu' },
+    { value: '#6366f1', label: 'Indaco' },
     { value: '#8b5cf6', label: 'Viola' },
+    { value: '#92400e', label: 'Marrone' },
     { value: '#64748b', label: 'Grigio' },
 ]
 
@@ -577,17 +583,24 @@ const Dashboard = () => {
                             <div className="flex items-center gap-4">
                                 {/* Avatar */}
                                 <div className="relative shrink-0">
-                                    <div
-                                        className={`h-24 w-24 overflow-hidden rounded-2xl border-2 bg-slate-100 dark:bg-muted shadow-md ${cardStyle ? cardStyle.avatarBorder : 'border-slate-200 dark:border-border'}`}
-                                        style={player?.accent_color ? { boxShadow: `0 0 0 3px ${player.accent_color}` } : undefined}
-                                    >
-                                        {form.img_url || player?.img_url ? (
-                                            <img src={form.img_url || player?.img_url} alt={form.nickname || player?.nickname} className="h-full w-full object-cover" />
-                                        ) : (
-                                            <div className="flex h-full w-full items-center justify-center text-3xl font-black text-slate-400 dark:text-slate-500">
-                                                {(player?.nickname ?? user?.username ?? '?').charAt(0).toUpperCase()}
-                                            </div>
-                                        )}
+                                    {/* Bordo del grado (tier badge) sempre esterno e più spesso —
+                                        il colore accento personale, quando presente, è un anello
+                                        sottile annidato dentro, con un margine di respiro (padding)
+                                        che lo separa dal bordo del grado, che resta il segnale
+                                        dominante. */}
+                                    <div className={`h-24 w-24 rounded-2xl border-4 p-1 shadow-md ${cardStyle ? cardStyle.avatarBorder : 'border-slate-200 dark:border-border'}`}>
+                                        <div
+                                            className="h-full w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-muted"
+                                            style={player?.accent_color ? { border: `2px solid ${player.accent_color}` } : undefined}
+                                        >
+                                            {form.img_url || player?.img_url ? (
+                                                <img src={form.img_url || player?.img_url} alt={form.nickname || player?.nickname} className="h-full w-full object-cover" />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center text-3xl font-black text-slate-400 dark:text-slate-500">
+                                                    {(player?.nickname ?? user?.username ?? '?').charAt(0).toUpperCase()}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                     {cardStyle && (
                                         <div className={`absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full shadow-md ${cardStyle.badgeBg}`}>
