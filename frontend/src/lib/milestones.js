@@ -67,7 +67,7 @@ export const detectTournamentMilestones = ({ tournament, standings, statsByPlaye
                 standing.playerId, detailedTournaments, sameGameAndFormat(tournament), wonBy(standing.playerId)
             )
             if (earliestWin === tournament.id) {
-                addMilestone(standing, 'prima_vittoria', `Prima vittoria${gameSuffix}`)
+                addMilestone(standing, 'prima_vittoria', `Primo torneo vinto${gameSuffix}`)
             }
         }
     })

@@ -12,6 +12,18 @@ import { detectTournamentMilestones } from '@/lib/milestones'
 // normale) invece di una stringa piatta unica — vedi ActivityFeed.jsx, che
 // usa anche `type`/`avatar` per il badge icona colorato e l'avatar cerchiato.
 const WIN_STREAK_THRESHOLD = 3
+const MAX_NAMES_SHOWN = 3
+
+// "Shiba", "Shiba e Vlad", "Shiba, Vlad e Next Champion", "Shiba, Vlad e altri 2"
+// — usato per accorpare in una riga sola più giocatori che raggiungono lo
+// stesso traguardo nello stesso torneo, invece di una riga a testa.
+const joinNames = (names) => {
+    if (names.length <= 1) return names[0] ?? ''
+    if (names.length <= MAX_NAMES_SHOWN) {
+        return `${names.slice(0, -1).join(', ')} e ${names[names.length - 1]}`
+    }
+    return `${names.slice(0, MAX_NAMES_SHOWN).join(', ')} e altri ${names.length - MAX_NAMES_SHOWN}`
+}
 
 export function buildActivityFeed({ detailedTournaments, statsByPlayerId, games, limit = 12 }) {
     const gameNameById = new Map((games ?? []).map((g) => [g.id, g.name]))
@@ -39,14 +51,26 @@ export function buildActivityFeed({ detailedTournaments, statsByPlayerId, games,
                     detailedTournaments,
                     gameName,
                 })
+
+                // Più giocatori possono raggiungere lo STESSO traguardo nello
+                // stesso torneo (es. tutti al loro primo torneo) — un'unica
+                // riga per traguardo invece di una a testa, per non allungare
+                // il feed inutilmente.
+                const byMilestoneKey = new Map()
                 milestones.forEach((m) => {
+                    if (!byMilestoneKey.has(m.key)) byMilestoneKey.set(m.key, { label: m.label, players: [] })
+                    byMilestoneKey.get(m.key).players.push(m)
+                })
+
+                byMilestoneKey.forEach((group, key) => {
+                    const singlePlayer = group.players.length === 1 ? group.players[0] : null
                     events.push({
-                        id: `milestone-${t.id}-${m.playerId}-${m.key}`,
+                        id: `milestone-${t.id}-${key}`,
                         date: t.date,
                         type: 'milestone',
-                        avatar: m.img_url,
-                        primary: m.nickname,
-                        secondary: m.label,
+                        avatar: singlePlayer?.img_url ?? null,
+                        primary: joinNames(group.players.map((m) => m.nickname)),
+                        secondary: group.label,
                         tournamentId: t.id,
                     })
                 })
