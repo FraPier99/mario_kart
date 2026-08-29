@@ -1,6 +1,7 @@
 import AppLayout from "@/components/layout/AppLayout";
 import Header from "@/components/layout/Header";
 import Hero from "@/components/layout/Hero";
+import ActivityFeed from "@/components/layout/ActivityFeed";
 import ApiBanner from '@/components/common/ApiBanner'
 import { useAppData } from '@/context/AppDataContext'
 
@@ -26,6 +27,7 @@ const Home = () =>{
                 />
             </div>
             <Hero />
+            <ActivityFeed />
         </AppLayout>
     )
 }
