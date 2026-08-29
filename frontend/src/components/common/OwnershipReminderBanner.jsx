@@ -25,7 +25,7 @@ const OnboardingStep = ({ done, label, to }) => (
         to={to}
         className={`flex items-center gap-2.5 rounded-xl border-2 px-3 py-2 transition ${
             done
-                ? 'border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/60 dark:bg-emerald-500/5'
+                ? 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/50'
                 : 'border-slate-200 dark:border-border bg-white dark:bg-card hover:border-blue-300 dark:hover:border-blue-500/40'
         }`}
     >
@@ -70,7 +70,7 @@ const OwnershipReminderBanner = () => {
     }
 
     return (
-        <div className="rounded-2xl border-2 border-blue-200 dark:border-blue-500/25 bg-blue-50/60 dark:bg-blue-500/5 p-4">
+        <div className="rounded-2xl border-2 border-blue-200 dark:border-blue-500/25 bg-blue-50/95 dark:bg-blue-950/70 backdrop-blur-sm p-4">
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     <p className="text-xs font-black uppercase tracking-widest text-blue-700 dark:text-blue-300">Completa il tuo profilo gaming</p>
