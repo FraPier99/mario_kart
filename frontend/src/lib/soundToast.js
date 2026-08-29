@@ -1,25 +1,30 @@
 import { toast as sonnerToast } from 'sonner'
 import { playMkdsBalloonPop, playMkdsBalloonGet, playMkdsWfcError } from '@/lib/mkdsSounds'
+import { isUiSoundEnabled } from '@/lib/uiSoundPrefs'
+
+const playIfEnabled = (playFn) => {
+    if (isUiSoundEnabled()) playFn()
+}
 
 export const toast = {
     success: (...args) => {
-        playMkdsBalloonGet()
+        playIfEnabled(playMkdsBalloonGet)
         return sonnerToast.success(...args)
     },
     error: (...args) => {
-        playMkdsWfcError()
+        playIfEnabled(playMkdsWfcError)
         return sonnerToast.error(...args)
     },
     info: (...args) => {
-        playMkdsBalloonPop()
+        playIfEnabled(playMkdsBalloonPop)
         return sonnerToast.info(...args)
     },
     warning: (...args) => {
-        playMkdsBalloonPop()
+        playIfEnabled(playMkdsBalloonPop)
         return sonnerToast.warning(...args)
     },
     message: (...args) => {
-        playMkdsBalloonPop()
+        playIfEnabled(playMkdsBalloonPop)
         return sonnerToast.message(...args)
     },
     custom: (...args) => sonnerToast.custom(...args),

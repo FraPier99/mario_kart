@@ -12,6 +12,7 @@ import CollapsibleSection from '@/components/tournaments/CollapsibleSection'
 import { detectTournamentMilestones } from '@/lib/milestones'
 import { statsApi } from '@/services/apiClient'
 import { pickBestBadge, getProfileCardStyle } from '@/lib/playerBadges'
+import { checkBadgeTierUps } from '@/lib/badgeTierToast'
 
 const formatChampionDate = (value) => {
     if (!value) return null
@@ -30,9 +31,14 @@ const Hero = () => {
         if (!player) return
         let active = true
         statsApi.playerBadges(player.id)
-            .then((res) => { if (active) setBadges(res.data) })
+            .then((res) => {
+                if (!active) return
+                setBadges(res.data)
+                checkBadgeTierUps(player.id, res.data, games)
+            })
             .catch(() => { if (active) setBadges([]) })
         return () => { active = false }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [player])
     const bestBadge = useMemo(() => pickBestBadge(badges), [badges])
     // "Dettagli torneo" (personaggi usati/premi/traguardi) collassato di

@@ -588,6 +588,14 @@ def ensure_player_bio_column():
             connection.execute(text("ALTER TABLE players ADD COLUMN bio TEXT"))
 
 
+def ensure_player_accent_color_column():
+    inspector = inspect(engine)
+    player_columns = {col["name"] for col in inspector.get_columns("players")}
+    if "accent_color" not in player_columns:
+        with engine.begin() as connection:
+            connection.execute(text("ALTER TABLE players ADD COLUMN accent_color TEXT"))
+
+
 def ensure_temp_passwords_table():
     inspector = inspect(engine)
     if "temp_passwords" not in inspector.get_table_names():
@@ -1026,6 +1034,7 @@ def bootstrap_database():
     ensure_user_img_url_column()
     ensure_player_champion_photo_column()
     ensure_player_bio_column()
+    ensure_player_accent_color_column()
     ensure_temp_passwords_table()
     ensure_tournament_status_column()
     ensure_tournament_deadline_lock_column()

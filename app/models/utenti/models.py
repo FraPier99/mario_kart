@@ -29,6 +29,7 @@ class Player(Base):
     champion_photo = Column(Text, nullable=True)
 
     bio = Column(Text, nullable=True)
+    accent_color = Column(String, nullable=True)
     favorite_character_id = Column(Integer, ForeignKey("characters.id"), nullable=True)
 
     results = relationship("Result", back_populates="player")

@@ -22,6 +22,7 @@ class AuthPlayerSummary(BaseModel):
     favorite_character_id: Optional[int] = None
     img_url: Optional[str] = None
     bio: Optional[str] = None
+    accent_color: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
@@ -81,6 +82,7 @@ class UpdateMyProfile(BaseModel):
     favorite_character_id: Optional[int] = None
     img_url: Optional[str] = None
     bio: Optional[str] = None
+    accent_color: Optional[Annotated[str, StringConstraints(pattern=r"^#[0-9a-fA-F]{6}$")]] = None
 
 
 class ChangePasswordRequest(BaseModel):

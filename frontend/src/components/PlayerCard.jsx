@@ -22,11 +22,12 @@ const PlayerCard = ({ players, bestBadgeByPlayerId, handlePlayerClick }) => {
                         style={{
                             animationDelay: `${idx * 0.04}s`,
                             boxShadow: cardStyle ? 'var(--circuit-shadow-md)' : 'var(--circuit-shadow-sm)',
+                            borderColor: !cardStyle && p.accent_color ? p.accent_color : undefined,
                         }}
                         className={`animate-fade-in flex flex-col items-center overflow-hidden rounded-2xl border-2 transition-all duration-300 hover:scale-[1.03] ${
                             cardStyle
                                 ? `border-circuit-ink ${cardStyle.cardBg}`
-                                : 'border-slate-300 dark:border-border bg-white dark:bg-card'
+                                : `bg-white dark:bg-card ${p.accent_color ? '' : 'border-slate-300 dark:border-border'}`
                         }`}
                     >
                         <div className="relative h-32 w-full bg-gradient-to-b from-slate-50 dark:from-muted to-slate-200 dark:to-muted pb-2">

@@ -7,6 +7,11 @@ from app.core.media import to_image_url
 #
 NormalizeStr = Annotated[str, StringConstraints(strip_whitespace=True, to_lower=True)]
 
+# Colore accent personale, usato solo come inline style (avatar ring) —
+# vincolato a un hex a 6 cifre per evitare di iniettare valori CSS
+# arbitrari nel DOM tramite un campo profilo.
+AccentColorStr = Annotated[str, StringConstraints(pattern=r"^#[0-9a-fA-F]{6}$")]
+
 
 class CreatePlayer(BaseModel):
     first_name: NormalizeStr
@@ -15,6 +20,7 @@ class CreatePlayer(BaseModel):
     favorite_character_id: Optional[int] = None
     img_url: Optional[str] = None
     bio: Optional[str] = None
+    accent_color: Optional[AccentColorStr] = None
 
 
 class PlayerResponse(BaseModel):
@@ -26,6 +32,7 @@ class PlayerResponse(BaseModel):
     img_url: Optional[str] = None
     champion_photo: Optional[str] = None
     bio: Optional[str] = None
+    accent_color: Optional[str] = None
 
     # per far capire a pydantic che deve convertire l'istanza del modello SQLAlchemy in un dizionario
     model_config = {"from_attributes": True}
@@ -47,5 +54,6 @@ class UpdatePlayer(BaseModel):
     favorite_character_id: Optional[int] = None
     img_url: Optional[str] = None
     bio: Optional[str] = None
+    accent_color: Optional[AccentColorStr] = None
 
     model_config = {"from_attributes": True}

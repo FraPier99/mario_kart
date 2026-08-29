@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Zap, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
+import { toast as soundToast } from '@/lib/soundToast'
 import AppLayout from '@/components/layout/AppLayout'
 import PowerCard from '@/components/cards/PowerCard'
 import { useAppData } from '@/context/AppDataContext'
@@ -143,7 +144,7 @@ const Cards = () => {
         setUsingCardId(itemId)
         try {
             await inventoryApi.use(itemId, {})
-            toast.success(`Uso di "${cardName}" dichiarato! L'organizzatore registrerà l'effetto.`)
+            soundToast.success(`Uso di "${cardName}" dichiarato! L'organizzatore registrerà l'effetto.`)
             const res = await inventoryApi.me()
             setInventory(res.data ?? [])
         } catch (err) {

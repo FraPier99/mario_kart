@@ -4,6 +4,8 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { Check, ChevronDown, Image as ImageIcon, PenLine, Search, Upload, X, Clock, AlertTriangle, Zap, Shield, Trophy, Flag, BarChart3, Star, Crown } from 'lucide-react'
 import PowerCard from '@/components/cards/PowerCard'
 import { toast } from 'sonner'
+import { toast as soundToast } from '@/lib/soundToast'
+import { isUiSoundEnabled, setUiSoundEnabled } from '@/lib/uiSoundPrefs'
 import { playMkdsCharacterVoice, preloadMkdsCharacterVoiceByName } from '@/lib/mkdsSounds'
 import { playMk8dCharacterVoice, preloadCharacterVoice as preloadMk8dCharacterVoice } from '@/lib/mk8dSounds'
 import AppLayout from '@/components/layout/AppLayout'
@@ -265,6 +267,46 @@ const SchedinaBadge = () => {
     )
 }
 
+// Palette fissa (non un color-picker libero): mantiene ogni accent
+// leggibile su sfondo chiaro/scuro e coerente con lo stile "pillola"
+// del resto dell'app, invece di lasciare scegliere un hex arbitrario.
+const ACCENT_PRESETS = [
+    { value: '#f43f5e', label: 'Rosa' },
+    { value: '#f97316', label: 'Arancione' },
+    { value: '#eab308', label: 'Giallo' },
+    { value: '#22c55e', label: 'Verde' },
+    { value: '#06b6d4', label: 'Ciano' },
+    { value: '#3b82f6', label: 'Blu' },
+    { value: '#8b5cf6', label: 'Viola' },
+    { value: '#64748b', label: 'Grigio' },
+]
+
+const AccentColorPicker = ({ value, onChange }) => (
+    <div className="space-y-2">
+        <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">Colore accento</span>
+        <div className="flex flex-wrap items-center gap-2">
+            {ACCENT_PRESETS.map((preset) => (
+                <button
+                    key={preset.value}
+                    type="button"
+                    title={preset.label}
+                    onClick={() => onChange(preset.value)}
+                    className={`h-8 w-8 rounded-full border-2 transition ${value === preset.value ? 'border-slate-900 dark:border-white scale-110' : 'border-white/60 dark:border-black/30 hover:scale-105'}`}
+                    style={{ backgroundColor: preset.value, boxShadow: value === preset.value ? '0 0 0 2px ' + preset.value + '55' : undefined }}
+                />
+            ))}
+            {value && (
+                <button
+                    type="button"
+                    onClick={() => onChange('')}
+                    className="rounded-full border-2 border-dashed border-slate-300 dark:border-border px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground transition hover:text-slate-600 dark:hover:text-foreground"
+                >
+                    Nessuno
+                </button>
+            )}
+        </div>
+    </div>
+)
 
 const Dashboard = () => {
     const { user, isAdmin, isSuperadmin, refreshMe, logout, isAuthenticated } = useAuth()
@@ -313,7 +355,7 @@ const Dashboard = () => {
         validProfileTabKeys.has(requestedProfileTab) ? requestedProfileTab : 'profilo'
     ))
     const [saving, setSaving] = useState(false)
-    const [form, setForm] = useState({ first_name: '', last_name: '', nickname: '', favorite_character_id: '', img_url: '', bio: '' })
+    const [form, setForm] = useState({ first_name: '', last_name: '', nickname: '', favorite_character_id: '', img_url: '', bio: '', accent_color: '' })
     const [imageFileName, setImageFileName] = useState('')
     const [inventory, setInventory] = useState([])
     const [inventoryLoading, setInventoryLoading] = useState(false)
@@ -321,6 +363,7 @@ const Dashboard = () => {
     // Cambio password self-service
     const [pwForm, setPwForm] = useState({ current_password: '', new_password: '', confirm_password: '' })
     const [pwSaving, setPwSaving] = useState(false)
+    const [uiSoundEnabled, setUiSoundEnabledState] = useState(() => isUiSoundEnabled())
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -331,6 +374,7 @@ const Dashboard = () => {
             favorite_character_id: player?.favorite_character_id ? String(player.favorite_character_id) : '',
             img_url: player?.img_url ?? '',
             bio: player?.bio ?? '',
+            accent_color: player?.accent_color ?? '',
         })
         setImageFileName('')
     }, [player, user, isSuperadmin])
@@ -379,6 +423,7 @@ const Dashboard = () => {
                 favorite_character_id: form.favorite_character_id ? Number(form.favorite_character_id) : null,
                 img_url: form.img_url.trim() || null,
                 bio: form.bio.trim() || null,
+                accent_color: form.accent_color || null,
             })
             toast.success('Profilo aggiornato')
             await refresh()
@@ -479,7 +524,7 @@ const Dashboard = () => {
             onConfirm: async () => {
                 try {
                     await inventoryApi.use(item.id)
-                    toast.success(`Potere "${item.card_name}" utilizzato!`)
+                    soundToast.success(`Potere "${item.card_name}" utilizzato!`)
                     await loadInventory()
                 } catch (error) {
                     toast.error('Impossibile usare il potere', {
@@ -532,7 +577,10 @@ const Dashboard = () => {
                             <div className="flex items-center gap-4">
                                 {/* Avatar */}
                                 <div className="relative shrink-0">
-                                    <div className={`h-24 w-24 overflow-hidden rounded-2xl border-2 bg-slate-100 dark:bg-muted shadow-md ${cardStyle ? cardStyle.avatarBorder : 'border-slate-200 dark:border-border'}`}>
+                                    <div
+                                        className={`h-24 w-24 overflow-hidden rounded-2xl border-2 bg-slate-100 dark:bg-muted shadow-md ${cardStyle ? cardStyle.avatarBorder : (player?.accent_color ? '' : 'border-slate-200 dark:border-border')}`}
+                                        style={!cardStyle && player?.accent_color ? { borderColor: player.accent_color } : undefined}
+                                    >
                                         {form.img_url || player?.img_url ? (
                                             <img src={form.img_url || player?.img_url} alt={form.nickname || player?.nickname} className="h-full w-full object-cover" />
                                         ) : (
@@ -685,6 +733,11 @@ const Dashboard = () => {
                                 />
                             </div>
 
+                            <AccentColorPicker
+                                value={form.accent_color}
+                                onChange={(nextValue) => setForm((current) => ({ ...current, accent_color: nextValue }))}
+                            />
+
                             <button type="submit" disabled={(!player && !isSuperadmin) || saving} className="rounded-2xl border-2 border-emerald-600 bg-emerald-600 px-5 py-3 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                 {saving ? 'Salvataggio...' : 'Salva profilo'}
                             </button>
@@ -753,6 +806,22 @@ const Dashboard = () => {
                                 {pwSaving ? 'Aggiornamento...' : 'Cambia password'}
                             </button>
                         </form>
+
+                        <div className="mt-6 border-t border-slate-100 dark:border-border pt-6">
+                            <p className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">Preferenze</p>
+                            <h2 className="mt-1 text-lg font-black text-slate-900 dark:text-foreground">Suoni interfaccia</h2>
+                            <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">Micro-suoni per momenti come l'uso di una carta o la salita di livello badge — spenti di default.</p>
+                            <button
+                                type="button"
+                                onClick={() => { const next = !uiSoundEnabled; setUiSoundEnabled(next); setUiSoundEnabledState(next) }}
+                                className={`mt-4 flex items-center gap-3 rounded-2xl border-2 px-4 py-3 font-title text-[10px] tracking-wide transition ${uiSoundEnabled ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300' : 'border-slate-200 dark:border-border bg-slate-50 dark:bg-muted text-slate-600 dark:text-muted-foreground'}`}
+                            >
+                                <span className={`flex h-5 w-9 items-center rounded-full p-0.5 transition ${uiSoundEnabled ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-600 justify-start'}`}>
+                                    <span className="h-4 w-4 rounded-full bg-white shadow" />
+                                </span>
+                                {uiSoundEnabled ? 'Suoni attivi' : 'Suoni disattivati'}
+                            </button>
+                        </div>
                     </div>
                 )}
 
