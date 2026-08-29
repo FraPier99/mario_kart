@@ -578,8 +578,8 @@ const Dashboard = () => {
                                 {/* Avatar */}
                                 <div className="relative shrink-0">
                                     <div
-                                        className={`h-24 w-24 overflow-hidden rounded-2xl border-2 bg-slate-100 dark:bg-muted shadow-md ${cardStyle ? cardStyle.avatarBorder : (player?.accent_color ? '' : 'border-slate-200 dark:border-border')}`}
-                                        style={!cardStyle && player?.accent_color ? { borderColor: player.accent_color } : undefined}
+                                        className={`h-24 w-24 overflow-hidden rounded-2xl border-2 bg-slate-100 dark:bg-muted shadow-md ${cardStyle ? cardStyle.avatarBorder : 'border-slate-200 dark:border-border'}`}
+                                        style={player?.accent_color ? { boxShadow: `0 0 0 3px ${player.accent_color}` } : undefined}
                                     >
                                         {form.img_url || player?.img_url ? (
                                             <img src={form.img_url || player?.img_url} alt={form.nickname || player?.nickname} className="h-full w-full object-cover" />

@@ -138,8 +138,8 @@ const CommunityUserPage = () => {
                             <div className="relative shrink-0">
                                 <div className="absolute inset-0 rounded-2xl bg-emerald-400/20 blur-xl scale-125 pointer-events-none" />
                                 <div
-                                    className={`relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-2xl border-[2.5px] bg-gradient-to-br from-emerald-400 to-green-500 shadow-lg shadow-emerald-400/20 ${cardStyle ? cardStyle.avatarBorder : (player?.accent_color ? '' : 'border-emerald-400')}`}
-                                    style={!cardStyle && player?.accent_color ? { borderColor: player.accent_color } : undefined}
+                                    className={`relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-2xl border-[2.5px] bg-gradient-to-br from-emerald-400 to-green-500 shadow-lg shadow-emerald-400/20 ${cardStyle ? cardStyle.avatarBorder : 'border-emerald-400'}`}
+                                    style={player?.accent_color ? { boxShadow: `0 0 0 3px ${player.accent_color}` } : undefined}
                                 >
                                     {player?.img_url || communityUser?.img_url
                                         ? <img src={player?.img_url || communityUser?.img_url} alt={player?.nickname ?? communityUser?.username} className="h-full w-full object-cover" />

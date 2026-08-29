@@ -21,13 +21,15 @@ const PlayerCard = ({ players, bestBadgeByPlayerId, handlePlayerClick }) => {
                         key={p.id}
                         style={{
                             animationDelay: `${idx * 0.04}s`,
-                            boxShadow: cardStyle ? 'var(--circuit-shadow-md)' : 'var(--circuit-shadow-sm)',
-                            borderColor: !cardStyle && p.accent_color ? p.accent_color : undefined,
+                            boxShadow: [
+                                cardStyle ? 'var(--circuit-shadow-md)' : 'var(--circuit-shadow-sm)',
+                                p.accent_color ? `0 0 0 3px ${p.accent_color}` : null,
+                            ].filter(Boolean).join(', '),
                         }}
                         className={`animate-fade-in flex flex-col items-center overflow-hidden rounded-2xl border-2 transition-all duration-300 hover:scale-[1.03] ${
                             cardStyle
                                 ? `border-circuit-ink ${cardStyle.cardBg}`
-                                : `bg-white dark:bg-card ${p.accent_color ? '' : 'border-slate-300 dark:border-border'}`
+                                : 'border-slate-300 dark:border-border bg-white dark:bg-card'
                         }`}
                     >
                         <div className="relative h-32 w-full bg-gradient-to-b from-slate-50 dark:from-muted to-slate-200 dark:to-muted pb-2">
