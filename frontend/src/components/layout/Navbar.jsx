@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import {
-  Home, Trophy, BarChart3, Users, Menu, X, Sun, Moon,
+  Home, Trophy, BarChart3, Users, Menu, X, Sun, Moon, Search,
   LogOut, User, ChevronDown, PenLine,
   Plus, Shield, LayoutDashboard, Crown, Zap, Swords, Map, ScrollText
 } from "lucide-react"
@@ -317,6 +317,18 @@ export default function Navbar() {
             </div>
           )}
 
+          {/* Command palette trigger */}
+          {isAuthenticated && (
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event('kart:open-command-palette'))}
+              title="Cerca (Ctrl+K)"
+              className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-white/15 text-slate-400 transition hover:border-white/25 hover:text-white"
+            >
+              <Search size={15} />
+            </button>
+          )}
+
           {/* Campanella notifiche */}
           {isAuthenticated && <NotificationBell />}
 
@@ -425,6 +437,15 @@ export default function Navbar() {
 
         {/* MOBILE — right bar */}
         <div className="flex md:hidden items-center gap-1.5">
+          {isAuthenticated && (
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event('kart:open-command-palette'))}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 text-slate-400"
+            >
+              <Search size={15} />
+            </button>
+          )}
           <button
             type="button"
             onClick={toggleDark}

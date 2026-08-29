@@ -5,6 +5,7 @@ import { useCelebration } from '@/context/CelebrationContext'
 import { useProfileTheme } from '@/hooks/useProfileTheme'
 import { useTheme } from '@/context/ThemeContext'
 import GlobalCelebrationOverlay from '@/components/common/GlobalCelebrationOverlay'
+import CommandPalette from '@/components/common/CommandPalette'
 import PenaltyRulesAnnouncement from '@/components/tournaments/PenaltyRulesAnnouncement'
 import OwnershipReminderBanner from '@/components/common/OwnershipReminderBanner'
 import sfondo from '@/assets/sfondo.jpg'
@@ -48,6 +49,8 @@ const AppLayout  =({children})=>{
                     onClose={closeCelebration}
                 />
             )}
+
+            <CommandPalette />
         </div>
     )
 }
