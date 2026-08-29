@@ -6,6 +6,7 @@ import { useAppData } from '@/context/AppDataContext'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import { statsApi, getApiErrorMessage } from '@/services/apiClient'
 import PlayerLink from '@/components/common/PlayerLink'
+import { SkeletonPulse } from '@/components/common/Skeleton'
 
 const Selector = ({ label, search, setSearch, filtered, selected, setSelected, excludeId }) => (
     <div className="space-y-3">
@@ -209,7 +210,10 @@ const Compare = () => {
                 )}
 
                 {loading && (
-                    <p className="mb-6 text-center text-sm text-slate-400 dark:text-muted-foreground">Caricamento confronto…</p>
+                    <div className="mb-6 grid gap-4 sm:grid-cols-2">
+                        <SkeletonPulse className="h-24" />
+                        <SkeletonPulse className="h-24" />
+                    </div>
                 )}
 
                 {comparison && (

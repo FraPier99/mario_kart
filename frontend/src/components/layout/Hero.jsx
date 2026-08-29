@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Trophy, Crown, Gamepad2, Users2, Calendar, ArrowRight, Sparkles } from 'lucide-react'
+import { Trophy, Crown, Gamepad2, Users2, Calendar, ArrowRight, Sparkles, UserPlus } from 'lucide-react'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
@@ -21,7 +21,7 @@ const formatChampionDate = (value) => {
 
 const Hero = () => {
     const { statsByPlayerId, charactersById, detailedTournaments, games } = useAppData()
-    const { user } = useAuth()
+    const { user, isSuperadmin } = useAuth()
     const { dark } = useTheme()
     const theme = getProfileTheme(user, charactersById, dark)
     const player = user?.player ?? null
@@ -94,6 +94,39 @@ const Hero = () => {
             gameName: lastChampionGame?.name,
         })
         : []
+
+    // Un account loggato ma senza Player collegato (in attesa che un admin lo
+    // colleghi a un giocatore) vedeva finora la stessa card "Ultimo torneo"
+    // di chiunque altro, senza alcuna spiegazione del perché non trova le
+    // proprie statistiche/tornei — qui gli si spiega la situazione invece.
+    if (user && !isSuperadmin && !player) {
+        return (
+            <section className="mx-auto max-w-7xl px-4 py-8">
+                <div className="overflow-hidden rounded-[2rem] border-2 border-blue-200 dark:border-blue-500/30 bg-blue-50/60 dark:bg-blue-500/5 p-6 md:p-8">
+                    <div className="flex flex-col items-center gap-3 text-center md:flex-row md:items-start md:text-left">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-500/15">
+                            <UserPlus size={24} className="text-blue-600 dark:text-blue-300" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-xs font-black uppercase tracking-widest text-blue-700 dark:text-blue-300">Benvenuto in Lega Kart</p>
+                            <h2 className="mt-1 text-xl font-black text-slate-900 dark:text-foreground">Il tuo account non è ancora collegato a un giocatore</h2>
+                            <p className="mt-1.5 text-sm text-slate-600 dark:text-muted-foreground">
+                                Finché un admin non ti collega a un profilo giocatore non vedrai tornei, statistiche o badge personali — puoi comunque esplorare classifiche, tornei e regolamento nel frattempo.
+                            </p>
+                            <div className="mt-3 flex flex-wrap justify-center gap-2 md:justify-start">
+                                <Link to="/history" className="font-title rounded-xl border-2 border-blue-300 dark:border-blue-500/40 bg-white dark:bg-transparent px-4 py-2 text-[10px] tracking-wide text-blue-700 dark:text-blue-300 transition hover:bg-blue-100 dark:hover:bg-blue-500/10">
+                                    Sfoglia i tornei
+                                </Link>
+                                <Link to="/faq" className="font-title rounded-xl bg-blue-600 px-4 py-2 text-[10px] tracking-wide text-white transition hover:bg-blue-500">
+                                    Leggi il regolamento
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        )
+    }
 
     return (
         <section className="mx-auto max-w-7xl px-4 py-8">

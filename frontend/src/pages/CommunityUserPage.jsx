@@ -8,6 +8,7 @@ import RoleBadge from '@/components/community/RoleBadge'
 import { pickBestBadge, getProfileCardStyle } from '@/lib/playerBadges'
 import { authApi, statsApi, getApiErrorMessage } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
+import { SkeletonPulse, SkeletonRows } from '@/components/common/Skeleton'
 import { toast } from 'sonner'
 
 const CommunityUserPage = () => {
@@ -75,8 +76,9 @@ const CommunityUserPage = () => {
     if (loading) {
         return (
             <AppLayout>
-                <div className="mx-auto flex min-h-[60vh] max-w-3xl items-center justify-center px-4">
-                    <p className="font-title text-[11px] tracking-wide text-slate-400">Caricamento...</p>
+                <div className="mx-auto max-w-3xl space-y-4 px-4 py-12">
+                    <SkeletonPulse className="h-40" />
+                    <SkeletonRows count={3} />
                 </div>
             </AppLayout>
         )

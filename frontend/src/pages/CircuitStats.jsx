@@ -8,6 +8,7 @@ import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import { statsApi, getApiErrorMessage } from '@/services/apiClient'
 import CircuitRankingTable from '@/components/stats/CircuitRankingTable'
 import CircuitThumbnail from '@/components/common/CircuitThumbnail'
+import { SkeletonRows } from '@/components/common/Skeleton'
 import PlayerLink from '@/components/common/PlayerLink'
 
 const COLORS = ['#059669', '#2563eb', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#db2777', '#65a30d', '#ea580c', '#0d9488']
@@ -283,7 +284,7 @@ const CircuitStats = () => {
                                                     {isExpanded && (
                                                         <div className="mt-4">
                                                             {detailLoading ? (
-                                                                <p className="py-6 text-center text-sm text-slate-400 dark:text-muted-foreground">Caricamento…</p>
+                                                                <SkeletonRows count={3} />
                                                             ) : (
                                                                 <CircuitRankingTable rows={detail ?? []} playersById={playersById} />
                                                             )}

@@ -4,6 +4,7 @@ import {
     Users, Trophy, BarChart3, Shield, ExternalLink,
     Activity, Award, Plus, Flag, LayoutDashboard,
     Clock, Play, UserSquare2, MapPin, Zap, Gamepad2, Layers, PartyPopper,
+    Lock, AlertTriangle,
 } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import { useAppData } from '@/context/AppDataContext'
@@ -241,7 +242,7 @@ const TournamentTimeline = ({ tournament }) => {
 
 // ── tabs ─────────────────────────────────────────────────────────
 
-const PanoramicaTab = ({ stats, tournaments, activeTournament, players, charactersById, user, homeMetrics, onGoToGiocatori }) => (
+const PanoramicaTab = ({ stats, tournaments, activeTournament, players, charactersById, user, homeMetrics, onGoToGiocatori, attentionRows }) => (
     <div className="space-y-6">
 
         {/* HERO GRID: Profilo | Metriche | Stat Cards */}
@@ -272,6 +273,30 @@ const PanoramicaTab = ({ stats, tournaments, activeTournament, players, characte
                 <TrophiesStatCard concluded={stats.concluded} />
             </div>
         </div>
+
+        {/* COSA RICHIEDE ATTENZIONE — solo se c'è qualcosa da segnalare,
+        niente pannello vuoto quando è tutto a posto. */}
+        {attentionRows.length > 0 && (
+            <div className="rounded-[2rem] border-2 border-amber-200 dark:border-amber-500/25 bg-amber-50/50 dark:bg-amber-500/5 overflow-hidden">
+                <div className="flex items-center gap-2 px-5 py-4 border-b border-amber-200/60 dark:border-amber-500/15">
+                    <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400" />
+                    <p className="font-title text-xs tracking-wide text-amber-700 dark:text-amber-300">Richiede attenzione</p>
+                </div>
+                <div className="divide-y divide-amber-200/40 dark:divide-amber-500/10">
+                    {attentionRows.map((row) => (
+                        <Link key={row.id} to={`/tournaments/${row.tournamentId}`}
+                            className="flex items-center gap-3 px-5 py-3 transition hover:bg-amber-100/40 dark:hover:bg-amber-500/10">
+                            <row.icon size={15} className="shrink-0 text-amber-600 dark:text-amber-400" />
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-bold text-slate-900 dark:text-foreground">{row.name}</p>
+                                <p className="text-[11px] text-amber-700/80 dark:text-amber-300/70">{row.reason}</p>
+                            </div>
+                            <ExternalLink size={13} className="shrink-0 text-amber-500/60" />
+                        </Link>
+                    ))}
+                </div>
+            </div>
+        )}
 
         {/* AZIONI RAPIDE + TIMELINE */}
         <div className="grid gap-4 md:grid-cols-[1fr_220px]">
@@ -418,7 +443,7 @@ const TorneiTab = ({ tournaments }) => {
 
 // ── main component ───────────────────────────────────────────────
 export default function AdminDashboard() {
-    const { tournaments, players, loading, homeMetrics, charactersById, characters, circuits, games } = useAppData()
+    const { tournaments, detailedTournaments, players, loading, homeMetrics, charactersById, characters, circuits, games } = useAppData()
     const { user, isSuperadmin } = useAuth()
     const [activeTab, setActiveTab] = useState('panoramica')
     const [users, setUsers] = useState([])
@@ -446,6 +471,26 @@ export default function AdminDashboard() {
         () => tournaments.find(t => t.status === 'in_corso' && !t.is_friendly) ?? null,
         [tournaments]
     )
+
+    // "Cosa richiede attenzione ora" — segnali economici da calcolare
+    // interamente lato client sui dati già caricati, niente chiamate extra:
+    // schedine con deadline scaduta mai chiuse manualmente, e tornei in
+    // corso senza ancora nessuna gara registrata (fermi al palo).
+    const attentionRows = useMemo(() => {
+        const now = new Date()
+        const rows = []
+        tournaments.forEach((t) => {
+            if (t.status === 'da_svolgere' && !t.schedine_locked && t.deadline_lock && new Date(t.deadline_lock) < now) {
+                rows.push({ id: `${t.id}-schedine`, tournamentId: t.id, name: t.name, icon: Lock, reason: 'Schedine da chiudere — deadline scaduta' })
+            }
+        })
+        detailedTournaments.forEach((t) => {
+            if (t.status === 'in_corso' && !t.is_friendly && (t.raceCount ?? 0) === 0) {
+                rows.push({ id: `${t.id}-stalled`, tournamentId: t.id, name: t.name, icon: Clock, reason: 'In corso ma nessuna gara ancora registrata' })
+            }
+        })
+        return rows
+    }, [tournaments, detailedTournaments])
 
     if (loading) {
         return (
@@ -512,6 +557,7 @@ export default function AdminDashboard() {
                         user={user}
                         homeMetrics={homeMetrics}
                         onGoToGiocatori={() => setActiveTab('giocatori')}
+                        attentionRows={attentionRows}
                     />
                 )}
                 {activeTab === 'tornei' && (
@@ -533,7 +579,12 @@ export default function AdminDashboard() {
                     <PossessiTab />
                 )}
                 {activeTab === 'catalogo' && isSuperadmin && (
-                    <CatalogTab />
+                    <div className="rounded-2xl border-2 border-amber-200 dark:border-amber-500/20 bg-amber-50/30 dark:bg-amber-500/5 p-4">
+                        <p className="mb-3 flex items-center gap-1.5 font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">
+                            <Shield size={11} /> Solo SuperAdmin
+                        </p>
+                        <CatalogTab />
+                    </div>
                 )}
                 </div>
             </section>

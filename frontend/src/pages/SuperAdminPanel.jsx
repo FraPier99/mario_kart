@@ -10,6 +10,7 @@ import AppLayout from '@/components/layout/AppLayout'
 import ConfirmModal from '@/components/common/ConfirmModal'
 import DatabaseTab from '@/components/superadmin/DatabaseTab'
 import TournamentStatusBadge from '@/components/common/TournamentStatusBadge'
+import { SkeletonRows } from '@/components/common/Skeleton'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { authApi, auditApi, schedineApi, tournamentsApi, getApiErrorMessage } from '@/services/apiClient'
@@ -445,7 +446,12 @@ export default function SuperAdminPanel() {
     return (
         <AppLayout>
             <section className="mx-auto max-w-7xl px-4 py-8 animate-fade-in">
-                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 md:p-8 space-y-6">
+                {/* Bordo ambra persistente su tutto il pannello (non solo l'header)
+                — un superadmin può anche usare /admin "normale": questo bordo
+                resta visibile scrollando qualunque tab, a differenza
+                dell'header dorato che scorre via, così si sa sempre in quale
+                pannello (elevato) ci si trova. */}
+                <div className="rounded-3xl border-2 border-amber-200 dark:border-amber-500/20 bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 md:p-8 space-y-6">
 
                 {/* Header */}
                 <div className="mb-6 rounded-[2rem] border-2 border-circuit-ink bg-linear-to-br from-amber-100/90 via-amber-50/60 to-amber-100/80 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60 overflow-hidden" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
@@ -742,7 +748,7 @@ export default function SuperAdminPanel() {
                             </div>
                             <div className="max-h-[520px] space-y-2 overflow-y-auto pr-1">
                                 {usersLoading ? (
-                                    <p className="py-6 text-center text-sm text-slate-500 dark:text-muted-foreground">Caricamento...</p>
+                                    <SkeletonRows count={4} />
                                 ) : filteredUsers.map(account => (
                                     <div key={account.id} className="rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5">
                                         <div className="flex items-center justify-between gap-2">
@@ -877,7 +883,7 @@ export default function SuperAdminPanel() {
                                     </div>
                                     <div className="flex-1 overflow-y-auto space-y-2 pr-1">
                                         {tempPwModal.loading ? (
-                                            <p className="py-8 text-center text-sm text-slate-500">Caricamento...</p>
+                                            <SkeletonRows count={3} />
                                         ) : tempPwModal.passwords.length === 0 ? (
                                             <p className="py-8 text-center text-sm text-slate-400">Nessuna password temporanea attiva (scadute dopo 48h).</p>
                                         ) : (
@@ -1036,7 +1042,7 @@ export default function SuperAdminPanel() {
                         </div>
 
                         {auditLogsLoading ? (
-                            <p className="py-8 text-center text-sm text-slate-500 dark:text-muted-foreground">Caricamento log...</p>
+                            <SkeletonRows count={5} />
                         ) : auditLogs.length === 0 ? (
                             <p className="py-8 text-center text-sm text-slate-500 dark:text-muted-foreground">Nessun evento registrato</p>
                         ) : (

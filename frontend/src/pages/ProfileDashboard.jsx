@@ -9,6 +9,7 @@ import { playMk8dCharacterVoice, preloadCharacterVoice as preloadMk8dCharacterVo
 import AppLayout from '@/components/layout/AppLayout'
 import ConfirmModal from '@/components/common/ConfirmModal'
 import ApiBanner from '@/components/common/ApiBanner'
+import { SkeletonRows } from '@/components/common/Skeleton'
 import PlayerTournamentHistory from '@/components/community/PlayerTournamentHistory'
 import PlayerBadge from '@/components/community/PlayerBadge'
 import RoleBadge from '@/components/community/RoleBadge'
@@ -849,7 +850,7 @@ const Dashboard = () => {
                             <p className="font-title text-[9px] tracking-wide text-emerald-600 dark:text-emerald-400">Inventario</p>
                             <h2 className="mt-1 text-lg font-black uppercase tracking-tight text-slate-900 dark:text-foreground">I Miei Poteri</h2>
                             {inventoryLoading ? (
-                                <p className="mt-4 text-sm text-slate-500 dark:text-muted-foreground">Caricamento poteri...</p>
+                                <SkeletonRows count={2} className="mt-4" />
                             ) : inventory.length === 0 ? (
                                 <div className="mt-4 rounded-2xl border-2 border-dashed border-slate-200 dark:border-white/10 p-4 text-center">
                                     <Zap size={24} className="mx-auto text-slate-300 dark:text-slate-600" />
@@ -923,7 +924,7 @@ const Dashboard = () => {
                         <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">Indica quali giochi e console possiedi: aiuta a organizzare tornei e serate in base a chi ha cosa.</p>
 
                         {ownershipLoading ? (
-                            <p className="mt-4 text-sm text-slate-500 dark:text-muted-foreground">Caricamento...</p>
+                            <SkeletonRows count={3} className="mt-4" />
                         ) : (
                             <div className="mt-6">
                                 <OwnershipForm

@@ -31,8 +31,13 @@ const PlayerTournamentHistory = ({ playerId }) => {
     const [selectedGameId, setSelectedGameId] = useState('')
     const [groupStagePositions, setGroupStagePositions] = useState({})
 
+    // Ordine esplicito per data desc — vista "timeline", il più recente
+    // prima, indipendentemente dall'ordine con cui il backend restituisce
+    // i tornei.
     const myTournaments = useMemo(
-        () => (detailedTournaments ?? []).filter((t) => !t.is_friendly && (t.standings ?? []).some((s) => s.playerId === playerId)),
+        () => (detailedTournaments ?? [])
+            .filter((t) => !t.is_friendly && (t.standings ?? []).some((s) => s.playerId === playerId))
+            .sort((a, b) => new Date(b.date ?? 0) - new Date(a.date ?? 0)),
         [detailedTournaments, playerId]
     )
 

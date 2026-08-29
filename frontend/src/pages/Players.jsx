@@ -5,6 +5,7 @@ import AppLayout from '@/components/layout/AppLayout'
 import PlayerCard from '@/components/PlayerCard'
 import { useAppData } from '@/context/AppDataContext'
 import ApiBanner from '@/components/common/ApiBanner'
+import { SkeletonCardGrid } from '@/components/common/Skeleton'
 import { authApi, statsApi } from '@/services/apiClient'
 
 const Players = () => {
@@ -92,9 +93,7 @@ const Players = () => {
                     </div>
 
                     {loading ? (
-                        <div className="mt-6 rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card px-8 py-10 text-slate-500 dark:text-muted-foreground shadow-lg">
-                            Caricamento giocatori...
-                        </div>
+                        <SkeletonCardGrid count={8} className="mt-4 pb-4" />
                     ) : (
                         <div className="mt-4 grid grid-cols-2 gap-3 pb-4 md:grid-cols-3 lg:grid-cols-4">
                             {filteredPlayers.length === 0 ? (

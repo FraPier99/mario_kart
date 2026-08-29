@@ -58,6 +58,15 @@ export default function Navbar() {
     { name: 'Crea Torneo',        path: '/tournaments/new', icon: <Plus size={15} /> },
   ]
 
+  // Voci del menu rapido superadmin — un solo array invece di due copie
+  // JSX hardcoded (desktop + mobile), stesso principio già usato sopra per
+  // adminItems: la lista vive qui, ogni superficie la mappa con le proprie
+  // classi (compatte nel dropdown desktop, più larghe nel pannello mobile).
+  const superadminQuickActions = [
+    { name: 'Crea Torneo',     path: '/tournaments/new', icon: <Plus size={15} /> },
+    { name: 'Dashboard Admin', path: '/admin',           icon: <Users size={15} /> },
+  ]
+
   const player = user?.player ?? null
   const favoriteCharacter = player?.favorite_character_id
     ? charactersById?.get(player.favorite_character_id) ?? null
@@ -267,20 +276,16 @@ export default function Navbar() {
                     /* Versione semplificata per SuperAdmin */
                     <>
                       <p className="font-title px-3 py-1 text-[8px] tracking-wide text-slate-500">Azioni rapide</p>
-                      <Link
-                        to="/tournaments/new"
-                        onClick={() => setAdminOpen(false)}
-                        className="font-title flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide text-slate-300 transition hover:bg-white/8 hover:text-white"
-                      >
-                        <Plus size={13} /> Crea Torneo
-                      </Link>
-                      <Link
-                        to="/admin"
-                        onClick={() => setAdminOpen(false)}
-                        className="font-title flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide text-slate-300 transition hover:bg-white/8 hover:text-white"
-                      >
-                        <Users size={13} /> Dashboard Admin
-                      </Link>
+                      {superadminQuickActions.map((item) => (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          onClick={() => setAdminOpen(false)}
+                          className="font-title flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide text-slate-300 transition hover:bg-white/8 hover:text-white"
+                        >
+                          {item.icon} {item.name}
+                        </Link>
+                      ))}
                       <div className="my-1 border-t" style={{ borderColor: 'var(--mk-border)' }} />
                       <Link
                         to="/superadmin"
@@ -546,14 +551,12 @@ export default function Navbar() {
                 {isSuperadmin ? (
                   <>
                     <p className="px-2 pb-1 text-[9px] font-black uppercase tracking-[0.3em] text-amber-400/70">Azioni rapide</p>
-                    <Link to="/tournaments/new" onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-black uppercase tracking-wider text-slate-300 transition hover:bg-white/5">
-                      <Plus size={15} /> Crea Torneo
-                    </Link>
-                    <Link to="/admin" onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-black uppercase tracking-wider text-slate-300 transition hover:bg-white/5">
-                      <Users size={15} /> Dashboard Admin
-                    </Link>
+                    {superadminQuickActions.map((item) => (
+                      <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-black uppercase tracking-wider text-slate-300 transition hover:bg-white/5">
+                        {item.icon} {item.name}
+                      </Link>
+                    ))}
                     <div className="my-1 border-t border-white/8" />
                     <Link to="/superadmin" onClick={() => setMobileOpen(false)}
                       className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-black uppercase tracking-wider text-amber-300 transition hover:bg-amber-500/10">
