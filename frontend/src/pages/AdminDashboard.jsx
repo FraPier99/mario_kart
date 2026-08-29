@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import {
     Users, Trophy, BarChart3, Shield, ExternalLink,
     Activity, Award, Plus, Flag, LayoutDashboard,
-    Clock, Play, UserSquare2, MapPin, Zap, Gamepad2, Layers,
+    Clock, Play, UserSquare2, MapPin, Zap, Gamepad2, Layers, PartyPopper,
 } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import { useAppData } from '@/context/AppDataContext'
@@ -15,6 +15,7 @@ import CircuitsTab from '@/components/superadmin/CircuitsTab'
 import CarteTab from '@/components/admin/CarteTab'
 import PossessiTab from '@/components/admin/PossessiTab'
 import CatalogTab from '@/components/superadmin/CatalogTab'
+import TournamentStatusBadge from '@/components/common/TournamentStatusBadge'
 
 // ── Sparkline ────────────────────────────────────────────────────
 const Sparkline = ({ data, color = '#10b981', height = 30, width = 72 }) => {
@@ -55,14 +56,6 @@ const MetricMini = ({ icon: Icon, label, value, sub, color = 'amber' }) => (
         {sub && <p className="text-[9px] text-slate-400 dark:text-muted-foreground">{sub}</p>}
     </div>
 )
-
-const STATUS_LABEL = { da_svolgere: 'In attesa', in_corso: 'In corso', finito: 'Gare finite', concluso: 'Concluso' }
-const STATUS_COLOR = {
-    in_corso:    'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
-    concluso:    'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-400',
-    da_svolgere: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
-    finito:      'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
-}
 
 const TABS = [
     { key: 'panoramica', label: 'Panoramica', icon: LayoutDashboard },
@@ -344,9 +337,12 @@ const PanoramicaTab = ({ stats, tournaments, activeTournament, players, characte
                                     🏁 {t.n_races}
                                 </span>
                             )}
-                            <span className={`rounded-full px-2.5 py-0.5 font-title text-[9px] tracking-wide ${STATUS_COLOR[t.status] ?? STATUS_COLOR.da_svolgere}`}>
-                                {STATUS_LABEL[t.status] ?? t.status}
-                            </span>
+                            {t.is_friendly && (
+                                <span className="hidden sm:inline-flex items-center gap-1 rounded-lg border-2 border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 font-title text-[9px] tracking-wide text-amber-700 dark:text-amber-300">
+                                    <PartyPopper size={10} /> Amichevole
+                                </span>
+                            )}
+                            <TournamentStatusBadge status={t.status} />
                             <Link to={`/tournaments/${t.id}`}
                                 className="flex items-center gap-1 rounded-lg border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-2 py-1 font-title text-[9px] tracking-wide text-slate-600 dark:text-slate-300 transition active:translate-y-px hover:text-emerald-500 hover:border-emerald-300 dark:hover:border-emerald-700">
                                 <ExternalLink size={10} /> Apri
@@ -397,9 +393,12 @@ const TorneiTab = ({ tournaments }) => {
                             </p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                            <span className={`rounded-full px-2.5 py-0.5 font-title text-[9px] tracking-wide ${STATUS_COLOR[t.status] ?? STATUS_COLOR.da_svolgere}`}>
-                                {STATUS_LABEL[t.status] ?? t.status}
-                            </span>
+                            {t.is_friendly && (
+                                <span className="hidden sm:inline-flex items-center gap-1 rounded-lg border-2 border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 font-title text-[9px] tracking-wide text-amber-700 dark:text-amber-300">
+                                    <PartyPopper size={10} /> Amichevole
+                                </span>
+                            )}
+                            <TournamentStatusBadge status={t.status} />
                             <Link to={`/tournaments/${t.id}`}
                                 className="flex items-center gap-1 rounded-lg border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-2 py-1 font-title text-[9px] tracking-wide text-slate-600 dark:text-slate-300 transition active:translate-y-px hover:text-emerald-500 hover:border-emerald-300">
                                 <ExternalLink size={10} /> Apri

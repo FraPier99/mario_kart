@@ -53,16 +53,13 @@ const Hero = () => {
     const effectiveCardStyle = cardStyle
     const goldCard = Boolean(effectiveCardStyle)
     // Gradiente coerente col tier: oro per leggenda/campione, blu per
-    // veterano — stessa palette di PROFILE_CARD_STYLES ma come inline
-    // style perché qui il resto della card usa già `style.background`
-    // anziché classi Tailwind.
-    const goldBackground = cardTier === 'veterano'
-        ? (dark
-            ? 'rgba(23,37,84,0.20)'
-            : 'rgba(239,246,255,0.50)')
-        : (dark
-            ? 'linear-gradient(to bottom right, rgba(67,20,7,0.60), rgba(120,53,15,0.30), rgba(67,20,7,0.60))'
-            : 'linear-gradient(to bottom right, rgba(254,243,199,0.92), rgba(255,251,235,0.70), rgba(254,243,199,0.88))')
+    // veterano — classi Tailwind con varianti dark:, non più un ternario
+    // JS su `dark` + style inline (il resto della card usa ancora
+    // style.background per theme.cardBackground, dinamico per utente e
+    // quindi legittimamente inline — qui invece il gradiente è fisso).
+    const goldCardBg = cardTier === 'veterano'
+        ? 'bg-blue-50/50 dark:bg-blue-950/20'
+        : 'bg-linear-to-br from-amber-100/92 via-amber-50/70 to-amber-100/88 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60'
 
     // "Ultimo campione": non usare lastWinner/lastWinnerStats del context — quelli
     // valgono solo se il torneo più recente in assoluto è concluso, quindi sono
@@ -101,8 +98,8 @@ const Hero = () => {
     return (
         <section className="mx-auto max-w-7xl px-4 py-8">
             <div
-                className={`overflow-hidden rounded-[2rem] border-2 backdrop-blur-xl transition-all duration-500 ${goldCard ? `border-circuit-ink ${effectiveCardStyle?.shimmer ? 'gold-card-shimmer' : ''}` : 'border-slate-900/70 dark:border-white/20'}`}
-                style={{ background: goldCard ? goldBackground : theme.cardBackground, boxShadow: 'var(--circuit-shadow-lg)' }}
+                className={`overflow-hidden rounded-[2rem] border-2 backdrop-blur-xl transition-all duration-500 ${goldCard ? `border-circuit-ink ${goldCardBg} ${effectiveCardStyle?.shimmer ? 'gold-card-shimmer' : ''}` : 'border-slate-900/70 dark:border-white/20'}`}
+                style={{ background: goldCard ? undefined : theme.cardBackground, boxShadow: 'var(--circuit-shadow-lg)' }}
             >
 
                 {/* ── Zone 3 "Chi rappresenti": niente più identità qui (già raccontata dalla Hero in cima) ── */}
@@ -114,11 +111,8 @@ const Hero = () => {
 
                 <div className="p-6 pt-3">
                     {lastChampion ? (
-                        <div className="rounded-3xl border-2 border-amber-400/50 dark:border-amber-500/30 p-5 md:p-6"
-                            style={{ background: dark
-                                ? 'linear-gradient(to bottom right, rgba(67,20,7,0.60), rgba(120,53,15,0.30), rgba(67,20,7,0.60))'
-                                : 'linear-gradient(to bottom right, rgba(254,243,199,0.92), rgba(255,251,235,0.70), rgba(254,243,199,0.88))',
-                            boxShadow: 'var(--circuit-shadow-sm)' }}>
+                        <div className="rounded-3xl border-2 border-amber-400/50 dark:border-amber-500/30 bg-linear-to-br from-amber-100/92 via-amber-50/70 to-amber-100/88 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60 p-5 md:p-6"
+                            style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
 
                             <div>
                             {/* ── 1. Torneo ── */}
@@ -257,8 +251,7 @@ const Hero = () => {
                             </div>
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-600 p-5 py-8 text-center"
-                            style={{ background: dark ? 'rgba(30,41,59,0.4)' : 'rgba(255,255,255,0.5)' }}>
+                        <div className="flex flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-white/50 dark:bg-slate-800/40 p-5 py-8 text-center">
                             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
                                 <Trophy size={24} className="text-slate-400" />
                             </div>

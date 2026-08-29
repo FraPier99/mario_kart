@@ -3,24 +3,19 @@ import { Link } from 'react-router-dom'
 import {
     Activity, Award, BarChart3, Check, Clock, Database,
     ExternalLink, Key, LayoutDashboard, Play, Plus, RefreshCw,
-    Search, Shield, Trophy, Users, X, Zap, Trash2, Square, Flag, AlertTriangle, Copy
+    Search, Shield, Trophy, Users, X, Zap, Trash2, Square, Flag, AlertTriangle, Copy, PartyPopper
 } from 'lucide-react'
 import { toast } from 'sonner'
 import AppLayout from '@/components/layout/AppLayout'
 import ConfirmModal from '@/components/common/ConfirmModal'
 import DatabaseTab from '@/components/superadmin/DatabaseTab'
+import TournamentStatusBadge from '@/components/common/TournamentStatusBadge'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { authApi, auditApi, schedineApi, tournamentsApi, getApiErrorMessage } from '@/services/apiClient'
 
 // ── helpers ─────────────────────────────────────────────────────────
 const STATUS_LABEL = { da_svolgere: 'In attesa', in_corso: 'In corso', finito: 'Finito', concluso: 'Concluso' }
-const STATUS_COLOR = {
-    da_svolgere: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
-    in_corso: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
-    finito: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
-    concluso: 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-400',
-}
 const ACTION_COLOR = {
     login: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
     user_created: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
@@ -572,9 +567,12 @@ export default function SuperAdminPanel() {
                                                     🏁 {t.n_races}
                                                 </span>
                                             )}
-                                            <span className={`rounded-full px-2.5 py-0.5 font-title text-[9px] tracking-wide ${STATUS_COLOR[t.status] ?? STATUS_COLOR.da_svolgere}`}>
-                                                {STATUS_LABEL[t.status] ?? t.status}
-                                            </span>
+                                            {t.is_friendly && (
+                                                <span className="hidden sm:inline-flex items-center gap-1 rounded-lg border-2 border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 font-title text-[9px] tracking-wide text-amber-700 dark:text-amber-300">
+                                                    <PartyPopper size={10} /> Amichevole
+                                                </span>
+                                            )}
+                                            <TournamentStatusBadge status={t.status} />
                                             <Link to={`/tournaments/${t.id}`}
                                                 className="flex items-center gap-1 rounded-lg border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-2 py-1 font-title text-[9px] tracking-wide text-slate-600 dark:text-slate-300 transition active:translate-y-px hover:text-amber-500 hover:border-amber-300 dark:hover:border-amber-700">
                                                 <ExternalLink size={10} /> Apri
@@ -944,9 +942,12 @@ export default function SuperAdminPanel() {
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex items-center gap-2">
                                                         <p className="text-sm font-black text-slate-900 dark:text-foreground truncate">{t.name}</p>
-                                                        <span className={`shrink-0 rounded-full px-2.5 py-0.5 font-title text-[9px] tracking-wide ${STATUS_COLOR[t.status] ?? STATUS_COLOR.da_svolgere}`}>
-                                                            {STATUS_LABEL[t.status] ?? t.status}
-                                                        </span>
+                                                        {t.is_friendly && (
+                                                            <span className="shrink-0 inline-flex items-center gap-1 rounded-lg border-2 border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 font-title text-[9px] tracking-wide text-amber-700 dark:text-amber-300">
+                                                                <PartyPopper size={10} /> Amichevole
+                                                            </span>
+                                                        )}
+                                                        <TournamentStatusBadge status={t.status} />
                                                     </div>
                                                     <p className="text-xs text-slate-500 dark:text-muted-foreground mt-0.5">
                                                         {t.date ? new Date(t.date).toLocaleDateString('it-IT') : '—'} · {t.participant_ids?.length ?? 0} giocatori · {t.n_races ?? 0} gare

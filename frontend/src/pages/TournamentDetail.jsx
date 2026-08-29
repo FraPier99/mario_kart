@@ -1,5 +1,5 @@
 ﻿import { useMemo, useState, useEffect, useCallback } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Crown, Trophy, Trash2, Shield, Ban, Zap, AlertCircle, Settings, Users, Flag, Swords, Clock, BarChart3, ListChecks, MapPin, PartyPopper } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import PortalSelect from '@/components/common/PortalSelect'
@@ -631,12 +631,24 @@ const TournamentDetail = () => {
                             <div className="mt-4 flex flex-wrap items-center gap-2">
                                 <span className="font-title text-[9px] tracking-wide text-slate-400">Partecipanti</span>
                                 <div className="flex -space-x-2">
-                                    {tournamentParticipants.slice(0, 8).map((p) => (
-                                        <div key={p.id} title={p.nickname} className="h-7 w-7 overflow-hidden rounded-full border-2 border-white dark:border-card bg-slate-100 dark:bg-slate-800 shadow-sm">
-                                            {p.img_url ? <img src={p.img_url} alt={p.nickname} className="h-full w-full object-cover" />
-                                                : <div className="flex h-full w-full items-center justify-center text-[9px] font-black text-slate-500">{(p.nickname ?? '?').charAt(0).toUpperCase()}</div>}
-                                        </div>
-                                    ))}
+                                    {tournamentParticipants.slice(0, 8).map((p) => {
+                                        const avatar = (
+                                            <div className="h-7 w-7 overflow-hidden rounded-full border-2 border-white dark:border-card bg-slate-100 dark:bg-slate-800 shadow-sm transition hover:z-10 hover:scale-110">
+                                                {p.img_url ? <img src={p.img_url} alt={p.nickname} className="h-full w-full object-cover" />
+                                                    : <div className="flex h-full w-full items-center justify-center text-[9px] font-black text-slate-500">{(p.nickname ?? '?').charAt(0).toUpperCase()}</div>}
+                                            </div>
+                                        )
+                                        // Confronto rapido "io vs avversario" — solo per gli altri
+                                        // partecipanti, solo se so chi sono io in questo torneo.
+                                        return myPlayerId && p.id !== myPlayerId ? (
+                                            <Link key={p.id} to={`/compare?game=${tournament.game_id}&a=${myPlayerId}&b=${p.id}`}
+                                                title={`Confronta con ${p.nickname}`} className="relative">
+                                                {avatar}
+                                            </Link>
+                                        ) : (
+                                            <div key={p.id} title={p.nickname}>{avatar}</div>
+                                        )
+                                    })}
                                 </div>
                                 {tournamentParticipants.length > 8 && <span className="text-xs text-slate-400">+{tournamentParticipants.length - 8}</span>}
                             </div>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Search, Swords, Trophy, Target, Medal, MapPin } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import { useAppData } from '@/context/AppDataContext'
@@ -78,6 +79,7 @@ const StatCard = ({ icon: Icon, label, valueA, valueB, suffix, highlight }) => {
 
 const Compare = () => {
     const { players, games } = useAppData()
+    const [searchParams] = useSearchParams()
     const [gameId, setGameId] = useState('')
     const [searchA, setSearchA] = useState('')
     const [searchB, setSearchB] = useState('')
@@ -87,6 +89,29 @@ const Compare = () => {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const [circuitSearch, setCircuitSearch] = useState('')
+
+    // Precompila da query string (?game=&a=&b=) — usato dal bottone "Confronta"
+    // nella lista partecipanti di un torneo, per evitare di dover ricercare
+    // manualmente i due giocatori già noti dal contesto del torneo.
+    useEffect(() => {
+        if (!players.length || !games.length) return
+        const gameParam = searchParams.get('game')
+        const aParam = searchParams.get('a')
+        const bParam = searchParams.get('b')
+        if (gameParam && games.some((g) => String(g.id) === gameParam)) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setGameId(gameParam)
+        }
+        if (aParam) {
+            const found = players.find((p) => String(p.id) === aParam)
+            if (found) setPlayerA(found)
+        }
+        if (bParam) {
+            const found = players.find((p) => String(p.id) === bParam)
+            if (found) setPlayerB(found)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [players.length, games.length])
 
     const sortedPlayers = useMemo(() =>
         players.slice().sort((a, b) => a.nickname.localeCompare(b.nickname)),

@@ -244,13 +244,17 @@ export default function Navbar() {
                 onClick={() => setAdminOpen((v) => !v)}
                 className={cn(
                   "font-title flex items-center gap-1.5 rounded-lg border-2 px-3 py-1.5 text-[10px] tracking-wide transition-all",
-                  adminOpen
-                    ? "border-white/25 bg-white/10 text-white"
-                    : "border-white/15 text-slate-400 hover:border-white/25 hover:text-white"
+                  isSuperadmin
+                    ? (adminOpen
+                        ? "border-amber-400/60 bg-amber-500/15 text-amber-200"
+                        : "border-amber-400/30 text-amber-300 hover:border-amber-400/50 hover:text-amber-200")
+                    : (adminOpen
+                        ? "border-white/25 bg-white/10 text-white"
+                        : "border-white/15 text-slate-400 hover:border-white/25 hover:text-white")
                 )}
               >
                 <Shield size={13} />
-                <span className="hidden lg:inline">Admin</span>
+                <span className="hidden lg:inline">{isSuperadmin ? 'SuperAdmin' : 'Admin'}</span>
                 <ChevronDown size={11} className={`transition-transform ${adminOpen ? 'rotate-180' : ''}`} />
               </button>
 
@@ -538,10 +542,10 @@ export default function Navbar() {
 
             {/* ADMIN */}
             {isPrivileged && (
-              <div className="rounded-xl border border-white/8 p-2 space-y-0.5">
+              <div className={cn("rounded-xl border p-2 space-y-0.5", isSuperadmin ? "border-amber-400/25 bg-amber-500/5" : "border-white/8")}>
                 {isSuperadmin ? (
                   <>
-                    <p className="px-2 pb-1 text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Azioni rapide</p>
+                    <p className="px-2 pb-1 text-[9px] font-black uppercase tracking-[0.3em] text-amber-400/70">Azioni rapide</p>
                     <Link to="/tournaments/new" onClick={() => setMobileOpen(false)}
                       className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-black uppercase tracking-wider text-slate-300 transition hover:bg-white/5">
                       <Plus size={15} /> Crea Torneo
