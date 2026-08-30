@@ -648,7 +648,9 @@ const Dashboard = () => {
                                     </p>
                                     <div className="mt-2 flex flex-wrap items-center gap-1.5">
                                         <RoleBadge role={isSuperadmin ? 'superadmin' : isAdmin ? 'admin' : 'user'} size="sm" />
-                                        {badges.map((b) => (
+                                        {/* Il superadmin non gioca mai — nessun badge di gioco anche
+                                            se per qualche motivo risultasse un player collegato. */}
+                                        {!isSuperadmin && badges.map((b) => (
                                             <PlayerBadge key={b.game_id} badge={b} size="sm" />
                                         ))}
                                     </div>

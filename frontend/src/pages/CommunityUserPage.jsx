@@ -169,9 +169,11 @@ const CommunityUserPage = () => {
                             {player && <p className="mt-1 text-sm capitalize text-slate-500 dark:text-muted-foreground">{player.first_name} {player.last_name}</p>}
                             {player?.bio && <p className="mt-3 max-w-xl text-sm text-slate-600 dark:text-muted-foreground leading-relaxed whitespace-pre-wrap">{player.bio}</p>}
 
-                            {(favoriteCharacter || activeBadge) && (
+                            {(favoriteCharacter || (!viewedUserIsSuperadmin && activeBadge)) && (
                                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                                    {activeBadge && <PlayerBadge badge={activeBadge} />}
+                                    {/* Il superadmin non gioca mai — nessun badge di gioco anche
+                                        se per qualche motivo risultasse un player collegato. */}
+                                    {!viewedUserIsSuperadmin && activeBadge && <PlayerBadge badge={activeBadge} />}
                                     {favoriteCharacter && (
                                         <div className="flex items-center gap-2 rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-1.5">
                                             {favoriteCharacter.img_url && <img src={favoriteCharacter.img_url} alt={favoriteCharacter.name} className="h-5 w-5 rounded-full object-cover" />}
