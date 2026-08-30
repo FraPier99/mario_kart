@@ -29,7 +29,7 @@ const PlayerCard = ({ players, bestBadgeByPlayerId, handlePlayerClick }) => {
                             boxShadow: cardStyle ? 'var(--circuit-shadow-md)' : 'var(--circuit-shadow-sm)',
                         }}
                         className={`animate-fade-in overflow-hidden rounded-2xl border-4 p-1 transition-all duration-300 hover:scale-[1.03] ${
-                            cardStyle ? 'border-circuit-ink' : 'border-slate-300 dark:border-border'
+                            cardStyle ? cardStyle.avatarBorder : 'border-slate-300 dark:border-border'
                         }`}
                     >
                         <div

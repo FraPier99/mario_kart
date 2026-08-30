@@ -346,7 +346,12 @@ const Dashboard = () => {
     // (leggenda/campione/veterano) — un superadmin non ha badge per
     // game_id (non gioca), quindi niente trattamento dorato automatico:
     // stessa regola già applicata in CommunityUserPage.jsx.
-    const cardStyle = getProfileCardStyle(bestBadge?.tier)
+    // Il superadmin non ha Player/badge (non gioca mai), ma ha comunque
+    // diritto al trattamento "carta speciale" oro — non derivato dal
+    // sistema badge/tier (che senza dati reali cadrebbe sul tier più basso,
+    // "sfidante"), ma come effetto del ruolo stesso: stessa leggenda usata
+    // per il tier più esclusivo dei giocatori, riusata qui come override.
+    const cardStyle = isSuperadmin ? getProfileCardStyle('leggenda') : getProfileCardStyle(bestBadge?.tier)
     const effectiveCardStyle = cardStyle
     const [selectedGameId, setSelectedGameId] = useState('')
     const activeBadge = useMemo(() => {

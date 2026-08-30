@@ -63,7 +63,11 @@ const CommunityUserPage = () => {
         if (!selectedGameId) return bestBadge
         return badges.find((b) => b.game_id === Number(selectedGameId)) ?? bestBadge
     }, [badges, selectedGameId, bestBadge])
-    const cardStyle = getProfileCardStyle(bestBadge?.tier)
+    // Stesso override di ProfileDashboard.jsx: il superadmin non ha
+    // Player/badge (non gioca mai) ma ha comunque diritto al trattamento
+    // "carta speciale" oro come effetto del ruolo, non del sistema
+    // badge/tier (che senza dati reali cadrebbe sul tier più basso).
+    const cardStyle = viewedUserIsSuperadmin ? getProfileCardStyle('leggenda') : getProfileCardStyle(bestBadge?.tier)
 
     const gameStats = useMemo(() => {
         if (!selectedGameId || !player) return null
@@ -183,7 +187,7 @@ const CommunityUserPage = () => {
 
                 {/* Superadmin sees fun game-master banner */}
                 {viewedUserIsSuperadmin ? (
-                    <div className="rounded-2xl border-2 border-amber-400/60 dark:border-amber-500/30 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/5 p-8 text-center" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
+                    <div className="rounded-2xl border-2 border-amber-400/60 dark:border-amber-500/30 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-950/70 dark:to-orange-950/60 backdrop-blur-sm p-8 text-center" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-circuit-ink bg-gradient-to-br from-amber-400 to-orange-500" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                             <Shield size={28} className="text-white" />
                         </div>
@@ -192,9 +196,6 @@ const CommunityUserPage = () => {
                         </h2>
                         <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 italic">
                             "Chi è primo nella classifica non conta. Quello che conta è avere il miglior item al momento giusto."
-                        </p>
-                        <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">
-                            Tu organizzi, loro corrono. La vera vittoria è vedere il tabellone funzionare. 👑
                         </p>
                         <div className="mt-4 flex items-center justify-center gap-2">
                             <span className="font-title rounded-full bg-amber-100 dark:bg-amber-500/20 px-3 py-1 text-[9px] tracking-wide text-amber-700 dark:text-amber-300">SuperAdmin</span>
