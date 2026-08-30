@@ -75,17 +75,28 @@ const FavoriteCharacterPicker = ({ value, onChange, characters }) => {
     useEffect(() => {
         if (!open || !triggerRef.current) return
 
+        // Ancorato al trigger: si apre verso l'alto SOLO se sotto non c'è
+        // nemmeno lo spazio minimo E sopra ce n'è di più — non appena
+        // "sotto è un po' stretto" (soglia troppo larga prima, 320px,
+        // quasi sempre vera su mobile), altrimenti il menu finiva quasi
+        // sempre spinto in cima allo schermo invece di restare vicino al
+        // bottone. L'altezza disponibile è sempre quella REALE nella
+        // direzione scelta (mai un valore fisso che sfora fuori viewport).
         const rect = triggerRef.current.getBoundingClientRect()
         const viewportHeight = window.innerHeight
         const viewportWidth = window.innerWidth
-        const spaceBelow = viewportHeight - rect.bottom - 24
-        const spaceAbove = rect.top - 24
-        const openUp = spaceBelow < 320 && spaceAbove > spaceBelow
-        const preferredHeight = Math.max(240, Math.min(360, openUp ? spaceAbove : spaceBelow))
-        const left = Math.max(12, Math.min(rect.left, viewportWidth - Math.max(rect.width, 340) - 12))
+        const margin = 12
+        const MIN_HEIGHT = 200
+        const MAX_HEIGHT = 360
+        const spaceBelow = viewportHeight - rect.bottom - margin
+        const spaceAbove = rect.top - margin
+        const openUp = spaceBelow < MIN_HEIGHT && spaceAbove > spaceBelow
+        const availableSpace = openUp ? spaceAbove : spaceBelow
+        const preferredHeight = Math.max(Math.min(MIN_HEIGHT, availableSpace), Math.min(MAX_HEIGHT, availableSpace))
+        const left = Math.max(margin, Math.min(rect.left, viewportWidth - Math.max(rect.width, 340) - margin))
 
         setMenuStyle({
-            top: openUp ? Math.max(12, rect.top - preferredHeight - 8) : rect.bottom + 8,
+            top: openUp ? Math.max(margin, rect.top - preferredHeight - 8) : rect.bottom + 8,
             left,
             width: Math.max(rect.width, 340),
             maxHeight: preferredHeight,
@@ -688,27 +699,32 @@ const Dashboard = () => {
                         </div>
 
                         <form onSubmit={handleSaveProfile} className="mt-6 space-y-4">
+                            {/* min-w-0 su ogni figlio: senza, l'input dentro (larghezza
+                                intrinseca minima del browser per un <input> testo) forza la
+                                colonna grid a crescere oltre lo spazio disponibile invece di
+                                rispettare w-full — su mobile (una sola colonna) gli input
+                                uscivano visibilmente dalla card. */}
                             <div className={`grid gap-4 ${isSuperadmin ? '' : 'md:grid-cols-2'}`}>
                                 {!isSuperadmin && (
                                     <>
-                                        <label className="space-y-2">
+                                        <label className="min-w-0 space-y-2">
                                             <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">Nome</span>
                                             <input name="first_name" value={form.first_name} onChange={handleFormChange} className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-emerald-500 dark:border-border dark:bg-muted dark:text-foreground" />
                                         </label>
-                                        <label className="space-y-2">
+                                        <label className="min-w-0 space-y-2">
                                             <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">Cognome</span>
                                             <input name="last_name" value={form.last_name} onChange={handleFormChange} className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-emerald-500 dark:border-border dark:bg-muted dark:text-foreground" />
                                         </label>
                                     </>
                                 )}
-                                <label className="space-y-2">
+                                <label className="min-w-0 space-y-2">
                                     <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">Nickname</span>
                                     <input name="nickname" value={form.nickname} onChange={handleFormChange} className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-emerald-500 dark:border-border dark:bg-muted dark:text-foreground" />
                                     <p className="text-[10px] text-slate-400 dark:text-muted-foreground">
                                         Verrà salvato in minuscolo e senza spazi o caratteri speciali (es. "{form.nickname.toLowerCase().replace(/[^a-z0-9]/g, '') || 'fra'}") — usalo per accedere insieme alla password.
                                     </p>
                                 </label>
-                                <div className="space-y-2">
+                                <div className="min-w-0 space-y-2">
                                     <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">Immagine profilo</span>
                                     <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-slate-600 transition hover:border-emerald-400 hover:text-slate-900 dark:border-border dark:bg-muted dark:text-muted-foreground dark:hover:text-foreground">
                                         <span className="flex items-center gap-2 truncate">

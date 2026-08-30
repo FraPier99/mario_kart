@@ -137,7 +137,10 @@ const CircuitPicker = ({ circuits = [], value, onChange, disabled = false, usedC
     }
 
     return (
-        <div ref={triggerRef} className="relative flex items-stretch gap-2">
+        // Sotto ad `sm` il bottone Random va a riga intera SOTTO al trigger
+        // invece di stargli accanto — a fianco su mobile aveva poco margine
+        // e finiva visivamente tagliato al bordo destro della riga.
+        <div ref={triggerRef} className="relative flex flex-col sm:flex-row sm:items-stretch gap-2">
             <button
                 type="button"
                 onClick={() => { if (!disabled) setOpen((current) => !current) }}
@@ -166,7 +169,7 @@ const CircuitPicker = ({ circuits = [], value, onChange, disabled = false, usedC
                 onClick={handleRandom}
                 disabled={disabled || circuits.length === 0}
                 title="Sorteggia un circuito non ancora usato"
-                className="shrink-0 flex flex-col items-center justify-center gap-1 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3.5 text-slate-500 dark:text-muted-foreground transition hover:border-emerald-400 hover:text-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full sm:w-auto sm:shrink-0 flex flex-row sm:flex-col items-center justify-center gap-2 sm:gap-1 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3.5 py-2.5 sm:py-0 text-slate-500 dark:text-muted-foreground transition hover:border-emerald-400 hover:text-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
                 <Shuffle size={15} />
                 <span className="text-[8px] font-black uppercase tracking-widest">Random</span>

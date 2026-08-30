@@ -73,10 +73,14 @@ const ActivityFeed = () => {
                         <li key={event.id}>
                             <Link
                                 to={`/tournaments/${event.tournamentId}`}
-                                className="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-border bg-white/60 dark:bg-card/40 p-2.5 transition hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10"
+                                className="flex items-start gap-3 rounded-xl border border-slate-200 dark:border-border bg-white/60 dark:bg-card/40 p-2.5 transition hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10"
                             >
                                 <EventBadge type={event.type} avatar={event.avatar} primary={event.primary} />
-                                <span className="min-w-0 flex-1 truncate capitalize text-sm">
+                                {/* Niente `truncate`: con 3+ nomi uniti (traguardi raggiunti
+                                    insieme) il testo va a capo su più righe invece di tagliarsi
+                                    illeggibile, soprattutto su mobile dove lo spazio orizzontale
+                                    è poco. */}
+                                <span className="min-w-0 flex-1 break-words capitalize text-sm">
                                     {event.primary && <span className="font-black text-slate-900 dark:text-foreground">{event.primary} </span>}
                                     <span className="text-slate-500 dark:text-muted-foreground">{event.secondary}</span>
                                 </span>

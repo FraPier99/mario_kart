@@ -32,7 +32,7 @@ const TournamentHistoryCard = ({ tournament }) => {
             style={{ boxShadow: 'var(--circuit-shadow-md)' }}
         >
             <div
-                className="flex flex-wrap items-center justify-between gap-4 p-6 cursor-pointer select-none transition-colors hover:bg-slate-50/50 dark:hover:bg-muted/30"
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 cursor-pointer select-none transition-colors hover:bg-slate-50/50 dark:hover:bg-muted/30"
                 onClick={() => setExpanded((v) => !v)}
             >
                 <div className="min-w-0 flex-1">

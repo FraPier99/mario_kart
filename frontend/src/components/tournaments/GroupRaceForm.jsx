@@ -92,28 +92,33 @@ const GroupRaceForm = ({
         return ids
     }, [tournament?.races, phase, groupName, randomizeCircuit])
 
-    // Reset slots when group/phase changes. Se randomizeCircuit è attivo (es.
-    // Spareggio a gara secca o duello podio), preseleziona automaticamente una
-    // pista a caso tra quelle non ancora usate nel torneo — ma SOLO la prima
-    // volta per questo specifico duello (fase+girone+slot): senza questa
-    // guardia, il polling di refresh di TournamentDetail (ogni 20s mentre il
-    // torneo è in_corso) fa rieseguire l'effetto e ri-randomizza la pista da
-    // capo ad ogni ciclo, rischiando di salvare un risultato per una pista
-    // diversa da quella effettivamente mostrata/giocata dal vivo.
+    // Reset slots SOLO quando cambia davvero il contesto (fase+girone+slot),
+    // non ad ogni riesecuzione dell'effetto — il polling di refresh di
+    // TournamentDetail (ogni 20s mentre il torneo è in_corso) dà a
+    // `tournament.races` una nuova identità di array ad ogni ciclo, che a
+    // sua volta cambia `usedCircuitIds`/`circuits` e rieseguirebbe l'intero
+    // effetto: senza la guardia sul key, questo cancellava silenziosamente
+    // pilota/personaggio già selezionati (e, per i duelli con
+    // randomizeCircuit, ri-randomizzava la pista) mentre l'utente stava
+    // ancora compilando il form dal vivo. Se randomizeCircuit è attivo (es.
+    // Spareggio a gara secca o duello podio), la stessa guardia preseleziona
+    // una pista a caso tra quelle non ancora usate SOLO la prima volta per
+    // questo specifico duello.
     const [noCircuitsLeft, setNoCircuitsLeft] = useState(false)
     const autoPickKeyRef = useRef(null)
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setSlots(emptySlots())
-        setErrors([])
-        if (!randomizeCircuit) {
-            setCircuitId('')
-            autoPickKeyRef.current = null
-            return
-        }
         const key = `${phase}-${groupName}-${slotCount}`
         if (autoPickKeyRef.current === key) return
         autoPickKeyRef.current = key
+
+        setSlots(emptySlots())
+        setErrors([])
+
+        if (!randomizeCircuit) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setCircuitId('')
+            return
+        }
 
         const available = circuits.filter((c) => !usedCircuitIds.has(c.id))
         if (available.length === 0) {
@@ -124,7 +129,7 @@ const GroupRaceForm = ({
             const pick = available[Math.floor(Math.random() * available.length)]
             setCircuitId(pick ? String(pick.id) : '')
         }
-    }, [phase, groupName, slotCount, usedCircuitIds, circuits, tournament?.races])
+    }, [phase, groupName, slotCount, usedCircuitIds, circuits, tournament?.races, randomizeCircuit])
 
     const setSlotPlayer = (index, playerId) => {
         setSlots((prev) => prev.map((s, i) => {
@@ -281,13 +286,16 @@ const GroupRaceForm = ({
                                         : 'border-slate-200 dark:border-border bg-slate-50/50 dark:bg-card'
                                 }`}
                             >
-                                {/* Medaglia */}
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/80 dark:bg-muted text-sm font-black select-none">
+                                {/* Medaglia — nascosta sotto sm: puramente decorativa
+                                    (l'ordine di posizione è già implicito nella lista e nel
+                                    bordo ambra/verde della riga), toglierla libera spazio
+                                    per il dropdown pilota che altrimenti si accalcava. */}
+                                <div className="hidden sm:flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/80 dark:bg-muted text-sm font-black select-none">
                                     {MEDAL[index]}
                                 </div>
 
                                 {/* Punti */}
-                                <div className="flex flex-col items-center w-7 shrink-0">
+                                <div className="flex flex-col items-center w-6 sm:w-7 shrink-0">
                                     <span className="text-[7px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground leading-none">pt</span>
                                     <span className="text-base font-black text-slate-900 dark:text-foreground leading-tight">{PUNTI[index]}</span>
                                 </div>
@@ -295,8 +303,8 @@ const GroupRaceForm = ({
                                 {/* Avatar giocatore selezionato */}
                                 <div className="shrink-0">
                                     {selectedPlayer?.img_url
-                                        ? <img src={selectedPlayer.img_url} alt={selectedPlayer.nickname} className="h-8 w-8 rounded-xl object-cover border-2 border-white dark:border-border" />
-                                        : <div className="h-8 w-8 rounded-xl bg-slate-200 dark:bg-muted flex items-center justify-center text-[10px] font-black text-slate-500">
+                                        ? <img src={selectedPlayer.img_url} alt={selectedPlayer.nickname} className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl object-cover border-2 border-white dark:border-border" />
+                                        : <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl bg-slate-200 dark:bg-muted flex items-center justify-center text-[10px] font-black text-slate-500">
                                             {selectedPlayer?.nickname?.charAt(0)?.toUpperCase() ?? '?'}
                                           </div>
                                     }

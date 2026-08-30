@@ -26,7 +26,13 @@
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
-  color-scheme: light dark;
+  /* Segue il toggle manuale dell'app (ThemeContext), non la preferenza
+     light/dark del sistema operativo — con `light dark` qui, un
+     <select> nativo (es. il dropdown pilota in GroupRaceForm.jsx) veniva
+     renderizzato dal browser secondo l'OS, indipendentemente dal tema
+     scelto in-app: risultato, popup del select illeggibile quando i due
+     non coincidevano (es. app in dark, OS in light). */
+  color-scheme: light;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -186,6 +192,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
