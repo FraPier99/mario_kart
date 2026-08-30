@@ -327,7 +327,7 @@ const AccentColorPicker = ({ value, onChange }) => (
 
 const Dashboard = () => {
     const { user, isAdmin, isSuperadmin, refreshMe, logout, isAuthenticated } = useAuth()
-    const { charactersById, statsByPlayerId, refresh, getTournamentById, games, consoles, getLeaderboardByGame } = useAppData()
+    const { charactersById, statsByPlayerId, patchPlayer, getTournamentById, games, consoles, getLeaderboardByGame } = useAppData()
     const characters = useMemo(() => [...charactersById.values()], [charactersById])
     const player = user?.player ?? null
     const playerStats = player ? (statsByPlayerId.get(player.id) ?? null) : null
@@ -433,7 +433,7 @@ const Dashboard = () => {
 
         setSaving(true)
         try {
-            await authApi.updateMyProfile({
+            const payload = {
                 first_name: form.first_name.trim(),
                 last_name: form.last_name.trim(),
                 nickname: form.nickname.trim(),
@@ -441,9 +441,18 @@ const Dashboard = () => {
                 img_url: form.img_url.trim() || null,
                 bio: form.bio.trim() || null,
                 accent_color: form.accent_color || null,
-            })
+            }
+            await authApi.updateMyProfile(payload)
             toast.success('Profilo aggiornato')
-            await refresh()
+            // Patch locale invece di refresh(): GET /players ha una cache
+            // HTTP di 60s (vedi commento su patchPlayer in
+            // AppDataContext.jsx) — un refresh() qui avrebbe rischiato di
+            // ricevere dal browser la risposta cache-ata pre-modifica,
+            // sovrascrivendo la patch appena applicata e mostrando altrove
+            // nell'app (es. /players) il colore accento/nickname/avatar
+            // "vecchio" finché la cache non scadeva. Stesso principio già
+            // usato per patchTournament/patchCircuit altrove nell'app.
+            if (player) patchPlayer(player.id, payload)
             await refreshMe()
         }
         catch (error) {

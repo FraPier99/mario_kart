@@ -496,6 +496,18 @@ export function AppDataProvider({ children }) {
         setCharacters((prev) => prev.map((c) => (c.id === characterId ? { ...c, ...patch } : c)))
     }, [])
 
+    // Stesso principio, per l'auto-modifica del proprio profilo giocatore
+    // (nome/nickname/avatar/bio/colore accento in ProfileDashboard.jsx):
+    // GET /players ha una cache HTTP di 60s (Cache-Control: max-age=60, per
+    // evitare di riscaricare gli avatar base64 ad ogni fetch) — senza questa
+    // patch locale, un refresh() subito dopo il salvataggio poteva ricevere
+    // dal browser la risposta cache-ata PRE-modifica, facendo sembrare la
+    // modifica "non salvata" (es. colore accento) finché la cache non
+    // scadeva o non si ricaricava la pagina per intero.
+    const patchPlayer = useCallback((playerId, patch) => {
+        setPlayers((prev) => prev.map((p) => (p.id === playerId ? { ...p, ...patch } : p)))
+    }, [])
+
     // Stesso principio delle patch sopra, per l'aggiunta di un nuovo
     // circuito/personaggio dal pannello admin: appende localmente invece
     // di rifare l'intero refresh().
@@ -751,6 +763,7 @@ export function AppDataProvider({ children }) {
         patchTournament,
         patchCircuit,
         patchCharacter,
+        patchPlayer,
         addCircuit,
         removeCircuit,
         addCharacter,
