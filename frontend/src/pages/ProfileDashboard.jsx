@@ -625,22 +625,6 @@ const Dashboard = () => {
                     />
                 </div>
 
-                {/* Tab bar — separata dalla card profilo qui sopra: naviga il
-                    contenuto della card sotto, non fa parte dell'identità del
-                    giocatore, va tenuta fuori da quella card (segnalato
-                    dall'utente). */}
-                <div className="mx-auto max-w-5xl border-b border-slate-200 dark:border-border">
-                    <div className="flex gap-1 overflow-x-auto">
-                        {PROFILE_TABS.map((tab) => (
-                            <button key={tab.key} type="button"
-                                onClick={() => setProfileTab(tab.key)}
-                                className={`shrink-0 px-4 py-3 font-title text-[10px] tracking-wide border-b-2 transition ${profileTab === tab.key ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-transparent text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'}`}>
-                                {tab.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
                 {!isSuperadmin && shouldNudgeOwnership && (
                     <ApiBanner
                         tone="info"
@@ -655,7 +639,24 @@ const Dashboard = () => {
                     />
                 )}
 
-                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 md:p-8">
+                {/* Tab bar attaccata alla card sotto (stessa cornice/sfondo,
+                    nessuno spazio/bordo fra le due): è la sua barra di
+                    navigazione, deve leggersi come parte della stessa card,
+                    non come un elemento a sé stante scollegato in mezzo alla
+                    pagina (segnalato dall'utente). */}
+                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white/80 dark:bg-card/80 backdrop-blur-sm overflow-hidden">
+                    <div className="border-b border-slate-200 dark:border-border px-6 pt-2">
+                        <div className="flex gap-1 overflow-x-auto">
+                            {PROFILE_TABS.map((tab) => (
+                                <button key={tab.key} type="button"
+                                    onClick={() => setProfileTab(tab.key)}
+                                    className={`shrink-0 px-4 py-3 font-title text-[10px] tracking-wide border-b-2 transition ${profileTab === tab.key ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-transparent text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'}`}>
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="p-6 md:p-8">
 
                 {/* ── TAB: PROFILO ─────────────────────────────── */}
                 {profileTab === 'profilo' && (
@@ -1011,6 +1012,7 @@ const Dashboard = () => {
                     </div>
                 )}
 
+                    </div>
                 </div>
 
             </section>
