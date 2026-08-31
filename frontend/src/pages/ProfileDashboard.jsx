@@ -608,35 +608,36 @@ const Dashboard = () => {
                     invece di sembrare una card compatta. Il logout resta
                     disponibile dal menu profilo in Navbar — niente più
                     bottone "Esci" duplicato qui. */}
-                <div className={`mx-auto max-w-5xl rounded-[2rem] border-2 overflow-hidden ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
-                    <div className="p-6">
-                        <ProfileHeader
-                            avatarSrc={form.img_url || player?.img_url}
-                            nickname={player?.nickname ?? user?.username ?? '—'}
-                            fallbackInitial={(player?.nickname ?? user?.username ?? '?').charAt(0).toUpperCase()}
-                            subtitle={isSuperadmin ? 'Superadmin' : (player ? `${player.first_name} ${player.last_name}` : 'Nessun player collegato')}
-                            accentColor={player?.accent_color}
-                            role={isSuperadmin ? 'superadmin' : isAdmin ? 'admin' : 'user'}
-                            cardStyle={cardStyle}
-                            // Il superadmin non gioca mai — nessun badge di gioco anche se per
-                            // qualche motivo risultasse un player collegato.
-                            badges={isSuperadmin ? [] : badges}
-                            favoriteCharacter={favoriteCharacter}
-                            bio={player?.bio}
-                        />
-                    </div>
+                <div className={`mx-auto max-w-5xl rounded-[2rem] border-2 p-6 ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
+                    <ProfileHeader
+                        avatarSrc={form.img_url || player?.img_url}
+                        nickname={player?.nickname ?? user?.username ?? '—'}
+                        fallbackInitial={(player?.nickname ?? user?.username ?? '?').charAt(0).toUpperCase()}
+                        subtitle={isSuperadmin ? 'Superadmin' : (player ? `${player.first_name} ${player.last_name}` : 'Nessun player collegato')}
+                        accentColor={player?.accent_color}
+                        role={isSuperadmin ? 'superadmin' : isAdmin ? 'admin' : 'user'}
+                        cardStyle={cardStyle}
+                        // Il superadmin non gioca mai — nessun badge di gioco anche se per
+                        // qualche motivo risultasse un player collegato.
+                        badges={isSuperadmin ? [] : badges}
+                        favoriteCharacter={favoriteCharacter}
+                        bio={player?.bio}
+                    />
+                </div>
 
-                    {/* Tab bar */}
-                    <div className="border-t border-slate-100 dark:border-border px-6 pb-0">
-                        <div className="flex gap-1 overflow-x-auto">
-                            {PROFILE_TABS.map((tab) => (
-                                <button key={tab.key} type="button"
-                                    onClick={() => setProfileTab(tab.key)}
-                                    className={`shrink-0 px-4 py-3 font-title text-[10px] tracking-wide border-b-2 transition ${profileTab === tab.key ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-transparent text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'}`}>
-                                    {tab.label}
-                                </button>
-                            ))}
-                        </div>
+                {/* Tab bar — separata dalla card profilo qui sopra: naviga il
+                    contenuto della card sotto, non fa parte dell'identità del
+                    giocatore, va tenuta fuori da quella card (segnalato
+                    dall'utente). */}
+                <div className="mx-auto max-w-5xl border-b border-slate-200 dark:border-border">
+                    <div className="flex gap-1 overflow-x-auto">
+                        {PROFILE_TABS.map((tab) => (
+                            <button key={tab.key} type="button"
+                                onClick={() => setProfileTab(tab.key)}
+                                className={`shrink-0 px-4 py-3 font-title text-[10px] tracking-wide border-b-2 transition ${profileTab === tab.key ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-transparent text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'}`}>
+                                {tab.label}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
