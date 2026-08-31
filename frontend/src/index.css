@@ -242,25 +242,25 @@
 @keyframes mk-card-master-glow {
   0%, 100% {
     box-shadow:
-      0 0 18px 2px rgba(245, 158, 11, 0.45),
-      0 0 50px 8px rgba(245, 158, 11, 0.18),
-      inset 0 0 20px rgba(245, 158, 11, 0.08);
+      0 0 18px 2px rgba(246, 182, 13, 0.45),
+      0 0 50px 8px rgba(246, 182, 13, 0.18),
+      inset 0 0 20px rgba(246, 182, 13, 0.08);
   }
   50% {
     box-shadow:
-      0 0 35px 6px rgba(245, 158, 11, 0.7),
-      0 0 90px 18px rgba(245, 158, 11, 0.35),
-      inset 0 0 40px rgba(245, 158, 11, 0.15);
+      0 0 35px 6px rgba(246, 182, 13, 0.7),
+      0 0 90px 18px rgba(246, 182, 13, 0.35),
+      inset 0 0 40px rgba(246, 182, 13, 0.15);
   }
 }
 
 /* Star slow spin — icon Carta Master */
 @keyframes mk-card-star-spin {
-  0%   { transform: rotate(0deg) scale(1); filter: drop-shadow(0 0 6px rgba(245,158,11,0.7)); }
-  25%  { transform: rotate(90deg) scale(1.15); filter: drop-shadow(0 0 12px rgba(245,158,11,1)); }
-  50%  { transform: rotate(180deg) scale(1); filter: drop-shadow(0 0 6px rgba(245,158,11,0.7)); }
-  75%  { transform: rotate(270deg) scale(1.15); filter: drop-shadow(0 0 12px rgba(245,158,11,1)); }
-  100% { transform: rotate(360deg) scale(1); filter: drop-shadow(0 0 6px rgba(245,158,11,0.7)); }
+  0%   { transform: rotate(0deg) scale(1); filter: drop-shadow(0 0 6px rgba(246,182,13,0.7)); }
+  25%  { transform: rotate(90deg) scale(1.15); filter: drop-shadow(0 0 12px rgba(246,182,13,1)); }
+  50%  { transform: rotate(180deg) scale(1); filter: drop-shadow(0 0 6px rgba(246,182,13,0.7)); }
+  75%  { transform: rotate(270deg) scale(1.15); filter: drop-shadow(0 0 12px rgba(246,182,13,1)); }
+  100% { transform: rotate(360deg) scale(1); filter: drop-shadow(0 0 6px rgba(246,182,13,0.7)); }
 }
 
 /* Orbiting coin/star around card icon */
@@ -292,15 +292,15 @@
 @keyframes mk-card-shell-glow {
   0%, 100% {
     box-shadow:
-      0 0 18px 2px rgba(6, 182, 212, 0.5),
-      0 0 50px 8px rgba(6, 182, 212, 0.2),
-      inset 0 0 20px rgba(6, 182, 212, 0.08);
+      0 0 18px 2px rgba(46, 125, 240, 0.5),
+      0 0 50px 8px rgba(46, 125, 240, 0.2),
+      inset 0 0 20px rgba(46, 125, 240, 0.08);
   }
   50% {
     box-shadow:
-      0 0 38px 8px rgba(6, 182, 212, 0.75),
+      0 0 38px 8px rgba(46, 125, 240, 0.75),
       0 0 100px 20px rgba(99, 102, 241, 0.3),
-      inset 0 0 40px rgba(6, 182, 212, 0.15);
+      inset 0 0 40px rgba(46, 125, 240, 0.15);
   }
 }
 
@@ -315,9 +315,9 @@
 
 /* Shell spin icon */
 @keyframes mk-card-shell-spin {
-  0%   { transform: rotate(0deg) scale(1); filter: drop-shadow(0 0 8px rgba(6,182,212,0.8)); }
+  0%   { transform: rotate(0deg) scale(1); filter: drop-shadow(0 0 8px rgba(46,125,240,0.8)); }
   50%  { transform: rotate(180deg) scale(1.1); filter: drop-shadow(0 0 16px rgba(99,102,241,1)); }
-  100% { transform: rotate(360deg) scale(1); filter: drop-shadow(0 0 8px rgba(6,182,212,0.8)); }
+  100% { transform: rotate(360deg) scale(1); filter: drop-shadow(0 0 8px rgba(46,125,240,0.8)); }
 }
 
 /* Streak warning bar for shell */
@@ -404,8 +404,8 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
-  50% { box-shadow: 0 0 20px 4px rgba(245, 158, 11, 0.3); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(246, 182, 13, 0.4); }
+  50% { box-shadow: 0 0 20px 4px rgba(246, 182, 13, 0.3); }
 }
 
 /* ── GAMING / ARCADE UI ANIMATIONS ─────────────────────────────── */
@@ -623,8 +623,8 @@
 }
 
 @keyframes podium-glow-pulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(245,158,11,0.3), 0 0 30px rgba(245,158,11,0.15); }
-  50% { box-shadow: 0 0 20px rgba(245,158,11,0.7), 0 0 50px rgba(245,158,11,0.35); }
+  0%, 100% { box-shadow: 0 0 10px rgba(246,182,13,0.3), 0 0 30px rgba(246,182,13,0.15); }
+  50% { box-shadow: 0 0 20px rgba(246,182,13,0.7), 0 0 50px rgba(246,182,13,0.35); }
 }
 
 @keyframes podium-spotlight {
@@ -635,10 +635,10 @@
 }
 
 @keyframes podium-glow-ring {
-  0% { transform: scale(0.3); opacity: 0.9; box-shadow: 0 0 20px rgba(245,158,11,0.7); }
-  40% { transform: scale(1.4); opacity: 0.3; box-shadow: 0 0 50px rgba(245,158,11,0.3); }
-  70% { transform: scale(0.95); opacity: 0.6; box-shadow: 0 0 35px rgba(245,158,11,0.5); }
-  100% { transform: scale(1); opacity: 0.5; box-shadow: 0 0 30px rgba(245,158,11,0.4); }
+  0% { transform: scale(0.3); opacity: 0.9; box-shadow: 0 0 20px rgba(246,182,13,0.7); }
+  40% { transform: scale(1.4); opacity: 0.3; box-shadow: 0 0 50px rgba(246,182,13,0.3); }
+  70% { transform: scale(0.95); opacity: 0.6; box-shadow: 0 0 35px rgba(246,182,13,0.5); }
+  100% { transform: scale(1); opacity: 0.5; box-shadow: 0 0 30px rgba(246,182,13,0.4); }
 }
 
 @keyframes coin-fall {
@@ -658,8 +658,8 @@
 }
 
 @keyframes star-power-glow {
-  0%, 100% { box-shadow: 0 0 15px rgba(255,215,0,0.4), 0 0 30px rgba(255,215,0,0.2), 0 0 0 rgba(255,215,0,0); }
-  50% { box-shadow: 0 0 30px rgba(255,215,0,0.8), 0 0 60px rgba(255,215,0,0.4), 0 0 20px rgba(255,215,0,0.15); }
+  0%, 100% { box-shadow: 0 0 15px rgba(246,182,13,0.4), 0 0 30px rgba(246,182,13,0.2), 0 0 0 rgba(246,182,13,0); }
+  50% { box-shadow: 0 0 30px rgba(246,182,13,0.8), 0 0 60px rgba(246,182,13,0.4), 0 0 20px rgba(246,182,13,0.15); }
 }
 
 @keyframes trophy-float {
@@ -710,8 +710,8 @@
 }
 
 @keyframes crown-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(245,158,11,0.4), 0 0 60px rgba(245,158,11,0.15), 0 0 100px rgba(245,158,11,0.05); }
-  50% { box-shadow: 0 0 40px rgba(245,158,11,0.8), 0 0 100px rgba(245,158,11,0.35), 0 0 150px rgba(245,158,11,0.15); }
+  0%, 100% { box-shadow: 0 0 20px rgba(246,182,13,0.4), 0 0 60px rgba(246,182,13,0.15), 0 0 100px rgba(246,182,13,0.05); }
+  50% { box-shadow: 0 0 40px rgba(246,182,13,0.8), 0 0 100px rgba(246,182,13,0.35), 0 0 150px rgba(246,182,13,0.15); }
 }
 
 @keyframes mk-item-float {
@@ -760,14 +760,14 @@
 }
 
 @keyframes glow-expand {
-  0% { box-shadow: 0 0 10px rgba(245,158,11,0.3); transform: scale(0.95); }
-  50% { box-shadow: 0 0 40px rgba(245,158,11,0.7), 0 0 80px rgba(245,158,11,0.3); transform: scale(1.05); }
-  100% { box-shadow: 0 0 25px rgba(245,158,11,0.5), 0 0 50px rgba(245,158,11,0.2); transform: scale(1); }
+  0% { box-shadow: 0 0 10px rgba(246,182,13,0.3); transform: scale(0.95); }
+  50% { box-shadow: 0 0 40px rgba(246,182,13,0.7), 0 0 80px rgba(246,182,13,0.3); transform: scale(1.05); }
+  100% { box-shadow: 0 0 25px rgba(246,182,13,0.5), 0 0 50px rgba(246,182,13,0.2); transform: scale(1); }
 }
 
 @keyframes text-glow-breathe {
-  0%, 100% { text-shadow: 0 0 12px rgba(245,158,11,0.35), 0 0 30px rgba(245,158,11,0.18); transform: translateY(0); }
-  50% { text-shadow: 0 0 22px rgba(245,158,11,0.85), 0 0 56px rgba(245,158,11,0.42), 0 0 90px rgba(245,158,11,0.18); transform: translateY(-1px); }
+  0%, 100% { text-shadow: 0 0 12px rgba(246,182,13,0.35), 0 0 30px rgba(246,182,13,0.18); transform: translateY(0); }
+  50% { text-shadow: 0 0 22px rgba(246,182,13,0.85), 0 0 56px rgba(246,182,13,0.42), 0 0 90px rgba(246,182,13,0.18); transform: translateY(-1px); }
 }
 
 @keyframes rubber-stripe-1 {
@@ -801,7 +801,7 @@
 
 @keyframes text-neon-pulse {
   0%, 100% {
-    text-shadow: 0 0 10px rgba(245,158,11,0.6), 0 0 30px rgba(245,158,11,0.3), 0 0 60px rgba(245,158,11,0.15);
+    text-shadow: 0 0 10px rgba(246,182,13,0.6), 0 0 30px rgba(246,182,13,0.3), 0 0 60px rgba(246,182,13,0.15);
     opacity: 0;
     transform: translateY(20px) scale(0.95);
   }
@@ -810,7 +810,7 @@
     transform: translateY(0) scale(1);
   }
   50% {
-    text-shadow: 0 0 20px rgba(245,158,11,0.9), 0 0 50px rgba(245,158,11,0.5), 0 0 100px rgba(245,158,11,0.25);
+    text-shadow: 0 0 20px rgba(246,182,13,0.9), 0 0 50px rgba(246,182,13,0.5), 0 0 100px rgba(246,182,13,0.25);
   }
 }
 
@@ -837,9 +837,9 @@
 }
 
 @keyframes avatar-reveal-ring {
-  0% { box-shadow: 0 0 0 0 rgba(245,158,11,0.8); }
-  50% { box-shadow: 0 0 0 25px rgba(245,158,11,0.2); }
-  100% { box-shadow: 0 0 0 12px rgba(245,158,11,0.4); }
+  0% { box-shadow: 0 0 0 0 rgba(246,182,13,0.8); }
+  50% { box-shadow: 0 0 0 25px rgba(246,182,13,0.2); }
+  100% { box-shadow: 0 0 0 12px rgba(246,182,13,0.4); }
 }
 
 @keyframes avatar-reveal-fadeout {
@@ -857,9 +857,9 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(245, 158, 11, 0.08) 25%,
-    rgba(245, 158, 11, 0.15) 50%,
-    rgba(245, 158, 11, 0.08) 75%,
+    rgba(246, 182, 13, 0.08) 25%,
+    rgba(246, 182, 13, 0.15) 50%,
+    rgba(246, 182, 13, 0.08) 75%,
     transparent 100%
   );
   background-size: 200% 100%;
@@ -882,7 +882,7 @@
     90deg,
     transparent 0%,
     rgba(255, 255, 255, 0.25) 25%,
-    rgba(245, 158, 11, 0.18) 50%,
+    rgba(246, 182, 13, 0.18) 50%,
     rgba(255, 255, 255, 0.25) 75%,
     transparent 100%
   );
@@ -895,7 +895,7 @@
     90deg,
     transparent 0%,
     rgba(255, 255, 255, 0.06) 25%,
-    rgba(245, 158, 11, 0.12) 50%,
+    rgba(246, 182, 13, 0.12) 50%,
     rgba(255, 255, 255, 0.06) 75%,
     transparent 100%
   );

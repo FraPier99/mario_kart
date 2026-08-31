@@ -10,8 +10,8 @@ const MASTER = {
   shineAnim: 'mk-card-master-shine',
   borderColor: 'rgba(246,182,13,0.5)',
   textColor: 'text-circuit-gold',
-  textGlow: '0 0 20px rgba(245,158,11,0.8)',
-  textGlowSm: '0 0 12px rgba(245,158,11,0.5)',
+  textGlow: '0 0 20px rgba(246,182,13,0.8)',
+  textGlowSm: '0 0 12px rgba(246,182,13,0.5)',
   iconGrad: 'linear-gradient(135deg, #f6b60d, #d97706, #92400e)',
   iconAnim: 'mk-card-star-spin',
   rarityLabel: '★ Leggendaria ★',
@@ -22,10 +22,10 @@ const MASTER = {
   orbColors: ['#fcd34d', '#f59e0b'],
   borderClass: 'border-circuit-gold/50 dark:border-circuit-gold/30',
   infoBorder: 'border-amber-500/20',
-  infoBg: 'rgba(245,158,11,0.06)',
+  infoBg: 'rgba(246,182,13,0.06)',
   ctaGrad: 'from-circuit-gold to-orange-500 hover:from-circuit-gold/90 hover:to-orange-400 dark:from-circuit-gold dark:to-orange-500',
-  texture: 'repeating-linear-gradient(45deg, rgba(245,158,11,0.4) 0px, rgba(245,158,11,0.4) 1px, transparent 1px, transparent 12px)',
-  shineColor: 'linear-gradient(90deg, transparent, rgba(255,215,0,0.25), transparent)',
+  texture: 'repeating-linear-gradient(45deg, rgba(246,182,13,0.4) 0px, rgba(246,182,13,0.4) 1px, transparent 1px, transparent 12px)',
+  shineColor: 'linear-gradient(90deg, transparent, rgba(246,182,13,0.25), transparent)',
   cornerIcon: '★',
   cornerColor: 'text-amber-500/60',
 }
@@ -37,8 +37,8 @@ const SHELL = {
   shineAnim: 'mk-card-shell-shine',
   borderColor: 'rgba(46,125,240,0.45)',
   textColor: 'text-circuit-blue',
-  textGlow: '0 0 20px rgba(6,182,212,0.8)',
-  textGlowSm: '0 0 12px rgba(6,182,212,0.5)',
+  textGlow: '0 0 20px rgba(46,125,240,0.8)',
+  textGlowSm: '0 0 12px rgba(46,125,240,0.5)',
   iconGrad: 'linear-gradient(135deg, #2e7df0, #1d4ed8, #312e81)',
   iconAnim: 'mk-card-shell-spin',
   rarityLabel: '⚡ Rara ⚡',
@@ -49,10 +49,10 @@ const SHELL = {
   orbColors: ['#22d3ee', '#818cf8'],
   borderClass: 'border-circuit-blue/50 dark:border-circuit-blue/30',
   infoBorder: 'border-cyan-500/20',
-  infoBg: 'rgba(6,182,212,0.05)',
+  infoBg: 'rgba(46,125,240,0.05)',
   ctaGrad: 'from-circuit-blue to-blue-600 hover:from-circuit-blue/90 hover:to-blue-500 dark:from-circuit-blue dark:to-blue-600',
-  texture: 'repeating-linear-gradient(60deg, rgba(6,182,212,0.3) 0px, rgba(6,182,212,0.3) 1px, transparent 1px, transparent 14px),repeating-linear-gradient(-60deg, rgba(6,182,212,0.3) 0px, rgba(6,182,212,0.3) 1px, transparent 1px, transparent 14px)',
-  shineColor: 'linear-gradient(90deg, transparent, rgba(6,182,212,0.3), rgba(99,102,241,0.15), transparent)',
+  texture: 'repeating-linear-gradient(60deg, rgba(46,125,240,0.3) 0px, rgba(46,125,240,0.3) 1px, transparent 1px, transparent 14px),repeating-linear-gradient(-60deg, rgba(46,125,240,0.3) 0px, rgba(46,125,240,0.3) 1px, transparent 1px, transparent 14px)',
+  shineColor: 'linear-gradient(90deg, transparent, rgba(46,125,240,0.3), rgba(99,102,241,0.15), transparent)',
   cornerIcon: '⚡',
   cornerColor: 'text-cyan-400/60',
 }
@@ -153,7 +153,7 @@ export default function PowerCard({
             <div className="relative shrink-0">
               {!consumed && (
                 <div className="absolute inset-0 rounded-2xl blur-lg"
-                  style={{ background: isMaster ? 'rgba(245,158,11,0.4)' : 'rgba(6,182,212,0.4)', transform: 'scale(1.2)' }} />
+                  style={{ background: isMaster ? 'rgba(246,182,13,0.4)' : 'rgba(46,125,240,0.4)', transform: 'scale(1.2)' }} />
               )}
               <div className={`relative flex h-16 w-16 items-center justify-center rounded-2xl border text-white shadow-xl ${consumed ? 'bg-slate-300 dark:bg-slate-700 border-slate-200 dark:border-slate-600' : `bg-gradient-to-br ${isMaster ? 'from-amber-400 to-orange-600 border-amber-300/30' : 'from-cyan-400 to-blue-700 border-cyan-300/30'}`}`}>
                 <IconComponent size={30} className={consumed ? 'text-slate-400 dark:text-slate-500' : ''} />
@@ -254,9 +254,9 @@ export default function PowerCard({
           <span className="text-[8px] font-black uppercase tracking-[0.3em]">{t.rarityLabel}</span>
         </div>
         <div className="relative">
-          <div className="absolute inset-0 rounded-2xl blur-xl" style={{ background: isMaster ? 'rgba(245,158,11,0.4)' : 'rgba(6,182,212,0.4)', transform: 'scale(1.3)' }} />
+          <div className="absolute inset-0 rounded-2xl blur-xl" style={{ background: isMaster ? 'rgba(246,182,13,0.4)' : 'rgba(46,125,240,0.4)', transform: 'scale(1.3)' }} />
           <div className="relative flex h-24 w-24 items-center justify-center rounded-2xl border"
-            style={{ background: t.iconGrad, borderColor: isMaster ? 'rgba(245,158,11,0.3)' : 'rgba(6,182,212,0.3)' }}>
+            style={{ background: t.iconGrad, borderColor: isMaster ? 'rgba(246,182,13,0.3)' : 'rgba(46,125,240,0.3)' }}>
             <IconComponent size={44} className="text-white drop-shadow-xl" />
           </div>
         </div>
@@ -287,7 +287,7 @@ export default function PowerCard({
       }}
     >
       <div className="pointer-events-none absolute inset-0 rounded-2xl"
-        style={{ boxShadow: `inset 0 0 0 1.5px ${isMaster ? 'rgba(245,158,11,0.35)' : 'rgba(6,182,212,0.3)'}, inset 0 0 40px rgba(0,0,0,0.06)` }} />
+        style={{ boxShadow: `inset 0 0 0 1.5px ${isMaster ? 'rgba(246,182,13,0.35)' : 'rgba(46,125,240,0.3)'}, inset 0 0 40px rgba(0,0,0,0.06)` }} />
 
       <div className="relative z-10 flex flex-col h-full p-5 overflow-y-auto">
         <div className="flex items-center gap-3 shrink-0">
@@ -306,7 +306,7 @@ export default function PowerCard({
         </div>
 
         <div className="mt-4 space-y-3 flex-1">
-          <div className="rounded-2xl border p-3" style={{ borderColor: isMaster ? 'rgba(245,158,11,0.25)' : 'rgba(6,182,212,0.25)', background: t.infoBg }}>
+          <div className="rounded-2xl border p-3" style={{ borderColor: isMaster ? 'rgba(246,182,13,0.25)' : 'rgba(46,125,240,0.25)', background: t.infoBg }}>
             <div className="flex items-center gap-2 mb-2">
               <span className={isMaster ? 'text-amber-400' : 'text-cyan-400'}>{isMaster ? '🏆' : '🎯'}</span>
               <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${isMaster ? 'text-amber-400' : 'text-cyan-400'}`}>Come si ottiene</p>
@@ -320,7 +320,7 @@ export default function PowerCard({
             </p>
           </div>
 
-          <div className="rounded-2xl border p-3" style={{ borderColor: isMaster ? 'rgba(245,158,11,0.25)' : 'rgba(6,182,212,0.25)', background: t.infoBg }}>
+          <div className="rounded-2xl border p-3" style={{ borderColor: isMaster ? 'rgba(246,182,13,0.25)' : 'rgba(46,125,240,0.25)', background: t.infoBg }}>
             <div className="flex items-center gap-2 mb-2">
               <span className={isMaster ? 'text-amber-400' : 'text-cyan-400'}>{isMaster ? '⚡' : '💥'}</span>
               <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${isMaster ? 'text-amber-400' : 'text-cyan-400'}`}>Effetto</p>
