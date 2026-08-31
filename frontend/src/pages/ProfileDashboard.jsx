@@ -326,7 +326,7 @@ const AccentColorPicker = ({ value, onChange }) => (
 )
 
 const Dashboard = () => {
-    const { user, isAdmin, isSuperadmin, refreshMe, isAuthenticated } = useAuth()
+    const { user, isSuperadmin, refreshMe, isAuthenticated } = useAuth()
     const { charactersById, statsByPlayerId, patchPlayer, getTournamentById, games, consoles, getLeaderboardByGame } = useAppData()
     const characters = useMemo(() => [...charactersById.values()], [charactersById])
     const player = user?.player ?? null
@@ -602,20 +602,24 @@ const Dashboard = () => {
             <section className="mx-auto max-w-7xl px-4 py-8 animate-fade-in space-y-6">
 
                 {/* ── HEADER PROFILO ───────────────────────────── */}
-                {/* max-w-5xl qui (non max-w-7xl come il resto della pagina):
-                    il contenuto è intrinsecamente stretto, una card larga
-                    quanto tutta la pagina lascia una zona colorata vuota
-                    invece di sembrare una card compatta. Il logout resta
-                    disponibile dal menu profilo in Navbar — niente più
-                    bottone "Esci" duplicato qui. */}
-                <div className={`mx-auto max-w-5xl rounded-[2rem] border-2 p-6 ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
+                {/* Card compatta (max-w-md, non max-w-7xl come il resto della
+                    pagina): il contenuto (avatar+nome+badge) è intrinsecamente
+                    stretto — farla larga quanto la pagina lascia una zona
+                    colorata vuota invece di sembrare una card compatta stile
+                    "trading card". Il logout resta disponibile dal menu
+                    profilo in Navbar — niente più bottone "Esci" duplicato
+                    qui, niente più nome/cognome (ridondante col nickname). */}
+                <div className={`mx-auto max-w-md rounded-[2rem] border-2 p-6 ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                     <ProfileHeader
                         avatarSrc={form.img_url || player?.img_url}
                         nickname={player?.nickname ?? user?.username ?? '—'}
                         fallbackInitial={(player?.nickname ?? user?.username ?? '?').charAt(0).toUpperCase()}
-                        subtitle={isSuperadmin ? 'Superadmin' : (player ? `${player.first_name} ${player.last_name}` : 'Nessun player collegato')}
                         accentColor={player?.accent_color}
-                        role={isSuperadmin ? 'superadmin' : isAdmin ? 'admin' : 'user'}
+                        // Il badge ruolo si mostra solo per il superadmin: non ha
+                        // badge di gioco (non gioca mai), quindi è l'unica info di
+                        // "livello" disponibile — per admin/user era ridondante
+                        // col tag ruolo già visibile in Navbar.
+                        role={isSuperadmin ? 'superadmin' : null}
                         cardStyle={cardStyle}
                         // Il superadmin non gioca mai — nessun badge di gioco anche se per
                         // qualche motivo risultasse un player collegato.

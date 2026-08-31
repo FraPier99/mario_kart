@@ -133,15 +133,18 @@ const CommunityUserPage = () => {
                     <ArrowLeft size={14} /> Indietro
                 </button>
 
-                {/* Profile card */}
-                <div className={`rounded-2xl border-2 p-6 md:p-8 ${cardStyle ? `${cardStyle.cardBorder} ${cardStyle.cardBg}` : 'border-slate-200 dark:border-border bg-white dark:bg-card'}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
+                {/* Profile card — compatta (max-w-md), non max-w-3xl come il
+                    resto della pagina: il contenuto è intrinsecamente stretto. */}
+                <div className={`mx-auto max-w-md rounded-2xl border-2 p-6 md:p-8 ${cardStyle ? `${cardStyle.cardBorder} ${cardStyle.cardBg}` : 'border-slate-200 dark:border-border bg-white dark:bg-card'}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                     <ProfileHeader
                         avatarSrc={player?.img_url || communityUser?.img_url}
                         nickname={player?.nickname ?? communityUser.username}
                         fallbackInitial={(player?.nickname ?? communityUser.username ?? '?').charAt(0).toUpperCase()}
-                        subtitle={player ? `${player.first_name} ${player.last_name}` : null}
                         accentColor={player?.accent_color}
-                        role={communityUser.role}
+                        // Solo per il superadmin (nessun badge di gioco per
+                        // quell'account) — per admin/user è ridondante col tag
+                        // ruolo già visibile in Navbar.
+                        role={viewedUserIsSuperadmin ? communityUser.role : null}
                         cardStyle={cardStyle}
                         // Il superadmin non gioca mai — nessun badge di gioco anche se per
                         // qualche motivo risultasse un player collegato.
