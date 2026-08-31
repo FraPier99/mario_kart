@@ -8,6 +8,13 @@ const PlayerBadge = ({ badge, size = 'md', className = '' }) => {
     const meta = BADGE_TIERS[badge.tier] ?? BADGE_TIERS.esordiente
     const Icon = meta.Icon
     const sizeClasses = size === 'sm' ? 'gap-1 px-2 py-1 text-[9px]' : 'gap-1.5 px-3 py-1.5 text-xs'
+    // Gli extra scalano col size del badge principale invece di restare
+    // fissi a 9px — a size="sm" il badge principale è già a 9px, quindi
+    // fermarli più piccoli li rende illeggibili (segnalato dall'utente).
+    // Restano comunque un gradino sotto il principale (niente border-2/
+    // maiuscolo/sfondo pieno) per la gerarchia visiva.
+    const extraSizeClasses = size === 'sm' ? 'gap-1 px-1.5 py-0.5 text-[10px]' : 'gap-1 px-2 py-0.5 text-[11px]'
+    const extraIconSize = size === 'sm' ? 10 : 11
 
     // Indicatori extra indipendenti dal tier — "premiano la via di mezzo"
     // (costanza, miglioramento, Consolazione) senza sostituire il badge di
@@ -37,8 +44,8 @@ const PlayerBadge = ({ badge, size = 'md', className = '' }) => {
             </div>
             {extras.map(({ key, Icon: ExtraIcon, label, tooltip, className: extraClassName }) => (
                 <div key={key} title={tooltip}
-                    className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold normal-case tracking-normal ${extraClassName}`}>
-                    <ExtraIcon size={9} />
+                    className={`inline-flex items-center rounded-full border font-bold normal-case tracking-normal ${extraSizeClasses} ${extraClassName}`}>
+                    <ExtraIcon size={extraIconSize} />
                     <span>{label}</span>
                 </div>
             ))}

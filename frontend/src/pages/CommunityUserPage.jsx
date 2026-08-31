@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Flag, Trophy, Star, BarChart3, UserCircle2, Shield } from 'lucide-react'
+import { ArrowLeft, Flag, Trophy, Star, BarChart3, Shield } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import PlayerTournamentHistory from '@/components/community/PlayerTournamentHistory'
-import PlayerBadge from '@/components/community/PlayerBadge'
-import RoleBadge from '@/components/community/RoleBadge'
+import ProfileHeader from '@/components/community/ProfileHeader'
 import { pickBestBadge, getProfileCardStyle } from '@/lib/playerBadges'
 import { authApi, statsApi, getApiErrorMessage } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
@@ -134,56 +133,22 @@ const CommunityUserPage = () => {
                     <ArrowLeft size={14} /> Indietro
                 </button>
 
-                {/* Profile card — composizione editoriale asimmetrica: colonna avatar fissa + colonna contenuto fluida, niente centratura */}
+                {/* Profile card */}
                 <div className={`rounded-2xl border-2 p-6 md:p-8 ${cardStyle ? `${cardStyle.cardBorder} ${cardStyle.cardBg}` : 'border-slate-200 dark:border-border bg-white dark:bg-card'}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
-                    <div className="grid gap-6 md:grid-cols-[auto_1fr] items-start">
-                        {/* Colonna sinistra: avatar + ruolo */}
-                        <div className="flex flex-row items-center gap-3 md:flex-col md:items-start">
-                            <div className="relative shrink-0">
-                                <div className="absolute inset-0 rounded-2xl bg-emerald-400/20 blur-xl scale-125 pointer-events-none" />
-                                {/* Bordo del grado esterno e più spesso, colore accento come
-                                    anello sottile annidato con un margine di respiro — stesso
-                                    principio di ProfileDashboard.jsx. */}
-                                <div className={`relative h-28 w-28 rounded-2xl border-4 p-1 shadow-lg shadow-emerald-400/20 ${cardStyle ? cardStyle.avatarBorder : 'border-emerald-400'}`}>
-                                    <div
-                                        className="flex h-full w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-emerald-400 to-green-500"
-                                        style={player?.accent_color ? { border: `2px solid ${player.accent_color}` } : undefined}
-                                    >
-                                        {player?.img_url || communityUser?.img_url
-                                            ? <img src={player?.img_url || communityUser?.img_url} alt={player?.nickname ?? communityUser?.username} className="h-full w-full object-cover" />
-                                            : <UserCircle2 size={40} className="text-white" />}
-                                    </div>
-                                </div>
-                                {cardStyle && (
-                                    <span className={`absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white dark:border-card shadow-md ${cardStyle.badgeBg}`}>
-                                        <cardStyle.Icon size={13} className={cardStyle.badgeIconColor} />
-                                    </span>
-                                )}
-                            </div>
-                            <RoleBadge role={communityUser.role} size="sm" />
-                        </div>
-
-                        {/* Colonna destra: identità allineata a sinistra + badge in fondo */}
-                        <div className="min-w-0 text-left">
-                            <h1 className="text-3xl font-black text-slate-900 dark:text-foreground">{player?.nickname ?? communityUser.username}</h1>
-                            {player && <p className="mt-1 text-sm capitalize text-slate-500 dark:text-muted-foreground">{player.first_name} {player.last_name}</p>}
-                            {player?.bio && <p className="mt-3 max-w-xl text-sm text-slate-600 dark:text-muted-foreground leading-relaxed whitespace-pre-wrap">{player.bio}</p>}
-
-                            {(favoriteCharacter || (!viewedUserIsSuperadmin && activeBadge)) && (
-                                <div className="mt-4 flex flex-wrap items-center gap-2">
-                                    {/* Il superadmin non gioca mai — nessun badge di gioco anche
-                                        se per qualche motivo risultasse un player collegato. */}
-                                    {!viewedUserIsSuperadmin && activeBadge && <PlayerBadge badge={activeBadge} />}
-                                    {favoriteCharacter && (
-                                        <div className="flex items-center gap-2 rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-1.5">
-                                            {favoriteCharacter.img_url && <img src={favoriteCharacter.img_url} alt={favoriteCharacter.name} className="h-5 w-5 rounded-full object-cover" />}
-                                            <span className="text-xs font-black text-slate-600 dark:text-foreground">{favoriteCharacter.name}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    <ProfileHeader
+                        avatarSrc={player?.img_url || communityUser?.img_url}
+                        nickname={player?.nickname ?? communityUser.username}
+                        fallbackInitial={(player?.nickname ?? communityUser.username ?? '?').charAt(0).toUpperCase()}
+                        subtitle={player ? `${player.first_name} ${player.last_name}` : null}
+                        accentColor={player?.accent_color}
+                        role={communityUser.role}
+                        cardStyle={cardStyle}
+                        // Il superadmin non gioca mai — nessun badge di gioco anche se per
+                        // qualche motivo risultasse un player collegato.
+                        badges={!viewedUserIsSuperadmin && activeBadge ? [activeBadge] : []}
+                        favoriteCharacter={favoriteCharacter}
+                        bio={player?.bio}
+                    />
                 </div>
                   {player && <PlayerTournamentHistory playerId={player.id} />}
 

@@ -14,7 +14,7 @@ import ApiBanner from '@/components/common/ApiBanner'
 import { SkeletonRows } from '@/components/common/Skeleton'
 import PlayerTournamentHistory from '@/components/community/PlayerTournamentHistory'
 import PlayerBadge from '@/components/community/PlayerBadge'
-import RoleBadge from '@/components/community/RoleBadge'
+import ProfileHeader from '@/components/community/ProfileHeader'
 import { pickBestBadge, getProfileCardStyle } from '@/lib/playerBadges'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
@@ -618,64 +618,25 @@ const Dashboard = () => {
                 {/* ── HEADER PROFILO ───────────────────────────── */}
                 <div className={`rounded-[2rem] border-2 overflow-hidden ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                     <div className="p-6">
-                        <div className="flex flex-wrap items-center justify-between gap-4">
-                            <div className="flex items-center gap-4">
-                                {/* Avatar */}
-                                <div className="relative shrink-0">
-                                    {/* Bordo del grado (tier badge) sempre esterno e più spesso —
-                                        il colore accento personale, quando presente, è un anello
-                                        sottile annidato dentro, con un margine di respiro (padding)
-                                        che lo separa dal bordo del grado, che resta il segnale
-                                        dominante. */}
-                                    <div className={`h-24 w-24 rounded-2xl border-4 p-1 shadow-md ${cardStyle ? cardStyle.avatarBorder : 'border-slate-200 dark:border-border'}`}>
-                                        <div
-                                            className="h-full w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-muted"
-                                            style={player?.accent_color ? { border: `2px solid ${player.accent_color}` } : undefined}
-                                        >
-                                            {form.img_url || player?.img_url ? (
-                                                <img src={form.img_url || player?.img_url} alt={form.nickname || player?.nickname} className="h-full w-full object-cover" />
-                                            ) : (
-                                                <div className="flex h-full w-full items-center justify-center text-3xl font-black text-slate-400 dark:text-slate-500">
-                                                    {(player?.nickname ?? user?.username ?? '?').charAt(0).toUpperCase()}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    {cardStyle && (
-                                        <div className={`absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full shadow-md ${cardStyle.badgeBg}`}>
-                                            <cardStyle.Icon size={10} className={cardStyle.badgeIconColor} />
-                                        </div>
-                                    )}
-                                    {!cardStyle && favoriteCharacter?.img_url && (
-                                        <div className="absolute -bottom-2 -right-2 h-8 w-8 overflow-hidden rounded-xl border-2 border-white dark:border-slate-900 shadow-md">
-                                            <img src={favoriteCharacter.img_url} alt={favoriteCharacter.name} className="h-full w-full object-cover" />
-                                        </div>
-                                    )}
-                                </div>
-                                <div>
-                                    <h1 className="text-2xl font-black text-slate-900 dark:text-foreground">
-                                        {player?.nickname ?? user?.username ?? '—'}
-                                    </h1>
-                                    <p className="text-sm capitalize text-slate-500 dark:text-muted-foreground">
-                                        {isSuperadmin ? 'Superadmin' : (player ? `${player.first_name} ${player.last_name}` : 'Nessun player collegato')}
-                                        {favoriteCharacter && <span className="ml-2 text-slate-400">· {favoriteCharacter.name}</span>}
-                                    </p>
-                                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                                        <RoleBadge role={isSuperadmin ? 'superadmin' : isAdmin ? 'admin' : 'user'} size="sm" />
-                                        {/* Il superadmin non gioca mai — nessun badge di gioco anche
-                                            se per qualche motivo risultasse un player collegato. */}
-                                        {!isSuperadmin && badges.map((b) => (
-                                            <PlayerBadge key={b.game_id} badge={b} size="sm" />
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2">
+                        <ProfileHeader
+                            avatarSrc={form.img_url || player?.img_url}
+                            nickname={player?.nickname ?? user?.username ?? '—'}
+                            fallbackInitial={(player?.nickname ?? user?.username ?? '?').charAt(0).toUpperCase()}
+                            subtitle={isSuperadmin ? 'Superadmin' : (player ? `${player.first_name} ${player.last_name}` : 'Nessun player collegato')}
+                            accentColor={player?.accent_color}
+                            role={isSuperadmin ? 'superadmin' : isAdmin ? 'admin' : 'user'}
+                            cardStyle={cardStyle}
+                            // Il superadmin non gioca mai — nessun badge di gioco anche se per
+                            // qualche motivo risultasse un player collegato.
+                            badges={isSuperadmin ? [] : badges}
+                            favoriteCharacter={favoriteCharacter}
+                            bio={player?.bio}
+                            actions={(
                                 <button onClick={handleLogoutClick} type="button" className="rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5 font-title text-[10px] tracking-wide text-slate-700 dark:text-foreground transition active:translate-y-px hover:bg-slate-100">
                                     Esci
                                 </button>
-                            </div>
-                        </div>
+                            )}
+                        />
                     </div>
 
                     {/* Tab bar */}
