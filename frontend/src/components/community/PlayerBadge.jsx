@@ -11,16 +11,19 @@ const PlayerBadge = ({ badge, size = 'md', className = '' }) => {
 
     // Indicatori extra indipendenti dal tier — "premiano la via di mezzo"
     // (costanza, miglioramento, Consolazione) senza sostituire il badge di
-    // tier principale, vedi lib/playerBadges.js EXTRA_BADGES.
+    // tier principale (vedi lib/playerBadges.js EXTRA_BADGES). Stile
+    // volutamente più leggero/compatto: sono annotazioni secondarie, non
+    // devono competere in gerarchia visiva col badge di tier, che è l'unico
+    // basato sui risultati reali.
     const extras = []
     if ((badge.streak ?? 0) >= STREAK_BADGE_THRESHOLD) {
-        extras.push({ key: 'streak', ...EXTRA_BADGES.streak, label: EXTRA_BADGES.streak.label(badge.streak) })
+        extras.push({ key: 'streak', ...EXTRA_BADGES.streak, tooltip: EXTRA_BADGES.streak.tooltip(badge.streak) })
     }
     if (badge.improving) {
-        extras.push({ key: 'improving', ...EXTRA_BADGES.improving })
+        extras.push({ key: 'improving', ...EXTRA_BADGES.improving, tooltip: EXTRA_BADGES.improving.tooltip() })
     }
     if ((badge.consolation_wins ?? 0) > 0) {
-        extras.push({ key: 'consolation', ...EXTRA_BADGES.consolation, label: EXTRA_BADGES.consolation.label(badge.consolation_wins) })
+        extras.push({ key: 'consolation', ...EXTRA_BADGES.consolation, tooltip: EXTRA_BADGES.consolation.tooltip(badge.consolation_wins) })
     }
 
     return (
@@ -32,10 +35,10 @@ const PlayerBadge = ({ badge, size = 'md', className = '' }) => {
                     <span className="font-bold normal-case tracking-normal opacity-70">· {badge.game_name}</span>
                 )}
             </div>
-            {extras.map(({ key, Icon: ExtraIcon, label, className: extraClassName }) => (
-                <div key={key} title={label}
-                    className={`inline-flex items-center rounded-xl border-2 font-black uppercase tracking-wider ${sizeClasses} ${extraClassName}`}>
-                    <ExtraIcon size={size === 'sm' ? 11 : 13} />
+            {extras.map(({ key, Icon: ExtraIcon, label, tooltip, className: extraClassName }) => (
+                <div key={key} title={tooltip}
+                    className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold normal-case tracking-normal ${extraClassName}`}>
+                    <ExtraIcon size={9} />
                     <span>{label}</span>
                 </div>
             ))}

@@ -104,22 +104,28 @@ export const STREAK_BADGE_THRESHOLD = 3
  * Indicatori aggiuntivi indipendenti dal tier — "premiano la via di mezzo"
  * (chi non vince ma partecipa con costanza, chi sta migliorando, chi ha
  * vinto la Consolazione) senza introdurre una classifica parallela. Non
- * sostituiscono il badge di tier, si affiancano (vedi PlayerBadge.jsx).
+ * sostituiscono il badge di tier, si affiancano come annotazioni secondarie
+ * (vedi PlayerBadge.jsx: stile volutamente più leggero/compatto del badge
+ * di tier — nome breve nel pill, dettaglio completo solo nel tooltip —
+ * altrimenti visivamente competono con i badge "veri", basati sui risultati).
  */
 export const EXTRA_BADGES = {
     streak: {
         Icon: Repeat,
-        label: (n) => `Costanza · ${n} tornei di fila`,
-        className: 'border-emerald-300 bg-emerald-100 text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-300',
+        label: 'Costanza',
+        tooltip: (n) => `Costanza · ${n} tornei di fila`,
+        className: 'border-emerald-300 text-emerald-700 dark:border-emerald-500/40 dark:text-emerald-400',
     },
     improving: {
         Icon: TrendingUp,
         label: 'In crescita',
-        className: 'border-circuit-blue/60 bg-circuit-blue/15 text-blue-800 dark:border-circuit-blue/40 dark:bg-circuit-blue/15 dark:text-blue-300',
+        tooltip: () => 'In crescita',
+        className: 'border-circuit-blue/50 text-blue-700 dark:border-circuit-blue/40 dark:text-blue-400',
     },
     consolation: {
         Icon: Medal,
-        label: (n) => (n > 1 ? `Re della Consolazione · ${n}×` : 'Re della Consolazione'),
-        className: 'border-violet-300 bg-violet-100 text-violet-800 dark:border-violet-500/40 dark:bg-violet-500/15 dark:text-violet-300',
+        label: 'Consolazione',
+        tooltip: (n) => (n > 1 ? `Vinta la Consolazione · ${n}×` : 'Vinta la Consolazione'),
+        className: 'border-violet-300 text-violet-700 dark:border-violet-500/40 dark:text-violet-400',
     },
 }
