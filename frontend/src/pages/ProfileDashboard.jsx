@@ -616,7 +616,11 @@ const Dashboard = () => {
             <section className="mx-auto max-w-7xl px-4 py-8 animate-fade-in space-y-6">
 
                 {/* ── HEADER PROFILO ───────────────────────────── */}
-                <div className={`rounded-[2rem] border-2 overflow-hidden ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
+                {/* max-w-4xl qui (non max-w-7xl come il resto della pagina):
+                    il contenuto (avatar+nome+badge) è intrinsecamente stretto,
+                    una card larga quanto tutta la pagina lascia una zona colorata
+                    vuota a destra invece di sembrare una card compatta. */}
+                <div className={`mx-auto max-w-4xl rounded-[2rem] border-2 overflow-hidden ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                     <div className="p-6">
                         <ProfileHeader
                             avatarSrc={form.img_url || player?.img_url}

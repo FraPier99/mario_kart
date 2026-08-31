@@ -31,81 +31,74 @@ const ProfileHeader = ({
     actions,
 }) => {
     return (
-        <div className="grid gap-6 md:grid-cols-[auto_1fr] items-start">
-            {/* Colonna avatar — orizzontale su mobile, verticale da md: in su */}
-            <div className="flex flex-row items-center gap-3 md:flex-col md:items-start">
-                <div className="relative shrink-0">
-                    <div className="absolute inset-0 rounded-2xl bg-emerald-400/15 blur-xl scale-125 pointer-events-none" />
-                    <div className={`relative h-24 w-24 rounded-2xl border-4 p-1 shadow-md ${cardStyle ? cardStyle.avatarBorder : 'border-slate-200 dark:border-border'}`}>
-                        <div
-                            className="flex h-full w-full items-center justify-center overflow-hidden rounded-xl bg-slate-100 dark:bg-muted"
-                            style={accentColor ? { border: `2px solid ${accentColor}` } : undefined}
-                        >
-                            {avatarSrc ? (
-                                <img src={avatarSrc} alt={nickname} className="h-full w-full object-cover" />
-                            ) : (
-                                <span className="text-3xl font-black text-slate-400 dark:text-slate-500">{fallbackInitial}</span>
-                            )}
-                        </div>
-                    </div>
-                    {cardStyle && (
-                        <span className={`absolute -top-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white dark:border-card shadow-md ${cardStyle.badgeBg}`}>
-                            <cardStyle.Icon size={11} className={cardStyle.badgeIconColor} />
-                        </span>
-                    )}
-                    {!cardStyle && favoriteCharacter?.img_url && (
-                        <div className="absolute -bottom-2 -right-2 h-8 w-8 overflow-hidden rounded-xl border-2 border-white dark:border-slate-900 shadow-md">
-                            <img src={favoriteCharacter.img_url} alt={favoriteCharacter.name} className="h-full w-full object-cover" />
-                        </div>
-                    )}
-                </div>
-                <div className="md:hidden">
-                    <RoleBadge role={role} size="sm" />
-                </div>
-            </div>
-
-            {/* Colonna contenuto — le 3 fasce */}
-            <div className="min-w-0">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                    {/* Fascia 1 — Identità */}
-                    <div className="min-w-0">
-                        <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-foreground">{nickname}</h1>
-                        {subtitle && (
-                            <p className="mt-1 text-sm capitalize text-slate-500 dark:text-muted-foreground">{subtitle}</p>
-                        )}
-                        <div className="mt-2 hidden md:block">
-                            <RoleBadge role={role} size="sm" />
-                        </div>
-                    </div>
-                    {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
-                </div>
-
-                {/* Fascia 2 — Livelli: un badge per riga, extra sempre agganciati al proprio gioco */}
-                {badges.length > 0 && (
-                    <div className="mt-4 flex flex-col gap-2">
-                        {badges.map((b) => (
-                            <PlayerBadge key={b.game_id ?? 'best'} badge={b} />
-                        ))}
-                    </div>
-                )}
-
-                {/* Fascia 3 — Extra: personaggio preferito + bio, info secondarie */}
-                {(favoriteCharacter || bio) && (
-                    <div className="mt-4 space-y-3">
-                        {favoriteCharacter && (
-                            <div className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-1.5">
-                                {favoriteCharacter.img_url && (
-                                    <img src={favoriteCharacter.img_url} alt={favoriteCharacter.name} className="h-5 w-5 rounded-full object-cover" />
+        <div>
+            {/* Riga identità — avatar e nome SEMPRE affiancati, a ogni
+                larghezza: impilarli su righe separate (pattern preso da
+                CommunityUserPage) lasciava una riga avatar quasi vuota su
+                mobile e un blocco magro e disallineato su desktop — questo
+                usa lo spazio orizzontale in modo costante. */}
+            <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex items-center gap-4 min-w-0">
+                    <div className="relative shrink-0">
+                        <div className={`h-20 w-20 sm:h-24 sm:w-24 rounded-2xl border-4 p-1 shadow-md ${cardStyle ? cardStyle.avatarBorder : 'border-slate-200 dark:border-border'}`}>
+                            <div
+                                className="flex h-full w-full items-center justify-center overflow-hidden rounded-xl bg-slate-100 dark:bg-muted"
+                                style={accentColor ? { border: `2px solid ${accentColor}` } : undefined}
+                            >
+                                {avatarSrc ? (
+                                    <img src={avatarSrc} alt={nickname} className="h-full w-full object-cover" />
+                                ) : (
+                                    <span className="text-3xl font-black text-slate-400 dark:text-slate-500">{fallbackInitial}</span>
                                 )}
-                                <span className="text-xs font-black text-slate-600 dark:text-foreground">{favoriteCharacter.name}</span>
+                            </div>
+                        </div>
+                        {cardStyle && (
+                            <span className={`absolute -top-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white dark:border-card shadow-md ${cardStyle.badgeBg}`}>
+                                <cardStyle.Icon size={11} className={cardStyle.badgeIconColor} />
+                            </span>
+                        )}
+                        {!cardStyle && favoriteCharacter?.img_url && (
+                            <div className="absolute -bottom-2 -right-2 h-8 w-8 overflow-hidden rounded-xl border-2 border-white dark:border-slate-900 shadow-md">
+                                <img src={favoriteCharacter.img_url} alt={favoriteCharacter.name} className="h-full w-full object-cover" />
                             </div>
                         )}
-                        {bio && (
-                            <p className="max-w-xl text-sm text-slate-600 dark:text-muted-foreground leading-relaxed whitespace-pre-wrap">{bio}</p>
-                        )}
                     </div>
-                )}
+                    <div className="min-w-0">
+                        <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-foreground truncate">{nickname}</h1>
+                        {subtitle && (
+                            <p className="mt-1 text-sm capitalize text-slate-500 dark:text-muted-foreground truncate">{subtitle}</p>
+                        )}
+                        <RoleBadge role={role} size="sm" className="mt-2" />
+                    </div>
+                </div>
+                {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
             </div>
+
+            {/* Fascia 2 — Livelli: un badge per riga, extra sempre agganciati al proprio gioco */}
+            {badges.length > 0 && (
+                <div className="mt-4 flex flex-col gap-2">
+                    {badges.map((b) => (
+                        <PlayerBadge key={b.game_id ?? 'best'} badge={b} />
+                    ))}
+                </div>
+            )}
+
+            {/* Fascia 3 — Extra: personaggio preferito + bio, info secondarie */}
+            {(favoriteCharacter || bio) && (
+                <div className="mt-4 space-y-3">
+                    {favoriteCharacter && (
+                        <div className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-1.5">
+                            {favoriteCharacter.img_url && (
+                                <img src={favoriteCharacter.img_url} alt={favoriteCharacter.name} className="h-5 w-5 rounded-full object-cover" />
+                            )}
+                            <span className="text-xs font-black text-slate-600 dark:text-foreground">{favoriteCharacter.name}</span>
+                        </div>
+                    )}
+                    {bio && (
+                        <p className="max-w-xl text-sm text-slate-600 dark:text-muted-foreground leading-relaxed whitespace-pre-wrap">{bio}</p>
+                    )}
+                </div>
+            )}
         </div>
     )
 }
