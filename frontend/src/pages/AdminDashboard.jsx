@@ -1,22 +1,27 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { toast } from 'sonner'
 import {
     Users, Trophy, BarChart3, Shield, ExternalLink,
     Activity, Award, Plus, Flag, LayoutDashboard,
     Clock, Play, UserSquare2, MapPin, Zap, Gamepad2, Layers, PartyPopper,
-    Lock, AlertTriangle,
+    Lock, AlertTriangle, Database, Square, Check, Trash2, RefreshCw,
 } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
-import { authApi } from '@/services/apiClient'
+import { authApi, tournamentsApi, schedineApi, getApiErrorMessage } from '@/services/apiClient'
 import PlayersTab from '@/components/admin/PlayersTab'
 import CharactersTab from '@/components/admin/CharactersTab'
 import CircuitsTab from '@/components/superadmin/CircuitsTab'
 import CarteTab from '@/components/admin/CarteTab'
 import PossessiTab from '@/components/admin/PossessiTab'
 import CatalogTab from '@/components/superadmin/CatalogTab'
+import UsersTab from '@/components/superadmin/UsersTab'
+import DatabaseTab from '@/components/superadmin/DatabaseTab'
+import AuditLogTab from '@/components/superadmin/AuditLogTab'
 import TournamentStatusBadge from '@/components/common/TournamentStatusBadge'
+import ConfirmModal from '@/components/common/ConfirmModal'
 
 // ── Sparkline ────────────────────────────────────────────────────
 const Sparkline = ({ data, color = '#10b981', height = 30, width = 72 }) => {
@@ -67,10 +72,14 @@ const TABS = [
     { key: 'carte',      label: 'Carte',      icon: Zap },
     { key: 'possessi',   label: 'Possessi',   icon: Gamepad2 },
     { key: 'catalogo',   label: 'Catalogo',   icon: Layers, superadminOnly: true },
+    { key: 'utenti',     label: 'Utenti',     icon: Users, superadminOnly: true },
+    { key: 'database',   label: 'Database',   icon: Database, superadminOnly: true },
+    { key: 'log',        label: 'Audit Log',  icon: Activity, superadminOnly: true },
 ]
 
 const FILTERS = ['all', 'in_corso', 'da_svolgere', 'concluso']
 const FILTER_LABELS = { all: 'Tutti', in_corso: 'In corso', da_svolgere: 'In attesa', concluso: 'Conclusi' }
+const STATUS_LABEL = { da_svolgere: 'In attesa', in_corso: 'In corso', finito: 'Finito', concluso: 'Concluso' }
 
 // ── Admin Profile Card ────────────────────────────────────────────
 const AdminProfileCard = ({ user, players, charactersById }) => {
@@ -381,30 +390,82 @@ const PanoramicaTab = ({ stats, tournaments, activeTournament, players, characte
     </div>
 )
 
-const TorneiTab = ({ tournaments }) => {
+const TorneiTab = ({ tournaments, isSuperadmin, refresh, setConfirmModal }) => {
     const [filter, setFilter] = useState('all')
+    const [statusUpdating, setStatusUpdating] = useState({})
+    const [settlingSchedine, setSettlingSchedine] = useState({})
     const filtered = useMemo(() => {
         const sorted = [...tournaments].sort((a, b) => new Date(b.date ?? 0) - new Date(a.date ?? 0))
         if (filter === 'all') return sorted
         return sorted.filter(t => t.status === filter)
     }, [tournaments, filter])
 
+    // Azioni riservate al superadmin — stessa logica di SuperAdminPanel.jsx,
+    // portata qui perché il superadmin non deve più lasciare /admin per
+    // gestire lo stato di un torneo.
+    const updateTournamentStatus = async (id, newStatus) => {
+        setStatusUpdating(s => ({ ...s, [id]: true }))
+        try {
+            await tournamentsApi.update(id, { status: newStatus })
+            toast.success(`Torneo impostato a "${STATUS_LABEL[newStatus]}"`)
+            await refresh()
+        } catch (err) { toast.error('Impossibile aggiornare lo stato', { description: getApiErrorMessage(err) }) }
+        finally { setStatusUpdating(s => ({ ...s, [id]: false })) }
+    }
+
+    const activateLive = async (id) => {
+        setStatusUpdating(s => ({ ...s, [id]: true }))
+        try {
+            await tournamentsApi.activateLive(id)
+            toast.success('Torneo attivato in diretta')
+            await refresh()
+        } catch (err) { toast.error('Impossibile attivare', { description: getApiErrorMessage(err) }) }
+        finally { setStatusUpdating(s => ({ ...s, [id]: false })) }
+    }
+
+    const settleSchedine = async (id, name) => {
+        setSettlingSchedine(s => ({ ...s, [id]: true }))
+        try {
+            await schedineApi.settleTournament(id)
+            toast.success(`Schedine del torneo "${name}" liquidate`)
+            await refresh()
+        } catch (err) { toast.error('Impossibile liquidare schedine', { description: getApiErrorMessage(err) }) }
+        finally { setSettlingSchedine(s => ({ ...s, [id]: false })) }
+    }
+
+    const deleteTournament = async (id, name) => {
+        try {
+            await tournamentsApi.remove(id)
+            toast.success(`Torneo "${name}" eliminato`)
+            await refresh()
+        } catch (err) { toast.error('Impossibile eliminare', { description: getApiErrorMessage(err) }) }
+    }
+
     return (
         <div className="space-y-4">
             {/* Filter bar — "Nuovo torneo" è già nell'header della pagina (sempre
                 visibile su ogni tab), niente da ripetere qui. */}
-            <div className="flex gap-1 overflow-x-auto">
+            <div className="flex flex-wrap items-center gap-1 overflow-x-auto">
                 {FILTERS.map(f => (
                     <button key={f} type="button" onClick={() => setFilter(f)}
                         className={`shrink-0 rounded-xl px-3 py-1.5 font-title text-[10px] tracking-wide transition active:translate-y-px ${filter === f ? 'bg-emerald-500 text-white' : 'border-2 border-slate-200 dark:border-border bg-white dark:bg-card text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'}`}>
                         {FILTER_LABELS[f]}
                     </button>
                 ))}
+                {isSuperadmin && (
+                    <button type="button" onClick={() => { refresh(); toast.success('Aggiornato') }}
+                        className="ml-auto flex items-center gap-1.5 rounded-xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card px-3 py-1.5 font-title text-[10px] tracking-wide text-slate-500 dark:text-muted-foreground transition active:translate-y-px hover:text-slate-700 dark:hover:text-foreground">
+                        <RefreshCw size={11} /> Aggiorna
+                    </button>
+                )}
             </div>
 
             <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
-                {filtered.map((t, i) => (
-                    <div key={t.id} className={`flex items-center justify-between gap-4 px-5 py-4 ${i > 0 ? 'border-t border-slate-100 dark:border-white/5' : ''}`}>
+                {filtered.map((t, i) => {
+                    const isUpdating = statusUpdating[t.id]
+                    const isSettling = settlingSchedine[t.id]
+                    return (
+                    <div key={t.id} className={`flex flex-wrap items-center justify-between gap-4 px-5 py-4 ${i > 0 ? 'border-t border-slate-100 dark:border-white/5' : ''}`}>
                         <div className="min-w-0">
                             <p className="text-sm font-black text-slate-900 dark:text-foreground truncate">{t.name}</p>
                             <p className="text-xs text-slate-500 dark:text-muted-foreground">
@@ -412,7 +473,7 @@ const TorneiTab = ({ tournaments }) => {
                                 {(t.participant_ids?.length ?? 0) > 0 && ` · ${t.participant_ids.length} piloti`}
                             </p>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex flex-wrap items-center gap-1.5 shrink-0">
                             {t.is_friendly && (
                                 <span className="hidden sm:inline-flex items-center gap-1 rounded-lg border-2 border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 font-title text-[9px] tracking-wide text-amber-700 dark:text-amber-300">
                                     <PartyPopper size={10} /> Amichevole
@@ -423,9 +484,44 @@ const TorneiTab = ({ tournaments }) => {
                                 className="flex items-center gap-1 rounded-lg border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-2 py-1 font-title text-[9px] tracking-wide text-slate-600 dark:text-slate-300 transition active:translate-y-px hover:text-emerald-500 hover:border-emerald-300">
                                 <ExternalLink size={10} /> Apri
                             </Link>
+                            {isSuperadmin && t.status === 'da_svolgere' && (
+                                <button type="button" disabled={isUpdating} onClick={() => activateLive(t.id)}
+                                    className="flex items-center gap-1 rounded-lg bg-emerald-600 px-2 py-1 font-title text-[9px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-500 disabled:opacity-60">
+                                    <Play size={10} /> Attiva Live
+                                </button>
+                            )}
+                            {isSuperadmin && t.status === 'in_corso' && (
+                                <button type="button" disabled={isUpdating} onClick={() => setConfirmModal({ open: true, title: 'Chiudi torneo', message: `Impostare "${t.name}" come Finito?`, confirmText: 'Chiudi', confirmVariant: 'warning',
+                                    onConfirm: () => { updateTournamentStatus(t.id, 'finito'); setConfirmModal(p => ({ ...p, open: false })) }
+                                })} className="flex items-center gap-1 rounded-lg bg-blue-600 px-2 py-1 font-title text-[9px] tracking-wide text-white transition active:translate-y-px hover:bg-blue-500 disabled:opacity-60">
+                                    <Square size={10} /> Chiudi
+                                </button>
+                            )}
+                            {isSuperadmin && (t.status === 'in_corso' || t.status === 'finito') && (
+                                <button type="button" disabled={isSettling} onClick={() => setConfirmModal({ open: true, title: 'Liquida schedine', message: `Liquidare le schedine per "${t.name}"? Questa azione assegnerà i premi.`, confirmText: 'Liquida', confirmVariant: 'warning',
+                                    onConfirm: () => { settleSchedine(t.id, t.name); setConfirmModal(p => ({ ...p, open: false })) }
+                                })} className="flex items-center gap-1 rounded-lg bg-purple-600 px-2 py-1 font-title text-[9px] tracking-wide text-white transition active:translate-y-px hover:bg-purple-500 disabled:opacity-60">
+                                    <Check size={10} /> Schedine
+                                </button>
+                            )}
+                            {isSuperadmin && t.status === 'finito' && (
+                                <button type="button" disabled={isUpdating} onClick={() => setConfirmModal({ open: true, title: 'Concludi torneo', message: `Impostare "${t.name}" come Concluso?`, confirmText: 'Concludi', confirmVariant: 'warning',
+                                    onConfirm: () => { updateTournamentStatus(t.id, 'concluso'); setConfirmModal(p => ({ ...p, open: false })) }
+                                })} className="flex items-center gap-1 rounded-lg bg-slate-700 px-2 py-1 font-title text-[9px] tracking-wide text-white transition active:translate-y-px hover:bg-slate-600 disabled:opacity-60">
+                                    <Flag size={10} /> Concludi
+                                </button>
+                            )}
+                            {isSuperadmin && t.status === 'concluso' && (
+                                <button type="button" onClick={() => setConfirmModal({ open: true, title: 'Elimina torneo', message: `Eliminare permanentemente "${t.name}"? I dati collegati potrebbero essere persi.`, confirmText: 'Elimina', confirmVariant: 'danger',
+                                    onConfirm: () => { deleteTournament(t.id, t.name); setConfirmModal(p => ({ ...p, open: false })) }
+                                })} className="flex items-center gap-1 rounded-lg bg-rose-600 px-2 py-1 font-title text-[9px] tracking-wide text-white transition active:translate-y-px hover:bg-rose-500">
+                                    <Trash2 size={10} /> Elimina
+                                </button>
+                            )}
                         </div>
                     </div>
-                ))}
+                    )
+                })}
                 {filtered.length === 0 && (
                     <p className="px-5 py-8 text-center text-sm text-slate-400">
                         {filter === 'all' ? 'Nessun torneo creato.' : `Nessun torneo con stato "${FILTER_LABELS[filter]}".`}
@@ -438,10 +534,11 @@ const TorneiTab = ({ tournaments }) => {
 
 // ── main component ───────────────────────────────────────────────
 export default function AdminDashboard() {
-    const { tournaments, detailedTournaments, players, loading, homeMetrics, charactersById, characters, circuits, games } = useAppData()
+    const { tournaments, detailedTournaments, players, loading, homeMetrics, charactersById, characters, circuits, games, refresh } = useAppData()
     const { user, isSuperadmin } = useAuth()
     const [activeTab, setActiveTab] = useState('panoramica')
     const [users, setUsers] = useState([])
+    const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', confirmText: '', confirmVariant: 'danger', onConfirm: null })
 
     useEffect(() => {
         // GET /auth/users richiede il ruolo superadmin: un account admin (non
@@ -556,7 +653,7 @@ export default function AdminDashboard() {
                     />
                 )}
                 {activeTab === 'tornei' && (
-                    <TorneiTab tournaments={tournaments} />
+                    <TorneiTab tournaments={tournaments} isSuperadmin={isSuperadmin} refresh={refresh} setConfirmModal={setConfirmModal} />
                 )}
                 {activeTab === 'giocatori' && (
                     <PlayersTab />
@@ -581,8 +678,41 @@ export default function AdminDashboard() {
                         <CatalogTab />
                     </div>
                 )}
+                {activeTab === 'utenti' && isSuperadmin && (
+                    <div className="rounded-2xl border-2 border-amber-200 dark:border-amber-500/20 bg-amber-50/30 dark:bg-amber-500/5 p-4">
+                        <p className="mb-3 flex items-center gap-1.5 font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">
+                            <Shield size={11} /> Solo SuperAdmin
+                        </p>
+                        <UsersTab players={players} setConfirmModal={setConfirmModal} />
+                    </div>
+                )}
+                {activeTab === 'database' && isSuperadmin && (
+                    <div className="rounded-2xl border-2 border-amber-200 dark:border-amber-500/20 bg-amber-50/30 dark:bg-amber-500/5 p-4">
+                        <p className="mb-3 flex items-center gap-1.5 font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">
+                            <Shield size={11} /> Solo SuperAdmin
+                        </p>
+                        <DatabaseTab players={players} tournaments={tournaments} onRefresh={refresh} setConfirmModal={setConfirmModal} />
+                    </div>
+                )}
+                {activeTab === 'log' && isSuperadmin && (
+                    <div className="rounded-2xl border-2 border-amber-200 dark:border-amber-500/20 bg-amber-50/30 dark:bg-amber-500/5 p-4">
+                        <p className="mb-3 flex items-center gap-1.5 font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">
+                            <Shield size={11} /> Solo SuperAdmin
+                        </p>
+                        <AuditLogTab />
+                    </div>
+                )}
                 </div>
             </section>
+            <ConfirmModal
+                isOpen={confirmModal.open}
+                onClose={() => setConfirmModal(p => ({ ...p, open: false }))}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                confirmText={confirmModal.confirmText}
+                confirmVariant={confirmModal.confirmVariant || 'danger'}
+            />
         </AppLayout>
     )
 }
