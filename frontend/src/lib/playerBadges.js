@@ -9,19 +9,19 @@ import { Crown, Trophy, Star, Flame, Swords, Flag } from 'lucide-react'
 export const BADGE_TIERS = {
     leggenda: {
         Icon: Crown,
-        className: 'border-amber-400 bg-gradient-to-br from-amber-300 via-yellow-200 to-amber-400 text-amber-950 shadow-lg shadow-amber-400/40 dark:border-amber-400/60 dark:from-amber-500/30 dark:via-amber-400/20 dark:to-amber-600/30 dark:text-amber-200 dark:shadow-amber-500/20',
+        className: 'border-circuit-gold bg-gradient-to-br from-circuit-gold/75 via-circuit-gold/35 to-circuit-gold text-amber-950 shadow-lg shadow-circuit-gold/40 dark:border-circuit-gold/60 dark:from-circuit-gold/30 dark:via-circuit-gold/15 dark:to-circuit-gold/35 dark:text-amber-200 dark:shadow-circuit-gold/20',
     },
     campione: {
         Icon: Trophy,
-        className: 'border-amber-300 bg-amber-100 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-300',
+        className: 'border-circuit-gold/60 bg-circuit-gold/15 text-amber-800 dark:border-circuit-gold/40 dark:bg-circuit-gold/15 dark:text-amber-300',
     },
     veterano: {
         Icon: Star,
-        className: 'border-blue-300 bg-blue-100 text-blue-800 dark:border-blue-500/40 dark:bg-blue-500/15 dark:text-blue-300',
+        className: 'border-circuit-blue/60 bg-circuit-blue/15 text-blue-800 dark:border-circuit-blue/40 dark:bg-circuit-blue/15 dark:text-blue-300',
     },
     outsider: {
         Icon: Flame,
-        className: 'border-violet-300 bg-violet-100 text-violet-800 dark:border-violet-500/40 dark:bg-violet-500/15 dark:text-violet-300',
+        className: 'border-circuit-red/60 bg-circuit-red/15 text-red-800 dark:border-circuit-red/40 dark:bg-circuit-red/15 dark:text-red-300',
     },
     sfidante: {
         Icon: Swords,
@@ -56,36 +56,36 @@ export const PROFILE_CARD_STYLES = {
     leggenda: {
         Icon: Crown,
         shimmer: true,
-        cardBorder: 'border-amber-400/50 dark:border-amber-500/30 shadow-amber-300/20 dark:shadow-amber-950/40 ring-1 ring-amber-400/30 dark:ring-amber-500/20',
+        cardBorder: 'border-circuit-gold/50 dark:border-circuit-gold/30 shadow-circuit-gold/20 dark:shadow-amber-950/40 ring-1 ring-circuit-gold/30 dark:ring-circuit-gold/20',
         cardBg: 'bg-linear-to-br from-amber-100/90 via-amber-50/60 to-amber-100/80 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60',
-        avatarBorder: 'border-amber-400 shadow-amber-400/20',
-        badgeBg: 'bg-amber-400',
+        avatarBorder: 'border-circuit-gold shadow-circuit-gold/20',
+        badgeBg: 'bg-circuit-gold',
         badgeIconColor: 'text-amber-950',
-        textColor: 'text-amber-600 dark:text-amber-400',
+        textColor: 'text-circuit-gold',
     },
     campione: {
         Icon: Trophy,
         shimmer: false,
-        cardBorder: 'border-amber-300/40 dark:border-amber-500/20 shadow-amber-200/10 dark:shadow-amber-950/20',
+        cardBorder: 'border-circuit-gold/40 dark:border-circuit-gold/20 shadow-amber-200/10 dark:shadow-amber-950/20',
         cardBg: 'bg-amber-50/50 dark:bg-amber-950/20',
-        avatarBorder: 'border-amber-300 shadow-amber-300/15',
-        badgeBg: 'bg-amber-300',
+        avatarBorder: 'border-circuit-gold/70 shadow-circuit-gold/15',
+        badgeBg: 'bg-circuit-gold/80',
         badgeIconColor: 'text-amber-950',
-        textColor: 'text-amber-600 dark:text-amber-400',
+        textColor: 'text-circuit-gold',
     },
     veterano: {
         Icon: Star,
         shimmer: false,
         // Sfondo/bordo volutamente tenui (non un gradiente pieno come
-        // leggenda): la palette blu è condivisa con RoleBadge "admin"
-        // (indigo) e il badge-pill "veterano" stesso — una card di sfondo
-        // altrettanto satura li fa sparire tutti nello stesso azzurro.
-        cardBorder: 'border-blue-300/40 dark:border-blue-500/20 shadow-blue-200/10 dark:shadow-blue-950/20',
+        // leggenda): stessa palette --circuit-blue di RoleBadge "admin" e
+        // del badge-pill "veterano" stesso — una card di sfondo altrettanto
+        // satura li fa sparire tutti nello stesso azzurro.
+        cardBorder: 'border-circuit-blue/40 dark:border-circuit-blue/20 shadow-blue-200/10 dark:shadow-blue-950/20',
         cardBg: 'bg-blue-50/50 dark:bg-blue-950/20',
-        avatarBorder: 'border-blue-300 shadow-blue-300/15',
-        badgeBg: 'bg-blue-400',
+        avatarBorder: 'border-circuit-blue/70 shadow-circuit-blue/15',
+        badgeBg: 'bg-circuit-blue',
         badgeIconColor: 'text-white',
-        textColor: 'text-blue-600 dark:text-blue-400',
+        textColor: 'text-circuit-blue',
     },
 }
 

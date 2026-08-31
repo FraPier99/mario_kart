@@ -10,12 +10,16 @@ export const ROLE_BADGES = {
     superadmin: {
         label: 'SUPERADMIN',
         Icon: Shield,
-        className: 'border-amber-400 bg-linear-to-br from-amber-300 via-yellow-200 to-amber-400 text-amber-950 shadow-lg shadow-amber-400/40 dark:border-amber-400/60 dark:from-amber-500/30 dark:via-amber-400/20 dark:to-amber-600/30 dark:text-amber-200 dark:shadow-amber-500/20',
+        className: 'border-circuit-gold bg-linear-to-br from-circuit-gold/75 via-circuit-gold/35 to-circuit-gold text-amber-950 shadow-lg shadow-circuit-gold/40 dark:border-circuit-gold/60 dark:from-circuit-gold/30 dark:via-circuit-gold/15 dark:to-circuit-gold/35 dark:text-amber-200 dark:shadow-circuit-gold/20',
     },
     admin: {
         label: 'ADMIN',
         Icon: ShieldCheck,
-        className: 'border-indigo-300 bg-indigo-100 text-indigo-800 dark:border-indigo-500/40 dark:bg-indigo-500/15 dark:text-indigo-300',
+        // Stesso --circuit-blue del tier "veterano" (playerBadges.js) — le
+        // due gerarchie (ruolo account, tier di gioco) condividono ora lo
+        // stesso significante "blu" invece di indigo vs blue leggermente
+        // diversi.
+        className: 'border-circuit-blue/60 bg-circuit-blue/15 text-blue-800 dark:border-circuit-blue/40 dark:bg-circuit-blue/15 dark:text-blue-300',
     },
     user: {
         label: 'GIOCATORE',
