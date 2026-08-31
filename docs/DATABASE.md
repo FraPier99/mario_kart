@@ -41,6 +41,7 @@ sapere se i dati sono vuoti.
 | `tournaments` | `Tournament` | Torneo: gioco, formato (`classic`/`group_stage`), stato, vincitore, deadline schedina, chiusura anticipata schedine (`schedine_locked`), dati di formato (`format_data` JSON), Duello, ecc. |
 | `tournament_players` | `TournamentPlayer` | Tabella ponte N:N fra `tournaments` e `players` (partecipanti). |
 | `playoff_history` | `PlayoffHistory` | Storico spareggi diretti fra due giocatori. |
+| `player_game_participation` | `PlayerGameParticipation` | Costanza di partecipazione per `(player_id, game_id)`: tornei consecutivi giocati/saltati (`current_streak`/`tournaments_missed_in_a_row`), usata dal badge "Costanza" e dal promemoria di rientro (`participation_nudge`). Aggiornata da `_sync_participation_tracking` in `create_tournament`, solo per tornei non amichevoli. |
 | `races` | `Race` | Singola gara di un torneo: pista, ordine, e per i tornei a gironi `phase` (`group`/`finals`) e `group_name`. |
 | `results` | `Result` | Risultato di un giocatore in una gara: posizione, punti, personaggio usato. |
 | `predictions` | `Prediction` | Pronostico semplice "vincitore torneo" con puntata in monete virtuali (sistema di engagement separato dalle schedine). |

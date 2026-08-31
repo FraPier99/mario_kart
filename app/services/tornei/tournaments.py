@@ -7,7 +7,7 @@ import logging
 import random
 
 from app.services.schedine.schedine import settle_tournament_schedine
-from app.models import Tournament, TournamentPlayer, Player, User
+from app.models import Tournament, TournamentPlayer, Player, User, PlayerGameParticipation
 from sqlalchemy.orm import Session
 from sqlalchemy import func, case
 from app.data.punteggi import setUpTournament
@@ -35,6 +35,75 @@ def _reject_superadmin_participants(db: Session, participant_ids: list[int]) -> 
         raise ValueError(
             "Un account SuperAdmin non può essere aggiunto come partecipante al torneo"
         )
+
+
+# Soglie del tracking partecipazione (vedi PlayerGameParticipation): tornei
+# consecutivi giocati/saltati oltre le quali scattano rispettivamente il
+# badge "Costanza" (calcolato a lettura, in stats.py) e il promemoria di
+# rientro one-shot.
+PARTICIPATION_NUDGE_THRESHOLD = 3
+
+
+def _sync_participation_tracking(db: Session, tournament: Tournament) -> list[int]:
+    """Aggiorna PlayerGameParticipation per ogni giocatore che ha già una
+    storia di partecipazione su questo game_id: streak avanti di uno per chi
+    è fra i partecipanti del nuovo torneo, streak azzerata e "mancati"
+    incrementati per chi non c'è. Crea una nuova riga per i partecipanti di
+    questo torneo che non ne hanno ancora una (prima presenza su questo
+    gioco). Chiamata solo per tornei non amichevoli (create_tournament) —
+    stesso filtro già usato per badge/notifiche esistenti.
+
+    Ritorna gli user_id da avvisare col promemoria di rientro: solo chi ha
+    appena superato PARTICIPATION_NUDGE_THRESHOLD assenze consecutive per la
+    PRIMA volta a questo conteggio (last_nudged_at_missed_count), per non
+    rimandare la stessa notifica ad ogni torneo successivo."""
+    participant_ids = set(tournament.participant_ids or [])
+
+    existing_rows = (
+        db.query(PlayerGameParticipation)
+        .filter(PlayerGameParticipation.game_id == tournament.game_id)
+        .all()
+    )
+    existing_by_player = {row.player_id: row for row in existing_rows}
+
+    nudge_player_ids = []
+    for player_id, row in existing_by_player.items():
+        if player_id in participant_ids:
+            row.current_streak += 1
+            row.tournaments_missed_in_a_row = 0
+        else:
+            row.current_streak = 0
+            row.tournaments_missed_in_a_row += 1
+            if (
+                row.tournaments_missed_in_a_row >= PARTICIPATION_NUDGE_THRESHOLD
+                and row.last_nudged_at_missed_count != row.tournaments_missed_in_a_row
+            ):
+                row.last_nudged_at_missed_count = row.tournaments_missed_in_a_row
+                nudge_player_ids.append(player_id)
+        row.last_tournament_id_seen = tournament.id
+
+    for player_id in participant_ids:
+        if player_id in existing_by_player:
+            continue
+        db.add(
+            PlayerGameParticipation(
+                player_id=player_id,
+                game_id=tournament.game_id,
+                current_streak=1,
+                last_tournament_id_seen=tournament.id,
+            )
+        )
+
+    db.commit()
+
+    if not nudge_player_ids:
+        return []
+    return [
+        u.id
+        for u in db.query(User)
+        .filter(User.player_id.in_(nudge_player_ids), User.player_id.isnot(None))
+        .all()
+    ]
 
 
 def _compute_group_stage_n_races(n_players: int) -> int:
@@ -305,7 +374,10 @@ def create_tournament(
     # "disturbare" tutti per una partita per divertimento.
     if not new_tournament.is_friendly:
         try:
-            from app.services.utenti.notifications import create_tournament_notifications
+            from app.services.utenti.notifications import (
+                create_tournament_notifications,
+                create_single_notification,
+            )
 
             game_name = new_tournament.game.name if new_tournament.game else "torneo"
             create_tournament_notifications(
@@ -321,6 +393,17 @@ def create_tournament(
                     "schedina_pending",
                     f"Compila la schedina per '{new_tournament.name}'",
                 )
+
+            nudge_user_ids = _sync_participation_tracking(db, new_tournament)
+            for user_id in nudge_user_ids:
+                create_single_notification(
+                    db,
+                    user_id,
+                    "participation_nudge",
+                    f"Nuovo torneo di {game_name} — ti aspettiamo: '{new_tournament.name}'!",
+                    source_tournament_id=new_tournament.id,
+                )
+
             db.commit()
         except Exception:
             pass
@@ -769,6 +852,7 @@ def tournament_delete(db: Session, tournament_id: int):
 
     from app.models import (
         Notification,
+        PlayerGameParticipation,
         PlayoffHistory,
         PointAdjustment,
         Prediction,
@@ -824,6 +908,13 @@ def tournament_delete(db: Session, tournament_id: int):
     db.query(TournamentPhoto).filter(
         TournamentPhoto.tournament_id == tournament_id
     ).update({TournamentPhoto.tournament_id: None}, synchronize_session=False)
+
+    # 4d. Nullify PlayerGameParticipation.last_tournament_id_seen (preserva
+    # streak/missed accumulati, il torneo cancellato smette solo di essere
+    # "l'ultimo visto")
+    db.query(PlayerGameParticipation).filter(
+        PlayerGameParticipation.last_tournament_id_seen == tournament_id
+    ).update({PlayerGameParticipation.last_tournament_id_seen: None}, synchronize_session=False)
 
     # 5. Nullify UserInventory.consumed_in_race_id (before deleting Race/Result)
     race_ids = [

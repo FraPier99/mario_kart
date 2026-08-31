@@ -200,6 +200,32 @@ class TournamentPlayer(Base):
 
 
 # -------------------
+# PLAYER GAME PARTICIPATION
+# -------------------
+class PlayerGameParticipation(Base):
+    """Traccia la costanza di partecipazione ai tornei (non amichevoli) per
+    ciascuna coppia (player_id, game_id) — dato prima assente, necessario
+    per il badge "Costanza" e per il promemoria di rientro. Aggiornata da
+    _sync_participation_tracking in services/tornei/tournaments.py ad ogni
+    nuovo torneo creato per quel gioco."""
+    __tablename__ = "player_game_participation"
+
+    player_id = Column(Integer, ForeignKey("players.id"), primary_key=True)
+    game_id = Column(Integer, ForeignKey("games.id"), primary_key=True)
+
+    current_streak = Column(Integer, nullable=False, default=0)
+    tournaments_missed_in_a_row = Column(Integer, nullable=False, default=0)
+    last_tournament_id_seen = Column(Integer, ForeignKey("tournaments.id"), nullable=True)
+    # Numero di tornei saltati al momento dell'ultimo promemoria "torna a
+    # giocare" inviato — evita di rimandare la notifica ad ogni nuovo torneo
+    # finché il giocatore non supera una nuova soglia di assenza.
+    last_nudged_at_missed_count = Column(Integer, nullable=False, default=0)
+
+    player = relationship("Player")
+    game = relationship("Game")
+
+
+# -------------------
 # PLAYOFF HISTORY
 # -------------------
 class PlayoffHistory(Base):

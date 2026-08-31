@@ -100,6 +100,11 @@ class PlayerGameBadgeResponse(BaseModel):
     wins: int
     podiums: int
     podium_rate: float
+    # Ricompense per costanza/miglioramento, indipendenti dal tier — vedi
+    # PlayerGameParticipation e _compute_improving_flag in stats.py.
+    streak: int = 0
+    improving: bool = False
+    consolation_wins: int = 0
 
 
 class PlayerBestBadgeResponse(BaseModel):

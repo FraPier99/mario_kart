@@ -1,4 +1,4 @@
-import { Crown, Trophy, Star, Flame, Swords, Flag } from 'lucide-react'
+import { Crown, Trophy, Star, Flame, Swords, Flag, Repeat, TrendingUp, Medal } from 'lucide-react'
 
 /**
  * Metadati visivi per i 6 tier badge (vedi app/services/tornei/stats.py::
@@ -93,4 +93,33 @@ export const PROFILE_CARD_STYLES = {
  * trattano esattamente come l'attuale "non campione". */
 export function getProfileCardStyle(tier) {
     return PROFILE_CARD_STYLES[tier] ?? null
+}
+
+// Stessa soglia di PARTICIPATION_NUDGE_THRESHOLD/streak lato backend (vedi
+// app/services/tornei/tournaments.py) — sotto questo numero di tornei
+// consecutivi giocati l'indicatore "Costanza" non si mostra.
+export const STREAK_BADGE_THRESHOLD = 3
+
+/**
+ * Indicatori aggiuntivi indipendenti dal tier — "premiano la via di mezzo"
+ * (chi non vince ma partecipa con costanza, chi sta migliorando, chi ha
+ * vinto la Consolazione) senza introdurre una classifica parallela. Non
+ * sostituiscono il badge di tier, si affiancano (vedi PlayerBadge.jsx).
+ */
+export const EXTRA_BADGES = {
+    streak: {
+        Icon: Repeat,
+        label: (n) => `Costanza · ${n} tornei di fila`,
+        className: 'border-emerald-300 bg-emerald-100 text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-300',
+    },
+    improving: {
+        Icon: TrendingUp,
+        label: 'In crescita',
+        className: 'border-circuit-blue/60 bg-circuit-blue/15 text-blue-800 dark:border-circuit-blue/40 dark:bg-circuit-blue/15 dark:text-blue-300',
+    },
+    consolation: {
+        Icon: Medal,
+        label: (n) => (n > 1 ? `Re della Consolazione · ${n}×` : 'Re della Consolazione'),
+        className: 'border-violet-300 bg-violet-100 text-violet-800 dark:border-violet-500/40 dark:bg-violet-500/15 dark:text-violet-300',
+    },
 }

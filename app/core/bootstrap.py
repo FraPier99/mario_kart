@@ -531,6 +531,25 @@ def ensure_notification_source_tournament_column():
             )
 
 
+def ensure_player_game_participation_table():
+    inspector = inspect(engine)
+    if "player_game_participation" not in inspector.get_table_names():
+        with engine.begin() as connection:
+            connection.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS player_game_participation (
+                    player_id INTEGER NOT NULL REFERENCES players(id),
+                    game_id INTEGER NOT NULL REFERENCES games(id),
+                    current_streak INTEGER NOT NULL DEFAULT 0,
+                    tournaments_missed_in_a_row INTEGER NOT NULL DEFAULT 0,
+                    last_tournament_id_seen INTEGER REFERENCES tournaments(id),
+                    last_nudged_at_missed_count INTEGER NOT NULL DEFAULT 0,
+                    PRIMARY KEY (player_id, game_id)
+                )
+            """)
+            )
+
+
 def ensure_audit_log_table():
     inspector = inspect(engine)
     if "audit_log" not in inspector.get_table_names():
@@ -1049,6 +1068,7 @@ def bootstrap_database():
     ensure_photo_comment_edit_columns()
     ensure_notifications_table()
     ensure_notification_source_tournament_column()
+    ensure_player_game_participation_table()
     ensure_audit_log_table()
     ensure_format_columns()
     ensure_schedina_deluxe_table()

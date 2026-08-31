@@ -1,6 +1,6 @@
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session, aliased
-from app.models import Circuit, Game, Player, Race, Result, Tournament
+from app.models import Circuit, Game, Player, PlayerGameParticipation, Race, Result, Tournament
 
 
 def get_leaderboard(db: Session, tournament_id: int):
@@ -300,6 +300,57 @@ def _badge_tier_from_stats(tournaments_played: int, wins: int, podiums: int) -> 
     return "esordiente"
 
 
+# Servono almeno 6 tornei conclusi per esprimere un trend "in crescita":
+# con meno dati un confronto ultimi-3-vs-precedenti-3 è rumore, non segnale.
+_IMPROVEMENT_MIN_TOURNAMENTS = 6
+
+
+def _tournament_placement_pct(order: list[int], player_id: int) -> float | None:
+    """Piazzamento del giocatore in un torneo come percentuale 0-100 (stessa
+    formula del placementIndex per-gara di docs/CLASSIFICA.md, applicata qui
+    alla classifica finale del torneo intero), per confrontare tornei con un
+    numero diverso di partecipanti sulla stessa scala."""
+    n = len(order)
+    if n <= 1 or player_id not in order:
+        return None
+    pos = order.index(player_id) + 1
+    return (n - pos) / (n - 1) * 100
+
+
+def _compute_improving_flag(db: Session, tournaments: list, player_id: int) -> bool:
+    """True se il piazzamento medio del giocatore nelle sue ultime 3
+    partecipazioni concluse (per questo gioco) è migliore che nelle 3
+    precedenti — un modo per riconoscere chi sta migliorando anche se non
+    vince mai, senza introdurre una classifica parallela (esplicitamente
+    esclusa dal piano)."""
+    from app.services.tornei.tournaments import (
+        get_classic_final_classifica,
+        get_group_stage_overall_classifica,
+    )
+
+    dated = sorted((t for t in tournaments if t.date is not None), key=lambda t: t.date)
+    if len(dated) < _IMPROVEMENT_MIN_TOURNAMENTS:
+        return False
+
+    pct_by_tournament = []
+    for t in dated:
+        order = (
+            get_group_stage_overall_classifica(db, t.id)
+            if t.tournament_format == "group_stage"
+            else get_classic_final_classifica(db, t.id)
+        )
+        pct = _tournament_placement_pct(order, player_id)
+        if pct is not None:
+            pct_by_tournament.append(pct)
+
+    if len(pct_by_tournament) < _IMPROVEMENT_MIN_TOURNAMENTS:
+        return False
+
+    recent = pct_by_tournament[-3:]
+    previous = pct_by_tournament[-6:-3]
+    return (sum(recent) / 3) > (sum(previous) / 3)
+
+
 def get_player_game_badge(db: Session, player_id: int, game_id: int) -> dict:
     """Calcola il badge di un giocatore per un dato gioco, sui soli tornei
     CONCLUSI (Tournament.winner_id.isnot(None)) a cui ha partecipato.
@@ -356,6 +407,22 @@ def get_player_game_badge(db: Session, player_id: int, game_id: int) -> dict:
             podiums += 1
 
     tier = _badge_tier_from_stats(tournaments_played, wins, podiums)
+
+    # Ricompense per la costanza/il miglioramento, indipendenti dal tier
+    # tornei-vinti — vedi PlayerGameParticipation e _compute_improving_flag:
+    # "premiare la via di mezzo" senza toccare la classifica ufficiale.
+    participation = (
+        db.query(PlayerGameParticipation)
+        .filter(
+            PlayerGameParticipation.player_id == player_id,
+            PlayerGameParticipation.game_id == game_id,
+        )
+        .first()
+    )
+    streak = participation.current_streak if participation else 0
+    improving = _compute_improving_flag(db, tournaments, player_id)
+    consolation_wins = sum(1 for t in tournaments if t.consolation_winner_id == player_id)
+
     return {
         "tier": tier,
         "label": _BADGE_LABELS[tier],
@@ -363,6 +430,9 @@ def get_player_game_badge(db: Session, player_id: int, game_id: int) -> dict:
         "wins": wins,
         "podiums": podiums,
         "podium_rate": round(podiums / tournaments_played * 100, 1) if tournaments_played else 0.0,
+        "streak": streak,
+        "improving": improving,
+        "consolation_wins": consolation_wins,
     }
 
 

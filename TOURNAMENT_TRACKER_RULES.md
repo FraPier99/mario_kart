@@ -195,6 +195,7 @@ il proprio girone, e dopo l'avanzamento solo la fase in cui si trova
 | Punteggio schedine | `PUNTI_PRONOSTICO = 3` — `app/services/schedine/*` |
 | Standings per-girone lato frontend | `GroupCard`, `computeGroupStandings` — `frontend/src/components/tournaments/GroupPlancia.jsx` |
 | Torneo amichevole (flag, non un terzo formato) | `Tournament.is_friendly` — `app/models/tornei/models.py`; guardie in `update_tournament`/`set_tournament_playoff_winner`/`undo_last_playoff` (`app/services/tornei/tournaments.py`), `_check_not_friendly_tournament` (`app/controllers/cards/inventory.py`), `create_schedina`/`create_schedina_deluxe` (`app/services/schedine/*`), filtri in `app/services/tornei/stats.py` |
+| Tracking partecipazione (streak/promemoria rientro) | `_sync_participation_tracking` — `app/services/tornei/tournaments.py`, chiamata da `create_tournament` per tornei non amichevoli; badge "Costanza"/"In crescita"/"Re della Consolazione" derivati in `get_player_game_badge` — `app/services/tornei/stats.py` |
 
 ---
 

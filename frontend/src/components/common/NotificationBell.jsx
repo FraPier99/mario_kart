@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bell, BellRing, PenLine, Trophy, Zap, MessageCircle, ArrowRight, X } from 'lucide-react'
+import { Bell, BellRing, PenLine, Trophy, Zap, MessageCircle, ArrowRight, X, Heart } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { notificationsApi } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
@@ -14,6 +14,7 @@ const TYPE_CONFIG = {
   mention:           { icon: MessageCircle,  color: 'text-blue-400',    bg: 'bg-blue-500/15',    label: 'Menzione' },
   comment_reply:     { icon: MessageCircle,  color: 'text-emerald-400', bg: 'bg-emerald-500/15', label: 'Risposta in galleria' },
   card_granted:      { icon: Zap,            color: 'text-amber-400',   bg: 'bg-amber-500/15',   label: 'Carta ricevuta' },
+  participation_nudge: { icon: Heart,        color: 'text-rose-400',    bg: 'bg-rose-500/15',    label: 'Ti aspettiamo' },
 }
 const DEFAULT_CFG = { icon: Bell, color: 'text-slate-400', bg: 'bg-slate-500/15', label: 'Notifica' }
 
