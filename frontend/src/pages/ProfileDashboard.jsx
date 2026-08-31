@@ -545,6 +545,20 @@ const Dashboard = () => {
 
     const shouldNudgeOwnership = !ownershipLoading && !ownership.has_declared
 
+    const handleLogoutClick = () => {
+        setConfirmModal({
+            open: true,
+            title: 'Uscire dall\'account?',
+            message: 'Dovrai effettuare di nuovo l\'accesso per continuare a usare Lega Kart.',
+            confirmText: 'Esci',
+            confirmVariant: 'danger',
+            onConfirm: () => {
+                setConfirmModal((prev) => ({ ...prev, open: false }))
+                logout()
+            },
+        })
+    }
+
     const handleUsePower = (item) => {
         setConfirmModal({
             open: true,
@@ -657,12 +671,7 @@ const Dashboard = () => {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                {isAdmin && !isSuperadmin && (
-                                    <Link to="/tournaments/new" className="rounded-2xl border-2 border-emerald-600 bg-emerald-600 px-3 py-2.5 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-500">
-                                        Nuovo torneo
-                                    </Link>
-                                )}
-                                <button onClick={logout} type="button" className="rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5 font-title text-[10px] tracking-wide text-slate-700 dark:text-foreground transition active:translate-y-px hover:bg-slate-100">
+                                <button onClick={handleLogoutClick} type="button" className="rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5 font-title text-[10px] tracking-wide text-slate-700 dark:text-foreground transition active:translate-y-px hover:bg-slate-100">
                                     Esci
                                 </button>
                             </div>

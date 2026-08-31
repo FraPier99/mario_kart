@@ -342,10 +342,10 @@ const PanoramicaTab = ({ stats, tournaments, activeTournament, players, characte
         <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
             <div className="flex items-center justify-between gap-3 p-5 border-b border-slate-100 dark:border-border">
                 <p className="font-title text-xs tracking-wide text-slate-500 dark:text-muted-foreground">Ultimi tornei</p>
-                <Link to="/history" className="text-xs font-black text-emerald-600 dark:text-emerald-400 hover:underline">Vedi tutti</Link>
+                <Link to="/history" className="text-xs font-black text-emerald-600 dark:text-emerald-400 hover:underline">Storico tornei →</Link>
             </div>
             <div className="divide-y divide-slate-100 dark:divide-white/5">
-                {tournaments.slice(0, 6).map(t => (
+                {tournaments.slice(0, 5).map(t => (
                     <div key={t.id} className="flex items-center justify-between gap-4 px-5 py-3">
                         <div className="min-w-0">
                             <p className="text-sm font-black text-slate-900 dark:text-foreground truncate">{t.name}</p>
@@ -391,20 +391,15 @@ const TorneiTab = ({ tournaments }) => {
 
     return (
         <div className="space-y-4">
-            {/* Create + filter bar */}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex gap-1 overflow-x-auto">
-                    {FILTERS.map(f => (
-                        <button key={f} type="button" onClick={() => setFilter(f)}
-                            className={`shrink-0 rounded-xl px-3 py-1.5 font-title text-[10px] tracking-wide transition active:translate-y-px ${filter === f ? 'bg-emerald-500 text-white' : 'border-2 border-slate-200 dark:border-border bg-white dark:bg-card text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'}`}>
-                            {FILTER_LABELS[f]}
-                        </button>
-                    ))}
-                </div>
-                <Link to="/tournaments/new"
-                    className="flex items-center gap-1.5 rounded-xl bg-emerald-500 px-3 py-1.5 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-400">
-                    <Plus size={12} /> Nuovo torneo
-                </Link>
+            {/* Filter bar — "Nuovo torneo" è già nell'header della pagina (sempre
+                visibile su ogni tab), niente da ripetere qui. */}
+            <div className="flex gap-1 overflow-x-auto">
+                {FILTERS.map(f => (
+                    <button key={f} type="button" onClick={() => setFilter(f)}
+                        className={`shrink-0 rounded-xl px-3 py-1.5 font-title text-[10px] tracking-wide transition active:translate-y-px ${filter === f ? 'bg-emerald-500 text-white' : 'border-2 border-slate-200 dark:border-border bg-white dark:bg-card text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'}`}>
+                        {FILTER_LABELS[f]}
+                    </button>
+                ))}
             </div>
 
             <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
