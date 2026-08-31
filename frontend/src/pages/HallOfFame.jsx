@@ -59,14 +59,14 @@ const ChampionCard = ({ player, wins, gamesWon, tournaments, index, isLegend }) 
 
   return (
     <div
-      className="group relative overflow-hidden rounded-2xl border-2 border-amber-400/60 dark:border-amber-500/30 bg-linear-to-br from-amber-100/90 via-amber-50/60 to-amber-100/80 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60 transition-all duration-500 hover:scale-[1.02]"
+      className="group relative overflow-hidden rounded-2xl border-2 border-circuit-gold/60 dark:border-circuit-gold/30 bg-linear-to-br from-amber-100/90 via-amber-50/60 to-amber-100/80 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60 transition-all duration-500 hover:scale-[1.02]"
       style={{ animation: `fade-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both`, animationDelay: `${index * 0.06}s`, boxShadow: 'var(--circuit-shadow-md)' }}
     >
       {/* Crown badge — variante dorata con glow per il tier "Leggenda" (ha vinto
           tutti i tornei conclusi del gioco filtrato, min. 2), altrimenti la
           semplice corona ambra di sempre. */}
       <div
-        className={`absolute right-3 top-3 z-10 rounded-full p-1.5 shadow-lg ${isLegend ? 'bg-linear-to-br from-amber-300 via-yellow-200 to-amber-500 shadow-amber-400/60' : 'bg-amber-400 shadow-amber-400/40'}`}
+        className={`absolute right-3 top-3 z-10 rounded-full p-1.5 shadow-lg ${isLegend ? 'bg-linear-to-br from-amber-300 via-yellow-200 to-circuit-gold shadow-circuit-gold/60' : 'bg-circuit-gold shadow-circuit-gold/40'}`}
         style={{ animation: 'crown-drop 1.2s cubic-bezier(0.34,1.56,0.64,1) both 0.3s' }}
         title={isLegend ? 'Leggenda: ha vinto tutti i tornei giocati di questo gioco' : undefined}
       >
@@ -104,13 +104,13 @@ const ChampionCard = ({ player, wins, gamesWon, tournaments, index, isLegend }) 
       <div className="relative flex justify-center pt-8 pb-4">
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-amber-200/40 dark:from-amber-800/20 to-transparent" />
         <div className="relative">
-          <div className="absolute -inset-1 rounded-2xl bg-amber-400/30 blur-md" />
+          <div className="absolute -inset-1 rounded-2xl bg-circuit-gold/30 blur-md" />
           <img
             src={player.champion_photo || player.img_url || buildAvatarPlaceholder(player.nickname)}
             alt={player.nickname}
             loading="lazy"
             decoding="async"
-            className="relative h-24 w-24 rounded-2xl object-cover ring-2 ring-white/60 dark:ring-amber-500/30 shadow-lg"
+            className="relative h-24 w-24 rounded-2xl object-cover ring-2 ring-white/60 dark:ring-circuit-gold/30 shadow-lg"
           />
         </div>
       </div>
@@ -283,7 +283,7 @@ const HallOfFame = () => {
     <AppLayout>
       <section className="mx-auto max-w-7xl px-4 py-10">
         {/* ── Hero Header ── */}
-        <div className="relative mb-10 overflow-hidden rounded-[2.5rem] border border-amber-400/50 dark:border-amber-500/30 bg-linear-to-br from-amber-100 via-amber-400 to-amber-600 dark:from-amber-950 dark:via-amber-900 dark:to-amber-950 p-8 md:p-12 text-center shadow-2xl shadow-amber-300/30 dark:shadow-amber-950/50 gold-card-shimmer">
+        <div className="relative mb-10 overflow-hidden rounded-[2.5rem] border border-circuit-gold/50 dark:border-circuit-gold/30 bg-linear-to-br from-amber-100 via-amber-400 to-amber-600 dark:from-amber-950 dark:via-amber-900 dark:to-amber-950 p-8 md:p-12 text-center shadow-2xl shadow-circuit-gold/30 dark:shadow-amber-950/50 gold-card-shimmer">
           <StarBg count={25} />
 
           {/* Confetti particles */}
@@ -341,15 +341,15 @@ const HallOfFame = () => {
         {/* ── Stats bar ── */}
         <div className="mt-8 rounded-3xl border border-slate-200 dark:border-border bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 md:p-8">
         <div className="mb-8 grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border-2 border-amber-400/50 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-center" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+          <div className="rounded-2xl border-2 border-circuit-gold/50 dark:border-circuit-gold/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-center" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
             <p className="font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">Campioni</p>
             <p className="font-title mt-1 text-2xl text-amber-800 dark:text-amber-200">{loading ? '—' : totalChampions}</p>
           </div>
-          <div className="rounded-2xl border-2 border-amber-400/50 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-center" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+          <div className="rounded-2xl border-2 border-circuit-gold/50 dark:border-circuit-gold/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-center" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
             <p className="font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">Titoli assegnati</p>
             <p className="font-title mt-1 text-2xl text-amber-800 dark:text-amber-200">{loading ? '—' : totalWins}</p>
           </div>
-          <div className="rounded-2xl border-2 border-amber-400/50 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-center" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+          <div className="rounded-2xl border-2 border-circuit-gold/50 dark:border-circuit-gold/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-center" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
             <p className="font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">Giochi coperti</p>
             <p className="font-title mt-1 text-2xl text-amber-800 dark:text-amber-200">{loading ? '—' : uniqueGames}</p>
           </div>
@@ -364,7 +364,7 @@ const HallOfFame = () => {
           <select
             value={selectedGameId}
             onChange={(e) => setSelectedGameId(e.target.value)}
-            className="font-title rounded-xl border-2 border-amber-300 dark:border-amber-500/30 bg-white dark:bg-card px-4 py-2.5 text-[10px] tracking-wide outline-none focus:border-amber-500 text-slate-800 dark:text-foreground"
+            className="font-title rounded-xl border-2 border-circuit-gold/60 dark:border-circuit-gold/30 bg-white dark:bg-card px-4 py-2.5 text-[10px] tracking-wide outline-none focus:border-circuit-gold text-slate-800 dark:text-foreground"
           >
             <option value="">Tutti i giochi</option>
             {games.map((g) => (
@@ -377,7 +377,7 @@ const HallOfFame = () => {
         {loading ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="rounded-2xl border-2 border-amber-400/30 dark:border-amber-500/20 bg-amber-50/60 dark:bg-amber-950/20 p-5">
+              <div key={i} className="rounded-2xl border-2 border-circuit-gold/30 dark:border-circuit-gold/20 bg-amber-50/60 dark:bg-amber-950/20 p-5">
                 <div className="mx-auto h-24 w-24 animate-shimmer rounded-2xl bg-linear-to-r from-amber-200 via-amber-300 to-amber-200 dark:from-amber-900 dark:via-amber-800 dark:to-amber-900 bg-size-[200%_100%]" />
                 <div className="mt-4 h-4 w-2/3 mx-auto animate-shimmer rounded-lg bg-linear-to-r from-amber-200 via-amber-300 to-amber-200 dark:from-amber-900 dark:via-amber-800 dark:to-amber-900 bg-size-[200%_100%]" />
                 <div className="mt-3 h-8 w-1/2 mx-auto animate-shimmer rounded-xl bg-linear-to-r from-amber-200 via-amber-300 to-amber-200 dark:from-amber-900 dark:via-amber-800 dark:to-amber-900 bg-size-[200%_100%]" />
@@ -399,7 +399,7 @@ const HallOfFame = () => {
             ))}
           </div>
         ) : (
-          <div className="rounded-2xl border-2 border-dashed border-amber-300 dark:border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/10 px-8 py-16 text-center">
+          <div className="rounded-2xl border-2 border-dashed border-circuit-gold/60 dark:border-circuit-gold/30 bg-amber-50/50 dark:bg-amber-950/10 px-8 py-16 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 dark:bg-amber-900/30">
               <Trophy size={28} className="text-amber-500" />
             </div>
