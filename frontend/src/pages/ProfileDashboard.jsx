@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Check, ChevronDown, Image as ImageIcon, PenLine, Search, Upload, X, Clock, AlertTriangle, Zap, Shield, Trophy, Flag, BarChart3, Star, Crown } from 'lucide-react'
+import { Check, ChevronDown, Image as ImageIcon, PenLine, Search, Upload, X, Clock, AlertTriangle, Zap, Trophy, Flag, BarChart3, Star, Crown } from 'lucide-react'
 import PowerCard from '@/components/cards/PowerCard'
 import { toast } from 'sonner'
 import { toast as soundToast } from '@/lib/soundToast'
@@ -326,7 +326,7 @@ const AccentColorPicker = ({ value, onChange }) => (
 )
 
 const Dashboard = () => {
-    const { user, isAdmin, isSuperadmin, refreshMe, logout, isAuthenticated } = useAuth()
+    const { user, isAdmin, isSuperadmin, refreshMe, isAuthenticated } = useAuth()
     const { charactersById, statsByPlayerId, patchPlayer, getTournamentById, games, consoles, getLeaderboardByGame } = useAppData()
     const characters = useMemo(() => [...charactersById.values()], [charactersById])
     const player = user?.player ?? null
@@ -545,20 +545,6 @@ const Dashboard = () => {
 
     const shouldNudgeOwnership = !ownershipLoading && !ownership.has_declared
 
-    const handleLogoutClick = () => {
-        setConfirmModal({
-            open: true,
-            title: 'Uscire dall\'account?',
-            message: 'Dovrai effettuare di nuovo l\'accesso per continuare a usare Lega Kart.',
-            confirmText: 'Esci',
-            confirmVariant: 'danger',
-            onConfirm: () => {
-                setConfirmModal((prev) => ({ ...prev, open: false }))
-                logout()
-            },
-        })
-    }
-
     const handleUsePower = (item) => {
         setConfirmModal({
             open: true,
@@ -616,11 +602,13 @@ const Dashboard = () => {
             <section className="mx-auto max-w-7xl px-4 py-8 animate-fade-in space-y-6">
 
                 {/* ── HEADER PROFILO ───────────────────────────── */}
-                {/* max-w-4xl qui (non max-w-7xl come il resto della pagina):
-                    il contenuto (avatar+nome+badge) è intrinsecamente stretto,
-                    una card larga quanto tutta la pagina lascia una zona colorata
-                    vuota a destra invece di sembrare una card compatta. */}
-                <div className={`mx-auto max-w-4xl rounded-[2rem] border-2 overflow-hidden ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
+                {/* max-w-5xl qui (non max-w-7xl come il resto della pagina):
+                    il contenuto è intrinsecamente stretto, una card larga
+                    quanto tutta la pagina lascia una zona colorata vuota
+                    invece di sembrare una card compatta. Il logout resta
+                    disponibile dal menu profilo in Navbar — niente più
+                    bottone "Esci" duplicato qui. */}
+                <div className={`mx-auto max-w-5xl rounded-[2rem] border-2 overflow-hidden ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                     <div className="p-6">
                         <ProfileHeader
                             avatarSrc={form.img_url || player?.img_url}
@@ -635,11 +623,6 @@ const Dashboard = () => {
                             badges={isSuperadmin ? [] : badges}
                             favoriteCharacter={favoriteCharacter}
                             bio={player?.bio}
-                            actions={(
-                                <button onClick={handleLogoutClick} type="button" className="rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2.5 font-title text-[10px] tracking-wide text-slate-700 dark:text-foreground transition active:translate-y-px hover:bg-slate-100">
-                                    Esci
-                                </button>
-                            )}
                         />
                     </div>
 
@@ -1024,29 +1007,6 @@ const Dashboard = () => {
                                 />
                             </div>
                         )}
-                    </div>
-                )}
-
-                {/* ── BANNER SUPERADMIN → redirect to /superadmin ── */}
-                {isSuperadmin && (
-                    <div className="rounded-[2rem] border-2 border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 p-6" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
-                        <div className="flex flex-wrap items-center justify-between gap-4">
-                            <div className="flex items-center gap-4">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-400/30">
-                                    <Shield size={22} />
-                                </div>
-                                <div>
-                                    <p className="font-title text-[9px] tracking-wide text-amber-600 dark:text-amber-400">Accesso completo</p>
-                                    <h2 className="mt-0.5 text-lg font-black text-slate-900 dark:text-foreground">Pannello SuperAdmin</h2>
-                                    <p className="text-sm text-slate-500 dark:text-muted-foreground">Gestisci utenti, tornei, carte e audit log da un unico pannello.</p>
-                                </div>
-                            </div>
-                            <Link to="/superadmin"
-                                className="inline-flex items-center gap-2 rounded-2xl border-2 border-amber-500 bg-amber-500 px-5 py-3 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-amber-400"
-                                style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                                <Shield size={16} /> Apri Pannello
-                            </Link>
-                        </div>
                     </div>
                 )}
 

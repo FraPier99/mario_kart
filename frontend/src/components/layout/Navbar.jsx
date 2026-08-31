@@ -12,6 +12,7 @@ import { useAppData } from '@/context/AppDataContext'
 import { getProfileTheme } from '@/lib/profileTheme'
 import NotificationBell from '@/components/common/NotificationBell'
 import LogoMark from '@/components/common/LogoMark'
+import ConfirmModal from '@/components/common/ConfirmModal'
 
 export default function Navbar() {
   const location = useLocation()
@@ -23,6 +24,22 @@ export default function Navbar() {
 
   const [mobileOpen, setMobileOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  // Conferma prima del logout — evita l'uscita accidentale da un click sul
+  // menu account (richiesta esplicita: prima usciva subito senza modale).
+  const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', confirmText: '', confirmVariant: 'danger', onConfirm: null })
+  const handleLogoutClick = () => {
+    setConfirmModal({
+      open: true,
+      title: 'Uscire dall\'account?',
+      message: 'Dovrai effettuare di nuovo l\'accesso per continuare a usare Lega Kart.',
+      confirmText: 'Esci',
+      confirmVariant: 'danger',
+      onConfirm: () => {
+        setConfirmModal((prev) => ({ ...prev, open: false }))
+        logout()
+      },
+    })
+  }
   const [adminOpen, setAdminOpen] = useState(false)
   const [torneiOpen, setTorneiOpen] = useState(false)
   const [classificheOpen, setClassificheOpen] = useState(false)
@@ -119,6 +136,7 @@ export default function Navbar() {
   )
 
   return (
+    <>
     <nav
       className="sticky top-0 z-50 border-b shadow-lg backdrop-blur-md"
       style={{ background: 'var(--mk-navbar-bg)', borderBottomColor: 'var(--mk-border)' }}
@@ -424,7 +442,7 @@ export default function Navbar() {
                   <div className="my-1 border-t" style={{ borderColor: 'var(--mk-border)' }} />
                   <button
                     type="button"
-                    onClick={() => { setProfileOpen(false); logout() }}
+                    onClick={() => { setProfileOpen(false); handleLogoutClick() }}
                     className="font-title flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[10px] tracking-wide text-rose-400 transition hover:bg-rose-500/10 hover:text-rose-300"
                   >
                     <LogOut size={13} /> Logout
@@ -608,7 +626,7 @@ export default function Navbar() {
               <div className="border-t pt-2" style={{ borderTopColor: 'var(--mk-border)' }}>
                 <button
                   type="button"
-                  onClick={() => { setMobileOpen(false); logout() }}
+                  onClick={() => { setMobileOpen(false); handleLogoutClick() }}
                   className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-black uppercase tracking-wider text-rose-400 transition hover:bg-rose-500/10"
                 >
                   <LogOut size={15} /> Logout
@@ -619,5 +637,15 @@ export default function Navbar() {
         </div>
       )}
     </nav>
+    <ConfirmModal
+      isOpen={confirmModal.open}
+      onClose={() => setConfirmModal((prev) => ({ ...prev, open: false }))}
+      onConfirm={confirmModal.onConfirm}
+      title={confirmModal.title}
+      message={confirmModal.message}
+      confirmText={confirmModal.confirmText}
+      confirmVariant={confirmModal.confirmVariant || 'danger'}
+    />
+    </>
   )
 }
