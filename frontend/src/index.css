@@ -3,7 +3,6 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 @import "@fontsource/rubik-mono-one/400.css";
-@import "@fontsource/press-start-2p/400.css";
 
 @custom-variant dark (&:is(.dark *));
 :root {
@@ -21,8 +20,6 @@
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: 'Rubik Mono One', system-ui, sans-serif;
-  --pixel: 'Press Start 2P', monospace;
-  --mono: ui-monospace, Consolas, monospace;
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
@@ -138,9 +135,7 @@
   --color-circuit-red: var(--circuit-red);
   --color-circuit-gold: var(--circuit-gold);
   --color-circuit-blue: var(--circuit-blue);
-  --font-heading: var(--heading);
   --font-sans: 'Geist Variable', sans-serif;
-  --font-pixel: var(--pixel);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -184,10 +179,6 @@
 @layer utilities {
   .font-title {
     font-family: var(--heading);
-  }
-
-  .font-pixel {
-    font-family: var(--pixel);
   }
 }
 
