@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import {
     Flag, Trophy, Swords, ScrollText, Zap, Scale,
     Crown, Star, Flame, Flag as FlagIcon, ChevronDown, PartyPopper,
+    Repeat, TrendingUp, Medal,
 } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import PlayerLink from '@/components/common/PlayerLink'
@@ -31,6 +32,14 @@ const BADGE_TIERS_FAQ = [
     { tier: 'OUTSIDER', Icon: Flame, color: 'text-violet-600 dark:text-violet-400', desc: 'Non ha mai vinto, ha fatto almeno un podio, ma meno spesso della metà dei tornei giocati.' },
     { tier: 'ESORDIENTE', Icon: FlagIcon, color: 'text-emerald-600 dark:text-emerald-400', desc: 'Ha giocato almeno un torneo concluso ma non è mai arrivato sul podio.' },
     { tier: 'SFIDANTE', Icon: Swords, color: 'text-slate-500 dark:text-muted-foreground', desc: 'Non ha ancora giocato un torneo concluso di quel gioco (e quel gioco ha comunque almeno un torneo creato).' },
+]
+
+// Indicatori extra indipendenti dal tier — vedi lib/playerBadges.js
+// EXTRA_BADGES, stesso concetto spiegato qui in linguaggio da regolamento.
+const EXTRA_BADGES_FAQ = [
+    { key: 'streak', Icon: Repeat, color: 'text-emerald-600 dark:text-emerald-400', title: 'Costanza', desc: 'Ha giocato almeno 3 tornei consecutivi dello stesso gioco, senza saltarne nemmeno uno.' },
+    { key: 'improving', Icon: TrendingUp, color: 'text-blue-600 dark:text-blue-400', title: 'In crescita', desc: 'Il piazzamento medio nelle ultime 3 partecipazioni concluse è migliore rispetto alle 3 precedenti (serve avere almeno 6 tornei conclusi giocati).' },
+    { key: 'consolation', Icon: Medal, color: 'text-violet-600 dark:text-violet-400', title: 'Re della Consolazione', desc: 'Ha vinto almeno una volta la Finale di Consolazione (il bracket "minore" dei tornei a gironi, per chi non arriva in Finale principale).' },
 ]
 
 // Struttura a due livelli: le voci con `children` sono un'etichetta di
@@ -326,6 +335,29 @@ const Faq = () => {
                                         </div>
                                     ))}
                                 </div>
+
+                                <SubHeading>Riconoscimenti extra</SubHeading>
+                                <p className="text-sm text-slate-600 dark:text-muted-foreground">
+                                    Oltre al livello, si possono ottenere fino a tre indicatori aggiuntivi — non
+                                    sostituiscono il badge di livello, si affiancano: premiano la costanza e i
+                                    miglioramenti, non solo le vittorie.
+                                </p>
+                                <div className="mt-4 space-y-3">
+                                    {EXTRA_BADGES_FAQ.map(({ key, Icon, color, title, desc }) => (
+                                        <div key={key} className="flex items-start gap-3 rounded-2xl border border-slate-200 dark:border-border p-4">
+                                            <Icon size={18} className={`mt-0.5 shrink-0 ${color}`} />
+                                            <div>
+                                                <p className={`text-sm font-black uppercase tracking-wide ${color}`}>{title}</p>
+                                                <p className="mt-1 text-sm text-slate-600 dark:text-muted-foreground">{desc}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <p className="mt-4 text-sm text-slate-600 dark:text-muted-foreground">
+                                    Chi salta 3 tornei di fila dello stesso gioco riceve inoltre un promemoria
+                                    di rientro (una tantum, non si ripete ad ogni torneo successivo) — un
+                                    invito, non un obbligo.
+                                </p>
                             </div>
                         )}
 
