@@ -51,7 +51,11 @@ const ProfileHeader = ({
                             <cardStyle.Icon size={9} className={cardStyle.badgeIconColor} />
                         </span>
                     )}
-                    {!cardStyle && favoriteCharacter?.img_url && (
+                    {/* Personaggio preferito sempre qui, vicino all'avatar (angolo
+                        opposto al badge di tier, nessuna sovrapposizione) — mai
+                        anche ripetuto sotto come chip separata (segnalato
+                        dall'utente come duplicazione). */}
+                    {favoriteCharacter?.img_url && (
                         <div className="absolute -bottom-1.5 -right-1.5 h-6 w-6 overflow-hidden rounded-lg border-2 border-white dark:border-slate-900 shadow-md">
                             <img src={favoriteCharacter.img_url} alt={favoriteCharacter.name} className="h-full w-full object-cover" />
                         </div>
@@ -67,23 +71,24 @@ const ProfileHeader = ({
                 </div>
             </div>
 
-            {/* Livelli — un badge di tier per riga, extra agganciati al proprio gioco */}
+            {/* Livelli — un badge per gioco, sulla stessa riga quando ce n'è
+                più di uno (extra sempre agganciati al proprio badge, mai
+                mescolati fra giochi diversi anche se affiancati). */}
             {badges.length > 0 && (
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
                     {badges.map((b) => (
                         <PlayerBadge key={b.game_id ?? 'best'} badge={b} size="sm" />
                     ))}
                 </div>
             )}
 
-            {/* Extra — personaggio preferito + bio, info secondarie */}
-            {(favoriteCharacter || bio) && (
+            {/* Extra — bio, e personaggio preferito SOLO se non ha un'immagine
+                (con immagine è già mostrato vicino all'avatar, mai duplicato
+                qui sotto — segnalato dall'utente). */}
+            {((favoriteCharacter && !favoriteCharacter.img_url) || bio) && (
                 <div className="flex flex-col items-center gap-2">
-                    {favoriteCharacter && (
+                    {favoriteCharacter && !favoriteCharacter.img_url && (
                         <div className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-1.5">
-                            {favoriteCharacter.img_url && (
-                                <img src={favoriteCharacter.img_url} alt={favoriteCharacter.name} className="h-5 w-5 rounded-full object-cover" />
-                            )}
                             <span className="text-xs font-black text-slate-600 dark:text-foreground">{favoriteCharacter.name}</span>
                         </div>
                     )}

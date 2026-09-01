@@ -35,7 +35,7 @@ const Header = () => {
         <section className="mx-auto max-w-7xl px-4 pt-8">
             {/* Card compatta "Chi sono io" — sfumatura tema leggera al posto della foto/blur/texture di sfondo */}
             <div
-                className="overflow-hidden rounded-[2rem] border-2 border-slate-900/70 dark:border-white/20 backdrop-blur-xl"
+                className="overflow-hidden rounded-[2rem] border-2 border-slate-900/70 dark:border-white/20"
                 style={{ background: theme.cardBackground, boxShadow: 'var(--circuit-shadow-lg)' }}
             >
                 <div className="flex flex-col gap-5 p-5 md:flex-row md:items-center md:justify-between md:p-6">
@@ -46,7 +46,7 @@ const Header = () => {
                     >
                         <div className="relative shrink-0">
                             <div className="absolute -inset-0.5 rounded-2xl opacity-60 animate-pulse" style={{ background: theme.accent }} />
-                            <div className="relative h-18 w-18 overflow-hidden rounded-2xl border-2 border-slate-900/70 dark:border-white/20 bg-white/40 dark:bg-black/20 md:h-20 md:w-20" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+                            <div className="relative h-18 w-18 overflow-hidden rounded-2xl border-2 border-slate-900/70 dark:border-white/20 bg-slate-100 dark:bg-slate-900 md:h-20 md:w-20" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                 {player?.img_url ? (
                                     <img src={player.img_url} alt={player.nickname} className="h-full w-full object-cover" />
                                 ) : (

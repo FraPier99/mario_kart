@@ -57,7 +57,7 @@ export const PROFILE_CARD_STYLES = {
         Icon: Crown,
         shimmer: true,
         cardBorder: 'border-circuit-gold/50 dark:border-circuit-gold/30 shadow-circuit-gold/20 dark:shadow-amber-950/40 ring-1 ring-circuit-gold/30 dark:ring-circuit-gold/20',
-        cardBg: 'bg-linear-to-br from-amber-100/90 via-amber-50/60 to-amber-100/80 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60',
+        cardBg: 'bg-linear-to-br from-amber-100 via-amber-50 to-amber-100 dark:from-amber-950 dark:via-amber-900 dark:to-amber-950',
         avatarBorder: 'border-circuit-gold shadow-circuit-gold/20',
         badgeBg: 'bg-circuit-gold',
         badgeIconColor: 'text-amber-950',
@@ -67,7 +67,7 @@ export const PROFILE_CARD_STYLES = {
         Icon: Trophy,
         shimmer: false,
         cardBorder: 'border-circuit-gold/40 dark:border-circuit-gold/20 shadow-amber-200/10 dark:shadow-amber-950/20',
-        cardBg: 'bg-amber-50/50 dark:bg-amber-950/20',
+        cardBg: 'bg-amber-50 dark:bg-amber-950',
         avatarBorder: 'border-circuit-gold/70 shadow-circuit-gold/15',
         badgeBg: 'bg-circuit-gold/80',
         badgeIconColor: 'text-amber-950',
@@ -81,7 +81,7 @@ export const PROFILE_CARD_STYLES = {
         // del badge-pill "veterano" stesso — una card di sfondo altrettanto
         // satura li fa sparire tutti nello stesso azzurro.
         cardBorder: 'border-circuit-blue/40 dark:border-circuit-blue/20 shadow-blue-200/10 dark:shadow-blue-950/20',
-        cardBg: 'bg-blue-50/50 dark:bg-blue-950/20',
+        cardBg: 'bg-blue-50 dark:bg-blue-950',
         avatarBorder: 'border-circuit-blue/70 shadow-circuit-blue/15',
         badgeBg: 'bg-circuit-blue',
         badgeIconColor: 'text-white',

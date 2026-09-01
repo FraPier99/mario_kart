@@ -68,8 +68,8 @@ const Hero = () => {
     // style.background per theme.cardBackground, dinamico per utente e
     // quindi legittimamente inline — qui invece il gradiente è fisso).
     const goldCardBg = cardTier === 'veterano'
-        ? 'bg-blue-50/50 dark:bg-blue-950/20'
-        : 'bg-linear-to-br from-amber-100/92 via-amber-50/70 to-amber-100/88 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60'
+        ? 'bg-blue-50 dark:bg-blue-950'
+        : 'bg-linear-to-br from-amber-100 via-amber-50 to-amber-100 dark:from-amber-950 dark:via-amber-900 dark:to-amber-950'
 
     // "Ultimo campione": non usare lastWinner/lastWinnerStats del context — quelli
     // valgono solo se il torneo più recente in assoluto è concluso, quindi sono
@@ -112,7 +112,7 @@ const Hero = () => {
     if (user && !isSuperadmin && !player) {
         return (
             <section className="mx-auto max-w-7xl px-4 py-8">
-                <div className="overflow-hidden rounded-[2rem] border-2 border-blue-200 dark:border-blue-500/30 bg-blue-50/60 dark:bg-blue-500/5 p-6 md:p-8">
+                <div className="overflow-hidden rounded-[2rem] border-2 border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-950 p-6 md:p-8">
                     <div className="flex flex-col items-center gap-3 text-center md:flex-row md:items-start md:text-left">
                         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-500/15">
                             <UserPlus size={24} className="text-blue-600 dark:text-blue-300" />
@@ -141,7 +141,7 @@ const Hero = () => {
     return (
         <section className="mx-auto max-w-7xl px-4 py-8">
             <div
-                className={`overflow-hidden rounded-[2rem] border-2 backdrop-blur-xl transition-all duration-500 ${goldCard ? `border-circuit-ink ${goldCardBg} ${effectiveCardStyle?.shimmer ? 'gold-card-shimmer' : ''}` : 'border-slate-900/70 dark:border-white/20'}`}
+                className={`overflow-hidden rounded-[2rem] border-2 transition-all duration-500 ${goldCard ? `border-circuit-ink ${goldCardBg} ${effectiveCardStyle?.shimmer ? 'gold-card-shimmer' : ''}` : 'border-slate-900/70 dark:border-white/20'}`}
                 style={{ background: goldCard ? undefined : theme.cardBackground, boxShadow: 'var(--circuit-shadow-lg)' }}
             >
 
@@ -154,7 +154,7 @@ const Hero = () => {
 
                 <div className="p-6 pt-3">
                     {lastChampion ? (
-                        <div className="rounded-3xl border-2 border-amber-400/50 dark:border-amber-500/30 bg-linear-to-br from-amber-100/92 via-amber-50/70 to-amber-100/88 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-amber-950/60 p-5 md:p-6"
+                        <div className="rounded-3xl border-2 border-amber-400/50 dark:border-amber-500/30 bg-linear-to-br from-amber-100 via-amber-50 to-amber-100 dark:from-amber-950 dark:via-amber-900 dark:to-amber-950 p-5 md:p-6"
                             style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
 
                             <div>
@@ -162,7 +162,7 @@ const Hero = () => {
                             <p className="line-clamp-2 text-2xl md:text-3xl font-black capitalize text-slate-900 dark:text-foreground leading-tight [text-shadow:0_1px_0_rgba(255,255,255,0.3)] dark:text-shadow-none">{lastChampionTournament.name}</p>
 
                             {/* ── 2. Vincitore — focal point della card, subito dopo il titolo ── */}
-                            <div className="mt-3 flex items-center gap-4 rounded-2xl bg-white/30 dark:bg-black/15 p-3">
+                            <div className="mt-3 flex items-center gap-4 rounded-2xl bg-white dark:bg-slate-900 p-3">
                                 <div className="relative shrink-0">
                                     <div className="relative flex h-16 w-16 items-center justify-center rounded-full border-[2.5px] border-amber-400 overflow-hidden bg-linear-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-400/20">
                                         <img
@@ -193,7 +193,7 @@ const Hero = () => {
                             <button
                                 type="button"
                                 onClick={() => setExpanded((v) => !v)}
-                                className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-amber-600/25 dark:border-amber-400/20 bg-white/20 dark:bg-black/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-amber-700/80 dark:text-amber-300/70 transition hover:bg-white/40 dark:hover:bg-black/20"
+                                className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-amber-600/25 dark:border-amber-400/20 bg-white dark:bg-slate-900 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-amber-700/80 dark:text-amber-300/70 transition hover:bg-amber-50 dark:hover:bg-slate-800"
                             >
                                 {expanded ? 'Mostra meno' : 'Mostra dettagli'}
                                 <ChevronDown size={12} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
@@ -205,7 +205,7 @@ const Hero = () => {
                                 <div className="mt-3">
                                     <Link
                                         to={`/tournaments/${lastChampionTournament.id}`}
-                                        className="font-title flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-600/40 dark:border-amber-400/30 bg-white/40 dark:bg-black/20 px-4 py-3 text-[10px] tracking-wide text-amber-800 dark:text-amber-200 transition active:translate-y-px hover:bg-white/60 dark:hover:bg-black/30"
+                                        className="font-title flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-600/40 dark:border-amber-400/30 bg-white dark:bg-slate-900 px-4 py-3 text-[10px] tracking-wide text-amber-800 dark:text-amber-200 transition active:translate-y-px hover:bg-amber-50 dark:hover:bg-slate-800"
                                     >
                                         Vai al torneo <ArrowRight size={14} />
                                     </Link>
@@ -238,7 +238,7 @@ const Hero = () => {
                                         <p className="text-[9px] font-black uppercase tracking-widest text-amber-600/70 dark:text-amber-400/60">Podio</p>
                                         <div className="mt-1.5 grid grid-cols-1 gap-2 sm:grid-cols-3">
                                             {lastChampionPodium.map((standing, idx) => (
-                                                <div key={standing.playerId} className="flex items-center gap-2.5 rounded-xl bg-white/30 dark:bg-black/15 px-3 py-2.5">
+                                                <div key={standing.playerId} className="flex items-center gap-2.5 rounded-xl bg-white dark:bg-slate-900 px-3 py-2.5">
                                                     <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-black ${idx === 0 ? 'bg-amber-400 text-amber-950' : idx === 1 ? 'bg-slate-300 text-slate-700' : 'bg-orange-400 text-orange-950'}`}>
                                                         {idx + 1}
                                                     </span>
@@ -308,7 +308,7 @@ const Hero = () => {
                             </div>
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-white/50 dark:bg-slate-800/40 p-5 py-8 text-center">
+                        <div className="flex flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-5 py-8 text-center">
                             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
                                 <Trophy size={24} className="text-slate-400" />
                             </div>

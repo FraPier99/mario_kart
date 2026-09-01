@@ -135,7 +135,7 @@ const CommunityUserPage = () => {
 
                 {/* Profile card — compatta (max-w-md), non max-w-3xl come il
                     resto della pagina: il contenuto è intrinsecamente stretto. */}
-                <div className={`mx-auto max-w-md rounded-2xl border-2 p-6 md:p-8 ${cardStyle ? `${cardStyle.cardBorder} ${cardStyle.cardBg}` : 'border-slate-200 dark:border-border bg-white dark:bg-card'}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
+                <div className={`mx-auto max-w-md rounded-[2rem] border-2 p-6 ${cardStyle ? `${cardStyle.cardBorder} ${cardStyle.cardBg}` : 'border-slate-200 dark:border-border bg-white dark:bg-card'}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                     <ProfileHeader
                         avatarSrc={player?.img_url || communityUser?.img_url}
                         nickname={player?.nickname ?? communityUser.username}
@@ -157,7 +157,7 @@ const CommunityUserPage = () => {
 
                 {/* Superadmin sees fun game-master banner */}
                 {viewedUserIsSuperadmin ? (
-                    <div className="rounded-2xl border-2 border-amber-400/60 dark:border-amber-500/30 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-950/70 dark:to-orange-950/60 backdrop-blur-sm p-8 text-center" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
+                    <div className="rounded-2xl border-2 border-amber-400/60 dark:border-amber-500/30 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-950 dark:to-orange-950 p-8 text-center" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-circuit-ink bg-gradient-to-br from-amber-400 to-orange-500" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                             <Shield size={28} className="text-white" />
                         </div>

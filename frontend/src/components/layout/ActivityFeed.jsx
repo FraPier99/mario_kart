@@ -63,7 +63,7 @@ const ActivityFeed = () => {
 
     return (
         <section className="mx-auto max-w-7xl px-4 pb-8">
-            <div className="rounded-[2rem] border-2 border-slate-900/70 dark:border-white/20 bg-white/70 dark:bg-card/70 backdrop-blur-xl p-6" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
+            <div className="rounded-[2rem] border-2 border-slate-900/70 dark:border-white/20 bg-white dark:bg-card p-6" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                 <div className="mb-4 flex items-center gap-2">
                     <Rss size={16} className="text-emerald-600 dark:text-emerald-400" />
                     <p className="font-title text-[10px] tracking-[0.3em] text-slate-700 dark:text-muted-foreground">Attività recente</p>
@@ -73,7 +73,7 @@ const ActivityFeed = () => {
                         <li key={event.id}>
                             <Link
                                 to={`/tournaments/${event.tournamentId}`}
-                                className="flex items-start gap-3 rounded-xl border border-slate-200 dark:border-border bg-white/60 dark:bg-card/40 p-2.5 transition hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10"
+                                className="flex items-start gap-3 rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-2.5 transition hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
                             >
                                 <EventBadge type={event.type} avatar={event.avatar} primary={event.primary} />
                                 {/* Niente `truncate`: con 3+ nomi uniti (traguardi raggiunti

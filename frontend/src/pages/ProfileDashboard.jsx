@@ -648,7 +648,7 @@ const Dashboard = () => {
                     navigazione, deve leggersi come parte della stessa card,
                     non come un elemento a sé stante scollegato in mezzo alla
                     pagina (segnalato dall'utente). */}
-                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white/80 dark:bg-card/80 backdrop-blur-sm overflow-hidden">
+                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden">
                     <div className="border-b border-slate-200 dark:border-border px-6 pt-2">
                         <div className="flex gap-1 overflow-x-auto">
                             {PROFILE_TABS.map((tab) => (
@@ -967,7 +967,7 @@ const Dashboard = () => {
                                         </>
                                     )}
                                     {inventory.filter((item) => item.is_consumed).length > 0 && (
-                                        <details className="mt-2 rounded-2xl border-2 border-slate-200 dark:border-border bg-white/60 dark:bg-card/60 p-3">
+                                        <details className="mt-2 rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-3">
                                             <summary className="cursor-pointer font-title text-[9px] tracking-wide text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 select-none">
                                                 Consumate ({inventory.filter((item) => item.is_consumed).length})
                                             </summary>
