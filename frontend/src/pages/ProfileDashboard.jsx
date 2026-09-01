@@ -724,16 +724,6 @@ const Dashboard = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="space-y-1.5">
-                                    <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">Bio</span>
-                                    <textarea name="bio" value={form.bio} onChange={handleFormChange} rows={3} maxLength={500}
-                                        placeholder="Parla di te, del tuo rapporto con Mario Kart..."
-                                        className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-emerald-500 resize-none dark:border-border dark:bg-muted dark:text-foreground" />
-                                    <p className="text-[10px] text-slate-400 dark:text-muted-foreground">{form.bio.length}/500 caratteri</p>
-                                </label>
-                            </div>
-
-                            <div className="space-y-2">
                                 <FavoriteCharacterPicker
                                     value={form.favorite_character_id}
                                     onChange={(nextValue) => setForm((current) => ({ ...current, favorite_character_id: nextValue }))}
@@ -745,6 +735,19 @@ const Dashboard = () => {
                                 value={form.accent_color}
                                 onChange={(nextValue) => setForm((current) => ({ ...current, accent_color: nextValue }))}
                             />
+
+                            {/* Bio spostata qui, appena prima del salvataggio: chiude il
+                                form invece di interrompere la sequenza identità→foto→
+                                preferenze (schema preso dal mockup dell'utente). */}
+                            <div className="space-y-2">
+                                <label className="space-y-1.5">
+                                    <span className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">Bio</span>
+                                    <textarea name="bio" value={form.bio} onChange={handleFormChange} rows={3} maxLength={500}
+                                        placeholder="Parla di te, del tuo rapporto con Mario Kart..."
+                                        className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-emerald-500 resize-none dark:border-border dark:bg-muted dark:text-foreground" />
+                                    <p className="text-[10px] text-slate-400 dark:text-muted-foreground">{form.bio.length}/500 caratteri</p>
+                                </label>
+                            </div>
 
                             <button type="submit" disabled={(!player && !isSuperadmin) || saving} className="rounded-2xl border-2 border-emerald-600 bg-emerald-600 px-5 py-3 font-title text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                 {saving ? 'Salvataggio...' : 'Salva profilo'}
