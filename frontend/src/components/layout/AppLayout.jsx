@@ -1,4 +1,5 @@
 import Navbar from "./Navbar";
+import MaintenanceBanner from "./MaintenanceBanner";
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { useCelebration } from '@/context/CelebrationContext'
@@ -28,6 +29,7 @@ const AppLayout  =({children})=>{
             </div>
             <div className="pointer-events-none fixed inset-0" style={{ backgroundImage: 'var(--mk-page-overlay)' }} />
             <div className="relative z-10 flex min-h-screen flex-col">
+                <MaintenanceBanner />
                 <Navbar />
                 <div className="mx-auto w-full max-w-7xl px-4 pt-4 space-y-2">
                     <PenaltyRulesAnnouncement />
