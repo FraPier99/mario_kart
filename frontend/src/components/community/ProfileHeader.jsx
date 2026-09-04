@@ -1,5 +1,50 @@
 import RoleBadge from '@/components/community/RoleBadge'
-import PlayerBadge from '@/components/community/PlayerBadge'
+import BadgeChip from '@/components/community/BadgeChip'
+import TierMedallion from '@/components/community/badges/TierMedallion'
+import ExtraMedallion from '@/components/community/badges/ExtraMedallion'
+import { TIER_BADGE_IMAGES, EXTRA_BADGE_IMAGES, EXTRA_BADGES, STREAK_BADGE_THRESHOLD } from '@/lib/playerBadges'
+
+// Una chip per badge (tier di un gioco, o un riconoscimento extra) — non più
+// un'unica riga "tier+extra" per gioco, così ogni elemento va a capo in
+// modo indipendente quando lo spazio finisce (vedi il blocco "Livelli" più
+// sotto: prima uno scroll orizzontale troncava il nome del secondo gioco).
+const chipsForBadge = (badge) => {
+    const chips = [{
+        key: `${badge.game_id ?? 'best'}-tier`,
+        image: TIER_BADGE_IMAGES[badge.tier],
+        medallion: <TierMedallion tier={badge.tier} size={32} />,
+        title: badge.label,
+        subtitle: badge.game_name,
+        opacity: badge.tier === 'sfidante' ? 0.85 : 1,
+    }]
+    if ((badge.streak ?? 0) >= STREAK_BADGE_THRESHOLD) {
+        chips.push({
+            key: `${badge.game_id ?? 'best'}-streak`,
+            image: EXTRA_BADGE_IMAGES.streak,
+            medallion: <ExtraMedallion type="streak" size={32} />,
+            title: EXTRA_BADGES.streak.label,
+            subtitle: `${badge.streak} tornei di fila`,
+        })
+    }
+    if (badge.improving) {
+        chips.push({
+            key: `${badge.game_id ?? 'best'}-improving`,
+            image: EXTRA_BADGE_IMAGES.improving,
+            medallion: <ExtraMedallion type="improving" size={32} />,
+            title: EXTRA_BADGES.improving.label,
+        })
+    }
+    if ((badge.consolation_wins ?? 0) > 0) {
+        chips.push({
+            key: `${badge.game_id ?? 'best'}-consolation`,
+            image: EXTRA_BADGE_IMAGES.consolation,
+            medallion: <ExtraMedallion type="consolation" size={32} />,
+            title: EXTRA_BADGES.consolation.label,
+            subtitle: badge.consolation_wins > 1 ? `Vinta ${badge.consolation_wins}×` : 'Vinta',
+        })
+    }
+    return chips
+}
 
 // Header profilo condiviso fra ProfileDashboard.jsx (proprio profilo) e
 // CommunityUserPage.jsx (profilo di un altro giocatore). Card compatta,
@@ -67,15 +112,15 @@ const ProfileHeader = ({
                 </div>
             </div>
 
-            {/* Livelli — un badge per gioco, sulla stessa riga quando ce n'è
-                più di uno (extra sempre agganciati al proprio badge, mai
-                mescolati fra giochi diversi anche se affiancati). Scroll
-                orizzontale invece di andare a capo quando i badge superano
-                lo spazio disponibile — non fa crescere l'altezza della card. */}
+            {/* Livelli — una chip per badge (tier di un gioco o riconoscimento
+                extra), tutte alla stessa dimensione. flex-wrap invece di
+                overflow-x: con tanti giochi la sezione cresce in altezza
+                invece di troncare il nome del gioco o nascondersi dietro
+                uno scroll forzato. */}
             {badges.length > 0 && (
-                <div className="flex w-full max-w-full items-center justify-center gap-x-4 gap-y-2 overflow-x-auto">
-                    {badges.map((b) => (
-                        <PlayerBadge key={b.game_id ?? 'best'} badge={b} size="lg" className="shrink-0" />
+                <div className="flex w-full flex-wrap items-center justify-center gap-2.5">
+                    {badges.flatMap(chipsForBadge).map((chip) => (
+                        <BadgeChip key={chip.key} {...chip} />
                     ))}
                 </div>
             )}

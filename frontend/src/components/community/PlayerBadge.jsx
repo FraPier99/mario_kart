@@ -2,8 +2,12 @@ import TierMedallion from '@/components/community/badges/TierMedallion'
 import ExtraMedallion from '@/components/community/badges/ExtraMedallion'
 import { EXTRA_BADGES, EXTRA_BADGE_IMAGES, STREAK_BADGE_THRESHOLD, TIER_BADGE_IMAGES } from '@/lib/playerBadges'
 
+// Stessa dimensione per il badge di tier e per gli extra — condividevano lo
+// stesso spazio prima di questo fix con l'extra visibilmente più piccolo,
+// facendolo leggere come un'icona "minore" invece che un badge di pari
+// dignità (i 3 extra premiano cose diverse dal tier, non qualcosa di meno
+// importante).
 const MEDALLION_SIZES = { sm: 30, md: 40, lg: 48 }
-const EXTRA_SIZES = { sm: 18, md: 22, lg: 26 }
 
 // Un badge non è mai mostrato "nudo": lo stesso giocatore ha un tier
 // diverso per ogni game_id, quindi il nome del gioco è sempre affiancato
@@ -55,14 +59,13 @@ const PlayerBadge = ({ badge, size = 'md', className = '' }) => {
             {extras.length > 0 && (
                 <div className="flex items-center gap-1">
                     {extras.map(({ key, tooltip }) => {
-                        const extraSize = EXTRA_SIZES[size] ?? EXTRA_SIZES.md
                         const extraImage = EXTRA_BADGE_IMAGES[key]
                         return (
                             <div key={key} title={tooltip}>
                                 {extraImage ? (
-                                    <img src={extraImage} alt={tooltip} className="shrink-0 object-contain" style={{ width: extraSize, height: extraSize }} />
+                                    <img src={extraImage} alt={tooltip} className="shrink-0 object-contain" style={{ width: medallionSize, height: medallionSize }} />
                                 ) : (
-                                    <ExtraMedallion type={key} size={extraSize} />
+                                    <ExtraMedallion type={key} size={medallionSize} />
                                 )}
                             </div>
                         )
