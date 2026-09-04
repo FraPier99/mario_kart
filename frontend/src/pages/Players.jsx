@@ -54,7 +54,17 @@ const Players = () => {
     return (
         <AppLayout>
             <div className="mx-auto max-w-7xl px-4 py-10">
-                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 md:p-8">
+                <div
+                    className="rounded-3xl border border-slate-200 dark:border-border bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 md:p-8"
+                    style={{
+                        // Motivo a scacchi diagonale, trasparente — pura decorazione
+                        // CSS (nessun asset), richiama il tema "bandiera a scacchi"
+                        // senza competere col contenuto (si somma al bg-white/80
+                        // esistente, non lo sostituisce).
+                        backgroundImage: 'repeating-linear-gradient(45deg, rgba(15,23,42,0.05) 0 12px, transparent 12px 24px), repeating-linear-gradient(-45deg, rgba(15,23,42,0.05) 0 12px, transparent 12px 24px)',
+                        backgroundSize: '48px 48px',
+                    }}
+                >
                     <div className="flex flex-col items-center text-center">
                         <h1 className="mb-2 text-3xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground md:text-4xl">
                             ROSTER GIOCATORI

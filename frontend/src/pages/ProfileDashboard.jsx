@@ -16,6 +16,8 @@ import PlayerTournamentHistory from '@/components/community/PlayerTournamentHist
 import PlayerBadge from '@/components/community/PlayerBadge'
 import ProfileHeader from '@/components/community/ProfileHeader'
 import { pickBestBadge, TIER_ACCENT_COLORS } from '@/lib/playerBadges'
+import { pickSessionCircuit } from '@/lib/circuitBackground'
+import CircuitBackdrop from '@/components/common/CircuitBackdrop'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { authApi, schedineApi, inventoryApi, ownershipApi, statsApi, getApiErrorMessage } from '@/services/apiClient'
@@ -327,7 +329,7 @@ const AccentColorPicker = ({ value, onChange }) => (
 
 const Dashboard = () => {
     const { user, isSuperadmin, refreshMe, isAuthenticated } = useAuth()
-    const { charactersById, statsByPlayerId, patchPlayer, getTournamentById, games, consoles, getLeaderboardByGame } = useAppData()
+    const { charactersById, statsByPlayerId, patchPlayer, getTournamentById, games, consoles, getLeaderboardByGame, circuits } = useAppData()
     const characters = useMemo(() => [...charactersById.values()], [charactersById])
     const player = user?.player ?? null
     const playerStats = player ? (statsByPlayerId.get(player.id) ?? null) : null
@@ -342,6 +344,10 @@ const Dashboard = () => {
         return () => { active = false }
     }, [player])
     const bestBadge = useMemo(() => pickBestBadge(badges), [badges])
+    // Sfondo "foto circuito" per la card header profilo, oggi piatta —
+    // casuale tra tutti i circuiti (non legata a un torneo specifico),
+    // stabile per la sessione del browser (vedi lib/circuitBackground.js).
+    const profileBgCircuit = useMemo(() => pickSessionCircuit('profile-header', circuits), [circuits])
     const [selectedGameId, setSelectedGameId] = useState('')
     const activeBadge = useMemo(() => {
         if (!selectedGameId) return bestBadge
@@ -602,7 +608,7 @@ const Dashboard = () => {
                     profilo in Navbar — niente più bottone "Esci" duplicato
                     qui, niente più nome/cognome (ridondante col nickname). */}
                 <div
-                    className={`mx-auto max-w-md rounded-[2rem] border-2 p-6 ${goldBorder} ${goldBg}`}
+                    className="relative mx-auto max-w-md overflow-hidden rounded-[2rem] border-2 border-white/15 bg-slate-900 p-6"
                     style={(() => {
                         const tierAccent = TIER_ACCENT_COLORS[(isSuperadmin ? 'leggenda' : bestBadge?.tier)]
                         return tierAccent
@@ -610,22 +616,25 @@ const Dashboard = () => {
                             : { boxShadow: 'var(--circuit-shadow-md)' }
                     })()}
                 >
-                    <ProfileHeader
-                        avatarSrc={form.img_url || player?.img_url}
-                        nickname={player?.nickname ?? user?.username ?? '—'}
-                        fallbackInitial={(player?.nickname ?? user?.username ?? '?').charAt(0).toUpperCase()}
-                        accentColor={player?.accent_color}
-                        // Il badge ruolo si mostra solo per il superadmin: non ha
-                        // badge di gioco (non gioca mai), quindi è l'unica info di
-                        // "livello" disponibile — per admin/user era ridondante
-                        // col tag ruolo già visibile in Navbar.
-                        role={isSuperadmin ? 'superadmin' : null}
-                        // Il superadmin non gioca mai — nessun badge di gioco anche se per
-                        // qualche motivo risultasse un player collegato.
-                        badges={isSuperadmin ? [] : badges}
-                        favoriteCharacter={favoriteCharacter}
-                        bio={player?.bio}
-                    />
+                    <CircuitBackdrop imageUrl={profileBgCircuit?.image_url} />
+                    <div className="relative z-10">
+                        <ProfileHeader
+                            avatarSrc={form.img_url || player?.img_url}
+                            nickname={player?.nickname ?? user?.username ?? '—'}
+                            fallbackInitial={(player?.nickname ?? user?.username ?? '?').charAt(0).toUpperCase()}
+                            accentColor={player?.accent_color}
+                            // Il badge ruolo si mostra solo per il superadmin: non ha
+                            // badge di gioco (non gioca mai), quindi è l'unica info di
+                            // "livello" disponibile — per admin/user era ridondante
+                            // col tag ruolo già visibile in Navbar.
+                            role={isSuperadmin ? 'superadmin' : null}
+                            // Il superadmin non gioca mai — nessun badge di gioco anche se per
+                            // qualche motivo risultasse un player collegato.
+                            badges={isSuperadmin ? [] : badges}
+                            favoriteCharacter={favoriteCharacter}
+                            bio={player?.bio}
+                        />
+                    </div>
                 </div>
 
                 {!isSuperadmin && shouldNudgeOwnership && (

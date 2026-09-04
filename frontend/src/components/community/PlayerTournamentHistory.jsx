@@ -17,6 +17,8 @@ import { Calendar, MapPin, Trophy } from 'lucide-react'
 import { useAppData } from '@/context/AppDataContext'
 import { tournamentsApi } from '@/services/apiClient'
 import { toTitleCase } from '@/lib/utils'
+import { pickSessionCircuit } from '@/lib/circuitBackground'
+import CircuitBackdrop from '@/components/common/CircuitBackdrop'
 
 const FORMAT_LABEL = { classic: 'Classifica unica', group_stage: 'A gironi' }
 
@@ -25,10 +27,10 @@ const POSITION_BADGE = {
     2: 'bg-slate-300 text-slate-800 border-circuit-ink',
     3: 'bg-orange-400 text-orange-950 border-circuit-ink',
 }
-const DEFAULT_BADGE = 'bg-slate-100 dark:bg-muted text-slate-500 dark:text-muted-foreground border-transparent'
+const DEFAULT_BADGE = 'bg-black/30 backdrop-blur-sm text-slate-300 border-white/20'
 
 const PlayerTournamentHistory = ({ playerId }) => {
-    const { detailedTournaments, games } = useAppData()
+    const { detailedTournaments, games, circuits } = useAppData()
     const [selectedGameId, setSelectedGameId] = useState('')
     const [groupStagePositions, setGroupStagePositions] = useState({})
 
@@ -106,17 +108,24 @@ const PlayerTournamentHistory = ({ playerId }) => {
                         }
                         const badgeClass = position != null && POSITION_BADGE[position] ? POSITION_BADGE[position] : DEFAULT_BADGE
                         const gameName = games.find((g) => g.id === t.game_id)?.name
+                        // Sfondo "foto circuito" per la card, oggi piatta e spenta —
+                        // pescato tra i circuiti effettivamente giocati in questo
+                        // torneo, stabile per la sessione del browser.
+                        const raceCircuitIds = [...new Set((t.races ?? []).map((r) => r.circuit_id))]
+                        const bgCircuit = pickSessionCircuit(`tournament-card-${t.id}`, circuits, raceCircuitIds)
 
                         return (
                             <Link
                                 key={t.id}
                                 to={`/tournaments/${t.id}`}
-                                className="flex flex-col gap-2.5 rounded-xl border border-slate-200 dark:border-border bg-slate-50/60 dark:bg-muted/30 p-3.5 transition hover:border-emerald-400 dark:hover:border-emerald-500/50 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10"
+                                className="relative flex flex-col gap-2.5 overflow-hidden rounded-xl bg-slate-900 p-3.5 transition hover:brightness-110"
                             >
+                                <CircuitBackdrop imageUrl={bgCircuit?.image_url} />
+                                <div className="relative z-10 flex flex-col gap-2.5">
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0">
-                                        <p title={t.name} className="truncate text-sm font-black text-slate-900 dark:text-foreground">{toTitleCase(t.name)}</p>
-                                        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-slate-500 dark:text-muted-foreground">
+                                        <p title={t.name} className="truncate text-sm font-black text-white">{toTitleCase(t.name)}</p>
+                                        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-slate-300">
                                             <span className="flex items-center gap-1"><Calendar size={10} />{t.date}</span>
                                             {gameName && <span className="flex items-center gap-1"><MapPin size={10} />{gameName}</span>}
                                         </div>
@@ -125,16 +134,17 @@ const PlayerTournamentHistory = ({ playerId }) => {
                                         {position ?? '—'}
                                     </span>
                                 </div>
-                                <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">
+                                <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-300">
                                     <span>{FORMAT_LABEL[t.tournament_format] ?? t.tournament_format}</span>
                                 </div>
                                 {standing && (
-                                    <div className="flex items-center gap-3 border-t border-slate-200 dark:border-border pt-2 text-xs">
-                                        <span className="font-black text-slate-700 dark:text-slate-300">{standing.points} pt</span>
-                                        <span className="text-slate-400 dark:text-muted-foreground">{standing.raceWins} vittorie</span>
-                                        <span className="text-slate-400 dark:text-muted-foreground">{standing.podiums} podi</span>
+                                    <div className="flex items-center gap-3 border-t border-white/15 pt-2 text-xs">
+                                        <span className="font-black text-slate-200">{standing.points} pt</span>
+                                        <span className="text-slate-400">{standing.raceWins} vittorie</span>
+                                        <span className="text-slate-400">{standing.podiums} podi</span>
                                     </div>
                                 )}
+                                </div>
                             </Link>
                         )
                     })}

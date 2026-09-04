@@ -121,7 +121,7 @@ const ProfileHeader = ({
                     )}
                 </div>
                 <div className="min-w-0 text-left">
-                    <h1 className="text-xl font-black text-slate-900 dark:text-foreground">{nickname}</h1>
+                    <h1 className="text-xl font-black text-white">{nickname}</h1>
                     {bestBadge && (
                         <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide" style={{ color: tierAccent }}>
                             Rango più alto: {bestBadge.label}
@@ -156,8 +156,8 @@ const ProfileHeader = ({
             {((favoriteCharacter && !favoriteCharacter.img_url) || bio) && (
                 <div className="flex w-full flex-col items-center gap-2">
                     {favoriteCharacter && !favoriteCharacter.img_url && (
-                        <div className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-1.5">
-                            <span className="text-xs font-black text-slate-600 dark:text-foreground">{favoriteCharacter.name}</span>
+                        <div className="inline-flex items-center gap-2 rounded-xl border-2 border-white/20 bg-black/30 backdrop-blur-sm px-3 py-1.5">
+                            <span className="text-xs font-black text-white">{favoriteCharacter.name}</span>
                         </div>
                     )}
                     {bio && (
@@ -167,17 +167,17 @@ const ProfileHeader = ({
                                 del divider riprendono l'accento di rango
                                 quando c'è un badge, altrimenti restano neutre. */}
                             <div className="flex w-full max-w-xs items-center gap-2.5">
-                                <span className="h-px flex-1 bg-slate-200 dark:bg-border" style={tierAccent ? { background: `${tierAccent}55` } : undefined} />
+                                <span className="h-px flex-1 bg-white/25" style={tierAccent ? { background: `${tierAccent}66` } : undefined} />
                                 <div
-                                    className="h-3.5 w-5 shrink-0 rounded-[3px] border border-slate-400/70 dark:border-slate-500/70"
+                                    className="h-3.5 w-5 shrink-0 rounded-[3px] border border-white/40"
                                     style={{
                                         backgroundImage: 'repeating-conic-gradient(#0f172a 0% 25%, #f8fafc 0% 50%)',
                                         backgroundSize: '7px 7px',
                                     }}
                                 />
-                                <span className="h-px flex-1 bg-slate-200 dark:bg-border" style={tierAccent ? { background: `${tierAccent}55` } : undefined} />
+                                <span className="h-px flex-1 bg-white/25" style={tierAccent ? { background: `${tierAccent}66` } : undefined} />
                             </div>
-                            <p className="max-w-sm text-sm text-slate-600 dark:text-muted-foreground leading-relaxed whitespace-pre-wrap">{bio}</p>
+                            <p className="max-w-sm text-sm text-slate-200 leading-relaxed whitespace-pre-wrap">{bio}</p>
                         </>
                     )}
                 </div>

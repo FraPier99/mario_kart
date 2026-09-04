@@ -5,6 +5,8 @@ import { useAuth } from '@/context/AuthContext'
 import { useAppData } from '@/context/AppDataContext'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import { formatTournamentTitle } from '@/lib/utils'
+import { pickSessionCircuit } from '@/lib/circuitBackground'
+import CircuitBackdrop from '@/components/common/CircuitBackdrop'
 
 const PODIUM_STYLES = [
     { medal: '🥇', badge: 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30' },
@@ -14,11 +16,16 @@ const PODIUM_STYLES = [
 
 const TournamentHistoryCard = ({ tournament }) => {
     const { isAdmin, isSuperadmin } = useAuth()
-    const { getTournamentDisplayNumber } = useAppData()
+    const { getTournamentDisplayNumber, circuits } = useAppData()
     const isPrivileged = isAdmin || isSuperadmin
     const [expanded, setExpanded] = useState(false)
     const participantCount = tournament.participant_ids?.length ?? tournament.standings?.length ?? 0
     const podium = (tournament.standings ?? []).slice(0, 3)
+    // Sfondo "foto circuito" per la riga sempre visibile — oggi piatta e
+    // spenta — pescato tra i circuiti effettivamente giocati in questo
+    // torneo, stabile per la sessione del browser.
+    const raceCircuitIds = [...new Set((tournament.races ?? []).map((r) => r.circuit_id))]
+    const bgCircuit = pickSessionCircuit(`tournament-history-${tournament.id}`, circuits, raceCircuitIds)
     const statusLabel = tournament.status === 'concluso'
         ? 'Concluso'
         : tournament.status === 'da_svolgere'
@@ -33,13 +40,15 @@ const TournamentHistoryCard = ({ tournament }) => {
             style={{ boxShadow: 'var(--circuit-shadow-md)' }}
         >
             <div
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 cursor-pointer select-none transition-colors hover:bg-slate-50/50 dark:hover:bg-muted/30"
+                className="relative overflow-hidden bg-slate-900 cursor-pointer select-none"
                 onClick={() => setExpanded((v) => !v)}
             >
+                <CircuitBackdrop imageUrl={bgCircuit?.image_url} />
+                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 transition-colors hover:bg-white/5">
                 <div className="min-w-0 flex-1">
-                    <p className="font-title text-[10px] tracking-wide text-emerald-600 dark:text-emerald-400">TORNEO #{getTournamentDisplayNumber(tournament.id)}</p>
-                    <h3 title={tournament.name} className="font-title text-lg text-slate-900 dark:text-foreground mt-1">{formatTournamentTitle(tournament.name, 40)}</h3>
-                    <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-500 dark:text-muted-foreground uppercase">
+                    <p className="font-title text-[10px] tracking-wide text-emerald-400">TORNEO #{getTournamentDisplayNumber(tournament.id)}</p>
+                    <h3 title={tournament.name} className="font-title text-lg text-white mt-1">{formatTournamentTitle(tournament.name, 40)}</h3>
+                    <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-300 uppercase">
                         <span>{tournament.date || 'DATA N/D'}</span>
                         <span>·</span>
                         <span>{tournament.raceCount}/{tournament.n_races} GARE</span>
@@ -48,7 +57,7 @@ const TournamentHistoryCard = ({ tournament }) => {
                         {tournament.is_friendly ? (
                             <>
                                 <span>·</span>
-                                <span className="flex items-center gap-1 font-black text-amber-600 dark:text-amber-400">
+                                <span className="flex items-center gap-1 font-black text-amber-400">
                                     <PartyPopper size={12} /> AMICHEVOLE
                                 </span>
                             </>
@@ -56,7 +65,7 @@ const TournamentHistoryCard = ({ tournament }) => {
                             <>
                                 <span>·</span>
                                 <span className="flex items-center gap-1">
-                                    <Crown size={12} className="text-amber-500" />
+                                    <Crown size={12} className="text-amber-400" />
                                     {tournament.winner?.nickname?.toUpperCase() ?? 'N/D'}
                                 </span>
                             </>
@@ -77,7 +86,7 @@ const TournamentHistoryCard = ({ tournament }) => {
                         <Link
                             to={`/tournaments/${tournament.id}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="rounded-xl border-2 border-slate-300 dark:border-border bg-slate-50 dark:bg-muted px-4 py-2 font-title text-[10px] tracking-wide text-slate-600 dark:text-muted-foreground transition-all duration-200 active:translate-y-px hover:border-slate-400 dark:hover:border-slate-500"
+                            className="rounded-xl border-2 border-white/20 bg-black/30 backdrop-blur-sm px-4 py-2 font-title text-[10px] tracking-wide text-white transition-all duration-200 active:translate-y-px hover:border-white/40"
                         >
                             Visualizza
                         </Link>
@@ -95,15 +104,16 @@ const TournamentHistoryCard = ({ tournament }) => {
                         <Link
                             to={`/schedina/${tournament.id}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="rounded-xl border-2 border-emerald-300 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-4 py-2 font-title text-[10px] tracking-wide text-emerald-700 dark:text-emerald-300 transition active:translate-y-px hover:border-emerald-400 dark:hover:border-emerald-500/50 hover:bg-emerald-100 dark:hover:bg-emerald-500/20"
+                            className="rounded-xl border-2 border-emerald-400/40 bg-emerald-500/10 px-4 py-2 font-title text-[10px] tracking-wide text-emerald-300 transition active:translate-y-px hover:border-emerald-400/60 hover:bg-emerald-500/20"
                         >
                             Esito schedina
                         </Link>
                     )}
                     <ChevronDown
                         size={20}
-                        className={`text-slate-400 transition-transform duration-300 shrink-0 ${expanded ? 'rotate-180' : ''}`}
+                        className={`text-slate-300 transition-transform duration-300 shrink-0 ${expanded ? 'rotate-180' : ''}`}
                     />
+                </div>
                 </div>
             </div>
 

@@ -5,6 +5,8 @@ import AppLayout from '@/components/layout/AppLayout'
 import PlayerTournamentHistory from '@/components/community/PlayerTournamentHistory'
 import ProfileHeader from '@/components/community/ProfileHeader'
 import { pickBestBadge, TIER_ACCENT_COLORS } from '@/lib/playerBadges'
+import { pickSessionCircuit } from '@/lib/circuitBackground'
+import CircuitBackdrop from '@/components/common/CircuitBackdrop'
 import { authApi, statsApi, getApiErrorMessage } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
 import { SkeletonPulse, SkeletonRows } from '@/components/common/Skeleton'
@@ -13,7 +15,7 @@ import { toast } from 'sonner'
 const CommunityUserPage = () => {
     const { userId } = useParams()
     const navigate = useNavigate()
-    const { statsByPlayerId, charactersById, games, getLeaderboardByGame } = useAppData()
+    const { statsByPlayerId, charactersById, games, getLeaderboardByGame, circuits } = useAppData()
     const [communityUser, setCommunityUser] = useState(null)
     const [loading, setLoading] = useState(true)
     const [notFound, setNotFound] = useState(false)
@@ -58,6 +60,8 @@ const CommunityUserPage = () => {
     }, [player])
 
     const bestBadge = useMemo(() => pickBestBadge(badges), [badges])
+    // Sfondo "foto circuito" per la card header profilo — vedi ProfileDashboard.jsx.
+    const profileBgCircuit = useMemo(() => pickSessionCircuit('profile-header', circuits), [circuits])
     const activeBadge = useMemo(() => {
         if (!selectedGameId) return bestBadge
         return badges.find((b) => b.game_id === Number(selectedGameId)) ?? bestBadge
@@ -130,7 +134,7 @@ const CommunityUserPage = () => {
                 {/* Profile card — compatta (max-w-md), non max-w-3xl come il
                     resto della pagina: il contenuto è intrinsecamente stretto. */}
                 <div
-                    className="mx-auto max-w-md rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-6"
+                    className="relative mx-auto max-w-md overflow-hidden rounded-[2rem] border-2 border-white/15 bg-slate-900 p-6"
                     style={(() => {
                         const tierAccent = TIER_ACCENT_COLORS[(viewedUserIsSuperadmin ? 'leggenda' : bestBadge?.tier)]
                         return tierAccent
@@ -138,6 +142,8 @@ const CommunityUserPage = () => {
                             : { boxShadow: 'var(--circuit-shadow-md)' }
                     })()}
                 >
+                    <CircuitBackdrop imageUrl={profileBgCircuit?.image_url} />
+                    <div className="relative z-10">
                     <ProfileHeader
                         avatarSrc={player?.img_url || communityUser?.img_url}
                         nickname={player?.nickname ?? communityUser.username}
@@ -153,6 +159,7 @@ const CommunityUserPage = () => {
                         favoriteCharacter={favoriteCharacter}
                         bio={player?.bio}
                     />
+                    </div>
                 </div>
                   {player && <PlayerTournamentHistory playerId={player.id} />}
 

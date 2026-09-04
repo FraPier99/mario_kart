@@ -15,6 +15,8 @@ import { statsApi } from '@/services/apiClient'
 import { TIER_BADGE_IMAGES } from '@/lib/playerBadges'
 import { checkBadgeTierUps } from '@/lib/badgeTierToast'
 import TierMedallion from '@/components/community/badges/TierMedallion'
+import { pickSessionCircuit } from '@/lib/circuitBackground'
+import CircuitBackdrop from '@/components/common/CircuitBackdrop'
 
 const formatChampionDate = (value) => {
     if (!value) return null
@@ -23,7 +25,7 @@ const formatChampionDate = (value) => {
 }
 
 const Hero = () => {
-    const { statsByPlayerId, charactersById, detailedTournaments, games } = useAppData()
+    const { statsByPlayerId, charactersById, detailedTournaments, games, circuits } = useAppData()
     const { user, isSuperadmin } = useAuth()
     const { dark } = useTheme()
     const theme = getProfileTheme(user, charactersById, dark)
@@ -61,6 +63,17 @@ const Hero = () => {
     const lastChampionFormatLabel = lastChampionTournament?.tournament_format === 'group_stage' ? 'Gironi' : 'Classic'
     const lastChampionParticipants = lastChampionTournament?.standings?.length ?? 0
     const lastChampionDateLabel = formatChampionDate(lastChampionTournament?.date)
+
+    // Sfondo "foto circuito" dietro titolo+vincitore (sempre visibili anche a
+    // card chiusa) — pesca tra i circuiti effettivamente giocati in QUESTO
+    // torneo quando possibile, altrimenti resta senza sfondo. Stabile per la
+    // sessione del browser (vedi lib/circuitBackground.js).
+    const lastChampionRaceCircuitIds = lastChampionTournament
+        ? [...new Set((lastChampionTournament.races ?? []).map((r) => r.circuit_id))]
+        : []
+    const lastChampionBgCircuit = lastChampionTournament
+        ? pickSessionCircuit(`tournament-hero-${lastChampionTournament.id}`, circuits, lastChampionRaceCircuitIds)
+        : null
 
     // Tier badge del vincitore per il gioco di questo torneo — stessa logica
     // di Stats.jsx (badge per-game_id, mai calcolato client-side).
@@ -155,14 +168,20 @@ const Hero = () => {
                                 pieno dietro tutto il blocco. */}
                             <div className="h-1 bg-linear-to-r from-circuit-gold/30 via-circuit-gold to-circuit-gold/30" />
 
-                            <div className="p-5 md:p-6">
+                            {/* Zona sempre visibile (titolo+vincitore+toggle, anche a card
+                                chiusa) — sfondo foto circuito del torneo, prima piatta e
+                                spenta. Testo sempre chiaro qui, indipendente dal tema del
+                                sito: serve a restare leggibile sopra qualunque foto. */}
+                            <div className="relative overflow-hidden bg-slate-900">
+                                <CircuitBackdrop imageUrl={lastChampionBgCircuit?.image_url} />
+                                <div className="relative z-10 p-5 md:p-6">
                             {/* ── 1. Torneo ── */}
-                            <p title={lastChampionTournament.name} className="text-2xl md:text-3xl font-black text-slate-900 dark:text-foreground leading-tight">{formatTournamentTitle(lastChampionTournament.name, 60)}</p>
+                            <p title={lastChampionTournament.name} className="text-2xl md:text-3xl font-black text-white leading-tight">{formatTournamentTitle(lastChampionTournament.name, 60)}</p>
 
                             {/* ── 2. Vincitore — focal point della card, subito dopo il titolo.
                                 Riga semplice separata da un divider sottile invece di una
                                 mini-card con sfondo proprio ("incollata sopra" il genitore). ── */}
-                            <div className="mt-4 flex items-center gap-4 border-t border-slate-100 dark:border-white/10 pt-4">
+                            <div className="mt-4 flex items-center gap-4 border-t border-white/15 pt-4">
                                 {lastChampionBadge && TIER_BADGE_IMAGES[lastChampionBadge.tier] ? (
                                     <img
                                         src={TIER_BADGE_IMAGES[lastChampionBadge.tier]}
@@ -183,8 +202,8 @@ const Hero = () => {
                                     </div>
                                 )}
                                 <div className="min-w-0">
-                                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">Vinto da</p>
-                                    <p className="truncate text-xl font-black capitalize text-slate-900 dark:text-foreground leading-tight">{lastChampion.nickname}</p>
+                                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-300">Vinto da</p>
+                                    <p className="truncate text-xl font-black capitalize text-white leading-tight">{lastChampion.nickname}</p>
                                     <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-black text-circuit-gold">
                                         {lastChampionBadge?.label ?? <><Trophy size={11} /></>}
                                         {(lastChampionStats?.tournamentWins ?? 1) > 1 ? ` · ${lastChampionStats.tournamentWins}° titolo` : ' · 1° titolo'}
@@ -203,9 +222,11 @@ const Hero = () => {
                                 {expanded ? 'Mostra meno' : 'Mostra dettagli'}
                                 <ChevronDown size={12} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
                             </button>
+                                </div>
+                            </div>
 
                             {expanded && (
-                                <>
+                                <div className="p-5 pt-4 md:p-6 md:pt-4">
                                 {/* ── 3. CTA ── */}
                                 <div className="mt-3">
                                     <Link
@@ -308,9 +329,8 @@ const Hero = () => {
                                         <TournamentMilestonesPanel milestones={lastChampionMilestones} />
                                     </CollapsibleSection>
                                 </div>
-                                </>
+                                </div>
                             )}
-                            </div>
                         </div>
                     ) : (
                         <div className="flex flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-5 py-8 text-center">

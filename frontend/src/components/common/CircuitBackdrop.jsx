@@ -1,0 +1,21 @@
+// Livello di sfondo "foto circuito + overlay scuro" per le card che oggi
+// risultano piatte/spente — va inserito come primo figlio di un contenitore
+// con `relative overflow-hidden`; il resto del contenuto va poi in un
+// wrapper `relative z-10` sopra questo livello. L'overlay è scuro a
+// prescindere dal tema del sito (la card diventa una piccola "isola" a tema
+// scuro con testo chiaro, non segue light/dark) — necessario per restare
+// leggibile sopra una foto qualunque.
+const CircuitBackdrop = ({ imageUrl }) => {
+    if (!imageUrl) return null
+    return (
+        <>
+            <div
+                className="absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: `url(${imageUrl})` }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/70 to-black/85" />
+        </>
+    )
+}
+
+export default CircuitBackdrop

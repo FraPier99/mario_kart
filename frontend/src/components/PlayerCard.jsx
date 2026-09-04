@@ -1,3 +1,4 @@
+import { User, ArrowRight } from 'lucide-react'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import { TIER_BADGE_IMAGES } from '@/lib/playerBadges'
 import TierMedallion from '@/components/community/badges/TierMedallion'
@@ -74,9 +75,11 @@ const PlayerCard = ({ players, bestBadgeByPlayerId, handlePlayerClick }) => {
                             <button
                                 type="button"
                                 onClick={() => handlePlayerClick(p)}
-                                className="font-title mt-auto cursor-pointer rounded-xl border-[1.5px] border-circuit-blue bg-transparent px-4 py-2 text-[10px] tracking-wide text-blue-600 dark:text-blue-300 transition active:translate-y-px hover:bg-circuit-blue/10"
+                                className="font-title mt-auto flex cursor-pointer items-center gap-1.5 rounded-xl border-[1.5px] border-circuit-blue bg-transparent px-4 py-2 text-[10px] tracking-wide text-blue-600 dark:text-blue-300 transition active:translate-y-px hover:bg-circuit-blue/10"
                             >
+                                <User size={12} className="shrink-0" />
                                 Visualizza Profilo
+                                <ArrowRight size={12} className="shrink-0" />
                             </button>
                         </div>
                     </div>
