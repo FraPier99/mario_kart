@@ -69,11 +69,13 @@ const ProfileHeader = ({
 
             {/* Livelli — un badge per gioco, sulla stessa riga quando ce n'è
                 più di uno (extra sempre agganciati al proprio badge, mai
-                mescolati fra giochi diversi anche se affiancati). */}
+                mescolati fra giochi diversi anche se affiancati). Scroll
+                orizzontale invece di andare a capo quando i badge superano
+                lo spazio disponibile — non fa crescere l'altezza della card. */}
             {badges.length > 0 && (
-                <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+                <div className="flex w-full max-w-full items-center justify-center gap-x-4 gap-y-2 overflow-x-auto">
                     {badges.map((b) => (
-                        <PlayerBadge key={b.game_id ?? 'best'} badge={b} size="sm" />
+                        <PlayerBadge key={b.game_id ?? 'best'} badge={b} size="lg" className="shrink-0" />
                     ))}
                 </div>
             )}

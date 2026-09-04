@@ -1,6 +1,9 @@
 import TierMedallion from '@/components/community/badges/TierMedallion'
 import ExtraMedallion from '@/components/community/badges/ExtraMedallion'
-import { EXTRA_BADGES, STREAK_BADGE_THRESHOLD, TIER_BADGE_IMAGES } from '@/lib/playerBadges'
+import { EXTRA_BADGES, EXTRA_BADGE_IMAGES, STREAK_BADGE_THRESHOLD, TIER_BADGE_IMAGES } from '@/lib/playerBadges'
+
+const MEDALLION_SIZES = { sm: 30, md: 40, lg: 48 }
+const EXTRA_SIZES = { sm: 18, md: 22, lg: 26 }
 
 // Un badge non è mai mostrato "nudo": lo stesso giocatore ha un tier
 // diverso per ogni game_id, quindi il nome del gioco è sempre affiancato
@@ -11,7 +14,7 @@ import { EXTRA_BADGES, STREAK_BADGE_THRESHOLD, TIER_BADGE_IMAGES } from '@/lib/p
 // didascalia secondaria accanto alla medaglia.
 const PlayerBadge = ({ badge, size = 'md', className = '' }) => {
     if (!badge) return null
-    const medallionSize = size === 'sm' ? 30 : 40
+    const medallionSize = MEDALLION_SIZES[size] ?? MEDALLION_SIZES.md
 
     // Indicatori extra indipendenti dal tier — "premiano la via di mezzo"
     // (costanza, miglioramento, Consolazione) senza sostituire il badge di
@@ -51,11 +54,19 @@ const PlayerBadge = ({ badge, size = 'md', className = '' }) => {
             </div>
             {extras.length > 0 && (
                 <div className="flex items-center gap-1">
-                    {extras.map(({ key, tooltip }) => (
-                        <div key={key} title={tooltip}>
-                            <ExtraMedallion type={key} size={size === 'sm' ? 18 : 22} />
-                        </div>
-                    ))}
+                    {extras.map(({ key, tooltip }) => {
+                        const extraSize = EXTRA_SIZES[size] ?? EXTRA_SIZES.md
+                        const extraImage = EXTRA_BADGE_IMAGES[key]
+                        return (
+                            <div key={key} title={tooltip}>
+                                {extraImage ? (
+                                    <img src={extraImage} alt={tooltip} className="shrink-0 object-contain" style={{ width: extraSize, height: extraSize }} />
+                                ) : (
+                                    <ExtraMedallion type={key} size={extraSize} />
+                                )}
+                            </div>
+                        )
+                    })}
                 </div>
             )}
         </div>

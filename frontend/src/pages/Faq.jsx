@@ -10,7 +10,7 @@ import EditableContentImage from '@/components/common/EditableContentImage'
 import PowerCard from '@/components/cards/PowerCard'
 import TierMedallion from '@/components/community/badges/TierMedallion'
 import ExtraMedallion from '@/components/community/badges/ExtraMedallion'
-import { TIER_BADGE_IMAGES } from '@/lib/playerBadges'
+import { TIER_BADGE_IMAGES, EXTRA_BADGE_IMAGES } from '@/lib/playerBadges'
 import { useAppData } from '@/context/AppDataContext'
 import { contentImagesApi } from '@/services/apiClient'
 
@@ -351,7 +351,11 @@ const Faq = () => {
                                 <div className="mt-4 space-y-3">
                                     {EXTRA_BADGES_FAQ.map(({ key, title, desc }) => (
                                         <div key={key} className="flex items-start gap-3 rounded-2xl border border-slate-200 dark:border-border p-4">
-                                            <ExtraMedallion type={key} size={40} />
+                                            {EXTRA_BADGE_IMAGES[key] ? (
+                                                <img src={EXTRA_BADGE_IMAGES[key]} alt={`Badge ${title}`} className="h-10 w-10 shrink-0 object-contain" />
+                                            ) : (
+                                                <ExtraMedallion type={key} size={40} />
+                                            )}
                                             <div>
                                                 <p className="text-sm font-black uppercase tracking-wide text-slate-700 dark:text-foreground">{title}</p>
                                                 <p className="mt-1 text-sm text-slate-600 dark:text-muted-foreground">{desc}</p>

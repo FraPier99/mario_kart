@@ -50,7 +50,7 @@ const PlayerCard = ({ players, bestBadgeByPlayerId, handlePlayerClick }) => {
                                 orizzontale invece di andare a capo quando i badge
                                 (un tier per gioco, in futuro) superano lo spazio. */}
                             {playerBadges.length > 0 && (
-                                <div className="mt-2.5 mb-1 flex w-full items-center gap-1.5 overflow-x-auto">
+                                <div className="mt-2.5 mb-1 flex w-full max-w-full items-center justify-center gap-1.5 overflow-x-auto">
                                     {playerBadges.map((b) => {
                                         const badgeImage = TIER_BADGE_IMAGES[b.tier]
                                         return badgeImage ? (
@@ -59,12 +59,12 @@ const PlayerCard = ({ players, bestBadgeByPlayerId, handlePlayerClick }) => {
                                                 src={badgeImage}
                                                 alt={`Badge ${b.label ?? b.tier}`}
                                                 title={b.label ?? b.tier}
-                                                className="h-8 w-8 shrink-0 object-contain"
+                                                className="h-11 w-11 shrink-0 object-contain"
                                                 style={{ opacity: b.tier === 'sfidante' ? 0.85 : 1 }}
                                             />
                                         ) : (
                                             <div key={b.game_id ?? b.tier} className="shrink-0" title={b.label ?? b.tier}>
-                                                <TierMedallion tier={b.tier} size={30} />
+                                                <TierMedallion tier={b.tier} size={44} />
                                             </div>
                                         )
                                     })}
