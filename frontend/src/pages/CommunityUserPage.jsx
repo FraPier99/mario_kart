@@ -4,7 +4,7 @@ import { ArrowLeft, Flag, Trophy, Star, BarChart3, Shield } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import PlayerTournamentHistory from '@/components/community/PlayerTournamentHistory'
 import ProfileHeader from '@/components/community/ProfileHeader'
-import { pickBestBadge } from '@/lib/playerBadges'
+import { pickBestBadge, TIER_ACCENT_COLORS } from '@/lib/playerBadges'
 import { authApi, statsApi, getApiErrorMessage } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
 import { SkeletonPulse, SkeletonRows } from '@/components/common/Skeleton'
@@ -129,7 +129,15 @@ const CommunityUserPage = () => {
 
                 {/* Profile card — compatta (max-w-md), non max-w-3xl come il
                     resto della pagina: il contenuto è intrinsecamente stretto. */}
-                <div className="mx-auto max-w-md rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-6" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
+                <div
+                    className="mx-auto max-w-md rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-6"
+                    style={(() => {
+                        const tierAccent = TIER_ACCENT_COLORS[(viewedUserIsSuperadmin ? 'leggenda' : bestBadge?.tier)]
+                        return tierAccent
+                            ? { borderColor: tierAccent, boxShadow: `var(--circuit-shadow-md), 0 0 0 3px ${tierAccent}22` }
+                            : { boxShadow: 'var(--circuit-shadow-md)' }
+                    })()}
+                >
                     <ProfileHeader
                         avatarSrc={player?.img_url || communityUser?.img_url}
                         nickname={player?.nickname ?? communityUser.username}

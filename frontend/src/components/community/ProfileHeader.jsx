@@ -1,4 +1,3 @@
-import { Flag } from 'lucide-react'
 import RoleBadge from '@/components/community/RoleBadge'
 import BadgeChip from '@/components/community/BadgeChip'
 import TierMedallion from '@/components/community/badges/TierMedallion'
@@ -163,10 +162,20 @@ const ProfileHeader = ({
                     )}
                     {bio && (
                         <>
-                            <div className="flex w-full max-w-xs items-center gap-2">
-                                <span className="h-px flex-1 bg-slate-200 dark:bg-border" />
-                                <Flag size={11} className="shrink-0 text-slate-300 dark:text-muted-foreground" />
-                                <span className="h-px flex-1 bg-slate-200 dark:bg-border" />
+                            {/* Vero motivo a scacchi (non un'icona outline
+                                sottile, che spariva sullo sfondo) — le linee
+                                del divider riprendono l'accento di rango
+                                quando c'è un badge, altrimenti restano neutre. */}
+                            <div className="flex w-full max-w-xs items-center gap-2.5">
+                                <span className="h-px flex-1 bg-slate-200 dark:bg-border" style={tierAccent ? { background: `${tierAccent}55` } : undefined} />
+                                <div
+                                    className="h-3.5 w-5 shrink-0 rounded-[3px] border border-slate-400/70 dark:border-slate-500/70"
+                                    style={{
+                                        backgroundImage: 'repeating-conic-gradient(#0f172a 0% 25%, #f8fafc 0% 50%)',
+                                        backgroundSize: '7px 7px',
+                                    }}
+                                />
+                                <span className="h-px flex-1 bg-slate-200 dark:bg-border" style={tierAccent ? { background: `${tierAccent}55` } : undefined} />
                             </div>
                             <p className="max-w-sm text-sm text-slate-600 dark:text-muted-foreground leading-relaxed whitespace-pre-wrap">{bio}</p>
                         </>

@@ -15,7 +15,7 @@ import { SkeletonRows } from '@/components/common/Skeleton'
 import PlayerTournamentHistory from '@/components/community/PlayerTournamentHistory'
 import PlayerBadge from '@/components/community/PlayerBadge'
 import ProfileHeader from '@/components/community/ProfileHeader'
-import { pickBestBadge } from '@/lib/playerBadges'
+import { pickBestBadge, TIER_ACCENT_COLORS } from '@/lib/playerBadges'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { authApi, schedineApi, inventoryApi, ownershipApi, statsApi, getApiErrorMessage } from '@/services/apiClient'
@@ -601,7 +601,15 @@ const Dashboard = () => {
                     "trading card". Il logout resta disponibile dal menu
                     profilo in Navbar — niente più bottone "Esci" duplicato
                     qui, niente più nome/cognome (ridondante col nickname). */}
-                <div className={`mx-auto max-w-md rounded-[2rem] border-2 p-6 ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
+                <div
+                    className={`mx-auto max-w-md rounded-[2rem] border-2 p-6 ${goldBorder} ${goldBg}`}
+                    style={(() => {
+                        const tierAccent = TIER_ACCENT_COLORS[(isSuperadmin ? 'leggenda' : bestBadge?.tier)]
+                        return tierAccent
+                            ? { borderColor: tierAccent, boxShadow: `var(--circuit-shadow-md), 0 0 0 3px ${tierAccent}22` }
+                            : { boxShadow: 'var(--circuit-shadow-md)' }
+                    })()}
+                >
                     <ProfileHeader
                         avatarSrc={form.img_url || player?.img_url}
                         nickname={player?.nickname ?? user?.username ?? '—'}
