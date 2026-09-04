@@ -1,8 +1,12 @@
+import { Flag } from 'lucide-react'
 import RoleBadge from '@/components/community/RoleBadge'
 import BadgeChip from '@/components/community/BadgeChip'
 import TierMedallion from '@/components/community/badges/TierMedallion'
 import ExtraMedallion from '@/components/community/badges/ExtraMedallion'
-import { TIER_BADGE_IMAGES, EXTRA_BADGE_IMAGES, EXTRA_BADGES, STREAK_BADGE_THRESHOLD } from '@/lib/playerBadges'
+import {
+    TIER_BADGE_IMAGES, EXTRA_BADGE_IMAGES, EXTRA_BADGES, STREAK_BADGE_THRESHOLD,
+    TIER_ACCENT_COLORS, EXTRA_ACCENT_COLORS, pickBestBadge,
+} from '@/lib/playerBadges'
 
 // Una chip per badge (tier di un gioco, o un riconoscimento extra) — non più
 // un'unica riga "tier+extra" per gioco, così ogni elemento va a capo in
@@ -16,6 +20,7 @@ const chipsForBadge = (badge) => {
         title: badge.label,
         subtitle: badge.game_name,
         opacity: badge.tier === 'sfidante' ? 0.85 : 1,
+        accentColor: TIER_ACCENT_COLORS[badge.tier],
     }]
     if ((badge.streak ?? 0) >= STREAK_BADGE_THRESHOLD) {
         chips.push({
@@ -24,6 +29,7 @@ const chipsForBadge = (badge) => {
             medallion: <ExtraMedallion type="streak" size={32} />,
             title: EXTRA_BADGES.streak.label,
             subtitle: `${badge.streak} tornei di fila`,
+            accentColor: EXTRA_ACCENT_COLORS.streak,
         })
     }
     if (badge.improving) {
@@ -32,6 +38,7 @@ const chipsForBadge = (badge) => {
             image: EXTRA_BADGE_IMAGES.improving,
             medallion: <ExtraMedallion type="improving" size={32} />,
             title: EXTRA_BADGES.improving.label,
+            accentColor: EXTRA_ACCENT_COLORS.improving,
         })
     }
     if ((badge.consolation_wins ?? 0) > 0) {
@@ -41,6 +48,7 @@ const chipsForBadge = (badge) => {
             medallion: <ExtraMedallion type="consolation" size={32} />,
             title: EXTRA_BADGES.consolation.label,
             subtitle: badge.consolation_wins > 1 ? `Vinta ${badge.consolation_wins}×` : 'Vinta',
+            accentColor: EXTRA_ACCENT_COLORS.consolation,
         })
     }
     return chips
@@ -73,15 +81,26 @@ const ProfileHeader = ({
     favoriteCharacter,
     bio,
 }) => {
+    // Rango più alto fra tutti i giochi — stesso accento (anello + alone)
+    // riusato sull'avatar e sul bordo di ogni chip, un solo linguaggio
+    // visivo invece di un riempimento pieno colorato (segnalato in passato
+    // come "clash") o di un header piatto senza alcun riferimento (segnalato
+    // subito dopo come "troppo spento").
+    const bestBadge = pickBestBadge(badges)
+    const tierAccent = bestBadge ? TIER_ACCENT_COLORS[bestBadge.tier] : null
+
     return (
         <div className="flex flex-col items-center text-center gap-4">
-            {/* Identità — avatar e nome sempre affiancati, card compatta.
-                Bordo sempre neutro: nessuna colorazione legata al tier qui,
-                è il badge illustrato sotto (riga "Livelli") a comunicare il
-                livello. */}
+            {/* Identità — avatar e nome sempre affiancati, card compatta. */}
             <div className="flex items-center gap-3">
                 <div className="relative shrink-0">
-                    <div className="h-16 w-16 rounded-2xl border-4 border-slate-200 dark:border-border p-1 shadow-md">
+                    <div
+                        className="h-16 w-16 rounded-2xl border-4 border-slate-200 dark:border-border p-1 shadow-md"
+                        style={tierAccent ? {
+                            borderColor: tierAccent,
+                            boxShadow: `0 0 0 4px ${tierAccent}2e, 0 0 18px ${tierAccent}40`,
+                        } : undefined}
+                    >
                         <div
                             className="flex h-full w-full items-center justify-center overflow-hidden rounded-xl bg-slate-100 dark:bg-muted"
                             style={accentColor ? { border: `2px solid ${accentColor}` } : undefined}
@@ -104,6 +123,11 @@ const ProfileHeader = ({
                 </div>
                 <div className="min-w-0 text-left">
                     <h1 className="text-xl font-black text-slate-900 dark:text-foreground">{nickname}</h1>
+                    {bestBadge && (
+                        <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide" style={{ color: tierAccent }}>
+                            Rango più alto: {bestBadge.label}
+                        </p>
+                    )}
                     {role && (
                         <div className="mt-1">
                             <RoleBadge role={role} size="sm" />
@@ -116,27 +140,36 @@ const ProfileHeader = ({
                 extra), tutte alla stessa dimensione. flex-wrap invece di
                 overflow-x: con tanti giochi la sezione cresce in altezza
                 invece di troncare il nome del gioco o nascondersi dietro
-                uno scroll forzato. */}
+                uno scroll forzato. Sotto ~480px le chip passano in colonna
+                piena larghezza invece di stringersi in due colonne strette. */}
             {badges.length > 0 && (
-                <div className="flex w-full flex-wrap items-center justify-center gap-2.5">
+                <div className="flex w-full flex-wrap items-center justify-center gap-2.5 max-[480px]:flex-col max-[480px]:items-stretch">
                     {badges.flatMap(chipsForBadge).map((chip) => (
                         <BadgeChip key={chip.key} {...chip} />
                     ))}
                 </div>
             )}
 
-            {/* Extra — bio, e personaggio preferito SOLO se non ha un'immagine
-                (con immagine è già mostrato vicino all'avatar, mai duplicato
-                qui sotto — segnalato dall'utente). */}
+            {/* Extra — personaggio preferito SOLO se non ha un'immagine (con
+                immagine è già mostrato vicino all'avatar, mai duplicato qui
+                sotto — segnalato dall'utente come duplicazione), e bio sotto
+                un piccolo divider a bandiera. */}
             {((favoriteCharacter && !favoriteCharacter.img_url) || bio) && (
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex w-full flex-col items-center gap-2">
                     {favoriteCharacter && !favoriteCharacter.img_url && (
                         <div className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-1.5">
                             <span className="text-xs font-black text-slate-600 dark:text-foreground">{favoriteCharacter.name}</span>
                         </div>
                     )}
                     {bio && (
-                        <p className="max-w-sm text-sm text-slate-600 dark:text-muted-foreground leading-relaxed whitespace-pre-wrap">{bio}</p>
+                        <>
+                            <div className="flex w-full max-w-xs items-center gap-2">
+                                <span className="h-px flex-1 bg-slate-200 dark:bg-border" />
+                                <Flag size={11} className="shrink-0 text-slate-300 dark:text-muted-foreground" />
+                                <span className="h-px flex-1 bg-slate-200 dark:bg-border" />
+                            </div>
+                            <p className="max-w-sm text-sm text-slate-600 dark:text-muted-foreground leading-relaxed whitespace-pre-wrap">{bio}</p>
+                        </>
                     )}
                 </div>
             )}

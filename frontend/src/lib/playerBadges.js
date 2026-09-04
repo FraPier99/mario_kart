@@ -57,6 +57,24 @@ export const EXTRA_BADGE_IMAGES = {
     consolation: '/badges/small_consolazione.png',
 }
 
+// Colore "accento" per tier/extra — stessa palette usata nell'anello/ring
+// delle medaglie SVG (TierMedallion/ExtraMedallion), riesportata qui per gli
+// usi che applicano il colore direttamente in CSS (bordo/alone dell'avatar,
+// bordo delle chip badge nell'header profilo) senza passare dalla medaglia.
+export const TIER_ACCENT_COLORS = {
+    leggenda: '#f6b60d',
+    campione: '#e6960c',
+    veterano: '#2e7df0',
+    outsider: '#e13c2e',
+    esordiente: '#334155',
+    sfidante: '#64748b',
+}
+export const EXTRA_ACCENT_COLORS = {
+    streak: '#06b6d4',
+    improving: '#10b981',
+    consolation: '#8b5cf6',
+}
+
 /** Il badge di rango più alto fra una lista di badge (uno per gioco). */
 export function pickBestBadge(badges) {
     if (!badges?.length) return null

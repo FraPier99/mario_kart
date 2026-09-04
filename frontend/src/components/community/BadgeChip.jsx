@@ -2,10 +2,21 @@
 // usata nel blocco "Livelli" del profilo al posto della vecchia riga a
 // scroll orizzontale: con flex-wrap le chip vanno a capo invece di troncare
 // il nome del gioco o nascondersi dietro uno scroll forzato.
+//
+// L'accento colore (stessa palette dell'anello attorno all'avatar) è un
+// bordo pieno + un lieve alone sulla chip stessa — non un cerchietto colorato
+// separato dietro l'icona: un solo effetto "esterno" riusato ovunque invece
+// di due accenti diversi che si accavallano.
 const CHIP_SIZE = 32
 
-const BadgeChip = ({ image, medallion, title, subtitle, opacity = 1 }) => (
-    <div className="flex shrink-0 items-center gap-2 rounded-xl bg-slate-100 dark:bg-slate-800 py-1.5 pr-3 pl-1.5">
+const BadgeChip = ({ image, medallion, title, subtitle, opacity = 1, accentColor }) => (
+    <div
+        className="flex shrink-0 items-center gap-2 rounded-xl bg-slate-100 dark:bg-slate-800 py-1.5 pr-3 pl-1.5"
+        style={accentColor ? {
+            border: `1.5px solid ${accentColor}`,
+            boxShadow: `0 0 0 2px ${accentColor}2e`,
+        } : undefined}
+    >
         {image ? (
             <img src={image} alt={title} className="shrink-0 object-contain" style={{ width: CHIP_SIZE, height: CHIP_SIZE, opacity }} />
         ) : (
