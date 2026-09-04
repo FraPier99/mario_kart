@@ -49,74 +49,12 @@ export const TIER_BADGE_IMAGES = {
     sfidante: '/badges/small_sfidante.png',
 }
 
-// Bordo card giocatore — UN SOLO colore di rango per card (vedi PlayerCard.jsx),
-// invece di più elementi colorati in competizione. Esordiente/sfidante/nessun
-// badge condividono lo stesso grigio neutro ("rango non ancora affermato").
-export const TIER_BORDER_CLASSES = {
-    leggenda: 'border-circuit-gold',
-    campione: 'border-circuit-gold/70',
-    veterano: 'border-circuit-blue',
-    outsider: 'border-circuit-red',
-}
-export const DEFAULT_TIER_BORDER = 'border-slate-300 dark:border-slate-700'
-
 /** Il badge di rango più alto fra una lista di badge (uno per gioco). */
 export function pickBestBadge(badges) {
     if (!badges?.length) return null
     return badges.slice().sort(
         (a, b) => BADGE_TIER_RANK.indexOf(a.tier) - BADGE_TIER_RANK.indexOf(b.tier)
     )[0]
-}
-
-/**
- * Stile "carta speciale" (bordo/sfondo/avatar/icona overlay) per la card
- * profilo — SOLO i 3 tier più esclusivi lo attivano; gli altri (outsider/
- * sfidante/esordiente) e l'assenza di badge restano allo stile normale
- * (vedi getProfileCardStyle, che ritorna null in quel caso). Sostituisce il
- * vecchio flag binario "isChampion" (tornei vinti > 0) con il tier reale del
- * badge migliore del giocatore.
- */
-export const PROFILE_CARD_STYLES = {
-    leggenda: {
-        Icon: Crown,
-        shimmer: true,
-        cardBorder: 'border-circuit-gold/50 dark:border-circuit-gold/30 shadow-circuit-gold/20 dark:shadow-amber-950/40 ring-1 ring-circuit-gold/30 dark:ring-circuit-gold/20',
-        cardBg: 'bg-linear-to-br from-amber-100 via-amber-50 to-amber-100 dark:from-amber-950 dark:via-amber-900 dark:to-amber-950',
-        avatarBorder: 'border-circuit-gold shadow-circuit-gold/20',
-        badgeBg: 'bg-circuit-gold',
-        badgeIconColor: 'text-amber-950',
-        textColor: 'text-circuit-gold',
-    },
-    campione: {
-        Icon: Trophy,
-        shimmer: false,
-        cardBorder: 'border-circuit-gold/40 dark:border-circuit-gold/20 shadow-amber-200/10 dark:shadow-amber-950/20',
-        cardBg: 'bg-amber-50 dark:bg-amber-950',
-        avatarBorder: 'border-circuit-gold/70 shadow-circuit-gold/15',
-        badgeBg: 'bg-circuit-gold/80',
-        badgeIconColor: 'text-amber-950',
-        textColor: 'text-circuit-gold',
-    },
-    veterano: {
-        Icon: Star,
-        shimmer: false,
-        // Sfondo/bordo volutamente tenui (non un gradiente pieno come
-        // leggenda): stessa palette --circuit-blue di RoleBadge "admin" e
-        // del badge-pill "veterano" stesso — una card di sfondo altrettanto
-        // satura li fa sparire tutti nello stesso azzurro.
-        cardBorder: 'border-circuit-blue/40 dark:border-circuit-blue/20 shadow-blue-200/10 dark:shadow-blue-950/20',
-        cardBg: 'bg-blue-50 dark:bg-blue-950',
-        avatarBorder: 'border-circuit-blue/70 shadow-circuit-blue/15',
-        badgeBg: 'bg-circuit-blue',
-        badgeIconColor: 'text-white',
-        textColor: 'text-circuit-blue',
-    },
-}
-
-/** null per outsider/sfidante/esordiente/nessun badge — i chiamanti lo
- * trattano esattamente come l'attuale "non campione". */
-export function getProfileCardStyle(tier) {
-    return PROFILE_CARD_STYLES[tier] ?? null
 }
 
 // Stessa soglia di PARTICIPATION_NUDGE_THRESHOLD/streak lato backend (vedi

@@ -24,17 +24,19 @@ const ProfileHeader = ({
     fallbackInitial,
     accentColor,
     role,
-    cardStyle,
     badges = [],
     favoriteCharacter,
     bio,
 }) => {
     return (
         <div className="flex flex-col items-center text-center gap-4">
-            {/* Identità — avatar e nome sempre affiancati, card compatta */}
+            {/* Identità — avatar e nome sempre affiancati, card compatta.
+                Bordo sempre neutro: nessuna colorazione legata al tier qui,
+                è il badge illustrato sotto (riga "Livelli") a comunicare il
+                livello. */}
             <div className="flex items-center gap-3">
                 <div className="relative shrink-0">
-                    <div className={`h-16 w-16 rounded-2xl border-4 p-1 shadow-md ${cardStyle ? cardStyle.avatarBorder : 'border-slate-200 dark:border-border'}`}>
+                    <div className="h-16 w-16 rounded-2xl border-4 border-slate-200 dark:border-border p-1 shadow-md">
                         <div
                             className="flex h-full w-full items-center justify-center overflow-hidden rounded-xl bg-slate-100 dark:bg-muted"
                             style={accentColor ? { border: `2px solid ${accentColor}` } : undefined}
@@ -46,13 +48,7 @@ const ProfileHeader = ({
                             )}
                         </div>
                     </div>
-                    {cardStyle && (
-                        <span className={`absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white dark:border-card shadow-md ${cardStyle.badgeBg}`}>
-                            <cardStyle.Icon size={9} className={cardStyle.badgeIconColor} />
-                        </span>
-                    )}
-                    {/* Personaggio preferito sempre qui, vicino all'avatar (angolo
-                        opposto al badge di tier, nessuna sovrapposizione) — mai
+                    {/* Personaggio preferito sempre qui, vicino all'avatar — mai
                         anche ripetuto sotto come chip separata (segnalato
                         dall'utente come duplicazione). */}
                     {favoriteCharacter?.img_url && (

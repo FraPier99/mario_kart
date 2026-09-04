@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
-    Flag, Trophy, Swords, ScrollText, Zap, Scale,
-    Crown, Star, Flame, Flag as FlagIcon, ChevronDown, PartyPopper,
-    Repeat, TrendingUp, Medal,
+    Flag, Trophy, ScrollText, Zap, Scale,
+    Crown, ChevronDown, PartyPopper,
 } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import PlayerLink from '@/components/common/PlayerLink'
 import EditableContentImage from '@/components/common/EditableContentImage'
 import PowerCard from '@/components/cards/PowerCard'
+import TierMedallion from '@/components/community/badges/TierMedallion'
+import ExtraMedallion from '@/components/community/badges/ExtraMedallion'
+import { TIER_BADGE_IMAGES } from '@/lib/playerBadges'
 import { useAppData } from '@/context/AppDataContext'
 import { contentImagesApi } from '@/services/apiClient'
 
@@ -26,20 +28,20 @@ const FounderName = ({ name, players }) => {
 }
 
 const BADGE_TIERS_FAQ = [
-    { tier: 'LEGGENDA', Icon: Crown, color: 'text-amber-600 dark:text-amber-400', desc: 'Ha vinto TUTTI i tornei conclusi di quel gioco a cui ha partecipato (100% di vittorie), oppure ha vinto almeno 3 tornei di quel gioco.' },
-    { tier: 'CAMPIONE', Icon: Trophy, color: 'text-amber-600 dark:text-amber-400', desc: 'Ha vinto almeno un torneo concluso di quel gioco (ma non tutti).' },
-    { tier: 'VETERANO', Icon: Star, color: 'text-blue-600 dark:text-blue-400', desc: 'Non ha mai vinto, ma è arrivato sul podio (primi 3 posti) in almeno metà dei tornei conclusi giocati.' },
-    { tier: 'OUTSIDER', Icon: Flame, color: 'text-violet-600 dark:text-violet-400', desc: 'Non ha mai vinto, ha fatto almeno un podio, ma meno spesso della metà dei tornei giocati.' },
-    { tier: 'ESORDIENTE', Icon: FlagIcon, color: 'text-emerald-600 dark:text-emerald-400', desc: 'Ha giocato almeno un torneo concluso ma non è mai arrivato sul podio.' },
-    { tier: 'SFIDANTE', Icon: Swords, color: 'text-slate-500 dark:text-muted-foreground', desc: 'Non ha ancora giocato un torneo concluso di quel gioco (e quel gioco ha comunque almeno un torneo creato).' },
+    { tier: 'LEGGENDA', code: 'leggenda', color: 'text-amber-600 dark:text-amber-400', desc: 'Ha vinto TUTTI i tornei conclusi di quel gioco a cui ha partecipato (100% di vittorie), oppure ha vinto almeno 3 tornei di quel gioco.' },
+    { tier: 'CAMPIONE', code: 'campione', color: 'text-amber-600 dark:text-amber-400', desc: 'Ha vinto almeno un torneo concluso di quel gioco (ma non tutti).' },
+    { tier: 'VETERANO', code: 'veterano', color: 'text-blue-600 dark:text-blue-400', desc: 'Non ha mai vinto, ma è arrivato sul podio (primi 3 posti) in almeno metà dei tornei conclusi giocati.' },
+    { tier: 'OUTSIDER', code: 'outsider', color: 'text-violet-600 dark:text-violet-400', desc: 'Non ha mai vinto, ha fatto almeno un podio, ma meno spesso della metà dei tornei giocati.' },
+    { tier: 'ESORDIENTE', code: 'esordiente', color: 'text-emerald-600 dark:text-emerald-400', desc: 'Ha giocato almeno un torneo concluso ma non è mai arrivato sul podio.' },
+    { tier: 'SFIDANTE', code: 'sfidante', color: 'text-slate-500 dark:text-muted-foreground', desc: 'Non ha ancora giocato un torneo concluso di quel gioco (e quel gioco ha comunque almeno un torneo creato).' },
 ]
 
 // Indicatori extra indipendenti dal tier — vedi lib/playerBadges.js
 // EXTRA_BADGES, stesso concetto spiegato qui in linguaggio da regolamento.
 const EXTRA_BADGES_FAQ = [
-    { key: 'streak', Icon: Repeat, color: 'text-emerald-600 dark:text-emerald-400', title: 'Costanza', desc: 'Ha giocato almeno 3 tornei consecutivi dello stesso gioco, senza saltarne nemmeno uno.' },
-    { key: 'improving', Icon: TrendingUp, color: 'text-blue-600 dark:text-blue-400', title: 'In crescita', desc: 'Il piazzamento medio nelle ultime 3 partecipazioni concluse è migliore rispetto alle 3 precedenti (serve avere almeno 6 tornei conclusi giocati).' },
-    { key: 'consolation', Icon: Medal, color: 'text-violet-600 dark:text-violet-400', title: 'Re della Consolazione', desc: 'Ha vinto almeno una volta la Finale di Consolazione (il bracket "minore" dei tornei a gironi, per chi non arriva in Finale principale).' },
+    { key: 'streak', title: 'Costanza', desc: 'Ha giocato almeno 3 tornei consecutivi dello stesso gioco, senza saltarne nemmeno uno.' },
+    { key: 'improving', title: 'In crescita', desc: 'Il piazzamento medio nelle ultime 3 partecipazioni concluse è migliore rispetto alle 3 precedenti (serve avere almeno 6 tornei conclusi giocati).' },
+    { key: 'consolation', title: 'Re della Consolazione', desc: 'Ha vinto almeno una volta la Finale di Consolazione (il bracket "minore" dei tornei a gironi, per chi non arriva in Finale principale).' },
 ]
 
 // Struttura a due livelli: le voci con `children` sono un'etichetta di
@@ -325,9 +327,13 @@ const Faq = () => {
                                     su un altro. Un gioco senza nessun torneo creato non produce alcun badge.
                                 </p>
                                 <div className="mt-5 space-y-3">
-                                    {BADGE_TIERS_FAQ.map(({ tier, Icon, color, desc }) => (
+                                    {BADGE_TIERS_FAQ.map(({ tier, code, color, desc }) => (
                                         <div key={tier} className="flex items-start gap-3 rounded-2xl border border-slate-200 dark:border-border p-4">
-                                            <Icon size={18} className={`mt-0.5 shrink-0 ${color}`} />
+                                            {TIER_BADGE_IMAGES[code] ? (
+                                                <img src={TIER_BADGE_IMAGES[code]} alt={`Badge ${tier}`} className="h-10 w-10 shrink-0 object-contain" />
+                                            ) : (
+                                                <TierMedallion tier={code} size={40} />
+                                            )}
                                             <div>
                                                 <p className={`text-sm font-black uppercase tracking-wide ${color}`}>{tier}</p>
                                                 <p className="mt-1 text-sm text-slate-600 dark:text-muted-foreground">{desc}</p>
@@ -343,11 +349,11 @@ const Faq = () => {
                                     miglioramenti, non solo le vittorie.
                                 </p>
                                 <div className="mt-4 space-y-3">
-                                    {EXTRA_BADGES_FAQ.map(({ key, Icon, color, title, desc }) => (
+                                    {EXTRA_BADGES_FAQ.map(({ key, title, desc }) => (
                                         <div key={key} className="flex items-start gap-3 rounded-2xl border border-slate-200 dark:border-border p-4">
-                                            <Icon size={18} className={`mt-0.5 shrink-0 ${color}`} />
+                                            <ExtraMedallion type={key} size={40} />
                                             <div>
-                                                <p className={`text-sm font-black uppercase tracking-wide ${color}`}>{title}</p>
+                                                <p className="text-sm font-black uppercase tracking-wide text-slate-700 dark:text-foreground">{title}</p>
                                                 <p className="mt-1 text-sm text-slate-600 dark:text-muted-foreground">{desc}</p>
                                             </div>
                                         </div>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Trophy, Gamepad2, Users2, Calendar, ArrowRight, Sparkles, UserPlus, ChevronDown } from 'lucide-react'
 import { useAppData } from '@/context/AppDataContext'
@@ -12,7 +12,7 @@ import TournamentMilestonesPanel from '@/components/layout/TournamentMilestonesP
 import CollapsibleSection from '@/components/tournaments/CollapsibleSection'
 import { detectTournamentMilestones } from '@/lib/milestones'
 import { statsApi } from '@/services/apiClient'
-import { pickBestBadge, getProfileCardStyle, TIER_BADGE_IMAGES } from '@/lib/playerBadges'
+import { TIER_BADGE_IMAGES } from '@/lib/playerBadges'
 import { checkBadgeTierUps } from '@/lib/badgeTierToast'
 import TierMedallion from '@/components/community/badges/TierMedallion'
 
@@ -28,21 +28,15 @@ const Hero = () => {
     const { dark } = useTheme()
     const theme = getProfileTheme(user, charactersById, dark)
     const player = user?.player ?? null
-    const [badges, setBadges] = useState([])
     useEffect(() => {
         if (!player) return
         let active = true
         statsApi.playerBadges(player.id)
-            .then((res) => {
-                if (!active) return
-                setBadges(res.data)
-                checkBadgeTierUps(player.id, res.data, games)
-            })
-            .catch(() => { if (active) setBadges([]) })
+            .then((res) => { if (active) checkBadgeTierUps(player.id, res.data, games) })
+            .catch(() => {})
         return () => { active = false }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [player])
-    const bestBadge = useMemo(() => pickBestBadge(badges), [badges])
     // "Dettagli torneo" (personaggi usati/premi/traguardi) collassato di
     // default su mobile — dove impilare tutto sotto podio+meta+CTA creava
     // troppo scroll prima di arrivare a contenuti secondari — aperto di
@@ -56,23 +50,6 @@ const Hero = () => {
     // molto meno spazio verticale di CTA+meta+podio+dettagli insieme) — si
     // apre solo su richiesta, invece di essere sempre alta in home.
     const [expanded, setExpanded] = useState(false)
-    // Stile "carta speciale" guidato dal tier reale del badge migliore
-    // (leggenda/campione/veterano) — un superadmin non ha badge per
-    // game_id (non gioca), quindi niente trattamento dorato automatico:
-    // stessa regola già applicata in CommunityUserPage.jsx.
-    const cardStyle = getProfileCardStyle(bestBadge?.tier)
-    const cardTier = cardStyle ? bestBadge.tier : null
-    const effectiveCardStyle = cardStyle
-    const goldCard = Boolean(effectiveCardStyle)
-    // Gradiente coerente col tier: oro per leggenda/campione, blu per
-    // veterano — classi Tailwind con varianti dark:, non più un ternario
-    // JS su `dark` + style inline (il resto della card usa ancora
-    // style.background per theme.cardBackground, dinamico per utente e
-    // quindi legittimamente inline — qui invece il gradiente è fisso).
-    const goldCardBg = cardTier === 'veterano'
-        ? 'bg-blue-50 dark:bg-blue-950'
-        : 'bg-linear-to-br from-amber-100 via-amber-50 to-amber-100 dark:from-amber-950 dark:via-amber-900 dark:to-amber-950'
-
     // "Ultimo campione": non usare lastWinner/lastWinnerStats del context — quelli
     // valgono solo se il torneo più recente in assoluto è concluso, quindi sono
     // spesso null mentre c'è un torneo in corso. Cerchiamo invece il primo torneo
@@ -159,8 +136,8 @@ const Hero = () => {
     return (
         <section className="mx-auto max-w-7xl px-4 py-8">
             <div
-                className={`overflow-hidden rounded-[2rem] border-2 transition-all duration-500 ${goldCard ? `border-circuit-ink ${goldCardBg} ${effectiveCardStyle?.shimmer ? 'gold-card-shimmer' : ''}` : 'border-slate-900/70 dark:border-white/20'}`}
-                style={{ background: goldCard ? undefined : theme.cardBackground, boxShadow: 'var(--circuit-shadow-lg)' }}
+                className="overflow-hidden rounded-[2rem] border-2 border-slate-900/70 dark:border-white/20 transition-all duration-500"
+                style={{ background: theme.cardBackground, boxShadow: 'var(--circuit-shadow-lg)' }}
             >
 
                 {/* ── Zone 3 "Chi rappresenti": niente più identità qui (già raccontata dalla Hero in cima) ── */}

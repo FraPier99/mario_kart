@@ -4,7 +4,7 @@ import { ArrowLeft, Flag, Trophy, Star, BarChart3, Shield } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import PlayerTournamentHistory from '@/components/community/PlayerTournamentHistory'
 import ProfileHeader from '@/components/community/ProfileHeader'
-import { pickBestBadge, getProfileCardStyle } from '@/lib/playerBadges'
+import { pickBestBadge } from '@/lib/playerBadges'
 import { authApi, statsApi, getApiErrorMessage } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
 import { SkeletonPulse, SkeletonRows } from '@/components/common/Skeleton'
@@ -62,12 +62,6 @@ const CommunityUserPage = () => {
         if (!selectedGameId) return bestBadge
         return badges.find((b) => b.game_id === Number(selectedGameId)) ?? bestBadge
     }, [badges, selectedGameId, bestBadge])
-    // Stesso override di ProfileDashboard.jsx: il superadmin non ha
-    // Player/badge (non gioca mai) ma ha comunque diritto al trattamento
-    // "carta speciale" oro come effetto del ruolo, non del sistema
-    // badge/tier (che senza dati reali cadrebbe sul tier più basso).
-    const cardStyle = viewedUserIsSuperadmin ? getProfileCardStyle('leggenda') : getProfileCardStyle(bestBadge?.tier)
-
     const gameStats = useMemo(() => {
         if (!selectedGameId || !player) return null
         const leaderboard = getLeaderboardByGame(selectedGameId)
@@ -135,7 +129,7 @@ const CommunityUserPage = () => {
 
                 {/* Profile card — compatta (max-w-md), non max-w-3xl come il
                     resto della pagina: il contenuto è intrinsecamente stretto. */}
-                <div className={`mx-auto max-w-md rounded-[2rem] border-2 p-6 ${cardStyle ? `${cardStyle.cardBorder} ${cardStyle.cardBg}` : 'border-slate-200 dark:border-border bg-white dark:bg-card'}`} style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
+                <div className="mx-auto max-w-md rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-6" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
                     <ProfileHeader
                         avatarSrc={player?.img_url || communityUser?.img_url}
                         nickname={player?.nickname ?? communityUser.username}
@@ -145,7 +139,6 @@ const CommunityUserPage = () => {
                         // quell'account) — per admin/user è ridondante col tag
                         // ruolo già visibile in Navbar.
                         role={viewedUserIsSuperadmin ? communityUser.role : null}
-                        cardStyle={cardStyle}
                         // Il superadmin non gioca mai — nessun badge di gioco anche se per
                         // qualche motivo risultasse un player collegato.
                         badges={!viewedUserIsSuperadmin && activeBadge ? [activeBadge] : []}

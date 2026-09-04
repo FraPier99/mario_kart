@@ -1,6 +1,6 @@
 import TierMedallion from '@/components/community/badges/TierMedallion'
 import ExtraMedallion from '@/components/community/badges/ExtraMedallion'
-import { EXTRA_BADGES, STREAK_BADGE_THRESHOLD } from '@/lib/playerBadges'
+import { EXTRA_BADGES, STREAK_BADGE_THRESHOLD, TIER_BADGE_IMAGES } from '@/lib/playerBadges'
 
 // Un badge non è mai mostrato "nudo": lo stesso giocatore ha un tier
 // diverso per ogni game_id, quindi il nome del gioco è sempre affiancato
@@ -29,9 +29,20 @@ const PlayerBadge = ({ badge, size = 'md', className = '' }) => {
         extras.push({ key: 'consolation', tooltip: EXTRA_BADGES.consolation.tooltip(badge.consolation_wins) })
     }
 
+    const badgeImage = TIER_BADGE_IMAGES[badge.tier]
+
     return (
         <div className={`inline-flex items-center gap-2.5 ${className}`}>
-            <TierMedallion tier={badge.tier} size={medallionSize} />
+            {badgeImage ? (
+                <img
+                    src={badgeImage}
+                    alt={`Badge ${badge.label}`}
+                    className="shrink-0 object-contain"
+                    style={{ width: medallionSize, height: medallionSize, opacity: badge.tier === 'sfidante' ? 0.85 : 1 }}
+                />
+            ) : (
+                <TierMedallion tier={badge.tier} size={medallionSize} />
+            )}
             <div className={size === 'sm' ? 'text-[10px]' : 'text-xs'}>
                 <span className="font-black uppercase tracking-wider text-slate-800 dark:text-foreground">{badge.label}</span>
                 {badge.game_name && (

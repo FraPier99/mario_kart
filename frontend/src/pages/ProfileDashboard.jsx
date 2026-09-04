@@ -15,7 +15,7 @@ import { SkeletonRows } from '@/components/common/Skeleton'
 import PlayerTournamentHistory from '@/components/community/PlayerTournamentHistory'
 import PlayerBadge from '@/components/community/PlayerBadge'
 import ProfileHeader from '@/components/community/ProfileHeader'
-import { pickBestBadge, getProfileCardStyle } from '@/lib/playerBadges'
+import { pickBestBadge } from '@/lib/playerBadges'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { authApi, schedineApi, inventoryApi, ownershipApi, statsApi, getApiErrorMessage } from '@/services/apiClient'
@@ -342,17 +342,6 @@ const Dashboard = () => {
         return () => { active = false }
     }, [player])
     const bestBadge = useMemo(() => pickBestBadge(badges), [badges])
-    // Stile "carta speciale" guidato dal tier reale del badge migliore
-    // (leggenda/campione/veterano) — un superadmin non ha badge per
-    // game_id (non gioca), quindi niente trattamento dorato automatico:
-    // stessa regola già applicata in CommunityUserPage.jsx.
-    // Il superadmin non ha Player/badge (non gioca mai), ma ha comunque
-    // diritto al trattamento "carta speciale" oro — non derivato dal
-    // sistema badge/tier (che senza dati reali cadrebbe sul tier più basso,
-    // "sfidante"), ma come effetto del ruolo stesso: stessa leggenda usata
-    // per il tier più esclusivo dei giocatori, riusata qui come override.
-    const cardStyle = isSuperadmin ? getProfileCardStyle('leggenda') : getProfileCardStyle(bestBadge?.tier)
-    const effectiveCardStyle = cardStyle
     const [selectedGameId, setSelectedGameId] = useState('')
     const activeBadge = useMemo(() => {
         if (!selectedGameId) return bestBadge
@@ -367,8 +356,11 @@ const Dashboard = () => {
         return { ...entry, rank, totalPlayers: leaderboard.length }
     }, [selectedGameId, player, getLeaderboardByGame])
 
-    const goldBorder = effectiveCardStyle?.cardBorder ?? 'border-slate-200 dark:border-border'
-    const goldBg = effectiveCardStyle?.cardBg ?? 'bg-white dark:bg-card'
+    // Nessuna card del profilo cambia più colore in base al tier del
+    // giocatore — il badge stesso, con la sua illustrazione, comunica il
+    // livello. Le costanti restano per non toccare ogni singolo utilizzo.
+    const goldBorder = 'border-slate-200 dark:border-border'
+    const goldBg = 'bg-white dark:bg-card'
 
     const [searchParams] = useSearchParams()
     const requestedProfileTab = searchParams.get('tab')
@@ -620,7 +612,6 @@ const Dashboard = () => {
                         // "livello" disponibile — per admin/user era ridondante
                         // col tag ruolo già visibile in Navbar.
                         role={isSuperadmin ? 'superadmin' : null}
-                        cardStyle={cardStyle}
                         // Il superadmin non gioca mai — nessun badge di gioco anche se per
                         // qualche motivo risultasse un player collegato.
                         badges={isSuperadmin ? [] : badges}
@@ -664,12 +655,7 @@ const Dashboard = () => {
 
                 {/* ── TAB: PROFILO ─────────────────────────────── */}
                 {profileTab === 'profilo' && (
-                    <div className={`relative rounded-[2rem] border-2 p-6 ${effectiveCardStyle?.shimmer ? 'gold-card-shimmer' : ''} ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
-                        {effectiveCardStyle && (
-                            <div className={`absolute right-4 top-4 rounded-full p-1.5 shadow-lg z-10 ${effectiveCardStyle.badgeBg}`}>
-                                <effectiveCardStyle.Icon size={16} className={effectiveCardStyle.badgeIconColor} />
-                            </div>
-                        )}
+                    <div className={`relative rounded-[2rem] border-2 p-6 ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
                             <div>
                                 <p className="font-title text-[9px] tracking-wide text-emerald-600 dark:text-emerald-400">Modifica profilo</p>
@@ -764,7 +750,7 @@ const Dashboard = () => {
 
                 {/* ── TAB: SICUREZZA ─────────────────────────────── */}
                 {profileTab === 'sicurezza' && (
-                    <div className={`rounded-[2rem] border-2 p-6 ${effectiveCardStyle?.shimmer ? 'gold-card-shimmer' : ''} ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
+                    <div className={`rounded-[2rem] border-2 p-6 ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                         <p className="font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">Sicurezza</p>
                         <h2 className="mt-1 text-lg font-black text-slate-900 dark:text-foreground">Cambia password</h2>
                         <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">Inserisci la password attuale per confermare la tua identità, poi la nuova password.</p>
@@ -838,11 +824,11 @@ const Dashboard = () => {
 
                 {/* ── TAB: STATISTICHE ─────────────────────────────── */}
                 {profileTab === 'statistiche' && (
-                    <div className={`rounded-[2rem] border-2 p-6 ${effectiveCardStyle?.shimmer ? 'gold-card-shimmer' : ''} ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
+                    <div className={`rounded-[2rem] border-2 p-6 ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                         <div className="space-y-4">
                         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                             {[
-                                { label: 'Tornei vinti', value: playerStats?.tournamentWins ?? 0, sub: `di ${playerStats?.tournamentsPlayed ?? 0} giocati`, Icon: Trophy, iconCls: cardStyle ? 'bg-amber-400/25 text-amber-600 dark:text-amber-300' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400', cardCls: cardStyle ? 'border-amber-300 dark:border-amber-500/40 bg-amber-50/70 dark:bg-amber-900/15' : 'border-slate-200 dark:border-border bg-white dark:bg-card' },
+                                { label: 'Tornei vinti', value: playerStats?.tournamentWins ?? 0, sub: `di ${playerStats?.tournamentsPlayed ?? 0} giocati`, Icon: Trophy, iconCls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400', cardCls: 'border-slate-200 dark:border-border bg-white dark:bg-card' },
                                 { label: 'Vittorie gara', value: playerStats?.raceWins ?? 0, sub: `di ${playerStats?.racesPlayed ?? 0} gare`, Icon: Flag, iconCls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', cardCls: 'border-slate-200 dark:border-border bg-white dark:bg-card' },
                                 { label: 'Podi totali', value: playerStats?.podiums ?? 0, sub: `Podium Rate ${playerStats?.podiumRate ?? 0}%`, Icon: Star, iconCls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', cardCls: 'border-slate-200 dark:border-border bg-white dark:bg-card' },
                                 { label: 'Punti totali', value: playerStats?.points ?? 0, sub: `Efficienza ${playerStats?.avgEfficiency ?? 0}%`, Icon: BarChart3, iconCls: 'bg-violet-500/10 text-violet-600 dark:text-violet-400', cardCls: 'border-slate-200 dark:border-border bg-white dark:bg-card' },
@@ -880,7 +866,7 @@ const Dashboard = () => {
                                     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                                         {[
                                             { label: 'Posizione', value: `#${gameStats.rank}`, sub: `di ${gameStats.totalPlayers}`, iconCls: gameStats.rank === 1 ? 'bg-amber-400/25 text-amber-600' : 'bg-slate-500/10 text-slate-600', Icon: Trophy },
-                                            { label: 'Tornei vinti', value: gameStats.tournamentWins, sub: `di ${gameStats.tournamentsPlayed} giocati`, iconCls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400', Icon: getProfileCardStyle(activeBadge?.tier)?.Icon ?? Crown },
+                                            { label: 'Tornei vinti', value: gameStats.tournamentWins, sub: `di ${gameStats.tournamentsPlayed} giocati`, iconCls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400', Icon: Crown },
                                             { label: 'Podi totali', value: gameStats.podiums, sub: `Podium Rate ${gameStats.podiumRate}%`, iconCls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', Icon: Star },
                                             { label: 'Vittorie gara', value: gameStats.raceWins, sub: `Win Rate ${gameStats.winRate}%`, iconCls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', Icon: Flag },
                                         ].map(({ label, value, sub, iconCls, Icon }) => (
@@ -926,7 +912,7 @@ const Dashboard = () => {
                     <div className="space-y-4">
                         <SchedinaBadge />
 
-                        <div className={`rounded-[2rem] border-2 p-6 ${effectiveCardStyle?.shimmer ? 'gold-card-shimmer' : ''} ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
+                        <div className={`rounded-[2rem] border-2 p-6 ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                             <p className="font-title text-[9px] tracking-wide text-emerald-600 dark:text-emerald-400">Inventario</p>
                             <h2 className="mt-1 text-lg font-black uppercase tracking-tight text-slate-900 dark:text-foreground">I Miei Poteri</h2>
                             {inventoryLoading ? (
@@ -998,7 +984,7 @@ const Dashboard = () => {
 
                 {/* ── TAB: POSSIEDI ─────────────────────────────── */}
                 {profileTab === 'possiedi' && (
-                    <div className={`rounded-[2rem] border-2 p-6 ${effectiveCardStyle?.shimmer ? 'gold-card-shimmer' : ''} ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
+                    <div className={`rounded-[2rem] border-2 p-6 ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                         <p className="font-title text-[9px] tracking-wide text-emerald-600 dark:text-emerald-400">Possiedi</p>
                         <h2 className="mt-1 text-lg font-black text-slate-900 dark:text-foreground">Giochi, console e R4</h2>
                         <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">Indica quali giochi e console possiedi: aiuta a organizzare tornei e serate in base a chi ha cosa.</p>
