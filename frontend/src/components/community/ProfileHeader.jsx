@@ -42,7 +42,7 @@ const ProfileHeader = ({
                             {avatarSrc ? (
                                 <img src={avatarSrc} alt={nickname} className="h-full w-full object-cover" />
                             ) : (
-                                <span className="text-xl font-black text-slate-400 dark:text-slate-500">{fallbackInitial}</span>
+                                <span className="text-xl font-black text-slate-400">{fallbackInitial}</span>
                             )}
                         </div>
                     </div>

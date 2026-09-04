@@ -68,8 +68,8 @@ const ImageUpload = ({ value, onChange }) => {
             </>
           ) : (
             <div className="flex h-full w-full flex-col items-center justify-center gap-1">
-              <UserSquare2 size={20} className="text-slate-400 dark:text-slate-500" />
-              <p className="text-[8px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Carica</p>
+              <UserSquare2 size={20} className="text-slate-400" />
+              <p className="text-[8px] font-black uppercase tracking-wider text-slate-400">Carica</p>
             </div>
           )}
         </div>
@@ -489,7 +489,7 @@ export default function PlayersTab() {
             <label className="space-y-1.5 text-sm font-medium text-slate-600 dark:text-slate-300">
               <span>PG preferito</span>
               <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Cerca personaggio..."
@@ -579,7 +579,7 @@ export default function PlayersTab() {
                 {isLocked ? (
                   <div
                     title="Solo un superadmin può modificare un giocatore collegato a un account admin/superadmin"
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border-2 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border-2 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400"
                   >
                     <Shield className="h-3.5 w-3.5" />
                     Account protetto

@@ -322,7 +322,7 @@ const Schedina = () => {
     }
 
     const DetailLabel = ({ children }) => (
-        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">{children}</p>
+        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">{children}</p>
     )
 
     // Dettaglio COMPLETO della schedina compilata dall'utente (i suoi pronostici),
@@ -375,7 +375,7 @@ const Schedina = () => {
                         <DetailLabel>Classifica gironi</DetailLabel>
                         {Object.entries(gironi).sort((a, b) => Number(a[0]) - Number(b[0])).map(([girone, ids]) => (
                             <div key={girone} className="space-y-1">
-                                <p className="text-[8px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Girone {girone}</p>
+                                <p className="text-[8px] font-black uppercase tracking-wider text-slate-400">Girone {girone}</p>
                                 <div className="space-y-1">
                                     {(ids ?? []).map((pid, i) => <RankRow key={`g-${girone}-${pid}-${i}`} position={`${i + 1}°`} playerId={pid} />)}
                                 </div>
@@ -603,7 +603,7 @@ const Schedina = () => {
 
                             return (
                                 <div className="mt-6 space-y-2">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400 dark:text-slate-500">Classifica pronostici</p>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Classifica pronostici</p>
 
                                     {/* Mobile: cards */}
                                     <div className="md:hidden space-y-2">
@@ -643,7 +643,7 @@ const Schedina = () => {
                                                     {/* Classifica completa pronosticata (tutte le posizioni, non
                                                         solo 1°/2°/3°/Ultimo), con marcatori di correttezza. */}
                                                     <div className="space-y-1">
-                                                        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">Classifica pronosticata</p>
+                                                        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-slate-400">Classifica pronosticata</p>
                                                         <div className="space-y-1">
                                                             {(entry.classifica_ordinata ?? []).map((pid, i) => (
                                                                 <div key={`${pid}-${i}`} className="flex items-center gap-2 rounded-xl bg-slate-50 dark:bg-muted px-2.5 py-1">
@@ -768,7 +768,7 @@ const Schedina = () => {
                                                                                 <div key={i} className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[10px] font-black ${
                                                                                     item.correct
                                                                                         ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400'
-                                                                                        : 'border-slate-200 bg-slate-50 text-slate-400 dark:border-white/10 dark:bg-white/3 dark:text-slate-500'
+                                                                                        : 'border-slate-200 bg-slate-50 text-slate-400 dark:border-white/10 dark:bg-white/3 dark:text-slate-400'
                                                                                 }`}>
                                                                                     <span>{item.correct ? '✓' : '✗'}</span>
                                                                                     <span>{item.label}</span>
@@ -800,7 +800,7 @@ const Schedina = () => {
 
                             return (
                                 <div className="mt-6 space-y-2">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400 dark:text-slate-500">Classifica pronostici (Gironi)</p>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Classifica pronostici (Gironi)</p>
 
                                     {/* Risultati reali */}
                                     {((deluxeDetail.actual_finalisti?.length ?? 0) > 0 || (deluxeDetail.actual_classifica_finale?.length ?? 0) > 0 || Object.keys(deluxeDetail.actual_classifiche_gironi_nicknames ?? {}).length > 0) && (
@@ -893,7 +893,7 @@ const Schedina = () => {
                                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[10px]">
                                                             {bd.classifica_finale.posizioni.map((pos, i) => (
                                                                 <div key={i} className="rounded-xl bg-slate-50 dark:bg-muted p-1.5">
-                                                                    <p className="font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 text-[8px] mb-0.5">{pos.label}</p>
+                                                                    <p className="font-black uppercase tracking-wider text-slate-400 text-[8px] mb-0.5">{pos.label}</p>
                                                                     {renderPick(entry.classifica_finale_ordinata[i], entry.classifica_finale_nicknames[i], pos.correct)}
                                                                 </div>
                                                             ))}
@@ -908,13 +908,13 @@ const Schedina = () => {
                                                             </p>
                                                             {Object.entries(bd.classifiche_gironi.gironi).map(([girone, gbd]) => (
                                                                 <div key={girone} className="space-y-1">
-                                                                    <p className="text-[8px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                                                    <p className="text-[8px] font-black uppercase tracking-wider text-slate-400">
                                                                         Girone {girone} ({gbd.posizioni_corrette}/{entry.classifiche_gironi?.[girone]?.length ?? 0} ✓)
                                                                     </p>
                                                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[10px]">
                                                                         {gbd.posizioni.map((pos, i) => (
                                                                             <div key={i} className="rounded-xl bg-slate-50 dark:bg-muted p-1.5">
-                                                                                <p className="font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 text-[8px] mb-0.5">{pos.label}</p>
+                                                                                <p className="font-black uppercase tracking-wider text-slate-400 text-[8px] mb-0.5">{pos.label}</p>
                                                                                 {renderPick(entry.classifiche_gironi?.[girone]?.[i], entry.classifiche_gironi_nicknames?.[girone]?.[i], pos.correct)}
                                                                             </div>
                                                                         ))}
@@ -949,7 +949,7 @@ const Schedina = () => {
                             <div className="mt-6 rounded-[2rem] border border-dashed border-slate-200 p-10 text-center dark:border-white/10">
                                 <FileText size={36} className="mx-auto text-slate-300 dark:text-slate-600" />
                                 <p className="mt-4 text-sm font-black text-slate-500 dark:text-muted-foreground uppercase tracking-wider">Nessuna schedina disponibile</p>
-                                <p className="mt-2 text-xs text-slate-400 dark:text-slate-500 max-w-md mx-auto">
+                                <p className="mt-2 text-xs text-slate-400 max-w-md mx-auto">
                                     {isTournamentDeleted ? 'Il torneo non è più disponibile.' : 'Torneo storico o nessuna schedina compilata.'}
                                 </p>
                             </div>
@@ -1168,7 +1168,7 @@ const Schedina = () => {
                                     </div>
                                 </div>
                                 {(overview?.usage ?? []).length === 0 && (
-                                    <p className="mt-4 text-center text-sm text-slate-400 dark:text-slate-500">Nessun dato disponibile.</p>
+                                    <p className="mt-4 text-center text-sm text-slate-400">Nessun dato disponibile.</p>
                                 )}
                             </div>
                         )}
@@ -1264,7 +1264,7 @@ const Schedina = () => {
                                     <div className="rounded-[2rem] border border-dashed border-slate-200 p-10 text-center dark:border-white/10">
                                         <ScrollText size={40} className="mx-auto text-slate-300 dark:text-slate-600" />
                                         <p className="mt-4 text-sm font-black text-slate-500 dark:text-muted-foreground uppercase tracking-wider">Nessuna schedina trovata</p>
-                                        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Non hai ancora compilato nessuna schedina.</p>
+                                        <p className="mt-1 text-xs text-slate-400">Non hai ancora compilato nessuna schedina.</p>
                                     </div>
                                 ) : (
                                     <>

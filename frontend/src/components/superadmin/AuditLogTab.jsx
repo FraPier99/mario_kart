@@ -67,7 +67,7 @@ const AuditLogTab = () => {
                                 </div>
                                 <p className="text-sm text-slate-700 dark:text-slate-200">{log.description}</p>
                             </div>
-                            <span className="shrink-0 text-[10px] text-slate-400 dark:text-slate-500">
+                            <span className="shrink-0 text-[10px] text-slate-400">
                                 {new Date(log.created_at).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
                             </span>
                         </div>

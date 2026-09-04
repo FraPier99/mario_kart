@@ -86,7 +86,7 @@ export default function PortalSelect({
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center justify-between gap-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-3 text-sm text-left outline-none transition hover:bg-slate-100 dark:hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-400"
       >
-        <span className={selected ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}>
+        <span className={selected ? 'text-slate-900 dark:text-white' : 'text-slate-400'}>
           {selected?.label ?? placeholder}
         </span>
         <ChevronDown
@@ -116,7 +116,7 @@ export default function PortalSelect({
                   className={[
                     'flex cursor-pointer items-center justify-between px-4 py-2.5 text-sm transition',
                     opt.disabled
-                      ? 'cursor-not-allowed opacity-40 text-slate-500 dark:text-slate-500 pointer-events-none'
+                      ? 'cursor-not-allowed opacity-40 text-slate-500 dark:text-slate-400 pointer-events-none'
                       : 'text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/10',
                     isSelected ? 'font-black bg-slate-100 dark:bg-white/10' : '',
                   ].join(' ')}

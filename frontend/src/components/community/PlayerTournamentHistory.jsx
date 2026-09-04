@@ -16,6 +16,7 @@ import { Link } from 'react-router-dom'
 import { Calendar, MapPin, Trophy } from 'lucide-react'
 import { useAppData } from '@/context/AppDataContext'
 import { tournamentsApi } from '@/services/apiClient'
+import { toTitleCase } from '@/lib/utils'
 
 const FORMAT_LABEL = { classic: 'Classifica unica', group_stage: 'A gironi' }
 
@@ -114,7 +115,7 @@ const PlayerTournamentHistory = ({ playerId }) => {
                             >
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0">
-                                        <p className="truncate text-sm font-black text-slate-900 dark:text-foreground">{t.name}</p>
+                                        <p title={t.name} className="truncate text-sm font-black text-slate-900 dark:text-foreground">{toTitleCase(t.name)}</p>
                                         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-slate-500 dark:text-muted-foreground">
                                             <span className="flex items-center gap-1"><Calendar size={10} />{t.date}</span>
                                             {gameName && <span className="flex items-center gap-1"><MapPin size={10} />{gameName}</span>}

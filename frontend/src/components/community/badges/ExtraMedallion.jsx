@@ -1,6 +1,10 @@
 import { useId } from 'react'
 import { Repeat, TrendingUp, Medal } from 'lucide-react'
 
+// Nota: "streak" (Costanza) usa un ciano/teal invece del blu di TierMedallion
+// "veterano" (#2e7df0) — le due palette erano identiche, indistinguibili tra
+// il badge di tier e quello extra pur essendo concetti diversi.
+
 // Medaglia illustrata per i badge extra (Costanza/In crescita/
 // Consolazione) — stessa tecnica "metallo invecchiato" di TierMedallion.jsx
 // ma più piccola e semplice (un solo giro di metallo, texture più
@@ -9,10 +13,10 @@ import { Repeat, TrendingUp, Medal } from 'lucide-react'
 const EXTRA_METAL = {
     streak: {
         Icon: Repeat,
-        stops: ['#dbeafe', '#2e7df0', '#1a4fa0'],
-        ring: '#2e7df0',
-        iconColor: '#0b2c66',
-        rust: '20, 45, 90',
+        stops: ['#cffafe', '#06b6d4', '#0e7490'],
+        ring: '#06b6d4',
+        iconColor: '#083344',
+        rust: '5, 60, 75',
         seed: 3,
     },
     improving: {

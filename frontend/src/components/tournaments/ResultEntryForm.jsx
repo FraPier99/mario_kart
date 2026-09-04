@@ -92,9 +92,9 @@ const RaceDropdown = ({ races, circuitsById, results, tournamentParticipants, va
                     className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl p-3"
                 >
                     <div className="flex items-center gap-3 mb-2 px-1">
-                        <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Completa</span>
-                        <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500"><span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Parziale</span>
-                        <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500"><span className="h-1.5 w-1.5 rounded-full bg-red-400" /> Vuota</span>
+                        <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Completa</span>
+                        <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400"><span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Parziale</span>
+                        <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400"><span className="h-1.5 w-1.5 rounded-full bg-red-400" /> Vuota</span>
                     </div>
                     <div className="grid grid-cols-5 gap-1.5">
                         {sortedRacesDesc.map((race) => {

@@ -295,7 +295,7 @@ const Cards = () => {
                             <div className="rounded-[2rem] border border-dashed border-slate-200 dark:border-white/10 p-10 text-center">
                                 <Zap size={40} className="mx-auto text-slate-300 dark:text-slate-600" />
                                 <p className="mt-4 text-sm font-black uppercase tracking-wider text-slate-500 dark:text-muted-foreground">Nessuna carta disponibile</p>
-                                <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Vinci le schedine per ottenere carte Master e Guscio Blu!</p>
+                                <p className="mt-1 text-xs text-slate-400">Vinci le schedine per ottenere carte Master e Guscio Blu!</p>
                             </div>
                         ) : (
                             <div className="space-y-4">
@@ -326,7 +326,7 @@ const Cards = () => {
                                                     type="button"
                                                     onClick={() => handleUseCard(item.id, item.card_name)}
                                                     disabled={!isLive || usingCardId === item.id}
-                                                    className={`w-full rounded-2xl px-4 py-2.5 text-xs font-black uppercase tracking-widest transition ${isLive ? (item.card_type === 'master' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-400 hover:to-orange-400 shadow-lg shadow-amber-500/20' : 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-400 hover:to-blue-400 shadow-lg shadow-cyan-500/20') : 'bg-slate-100 dark:bg-muted text-slate-400 dark:text-slate-500 cursor-not-allowed'}`}
+                                                    className={`w-full rounded-2xl px-4 py-2.5 text-xs font-black uppercase tracking-widest transition ${isLive ? (item.card_type === 'master' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-400 hover:to-orange-400 shadow-lg shadow-amber-500/20' : 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-400 hover:to-blue-400 shadow-lg shadow-cyan-500/20') : 'bg-slate-100 dark:bg-muted text-slate-400 cursor-not-allowed'}`}
                                                 >
                                                     {usingCardId === item.id ? 'Registrazione...' : isLive ? '⚡ Dichiara Uso Live' : '🔒 Torneo non in corso'}
                                                 </button>
@@ -339,7 +339,7 @@ const Cards = () => {
 
                                 {inventory.filter((item) => item.is_consumed).length > 0 && (
                                     <details className="rounded-[2rem] border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm">
-                                        <summary className="cursor-pointer text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 select-none">
+                                        <summary className="cursor-pointer text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 select-none">
                                             Storico carte consumate ({inventory.filter((item) => item.is_consumed).length})
                                         </summary>
                                         <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">

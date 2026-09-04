@@ -4,6 +4,7 @@ import { Crown, ChevronDown, Users, Flag, ArrowRight, PartyPopper } from 'lucide
 import { useAuth } from '@/context/AuthContext'
 import { useAppData } from '@/context/AppDataContext'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
+import { formatTournamentTitle } from '@/lib/utils'
 
 const PODIUM_STYLES = [
     { medal: '🥇', badge: 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30' },
@@ -37,7 +38,7 @@ const TournamentHistoryCard = ({ tournament }) => {
             >
                 <div className="min-w-0 flex-1">
                     <p className="font-title text-[10px] tracking-wide text-emerald-600 dark:text-emerald-400">TORNEO #{getTournamentDisplayNumber(tournament.id)}</p>
-                    <h3 className="font-title text-lg text-slate-900 dark:text-foreground truncate mt-1">{tournament.name?.toUpperCase()}</h3>
+                    <h3 title={tournament.name} className="font-title text-lg text-slate-900 dark:text-foreground mt-1">{formatTournamentTitle(tournament.name, 40)}</h3>
                     <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-500 dark:text-muted-foreground uppercase">
                         <span>{tournament.date || 'DATA N/D'}</span>
                         <span>·</span>

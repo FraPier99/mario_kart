@@ -2,6 +2,13 @@ import { buildAvatarPlaceholder } from '@/lib/placeholders'
 
 const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = null, theme = null, highlightPlayerId = null, isSuperadmin = false, onPlayerClick = null, startIndex = 0 }) => {
     if (!rows.length) {
+        // startIndex > 0 vuol dire che questa tabella continua un podio già
+        // mostrato sopra (es. rows = standings.slice(3)) — vuota in quel
+        // caso è legittimo (torneo con solo 3 partecipanti), non un errore:
+        // mostrare "Nessun dato disponibile" qui contraddiceva il podio
+        // pieno appena sopra. Il messaggio resta solo quando la tabella è
+        // l'unica fonte di classifica (startIndex === 0).
+        if (startIndex > 0) return null
         return (
             <div className="rounded-3xl border border-dashed border-slate-200 dark:border-border bg-white dark:bg-card p-6 text-sm text-slate-500 dark:text-muted-foreground">
                 Nessun dato disponibile per la classifica.
@@ -145,7 +152,7 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                                         <>
                                             <span className={`text-sm font-black ${placementTextColor(absoluteIndex)}`}>{row.placementIndex ?? 0}%</span>
                                             <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">placement</span>
-                                            <span className="text-[10px] text-slate-400 dark:text-slate-500">{row.points} pt</span>
+                                            <span className="text-[10px] text-slate-400">{row.points} pt</span>
                                         </>
                                     ) : (
                                         <>
@@ -159,14 +166,14 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                                     <div className="w-16 h-1 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
                                         <div className="h-full rounded-full bg-emerald-400" style={{ width: `${Math.min(row.winRate ?? 0, 100)}%` }} />
                                     </div>
-                                    <span className="text-[10px] text-slate-400 dark:text-slate-500">{row.winRate}% WR</span>
+                                    <span className="text-[10px] text-slate-400">{row.winRate}% WR</span>
                                 </div>
                                 <div className="flex flex-col items-end gap-0.5">
                                     <span className="text-xs font-black text-blue-700 dark:text-blue-400">{row.podiums} podi</span>
                                     <div className="w-16 h-1 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
                                         <div className="h-full rounded-full bg-blue-400" style={{ width: `${Math.min(row.podiumRate ?? 0, 100)}%` }} />
                                     </div>
-                                    <span className="text-[10px] text-slate-400 dark:text-slate-500">{row.podiumRate}% gare</span>
+                                    <span className="text-[10px] text-slate-400">{row.podiumRate}% gare</span>
                                 </div>
                             </div>
                         </div>
@@ -206,7 +213,7 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                                         {showTournamentWins ? (
                                             <>
                                                 <span className={`text-lg font-black ${placementTextColor(absoluteIndex)}`}>{row.placementIndex ?? 0}%</span>
-                                                <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-tight">{row.points} pt</div>
+                                                <div className="text-[10px] text-slate-400 leading-tight">{row.points} pt</div>
                                             </>
                                         ) : (
                                             <span className={`text-lg font-black ${placementTextColor(absoluteIndex)}`}>{row.points} pt</span>
@@ -215,7 +222,7 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                                     {showTournamentWins && (
                                         <td className="px-5 py-4 text-center align-middle">
                                             <span className="text-sm font-black text-amber-700 dark:text-amber-400">{row.tournamentWins}</span>
-                                            <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-tight">di {row.tournamentsPlayed}</div>
+                                            <div className="text-[10px] text-slate-400 leading-tight">di {row.tournamentsPlayed}</div>
                                         </td>
                                     )}
                                     <td className="px-5 py-4 text-center align-middle">
@@ -223,14 +230,14 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                                         <div className="mt-1 h-1 w-14 mx-auto rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
                                             <div className="h-full rounded-full bg-emerald-400 dark:bg-emerald-500 transition-all" style={{ width: `${Math.min(row.winRate ?? 0, 100)}%` }} />
                                         </div>
-                                        <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-tight mt-0.5">{row.winRate}% WR</div>
+                                        <div className="text-[10px] text-slate-400 leading-tight mt-0.5">{row.winRate}% WR</div>
                                     </td>
                                     <td className="px-5 py-4 text-center align-middle">
                                         <span className="text-sm font-black text-blue-700 dark:text-blue-400">{row.podiums}</span>
                                         <div className="mt-1 h-1 w-14 mx-auto rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
                                             <div className="h-full rounded-full bg-blue-400 dark:bg-blue-500 transition-all" style={{ width: `${Math.min(row.podiumRate ?? 0, 100)}%` }} />
                                         </div>
-                                        <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-tight mt-0.5">{row.podiumRate}% gare</div>
+                                        <div className="text-[10px] text-slate-400 leading-tight mt-0.5">{row.podiumRate}% gare</div>
                                     </td>
                                 </tr>
                             )

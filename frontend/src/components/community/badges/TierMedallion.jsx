@@ -21,10 +21,13 @@ const TIER_METAL = {
         seed: 2,
     },
     campione: {
+        // Oro più scuro/bronzato, distinto dal platino-oro di Leggenda: le
+        // due palette condividevano lo stesso stop centrale rgb(246,182,13),
+        // quasi indistinguibili a colpo d'occhio a dimensioni badge.
         Icon: Trophy,
-        stops: ['#ffe9a8', '#f6b60d', '#a6690a'],
-        ring: '#c98a12',
-        iconColor: '#5b3a00',
+        stops: ['#ffd76a', '#e6960c', '#8f5a06'],
+        ring: '#e6960c',
+        iconColor: '#4a2c00',
         stars: false,
         rust: '150, 90, 10',
         seed: 5,

@@ -113,13 +113,13 @@ export default function PowerCard({
             {customTitle || t.name}
           </p>
           {consumedAt && (
-            <p className="text-[9px] text-slate-400 dark:text-slate-500">
+            <p className="text-[9px] text-slate-400">
               Consumata {new Date(consumedAt).toLocaleDateString('it-IT')}
               {consumedTournamentName && <span> · {consumedTournamentName}</span>}
             </p>
           )}
           {sourceGameName && (
-            <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+            <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">
               {sourceGameName}{sourceTournamentName && ` · ${sourceTournamentName}`}
             </p>
           )}
@@ -156,7 +156,7 @@ export default function PowerCard({
                   style={{ background: isMaster ? 'rgba(246,182,13,0.4)' : 'rgba(46,125,240,0.4)', transform: 'scale(1.2)' }} />
               )}
               <div className={`relative flex h-16 w-16 items-center justify-center rounded-2xl border text-white shadow-xl ${consumed ? 'bg-slate-300 dark:bg-slate-700 border-slate-200 dark:border-slate-600' : `bg-gradient-to-br ${isMaster ? 'from-amber-400 to-orange-600 border-amber-300/30' : 'from-cyan-400 to-blue-700 border-cyan-300/30'}`}`}>
-                <IconComponent size={30} className={consumed ? 'text-slate-400 dark:text-slate-500' : ''} />
+                <IconComponent size={30} className={consumed ? 'text-slate-400' : ''} />
               </div>
             </div>
             <div className="flex-1 min-w-0">

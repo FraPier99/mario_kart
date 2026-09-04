@@ -289,6 +289,7 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
                             usedCircuitIds={usedCircuitIds}
                             label="Circuito"
                             placeholder="Seleziona un circuito"
+                            disabled={disabled}
                         />
                     )}
                 </div>
@@ -312,6 +313,7 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
                                             total={participants.length}
                                             complete={order.length === participants.length}
                                             onToggle={toggleRank}
+                                            disabled={disabled}
                                         />
                                         {pendingCharacterEffect && (
                                             <button
@@ -329,6 +331,7 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
                                             characters={characters}
                                             value={charactersByPlayer[p.id] ?? ''}
                                             onChange={(id) => setPlayerCharacter(p.id, id)}
+                                            disabled={disabled}
                                         />
                                     )}
                                     {punti && (
@@ -345,7 +348,7 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
 
                     {pool.length > 0 && (
                         <div className="space-y-2">
-                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">
+                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
                                 {order.length === 0 ? 'Clicca il pilota che arriverà 1°' : `Da posizionare — clicca per assegnare il ${medalFor(order.length)} posto`}
                             </p>
                             {pool.map((p) => (
@@ -356,6 +359,7 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
                                     total={participants.length}
                                     complete={false}
                                     onToggle={toggleRank}
+                                    disabled={disabled}
                                 />
                             ))}
                         </div>

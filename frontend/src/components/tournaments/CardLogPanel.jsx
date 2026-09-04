@@ -30,7 +30,7 @@ const CardEntryRow = ({ entry, variant }) => {
                 <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
                     <span className="font-black">Effetto:</span> {variant === 'log' ? entry.effect : (entry.effect ?? '—')}
                 </p>
-                <div className="mt-1 flex flex-wrap items-center gap-3 text-[10px] text-slate-400 dark:text-slate-500">
+                <div className="mt-1 flex flex-wrap items-center gap-3 text-[10px] text-slate-400">
                     {timestamp && <span>{formatTimestamp(timestamp)}</span>}
                     {variant === 'log' && entry.registered_by && <span>Registrata da: {entry.registered_by}</span>}
                     {variant === 'history' && entry.group_name && <span>{groupLabel(entry.group_name)}</span>}
@@ -51,15 +51,15 @@ const CardLogPanel = ({ variant, entries, eyebrow, title, emptyMessage }) => {
         <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm space-y-3">
             {variant === 'history' ? (
                 <div className="flex items-center gap-2">
-                    <History size={14} className="text-slate-400 dark:text-slate-500" />
+                    <History size={14} className="text-slate-400" />
                     <div>
-                        <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">{eyebrow}</p>
+                        <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">{eyebrow}</p>
                         <h3 className="mt-1 text-lg font-black text-slate-900 dark:text-foreground">{title}</h3>
                     </div>
                 </div>
             ) : (
                 <div>
-                    <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">{eyebrow}</p>
+                    <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">{eyebrow}</p>
                     <h3 className="mt-1 text-lg font-black text-slate-900 dark:text-foreground">{title}</h3>
                 </div>
             )}

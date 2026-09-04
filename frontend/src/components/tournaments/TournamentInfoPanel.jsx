@@ -44,7 +44,7 @@ const formatDateTime = (iso) => {
 
 const InfoItem = ({ label, value }) => (
     <div className="rounded-xl border border-slate-100 dark:border-border bg-slate-50/60 dark:bg-muted/30 px-3 py-2">
-        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">{label}</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">{label}</p>
         <p className="mt-0.5 text-sm font-black text-slate-900 dark:text-foreground">{value}</p>
     </div>
 )

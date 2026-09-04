@@ -248,11 +248,11 @@ const AlgorithmAnalysisPanel = ({ tournament }) => {
                         <>
                             <div className="grid grid-cols-2 gap-2">
                                 <div className="rounded-xl bg-slate-50 dark:bg-muted px-3 py-2 will-change-transform" style={{ animation: 'slide-up 0.75s cubic-bezier(0.22, 1, 0.36, 1) both', animationDelay: '0.03s' }}>
-                                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Gare rimanenti</p>
+                                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Gare rimanenti</p>
                                     <p className="mt-1 text-lg font-black text-slate-900 dark:text-foreground">{leaderboardAnalytics.remainingRaces}</p>
                                 </div>
                                 <div className="rounded-xl bg-slate-50 dark:bg-muted px-3 py-2 will-change-transform" style={{ animation: 'slide-up 0.75s cubic-bezier(0.22, 1, 0.36, 1) both', animationDelay: '0.06s' }}>
-                                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Max pt per gara</p>
+                                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Max pt per gara</p>
                                     <p className="mt-1 text-lg font-black text-slate-900 dark:text-foreground">{leaderboardAnalytics.maxPointsPerRace}</p>
                                 </div>
                             </div>
@@ -267,7 +267,7 @@ const AlgorithmAnalysisPanel = ({ tournament }) => {
                                 </div>
                             </div>
                             <div className="rounded-xl bg-slate-50 dark:bg-muted px-3 py-2 space-y-0.5">
-                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Gap classifica</p>
+                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Gap classifica</p>
                                 {tournament.standings.slice(0, 5).map((s, i) => (
                                     <div key={s.playerId} className="flex items-center justify-between text-xs">
                                         <span className="capitalize text-slate-600 dark:text-slate-400">#{i + 1} {s.nickname}</span>
@@ -276,7 +276,7 @@ const AlgorithmAnalysisPanel = ({ tournament }) => {
                                 ))}
                             </div>
                             <div className="rounded-xl bg-slate-50 dark:bg-muted px-3 py-2 space-y-0.5">
-                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Lettura rapida</p>
+                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Lettura rapida</p>
                                 <p className="text-xs text-slate-500 dark:text-slate-400">Leader: <span className="font-black text-slate-900 dark:text-foreground capitalize">{tournament.standings?.[0]?.nickname ?? '-'}</span></p>
                                 <p className="text-xs text-slate-500 dark:text-slate-400">Blindaggio: <span className="font-black text-emerald-600 dark:text-emerald-400">{leaderboardAnalytics.lockStatus === 'unreachable' ? 'non chiudibile' : 'chiudibile'}</span></p>
                             </div>
@@ -286,7 +286,7 @@ const AlgorithmAnalysisPanel = ({ tournament }) => {
                     {algoTab === 'dynamics' && (
                         <>
                             <div className="rounded-xl bg-slate-50 dark:bg-muted px-3 py-2">
-                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Confronto diretto tra i primi due</p>
+                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Confronto diretto tra i primi due</p>
                                 {leaderboardAnalytics.headToHead ? (
                                     <div className="mt-1 space-y-1 text-xs">
                                         <div className="flex items-center justify-between gap-3">
@@ -302,7 +302,7 @@ const AlgorithmAnalysisPanel = ({ tournament }) => {
                                 ) : <p className="text-xs text-slate-400">Non disponibile</p>}
                             </div>
                             <div className="rounded-xl bg-slate-50 dark:bg-muted px-3 py-2 space-y-1">
-                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Streak attivi</p>
+                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Streak attivi</p>
                                 {(() => {
                                     const active = leaderboardAnalytics.streakRows.filter((e) => e.winStreak > 0 || e.podiumStreak > 0).sort((a, b) => b.winStreak - a.winStreak || b.podiumStreak - a.podiumStreak).slice(0, 5)
                                     if (!active.length) return <p className="text-xs text-slate-400">Nessuno streak attivo</p>
@@ -319,7 +319,7 @@ const AlgorithmAnalysisPanel = ({ tournament }) => {
                                 })()}
                             </div>
                             <div className="rounded-xl bg-slate-50 dark:bg-muted px-3 py-2 space-y-1">
-                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Forma recente</p>
+                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Forma recente</p>
                                 {leaderboardAnalytics.momentumRanking.slice(0, 4).map((e, i) => (
                                     <div key={e.playerId} className="flex items-center justify-between text-xs">
                                         <span className="capitalize text-slate-600 dark:text-slate-400">#{i + 1} {e.nickname}</span>
@@ -332,7 +332,7 @@ const AlgorithmAnalysisPanel = ({ tournament }) => {
 
                     {algoTab === 'projection' && (
                         <>
-                            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Previsione vittoria (%)</p>
+                            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Previsione vittoria (%)</p>
                             {leaderboardAnalytics.predictions.map((entry) => (
                                 <div key={entry.playerId} className="rounded-xl bg-slate-50 dark:bg-muted px-3 py-2">
                                     <div className="mb-1 flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -345,7 +345,7 @@ const AlgorithmAnalysisPanel = ({ tournament }) => {
                                 </div>
                             ))}
                             <div className="rounded-xl bg-slate-50 dark:bg-muted px-3 py-2 space-y-0.5">
-                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Sintesi</p>
+                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Sintesi</p>
                                 <p className="text-xs text-slate-500 dark:text-slate-400">Favorito: <span className="font-black text-emerald-600 dark:text-emerald-400 capitalize">{leaderboardAnalytics.predictions?.[0]?.nickname ?? '-'}</span></p>
                                 <p className="text-xs text-slate-500 dark:text-slate-400">Gare residue: <span className="font-black text-slate-900 dark:text-foreground">{leaderboardAnalytics.remainingRaces}</span></p>
                                 <p className="text-xs text-slate-500 dark:text-slate-400">Blindaggio: <span className="font-black text-amber-600 dark:text-amber-400">{leaderboardAnalytics.lockStatus === 'unreachable' ? 'non chiudibile' : `${leaderboardAnalytics.pointsToSecure} pt`}</span></p>
@@ -369,7 +369,7 @@ const AlgorithmAnalysisPanel = ({ tournament }) => {
                                     <div className="mt-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
                                         <div className="h-full rounded-full bg-amber-500" style={{ width: `${entry.podiumRate}%` }} />
                                     </div>
-                                    <p className="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">Pos media: {(entry.avgPos ?? 0).toFixed(1)} · {entry.racesPlayed} gare</p>
+                                    <p className="mt-0.5 text-[10px] text-slate-400">Pos media: {(entry.avgPos ?? 0).toFixed(1)} · {entry.racesPlayed} gare</p>
                                 </div>
                             ))}
 

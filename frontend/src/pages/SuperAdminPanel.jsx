@@ -1058,10 +1058,10 @@ export default function SuperAdminPanel() {
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-xs text-slate-700 dark:text-slate-300 leading-snug">{log.description}</p>
                                                 {log.actor_username && (
-                                                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">da {log.actor_username}</p>
+                                                    <p className="text-[10px] text-slate-400 mt-0.5">da {log.actor_username}</p>
                                                 )}
                                             </div>
-                                            <span className="shrink-0 text-[9px] text-slate-400 dark:text-slate-500 tabular-nums whitespace-nowrap">{tsStr}</span>
+                                            <span className="shrink-0 text-[9px] text-slate-400 tabular-nums whitespace-nowrap">{tsStr}</span>
                                         </div>
                                     )
                                 })}

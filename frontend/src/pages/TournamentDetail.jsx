@@ -2,6 +2,7 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Crown, Trophy, Trash2, Shield, Ban, Zap, AlertCircle, Settings, Users, Flag, Swords, Clock, BarChart3, ListChecks, MapPin, PartyPopper } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
+import { toTitleCase } from '@/lib/utils'
 import PortalSelect from '@/components/common/PortalSelect'
 import RefreshButton from '@/components/common/RefreshButton'
 import LeaderboardTable from '@/components/stats/LeaderboardTable'
@@ -571,7 +572,7 @@ const TournamentDetail = () => {
                         <div className="flex flex-wrap items-start justify-between gap-4">
                             <div className="min-w-0 flex-1">
                                 <p className="font-title text-[10px] tracking-wide text-emerald-600 dark:text-emerald-400">Torneo #{getTournamentDisplayNumber(tournament.id)}</p>
-                                <h1 className="mt-1 text-3xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground">{tournament.name}</h1>
+                                <h1 title={tournament.name} className="mt-1 text-3xl font-black tracking-tight text-slate-900 dark:text-foreground">{toTitleCase(tournament.name)}</h1>
                                 <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-500 dark:text-muted-foreground">
                                     <span>{tournament.date}</span>
                                     <span>·</span>
@@ -1009,7 +1010,7 @@ const TournamentDetail = () => {
                             </label>
                         )}
                         {(selectedEffectDef?.needsCircuit || selectedEffectDef?.needsCharacter) && (
-                            <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                            <p className="text-[11px] text-slate-400">
                                 Nessuna gara da scegliere ora: questo effetto verrà proposto in automatico alla prossima gara creata che coinvolge il bersaglio.
                             </p>
                         )}
@@ -1077,7 +1078,7 @@ const TournamentDetail = () => {
                     </div>
                     <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-start sm:justify-between gap-4">
                         <div className="min-w-0 sm:flex-1">
-                            <h1 className="text-4xl font-black uppercase tracking-tight text-slate-900 dark:text-white">{tournament.name}</h1>
+                            <h1 title={tournament.name} className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">{toTitleCase(tournament.name)}</h1>
                             <div className="mt-4 flex flex-wrap gap-2 text-sm">
                                 <span className="whitespace-nowrap rounded-full bg-slate-100 dark:bg-white/10 px-3 py-1 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-white/10">Data: {tournament.date}</span>
                                 <span className="whitespace-nowrap rounded-full bg-slate-100 dark:bg-white/10 px-3 py-1 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-white/10">Gioco: {games.find((game) => game.id === tournament.game_id)?.name ?? `#${tournament.game_id}`}</span>
@@ -1453,7 +1454,7 @@ const TournamentDetail = () => {
                         {isAdmin && (
                             <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm space-y-4">
                                 <div>
-                                    <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">Registra uso</p>
+                                    <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Registra uso</p>
                                     <h3 className="mt-1 text-lg font-black text-slate-900 dark:text-foreground">Carta usata in gara</h3>
                                 </div>
                                 {tournamentStatus === 'concluso' && (
@@ -1510,7 +1511,7 @@ const TournamentDetail = () => {
                         {isAdmin && (
                             <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm space-y-3">
                                 <div>
-                                    <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">Inventario live</p>
+                                    <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Inventario live</p>
                                     <h3 className="mt-1 text-lg font-black text-slate-900 dark:text-foreground">Chi ha carte disponibili</h3>
                                 </div>
                                 {cardHolders.length === 0 ? (

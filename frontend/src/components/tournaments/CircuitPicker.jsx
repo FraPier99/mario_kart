@@ -224,7 +224,7 @@ const CircuitPicker = ({ circuits = [], value, onChange, disabled = false, usedC
                                                     <CircuitThumbnail circuit={circuit} size="md" />
                                                     <span className="min-w-0 truncate font-semibold">{circuit.name}</span>
                                                     {isDisabled ? (
-                                                        <span className="shrink-0 text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Già usato</span>
+                                                        <span className="shrink-0 text-[9px] font-black uppercase tracking-wider text-slate-400">Già usato</span>
                                                     ) : (
                                                         <span className={`ml-auto shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${cupStyle.badge}`}>
                                                             {circuit.description ?? 'Cup'}

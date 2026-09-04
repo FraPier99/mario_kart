@@ -398,7 +398,7 @@ const SchedinaForm = () => {
                                         viene aggiunto in coda alla classifica (posizione successiva). */}
                                     {items.length < participantPlayers.length && (
                                         <div className="mt-4 space-y-2">
-                                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">
+                                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
                                                 {items.length === 0
                                                     ? 'Clicca il giocatore che arriverà 1°'
                                                     : `Da posizionare — clicca per assegnare il ${items.length + 1}° posto`}
@@ -431,7 +431,7 @@ const SchedinaForm = () => {
                                     <span className="flex items-center gap-2 font-title text-xs tracking-wide text-sky-600 dark:text-sky-400">
                                         <Zap size={14} /> Maggior Streak (+{PUNTI_PRONOSTICO}pt)
                                     </span>
-                                    <p className="text-[10px] text-slate-400 dark:text-slate-500">Indovina quale pilota registrerà la striscia più lunga di primi posti consecutivi nelle singole gare.</p>
+                                    <p className="text-[10px] text-slate-400">Indovina quale pilota registrerà la striscia più lunga di primi posti consecutivi nelle singole gare.</p>
                                     <select value={form.maggiore_streak_vittorie_id} onChange={handleChange('maggiore_streak_vittorie_id')} required className="w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-sky-500 dark:border-border dark:bg-muted dark:text-foreground">
                                         <option value="">Seleziona</option>
                                         {playerOptions}
@@ -442,7 +442,7 @@ const SchedinaForm = () => {
                                     <span className="flex items-center gap-2 font-title text-xs tracking-wide text-purple-600 dark:text-purple-400">
                                         <Swords size={14} /> Il Duello Casuale (+{PUNTI_PRONOSTICO}pt)
                                     </span>
-                                    <p className="text-[10px] text-slate-400 dark:text-slate-500">All'apertura del torneo, il sistema genera una coppia di piloti casuale identica per tutti. Pronostica chi tra i due totalizzerà più punti in classifica generale, oppure se finiranno in Pareggio.</p>
+                                    <p className="text-[10px] text-slate-400">All'apertura del torneo, il sistema genera una coppia di piloti casuale identica per tutti. Pronostica chi tra i due totalizzerà più punti in classifica generale, oppure se finiranno in Pareggio.</p>
                                     {duelloPlayerALabel && duelloPlayerBLabel ? (
                                         <div className="mt-2 space-y-3">
                                             <span className="block rounded-xl border-2 border-purple-200 bg-purple-50 px-4 py-2.5 text-center text-sm font-bold text-purple-700 dark:border-purple-500/30 dark:bg-purple-500/10 dark:text-purple-300">
@@ -467,7 +467,7 @@ const SchedinaForm = () => {
                                     <Clock size={14} /> Spareggio
                                 </span>
                                 <h3 className="mt-1 text-sm font-black uppercase tracking-tight text-slate-900 dark:text-foreground">Punti di distacco</h3>
-                                <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">Usato solo come criterio di spareggio in caso di parità nel punteggio finale.</p>
+                                <p className="mt-1 text-[10px] text-slate-400">Usato solo come criterio di spareggio in caso di parità nel punteggio finale.</p>
                                 <label className="mt-3 block">
                                     <span className="font-title text-xs tracking-wide text-slate-500 dark:text-muted-foreground">Distanza 1°-2°:</span>
                                     <div className="mt-1.5 flex items-center gap-2">
@@ -484,7 +484,7 @@ const SchedinaForm = () => {
                                         <span className="text-xs font-black text-slate-400 shrink-0">pt</span>
                                     </div>
                                 </label>
-                                <p className="mt-1.5 text-[10px] text-slate-400 dark:text-slate-500">Massimo teorico per questo torneo: {spareggioMaxGap} pt.</p>
+                                <p className="mt-1.5 text-[10px] text-slate-400">Massimo teorico per questo torneo: {spareggioMaxGap} pt.</p>
                             </div>
                         </div>
 

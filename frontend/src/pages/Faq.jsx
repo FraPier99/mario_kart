@@ -312,7 +312,7 @@ const Faq = () => {
                                     <li>Nessun vincitore ufficiale da decretare: il torneo si chiude semplicemente segnandolo come concluso — restano comunque gare e classifica in tempo reale come in un torneo normale.</li>
                                     <li>Funziona sia in Classifica Unica che a Gironi, con lo stesso numero minimo di partecipanti già previsto per ciascun formato.</li>
                                 </ul>
-                                <p className="mt-5 text-center text-[10px] text-slate-400 dark:text-slate-500">Per ora un torneo amichevole può essere creato solo dagli amministratori.</p>
+                                <p className="mt-5 text-center text-[10px] text-slate-400">Per ora un torneo amichevole può essere creato solo dagli amministratori.</p>
                             </div>
                         )}
 
@@ -450,7 +450,7 @@ const Faq = () => {
                                     <li><strong className="text-slate-900 dark:text-foreground">Stesso gioco:</strong> una carta vinta in un gioco (es. Mario Kart DS) non si può usare in un torneo di un altro gioco.</li>
                                     <li><strong className="text-slate-900 dark:text-foreground">Niente spareggi:</strong> le carte non si possono usare nelle gare di Duello/spareggio.</li>
                                 </ul>
-                                <p className="mt-5 text-center text-[10px] text-slate-400 dark:text-slate-500">Le carte vengono attivate dall'organizzatore nella pagina di gestione del torneo. Una volta esauriti tutti gli usi non sono più recuperabili.</p>
+                                <p className="mt-5 text-center text-[10px] text-slate-400">Le carte vengono attivate dall'organizzatore nella pagina di gestione del torneo. Una volta esauriti tutti gli usi non sono più recuperabili.</p>
                             </div>
                         )}
 

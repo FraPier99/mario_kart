@@ -266,7 +266,14 @@ const PhaseRaceEntry = ({ tournament, players, circuits, characters, results, ph
 
             <PhaseCircuitsCard circuits={circuits} races={phaseGroupRaces} title={`Circuiti · ${groupLabel(activeGroup)}`} passEnabled={passEnabled} />
 
-            {completedGroups.has(activeGroup) ? (
+            {tournament.status === 'concluso' ? (
+                <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-900/10 px-4 py-3">
+                    <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400 font-black">
+                        Torneo concluso — non è possibile inserire altre gare.
+                    </p>
+                </div>
+            ) : completedGroups.has(activeGroup) ? (
                 <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-900/10 px-4 py-3">
                     <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
                     <p className="text-xs text-emerald-600 dark:text-emerald-400 font-black">

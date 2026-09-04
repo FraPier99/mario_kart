@@ -43,6 +43,7 @@ const ClickRankRow = ({
     accent = null,
     pills = null,
     trailing = null,
+    disabled = false,
 }) => {
     const isPlaced = pos !== -1
     const isAccent = complete && Boolean(accent?.(pos, total, complete))
@@ -50,9 +51,10 @@ const ClickRankRow = ({
     const row = (
         <button
             type="button"
+            disabled={disabled}
             onClick={() => onToggle(player.id)}
             style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
-            className={`flex w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left transition active:scale-[0.99] ${
+            className={`flex w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 ${
                 isAccent
                     ? 'border-cyan-300 bg-cyan-50/60 dark:border-cyan-500/30 dark:bg-cyan-500/10'
                     : isPlaced
@@ -60,7 +62,7 @@ const ClickRankRow = ({
                         : 'border-slate-200 bg-white hover:border-slate-300 dark:border-border dark:bg-card'
             }`}
         >
-            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black ${isAccent ? 'bg-cyan-100 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-300' : isPlaced ? badgeClasses(pos) : 'bg-slate-100 text-slate-400 dark:bg-muted dark:text-slate-500'}`}>
+            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black ${isAccent ? 'bg-cyan-100 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-300' : isPlaced ? badgeClasses(pos) : 'bg-slate-100 text-slate-400 dark:bg-muted dark:text-slate-400'}`}>
                 {pos === 0 ? (
                     <Trophy size={14} className={isAccent ? '' : 'text-circuit-ink'} />
                 ) : isAccent ? (

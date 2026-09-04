@@ -324,7 +324,7 @@ export default function Gallery() {
                     <div className="rounded-[2rem] border border-dashed border-slate-200 dark:border-white/10 p-16 text-center">
                         <Camera size={48} className="mx-auto text-slate-300 dark:text-slate-600" />
                         <p className="mt-4 text-sm font-black uppercase tracking-wider text-slate-500 dark:text-muted-foreground">Nessuna foto ancora</p>
-                        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                        <p className="mt-1 text-xs text-slate-400">
                             {isSuperadmin ? 'Carica la prima foto usando il pulsante in alto.' : 'Le foto delle serate verranno pubblicate presto.'}
                         </p>
                     </div>
@@ -416,7 +416,7 @@ export default function Gallery() {
                                     {(activePhoto.comments ?? []).length === 0 ? (
                                         <div className="py-8 text-center">
                                             <MessageCircle size={28} className="mx-auto text-slate-200 dark:text-slate-700" />
-                                            <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">Nessun commento ancora.</p>
+                                            <p className="mt-2 text-xs text-slate-400">Nessun commento ancora.</p>
                                         </div>
                                     ) : (
                                         <>
@@ -485,7 +485,7 @@ export default function Gallery() {
                                                             {c.parent_id && (() => {
                                                                 const parentComment = (activePhoto.comments ?? []).find(pc => pc.id === c.parent_id)
                                                                 const parentName = parentComment ? (parentComment.nickname ?? parentComment.username) : 'commento eliminato'
-                                                                return <p className="text-[9px] text-slate-400 dark:text-slate-500 italic mb-0.5">rispondendo a @{parentName}</p>
+                                                                return <p className="text-[9px] text-slate-400 italic mb-0.5">rispondendo a @{parentName}</p>
                                                             })()}
                                                             {c.text && <p className="mt-1 text-sm text-slate-700 dark:text-foreground">{renderMentions(c.text)}</p>}
                                                             {c.image_data && (
@@ -609,7 +609,7 @@ export default function Gallery() {
                                             </button>
                                         </div>
                                         {isSuperadmin && (
-                                            <p className="text-[9px] text-slate-400 dark:text-slate-500 italic">Moderazione attiva — puoi modificare ed eliminare qualsiasi commento.</p>
+                                            <p className="text-[9px] text-slate-400 italic">Moderazione attiva — puoi modificare ed eliminare qualsiasi commento.</p>
                                         )}
                                     </div>
                                 )}
