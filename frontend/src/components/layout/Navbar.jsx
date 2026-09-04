@@ -85,9 +85,6 @@ export default function Navbar() {
   ]
 
   const player = user?.player ?? null
-  const favoriteCharacter = player?.favorite_character_id
-    ? charactersById?.get(player.favorite_character_id) ?? null
-    : null
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -373,9 +370,7 @@ export default function Navbar() {
                 }}
               >
                 <div className="h-7 w-7 overflow-hidden rounded-lg border border-white/10 bg-white/10 shrink-0">
-                  {favoriteCharacter?.img_url ? (
-                    <img src={favoriteCharacter.img_url} alt={favoriteCharacter.name} className="h-full w-full object-cover" />
-                  ) : player?.img_url ? (
+                  {player?.img_url ? (
                     <img src={player.img_url} alt={player.nickname} className="h-full w-full object-cover" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-[10px] font-black text-white">
@@ -398,8 +393,8 @@ export default function Navbar() {
                   {/* Header profilo */}
                   <div className="mb-1 flex items-center gap-2.5 rounded-lg px-3 py-2" style={{ background: 'rgba(255,255,255,0.05)' }}>
                     <div className="h-9 w-9 overflow-hidden rounded-lg border border-white/10 shrink-0">
-                      {favoriteCharacter?.img_url ? (
-                        <img src={favoriteCharacter.img_url} alt={favoriteCharacter.name} className="h-full w-full object-cover" />
+                      {player?.img_url ? (
+                        <img src={player.img_url} alt={player.nickname} className="h-full w-full object-cover" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-sm font-black text-white">
                           {(player?.nickname || '?').charAt(0)}
@@ -494,8 +489,8 @@ export default function Navbar() {
             {isAuthenticated && (
               <div className="mb-3 flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: 'rgba(255,255,255,0.05)' }}>
                 <div className="h-9 w-9 overflow-hidden rounded-lg border border-white/10 bg-white/10 shrink-0">
-                  {favoriteCharacter?.img_url ? (
-                    <img src={favoriteCharacter.img_url} alt={favoriteCharacter.name} className="h-full w-full object-cover" />
+                  {player?.img_url ? (
+                    <img src={player.img_url} alt={player.nickname} className="h-full w-full object-cover" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-xs font-black text-white">
                       {(player?.nickname || '?').charAt(0)}
