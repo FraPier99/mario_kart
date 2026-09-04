@@ -1,5 +1,6 @@
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
-import { getProfileCardStyle } from '@/lib/playerBadges'
+import { TIER_BADGE_IMAGES, TIER_BORDER_CLASSES, DEFAULT_TIER_BORDER } from '@/lib/playerBadges'
+import TierMedallion from '@/components/community/badges/TierMedallion'
 
 const PlayerCard = ({ players, bestBadgeByPlayerId, handlePlayerClick }) => {
     if (!players.length) {
@@ -14,49 +15,52 @@ const PlayerCard = ({ players, bestBadgeByPlayerId, handlePlayerClick }) => {
         <>
             {players.map((p, idx) => {
                 const bestBadge = bestBadgeByPlayerId?.get(p.id)
-                const cardStyle = getProfileCardStyle(bestBadge?.tier)
+                const borderClass = TIER_BORDER_CLASSES[bestBadge?.tier] ?? DEFAULT_TIER_BORDER
+                const badgeImage = bestBadge ? TIER_BADGE_IMAGES[bestBadge.tier] : null
 
                 return (
-                    // Bordo colorato per tier ma tenue (cardStyle.cardBorder, già
-                    // con opacità ridotta a 20-50%) — niente più anello dedicato al
-                    // colore accento personale, tolto per non affollare la card.
+                    // Un solo colore di rango per card — bordo sottile, coerente col
+                    // badge in alto a destra — invece di più elementi colorati
+                    // (riempimento pieno + pillola + bottone) in competizione tra loro.
                     <div
                         key={p.id}
-                        style={{
-                            animationDelay: `${idx * 0.04}s`,
-                            boxShadow: cardStyle ? 'var(--circuit-shadow-md)' : 'var(--circuit-shadow-sm)',
-                        }}
-                        className={`animate-fade-in flex flex-col items-center overflow-hidden rounded-2xl border-2 transition-all duration-300 hover:scale-[1.03] ${
-                            cardStyle ? `${cardStyle.cardBorder} ${cardStyle.cardBg}` : 'border-slate-300 dark:border-border bg-white dark:bg-card'
-                        }`}
+                        style={{ animationDelay: `${idx * 0.04}s`, boxShadow: 'var(--circuit-shadow-sm)' }}
+                        className={`animate-fade-in flex flex-col items-center overflow-hidden rounded-2xl border-[1.5px] bg-white dark:bg-slate-900 transition-all duration-300 hover:scale-[1.03] ${borderClass}`}
                     >
-                        <div className="relative h-32 w-full bg-gradient-to-b from-slate-50 dark:from-muted to-slate-200 dark:to-muted pb-2">
-                            {cardStyle && (
-                                <div className={`absolute right-2 top-2 rounded-full border-2 border-circuit-ink p-1.5 ${cardStyle.badgeBg}`} style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                                    <cardStyle.Icon size={16} className={cardStyle.badgeIconColor} />
-                                </div>
+                        <div className="relative h-32 w-full bg-slate-100 dark:bg-slate-800">
+                            {bestBadge && (
+                                badgeImage ? (
+                                    <img
+                                        src={badgeImage}
+                                        alt={`Badge ${bestBadge.label ?? bestBadge.tier}`}
+                                        className="absolute right-2 top-2 h-9 w-9 object-contain"
+                                        style={{ opacity: bestBadge.tier === 'sfidante' ? 0.85 : 1 }}
+                                    />
+                                ) : (
+                                    <div className="absolute right-2 top-2">
+                                        <TierMedallion tier={bestBadge.tier} size={36} />
+                                    </div>
+                                )
                             )}
                             <img
                                 src={p.img_url || buildAvatarPlaceholder(p.nickname)}
                                 alt={p.first_name}
-                                className="h-full w-full rounded-2xl object-contain p-1"
+                                className="h-full w-full object-contain p-1"
                             />
                         </div>
 
                         <div className="flex w-full grow flex-col items-center p-4 text-center">
-                            <span className="font-title mb-2 rounded-full border-2 border-emerald-700/30 bg-emerald-500 px-3 py-1 text-[9px] tracking-wide text-white">
-                                {p.nickname?.toUpperCase()}
-                            </span>
-
-                            <h3 className="mb-3 text-base font-black capitalize tracking-tight text-slate-800 dark:text-foreground">
-                                {p.first_name} {p.last_name}
+                            <h3 className="text-xl font-black text-slate-900 dark:text-foreground leading-tight">
+                                {p.nickname}
                             </h3>
+                            <p className="mt-1 mb-3 text-[11px] font-semibold capitalize text-slate-500 dark:text-muted-foreground">
+                                {p.first_name} {p.last_name}
+                            </p>
 
                             <button
                                 type="button"
                                 onClick={() => handlePlayerClick(p)}
-                                className="font-title mt-auto cursor-pointer rounded-xl border-2 border-blue-800/30 bg-blue-600 px-4 py-2 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-blue-700"
-                                style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
+                                className="font-title mt-auto cursor-pointer rounded-xl border-[1.5px] border-circuit-blue bg-transparent px-4 py-2 text-[10px] tracking-wide text-blue-600 dark:text-blue-300 transition active:translate-y-px hover:bg-circuit-blue/10"
                             >
                                 Visualizza Profilo
                             </button>

@@ -36,6 +36,30 @@ export const BADGE_TIERS = {
 // Dal più al meno esclusivo — stesso ordine di BADGE_TIER_RANK nel backend.
 export const BADGE_TIER_RANK = ['leggenda', 'campione', 'veterano', 'outsider', 'esordiente', 'sfidante']
 
+// Badge illustrati (asset fotorealistici in /public/badges/), usati al posto
+// della vecchia icona lucide+pillola nella card "Ultimo torneo" (home) e
+// nella card giocatore (/players). Mancano ancora gli asset per outsider ed
+// esordiente (nessun tool di generazione immagini disponibile in questo
+// ambiente) — i chiamanti ricadono su <TierMedallion> (SVG) per quei due
+// tier finché non vengono forniti gli asset dedicati.
+export const TIER_BADGE_IMAGES = {
+    leggenda: '/badges/small_leggenda.png',
+    campione: '/badges/small_campione.png',
+    veterano: '/badges/small_veterano.png',
+    sfidante: '/badges/small_sfidante.png',
+}
+
+// Bordo card giocatore — UN SOLO colore di rango per card (vedi PlayerCard.jsx),
+// invece di più elementi colorati in competizione. Esordiente/sfidante/nessun
+// badge condividono lo stesso grigio neutro ("rango non ancora affermato").
+export const TIER_BORDER_CLASSES = {
+    leggenda: 'border-circuit-gold',
+    campione: 'border-circuit-gold/70',
+    veterano: 'border-circuit-blue',
+    outsider: 'border-circuit-red',
+}
+export const DEFAULT_TIER_BORDER = 'border-slate-300 dark:border-slate-700'
+
 /** Il badge di rango più alto fra una lista di badge (uno per gioco). */
 export function pickBestBadge(badges) {
     if (!badges?.length) return null

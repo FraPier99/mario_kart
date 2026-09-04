@@ -1,18 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Trophy, Crown, Gamepad2, Users2, Calendar, ArrowRight, Sparkles, UserPlus, ChevronDown } from 'lucide-react'
+import { Trophy, Gamepad2, Users2, Calendar, ArrowRight, Sparkles, UserPlus, ChevronDown } from 'lucide-react'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { getProfileTheme } from '@/lib/profileTheme'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
+import { formatTournamentTitle } from '@/lib/utils'
 import TournamentAwardsPanel from '@/components/layout/TournamentAwardsPanel'
 import TournamentMilestonesPanel from '@/components/layout/TournamentMilestonesPanel'
 import CollapsibleSection from '@/components/tournaments/CollapsibleSection'
 import { detectTournamentMilestones } from '@/lib/milestones'
 import { statsApi } from '@/services/apiClient'
-import { pickBestBadge, getProfileCardStyle } from '@/lib/playerBadges'
+import { pickBestBadge, getProfileCardStyle, TIER_BADGE_IMAGES } from '@/lib/playerBadges'
 import { checkBadgeTierUps } from '@/lib/badgeTierToast'
+import TierMedallion from '@/components/community/badges/TierMedallion'
 
 const formatChampionDate = (value) => {
     if (!value) return null
@@ -82,6 +84,22 @@ const Hero = () => {
     const lastChampionFormatLabel = lastChampionTournament?.tournament_format === 'group_stage' ? 'Gironi' : 'Classic'
     const lastChampionParticipants = lastChampionTournament?.standings?.length ?? 0
     const lastChampionDateLabel = formatChampionDate(lastChampionTournament?.date)
+
+    // Tier badge del vincitore per il gioco di questo torneo — stessa logica
+    // di Stats.jsx (badge per-game_id, mai calcolato client-side).
+    const [lastChampionBadges, setLastChampionBadges] = useState([])
+    useEffect(() => {
+        if (!lastChampion) return
+        let active = true
+        statsApi.playerBadges(lastChampion.id)
+            .then((res) => { if (active) setLastChampionBadges(res.data ?? []) })
+            .catch(() => { if (active) setLastChampionBadges([]) })
+        return () => { active = false }
+    }, [lastChampion])
+    const lastChampionBadge = lastChampionTournament
+        ? lastChampionBadges.find((b) => b.game_id === lastChampionTournament.game_id) ?? null
+        : null
+
     // Personaggi usati dal campione in QUESTO torneo (non solo il preferito) —
     // usedCharacterIds è già calcolato per standing in buildTournamentDetails.
     const lastChampionStanding = lastChampionTournament?.standings?.find((s) => s.playerId === lastChampion?.id) ?? null
@@ -154,17 +172,30 @@ const Hero = () => {
 
                 <div className="p-6 pt-3">
                     {lastChampion ? (
-                        <div className="rounded-3xl border-2 border-amber-400/50 dark:border-amber-500/30 bg-linear-to-br from-amber-100 via-amber-50 to-amber-100 dark:from-amber-950 dark:via-amber-900 dark:to-amber-950 p-5 md:p-6"
+                        <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900"
                             style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+                            {/* Accento oro ridotto a barra superiore — non più riempimento
+                                pieno dietro tutto il blocco. */}
+                            <div className="h-1 bg-linear-to-r from-circuit-gold/30 via-circuit-gold to-circuit-gold/30" />
 
-                            <div>
+                            <div className="p-5 md:p-6">
                             {/* ── 1. Torneo ── */}
-                            <p className="line-clamp-2 text-2xl md:text-3xl font-black capitalize text-slate-900 dark:text-foreground leading-tight [text-shadow:0_1px_0_rgba(255,255,255,0.3)] dark:text-shadow-none">{lastChampionTournament.name}</p>
+                            <p title={lastChampionTournament.name} className="text-2xl md:text-3xl font-black text-slate-900 dark:text-foreground leading-tight">{formatTournamentTitle(lastChampionTournament.name, 60)}</p>
 
-                            {/* ── 2. Vincitore — focal point della card, subito dopo il titolo ── */}
-                            <div className="mt-3 flex items-center gap-4 rounded-2xl bg-white dark:bg-slate-900 p-3">
-                                <div className="relative shrink-0">
-                                    <div className="relative flex h-16 w-16 items-center justify-center rounded-full border-[2.5px] border-amber-400 overflow-hidden bg-linear-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-400/20">
+                            {/* ── 2. Vincitore — focal point della card, subito dopo il titolo.
+                                Riga semplice separata da un divider sottile invece di una
+                                mini-card con sfondo proprio ("incollata sopra" il genitore). ── */}
+                            <div className="mt-4 flex items-center gap-4 border-t border-slate-100 dark:border-white/10 pt-4">
+                                {lastChampionBadge && TIER_BADGE_IMAGES[lastChampionBadge.tier] ? (
+                                    <img
+                                        src={TIER_BADGE_IMAGES[lastChampionBadge.tier]}
+                                        alt={`Badge ${lastChampionBadge.label}`}
+                                        className="h-14 w-14 shrink-0 object-contain"
+                                    />
+                                ) : lastChampionBadge ? (
+                                    <TierMedallion tier={lastChampionBadge.tier} size={56} />
+                                ) : (
+                                    <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-circuit-gold">
                                         <img
                                             src={lastChampion.img_url || buildAvatarPlaceholder(lastChampion.nickname)}
                                             alt={lastChampion.nickname}
@@ -173,16 +204,13 @@ const Hero = () => {
                                             className="h-full w-full object-cover"
                                         />
                                     </div>
-                                    <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white dark:border-card bg-amber-400 shadow-md">
-                                        <Crown size={10} className="text-amber-950" />
-                                    </span>
-                                </div>
+                                )}
                                 <div className="min-w-0">
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-amber-600/70 dark:text-amber-400/60">Vinto da</p>
+                                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">Vinto da</p>
                                     <p className="truncate text-xl font-black capitalize text-slate-900 dark:text-foreground leading-tight">{lastChampion.nickname}</p>
-                                    <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-wide text-amber-600 dark:text-amber-400">
-                                        <Trophy size={11} />
-                                        {(lastChampionStats?.tournamentWins ?? 1) > 1 ? `${lastChampionStats.tournamentWins}° titolo` : '1° titolo'}
+                                    <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-black text-circuit-gold">
+                                        {lastChampionBadge?.label ?? <><Trophy size={11} /></>}
+                                        {(lastChampionStats?.tournamentWins ?? 1) > 1 ? ` · ${lastChampionStats.tournamentWins}° titolo` : ' · 1° titolo'}
                                     </span>
                                 </div>
                             </div>
@@ -193,7 +221,7 @@ const Hero = () => {
                             <button
                                 type="button"
                                 onClick={() => setExpanded((v) => !v)}
-                                className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-amber-600/25 dark:border-amber-400/20 bg-white dark:bg-slate-900 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-amber-700/80 dark:text-amber-300/70 transition hover:bg-amber-50 dark:hover:bg-slate-800"
+                                className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border-[1.5px] border-circuit-gold px-3 py-2 text-[10px] font-black uppercase tracking-widest text-circuit-gold transition hover:bg-circuit-gold/10"
                             >
                                 {expanded ? 'Mostra meno' : 'Mostra dettagli'}
                                 <ChevronDown size={12} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
@@ -205,7 +233,7 @@ const Hero = () => {
                                 <div className="mt-3">
                                     <Link
                                         to={`/tournaments/${lastChampionTournament.id}`}
-                                        className="font-title flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-600/40 dark:border-amber-400/30 bg-white dark:bg-slate-900 px-4 py-3 text-[10px] tracking-wide text-amber-800 dark:text-amber-200 transition active:translate-y-px hover:bg-amber-50 dark:hover:bg-slate-800"
+                                        className="font-title flex w-full items-center justify-center gap-2 rounded-xl border-2 border-circuit-gold/40 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-[10px] tracking-wide text-amber-800 dark:text-amber-200 transition active:translate-y-px hover:bg-amber-50 dark:hover:bg-slate-700"
                                     >
                                         Vai al torneo <ArrowRight size={14} />
                                     </Link>
@@ -238,7 +266,7 @@ const Hero = () => {
                                         <p className="text-[9px] font-black uppercase tracking-widest text-amber-600/70 dark:text-amber-400/60">Podio</p>
                                         <div className="mt-1.5 grid grid-cols-1 gap-2 sm:grid-cols-3">
                                             {lastChampionPodium.map((standing, idx) => (
-                                                <div key={standing.playerId} className="flex items-center gap-2.5 rounded-xl bg-white dark:bg-slate-900 px-3 py-2.5">
+                                                <div key={standing.playerId} className="flex items-center gap-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 px-3 py-2.5">
                                                     <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-black ${idx === 0 ? 'bg-amber-400 text-amber-950' : idx === 1 ? 'bg-slate-300 text-slate-700' : 'bg-orange-400 text-orange-950'}`}>
                                                         {idx + 1}
                                                     </span>
