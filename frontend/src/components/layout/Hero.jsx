@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Trophy, Gamepad2, Users2, Calendar, ArrowRight, Sparkles, UserPlus, ChevronDown } from 'lucide-react'
+import { Trophy, Gamepad2, Users2, Calendar, ArrowRight, Sparkles, UserPlus, ChevronDown, Flag } from 'lucide-react'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
@@ -15,8 +15,6 @@ import { statsApi } from '@/services/apiClient'
 import { TIER_BADGE_IMAGES } from '@/lib/playerBadges'
 import { checkBadgeTierUps } from '@/lib/badgeTierToast'
 import TierMedallion from '@/components/community/badges/TierMedallion'
-import { pickSessionCircuit } from '@/lib/circuitBackground'
-import CircuitBackdrop from '@/components/common/CircuitBackdrop'
 
 const formatChampionDate = (value) => {
     if (!value) return null
@@ -25,7 +23,7 @@ const formatChampionDate = (value) => {
 }
 
 const Hero = () => {
-    const { statsByPlayerId, charactersById, detailedTournaments, games, circuits } = useAppData()
+    const { statsByPlayerId, charactersById, detailedTournaments, games } = useAppData()
     const { user, isSuperadmin } = useAuth()
     const { dark } = useTheme()
     const theme = getProfileTheme(user, charactersById, dark)
@@ -39,19 +37,16 @@ const Hero = () => {
         return () => { active = false }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [player])
-    // "Dettagli torneo" (personaggi usati/premi/traguardi) collassato di
-    // default su mobile — dove impilare tutto sotto podio+meta+CTA creava
-    // troppo scroll prima di arrivare a contenuti secondari — aperto di
-    // default su desktop, dove lo spazio non manca. Calcolato una sola
-    // volta al mount (non serve reagire al resize di una sezione già aperta
-    // manualmente dall'utente).
-    const [detailsDefaultOpen] = useState(() => (
+    // "Dettagli torneo" (personaggi usati/premi/traguardi) chiuso di default
+    // su mobile — dove impilare tutto sotto podio+meta creava troppo scroll
+    // — aperto di default su desktop, dove lo spazio non manca. Calcolato
+    // una sola volta al mount (non serve reagire al resize di una sezione
+    // già aperta/chiusa manualmente dall'utente). Stato condiviso col
+    // pulsante "Mostra dettagli" della riga CTA (CollapsibleSection in modo
+    // controllato) e con la stessa CollapsibleSection più sotto.
+    const [detailsOpen, setDetailsOpen] = useState(() => (
         typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches
     ))
-    // Card "Ultimo torneo" chiusa di default (nome+vincitore soli occupano
-    // molto meno spazio verticale di CTA+meta+podio+dettagli insieme) — si
-    // apre solo su richiesta, invece di essere sempre alta in home.
-    const [expanded, setExpanded] = useState(false)
     // "Ultimo campione": non usare lastWinner/lastWinnerStats del context — quelli
     // valgono solo se il torneo più recente in assoluto è concluso, quindi sono
     // spesso null mentre c'è un torneo in corso. Cerchiamo invece il primo torneo
@@ -62,18 +57,8 @@ const Hero = () => {
     const lastChampionGame = lastChampionTournament ? games.find((g) => g.id === lastChampionTournament.game_id) : null
     const lastChampionFormatLabel = lastChampionTournament?.tournament_format === 'group_stage' ? 'Gironi' : 'Classic'
     const lastChampionParticipants = lastChampionTournament?.standings?.length ?? 0
+    const lastChampionRaceCount = lastChampionTournament?.races?.length ?? 0
     const lastChampionDateLabel = formatChampionDate(lastChampionTournament?.date)
-
-    // Sfondo "foto circuito" dietro titolo+vincitore (sempre visibili anche a
-    // card chiusa) — pesca tra i circuiti effettivamente giocati in QUESTO
-    // torneo quando possibile, altrimenti resta senza sfondo. Stabile per la
-    // sessione del browser (vedi lib/circuitBackground.js).
-    const lastChampionRaceCircuitIds = lastChampionTournament
-        ? [...new Set((lastChampionTournament.races ?? []).map((r) => r.circuit_id))]
-        : []
-    const lastChampionBgCircuit = lastChampionTournament
-        ? pickSessionCircuit(`tournament-hero-${lastChampionTournament.id}`, circuits, lastChampionRaceCircuitIds)
-        : null
 
     // Tier badge del vincitore per il gioco di questo torneo — stessa logica
     // di Stats.jsx (badge per-game_id, mai calcolato client-side).
@@ -119,62 +104,51 @@ const Hero = () => {
     // proprie statistiche/tornei — qui gli si spiega la situazione invece.
     if (user && !isSuperadmin && !player) {
         return (
-            <section className="mx-auto max-w-7xl px-4 py-8">
-                <div className="overflow-hidden rounded-[2rem] border-2 border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-950 p-6 md:p-8">
-                    <div className="flex flex-col items-center gap-3 text-center md:flex-row md:items-start md:text-left">
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-500/15">
-                            <UserPlus size={24} className="text-blue-600 dark:text-blue-300" />
-                        </div>
-                        <div className="min-w-0">
-                            <p className="text-xs font-black uppercase tracking-widest text-blue-700 dark:text-blue-300">Benvenuto in Lega Kart</p>
-                            <h2 className="mt-1 text-xl font-black text-slate-900 dark:text-foreground">Il tuo account non è ancora collegato a un giocatore</h2>
-                            <p className="mt-1.5 text-sm text-slate-600 dark:text-muted-foreground">
-                                Finché un admin non ti collega a un profilo giocatore non vedrai tornei, statistiche o badge personali — puoi comunque esplorare classifiche, tornei e regolamento nel frattempo.
-                            </p>
-                            <div className="mt-3 flex flex-wrap justify-center gap-2 md:justify-start">
-                                <Link to="/history" className="font-title rounded-xl border-2 border-blue-300 dark:border-blue-500/40 bg-white dark:bg-transparent px-4 py-2 text-[10px] tracking-wide text-blue-700 dark:text-blue-300 transition hover:bg-blue-100 dark:hover:bg-blue-500/10">
-                                    Sfoglia i tornei
-                                </Link>
-                                <Link to="/faq" className="font-title rounded-xl bg-blue-600 px-4 py-2 text-[10px] tracking-wide text-white transition hover:bg-blue-500">
-                                    Leggi il regolamento
-                                </Link>
-                            </div>
+            <div className="overflow-hidden rounded-[2rem] border-2 border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-950 p-6 md:p-8">
+                <div className="flex flex-col items-center gap-3 text-center md:flex-row md:items-start md:text-left">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-500/15">
+                        <UserPlus size={24} className="text-blue-600 dark:text-blue-300" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-xs font-black uppercase tracking-widest text-blue-700 dark:text-blue-300">Benvenuto in Lega Kart</p>
+                        <h2 className="mt-1 text-xl font-black text-slate-900 dark:text-foreground">Il tuo account non è ancora collegato a un giocatore</h2>
+                        <p className="mt-1.5 text-sm text-slate-600 dark:text-muted-foreground">
+                            Finché un admin non ti collega a un profilo giocatore non vedrai tornei, statistiche o badge personali — puoi comunque esplorare classifiche, tornei e regolamento nel frattempo.
+                        </p>
+                        <div className="mt-3 flex flex-wrap justify-center gap-2 md:justify-start">
+                            <Link to="/history" className="font-title rounded-xl border-2 border-blue-300 dark:border-blue-500/40 bg-white dark:bg-transparent px-4 py-2 text-[10px] tracking-wide text-blue-700 dark:text-blue-300 transition hover:bg-blue-100 dark:hover:bg-blue-500/10">
+                                Sfoglia i tornei
+                            </Link>
+                            <Link to="/faq" className="font-title rounded-xl bg-blue-600 px-4 py-2 text-[10px] tracking-wide text-white transition hover:bg-blue-500">
+                                Leggi il regolamento
+                            </Link>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
         )
     }
 
     return (
-        <section className="mx-auto max-w-7xl px-4 py-8">
-            <div
-                className="overflow-hidden rounded-[2rem] border-2 border-slate-900/70 dark:border-white/20 transition-all duration-500"
-                style={{ background: theme.cardBackground, boxShadow: 'var(--circuit-shadow-lg)' }}
-            >
+        <div
+            className="overflow-hidden rounded-[2rem] border-2 border-slate-900/70 dark:border-white/20 transition-all duration-500"
+            style={{ background: theme.cardBackground, boxShadow: 'var(--circuit-shadow-lg)' }}
+        >
+            <div className="px-6 pt-5">
+                <p className={`text-[10px] font-black uppercase tracking-[0.4em] ${theme.tailwind.textStrong}`}>
+                    🏁 Ultimo torneo
+                </p>
+            </div>
 
-                {/* ── Zone 3 "Chi rappresenti": niente più identità qui (già raccontata dalla Hero in cima) ── */}
-                <div className="px-6 pt-5">
-                    <p className={`text-[10px] font-black uppercase tracking-[0.4em] ${theme.tailwind.textStrong}`}>
-                        🏁 Ultimo torneo
-                    </p>
-                </div>
+            <div className="p-6 pt-3">
+                {lastChampion ? (
+                    <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900"
+                        style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+                        {/* Accento oro ridotto a barra superiore — non più riempimento
+                            pieno dietro tutto il blocco. */}
+                        <div className="h-1 bg-linear-to-r from-circuit-gold/30 via-circuit-gold to-circuit-gold/30" />
 
-                <div className="p-6 pt-3">
-                    {lastChampion ? (
-                        <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900"
-                            style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                            {/* Accento oro ridotto a barra superiore — non più riempimento
-                                pieno dietro tutto il blocco. */}
-                            <div className="h-1 bg-linear-to-r from-circuit-gold/30 via-circuit-gold to-circuit-gold/30" />
-
-                            {/* Zona sempre visibile (titolo+vincitore+toggle, anche a card
-                                chiusa) — sfondo foto circuito del torneo, prima piatta e
-                                spenta. Testo sempre chiaro qui, indipendente dal tema del
-                                sito: serve a restare leggibile sopra qualunque foto. */}
-                            <div className="relative overflow-hidden bg-slate-900">
-                                <CircuitBackdrop imageUrl={lastChampionBgCircuit?.image_url} />
-                                <div className="relative z-10 p-5 md:p-6">
+                        <div className="bg-slate-900 p-5 md:p-6">
                             {/* ── 1. Torneo ── */}
                             <p title={lastChampionTournament.name} className="text-2xl md:text-3xl font-black text-white leading-tight">{formatTournamentTitle(lastChampionTournament.name, 60)}</p>
 
@@ -211,138 +185,138 @@ const Hero = () => {
                                 </div>
                             </div>
 
-                            {/* ── Toggle — chiusa di default mostra solo titolo+vincitore
-                                sopra; il resto (CTA, meta, podio, dettagli) si apre a
-                                richiesta invece di occupare sempre tutto questo spazio. ── */}
-                            <button
-                                type="button"
-                                onClick={() => setExpanded((v) => !v)}
-                                className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border-[1.5px] border-circuit-gold px-3 py-2 text-[10px] font-black uppercase tracking-widest text-circuit-gold transition hover:bg-circuit-gold/10"
-                            >
-                                {expanded ? 'Mostra meno' : 'Mostra dettagli'}
-                                <ChevronDown size={12} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
-                            </button>
-                                </div>
+                            {/* ── 3. Pulsanti principali affiancati — sempre visibili, non più
+                                un unico toggle full-width con la CTA nascosta dietro. ── */}
+                            <div className="mt-4 flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setDetailsOpen((v) => !v)}
+                                    className="font-title flex flex-1 items-center justify-center gap-1.5 rounded-xl border-[1.5px] border-circuit-gold px-3 py-2.5 text-[10px] tracking-widest text-circuit-gold transition hover:bg-circuit-gold/10"
+                                >
+                                    Mostra dettagli
+                                    <ChevronDown size={12} className={`transition-transform ${detailsOpen ? 'rotate-180' : ''}`} />
+                                </button>
+                                <Link
+                                    to={`/tournaments/${lastChampionTournament.id}`}
+                                    className="font-title flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-circuit-gold/40 bg-slate-800 px-3 py-2.5 text-[10px] tracking-widest text-amber-200 transition active:translate-y-px hover:bg-slate-700"
+                                >
+                                    Vai al torneo <ArrowRight size={13} />
+                                </Link>
                             </div>
 
-                            {expanded && (
-                                <div className="p-5 pt-4 md:p-6 md:pt-4">
-                                {/* ── 3. CTA ── */}
-                                <div className="mt-3">
-                                    <Link
-                                        to={`/tournaments/${lastChampionTournament.id}`}
-                                        className="font-title flex w-full items-center justify-center gap-2 rounded-xl border-2 border-circuit-gold/40 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-[10px] tracking-wide text-amber-800 dark:text-amber-200 transition active:translate-y-px hover:bg-amber-50 dark:hover:bg-slate-700"
-                                    >
-                                        Vai al torneo <ArrowRight size={14} />
-                                    </Link>
-                                </div>
-
-                                {/* ── 4. Dettagli torneo ── */}
-                                <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-500 dark:text-muted-foreground">
-                                    {lastChampionGame && (
-                                        <span className="inline-flex items-center gap-1"><Gamepad2 size={11} className="text-amber-500/80" /> <span className="capitalize font-semibold text-slate-700 dark:text-foreground">{lastChampionGame.name}</span></span>
-                                    )}
-                                    <span className="text-amber-400/40">·</span>
-                                    <span className="font-medium text-slate-700 dark:text-foreground">{lastChampionFormatLabel}</span>
-                                    {lastChampionParticipants > 0 && (
-                                        <>
-                                            <span className="text-amber-400/40">·</span>
-                                            <span className="inline-flex items-center gap-1"><Users2 size={11} className="text-amber-500/80" /> {lastChampionParticipants}</span>
-                                        </>
-                                    )}
-                                    {lastChampionDateLabel && (
-                                        <>
-                                            <span className="text-amber-400/40">·</span>
-                                            <span className="inline-flex items-center gap-1"><Calendar size={11} className="text-amber-500/80" /> {lastChampionDateLabel}</span>
-                                        </>
-                                    )}
-                                </div>
-
-                                {/* ── 4. Podio — tre chip orizzontali a piena larghezza ── */}
-                                {lastChampionPodium.length > 0 && (
-                                    <div className="mt-4">
-                                        <p className="text-[9px] font-black uppercase tracking-widest text-amber-600/70 dark:text-amber-400/60">Podio</p>
-                                        <div className="mt-1.5 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                                            {lastChampionPodium.map((standing, idx) => (
-                                                <div key={standing.playerId} className="flex items-center gap-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 px-3 py-2.5">
-                                                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-black ${idx === 0 ? 'bg-amber-400 text-amber-950' : idx === 1 ? 'bg-slate-300 text-slate-700' : 'bg-orange-400 text-orange-950'}`}>
-                                                        {idx + 1}
-                                                    </span>
-                                                    <img
-                                                        src={standing.img_url || buildAvatarPlaceholder(standing.nickname)}
-                                                        alt={standing.nickname}
-                                                        loading="lazy"
-                                                        decoding="async"
-                                                        className="h-9 w-9 shrink-0 rounded-full object-cover"
-                                                    />
-                                                    <span className="min-w-0 flex-1 truncate text-sm font-bold capitalize text-slate-800 dark:text-foreground">{standing.nickname}</span>
-                                                    {standing.points != null && (
-                                                        <span className="text-xs font-black text-amber-600/80 dark:text-amber-400/70">{standing.points}pt</span>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
+                            {/* ── 4. Riga compatta modalità/partecipanti/gare/data ── */}
+                            <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-300">
+                                {lastChampionGame && (
+                                    <span className="inline-flex items-center gap-1"><Gamepad2 size={11} className="text-amber-400/80" /> <span className="capitalize font-semibold text-slate-200">{lastChampionGame.name}</span></span>
                                 )}
+                                <span className="text-amber-400/40">·</span>
+                                <span className="font-medium text-slate-200">{lastChampionFormatLabel}</span>
+                                {lastChampionParticipants > 0 && (
+                                    <>
+                                        <span className="text-amber-400/40">·</span>
+                                        <span className="inline-flex items-center gap-1"><Users2 size={11} className="text-amber-400/80" /> {lastChampionParticipants}</span>
+                                    </>
+                                )}
+                                {lastChampionRaceCount > 0 && (
+                                    <>
+                                        <span className="text-amber-400/40">·</span>
+                                        <span className="inline-flex items-center gap-1"><Flag size={11} className="text-amber-400/80" /> {lastChampionRaceCount} gare</span>
+                                    </>
+                                )}
+                                {lastChampionDateLabel && (
+                                    <>
+                                        <span className="text-amber-400/40">·</span>
+                                        <span className="inline-flex items-center gap-1"><Calendar size={11} className="text-amber-400/80" /> {lastChampionDateLabel}</span>
+                                    </>
+                                )}
+                            </div>
 
-                                {/* ── 5. Dettagli torneo — personaggi usati + premi + traguardi,
-                                    raggruppati in un unico capitolo collassabile (chiuso di default
-                                    su mobile, aperto su desktop dove lo spazio non manca): prima
-                                    erano impilati per intero, costringendo a scorrere oltre podio e
-                                    personaggi prima di arrivare a premi/traguardi. ── */}
+                            {/* ── 5. Podio finale — sempre visibile, tre chip orizzontali, 1°
+                                posto graficamente più marcato. ── */}
+                            {lastChampionPodium.length > 0 && (
                                 <div className="mt-4">
-                                    <CollapsibleSection
-                                        title="Dettagli torneo"
-                                        subtitle="Personaggi usati, premi e traguardi"
-                                        icon={<Sparkles size={16} />}
-                                        defaultOpen={detailsDefaultOpen}
-                                    >
-                                        {lastChampionCharacters.length > 0 && (
-                                            <div>
-                                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">Personaggi usati dal vincitore</p>
-                                                <div className="mt-1.5 flex flex-wrap gap-2">
-                                                    {lastChampionCharacters.slice(0, 8).map((character) => (
-                                                        <div key={character.id} className="flex items-center gap-1.5 rounded-full bg-slate-100 dark:bg-muted py-1 pl-1 pr-3">
-                                                            <div className="h-6 w-6 shrink-0 overflow-hidden rounded-full border border-white dark:border-card bg-slate-100 dark:bg-slate-700/60">
-                                                                {character.img_url ? (
-                                                                    <img src={character.img_url} alt={character.name} className="h-full w-full object-cover" />
-                                                                ) : (
-                                                                    <div className="flex h-full w-full items-center justify-center text-[10px] font-black text-slate-400">{character.name.charAt(0).toUpperCase()}</div>
-                                                                )}
-                                                            </div>
-                                                            <span className="max-w-24 truncate text-[10px] font-bold capitalize text-slate-700 dark:text-foreground">{character.name}</span>
-                                                        </div>
-                                                    ))}
-                                                    {lastChampionCharacters.length > 8 && (
-                                                        <div className="flex items-center rounded-full border border-dashed border-slate-300 dark:border-slate-600 px-3 py-1 text-[10px] font-black text-slate-500 dark:text-muted-foreground">
-                                                            +{lastChampionCharacters.length - 8} altri
-                                                        </div>
-                                                    )}
-                                                </div>
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-amber-400/70">Podio finale</p>
+                                    <div className="mt-1.5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                        {lastChampionPodium.map((standing, idx) => (
+                                            <div
+                                                key={standing.playerId}
+                                                className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 ${idx === 0 ? 'bg-amber-500/15 ring-1 ring-inset ring-amber-400/50' : 'bg-slate-800'}`}
+                                            >
+                                                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-black ${idx === 0 ? 'bg-amber-400 text-amber-950' : idx === 1 ? 'bg-slate-300 text-slate-700' : 'bg-orange-400 text-orange-950'}`}>
+                                                    {idx + 1}
+                                                </span>
+                                                <img
+                                                    src={standing.img_url || buildAvatarPlaceholder(standing.nickname)}
+                                                    alt={standing.nickname}
+                                                    loading="lazy"
+                                                    decoding="async"
+                                                    className={`shrink-0 rounded-full object-cover ${idx === 0 ? 'h-10 w-10' : 'h-9 w-9'}`}
+                                                />
+                                                <span className="min-w-0 flex-1 truncate text-sm font-bold capitalize text-white">{standing.nickname}</span>
+                                                {standing.points != null && (
+                                                    <span className="text-xs font-black text-amber-300">{standing.points}pt</span>
+                                                )}
                                             </div>
-                                        )}
-                                        <TournamentAwardsPanel
-                                            tournamentId={lastChampionTournament.id}
-                                            tournamentFormat={lastChampionTournament.tournament_format}
-                                            standings={lastChampionTournament.standings}
-                                        />
-                                        <TournamentMilestonesPanel milestones={lastChampionMilestones} />
-                                    </CollapsibleSection>
-                                </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </div>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-5 py-8 text-center">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
-                                <Trophy size={24} className="text-slate-400" />
-                            </div>
-                            <p className="text-xs text-slate-500 dark:text-muted-foreground">Nessun campione ancora</p>
+
+                        {/* ── 6. Dettagli torneo — personaggi usati + premi + traguardi,
+                            unico capitolo collassabile, pilotato anche dal pulsante
+                            "Mostra dettagli" sopra (stato condiviso). ── */}
+                        <div className="p-5 pt-4 md:p-6 md:pt-4">
+                            <CollapsibleSection
+                                title="Dettagli torneo"
+                                subtitle="Personaggi usati, premi e traguardi"
+                                icon={<Sparkles size={16} />}
+                                open={detailsOpen}
+                                onOpenChange={setDetailsOpen}
+                            >
+                                {lastChampionCharacters.length > 0 && (
+                                    <div>
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">Personaggi usati dal vincitore</p>
+                                        <div className="mt-1.5 flex flex-wrap gap-2">
+                                            {lastChampionCharacters.slice(0, 8).map((character) => (
+                                                <div key={character.id} className="flex items-center gap-1.5 rounded-full bg-slate-100 dark:bg-muted py-1 pl-1 pr-3">
+                                                    <div className="h-6 w-6 shrink-0 overflow-hidden rounded-full border border-white dark:border-card bg-slate-100 dark:bg-slate-700/60">
+                                                        {character.img_url ? (
+                                                            <img src={character.img_url} alt={character.name} className="h-full w-full object-cover" />
+                                                        ) : (
+                                                            <div className="flex h-full w-full items-center justify-center text-[10px] font-black text-slate-400">{character.name.charAt(0).toUpperCase()}</div>
+                                                        )}
+                                                    </div>
+                                                    <span className="max-w-24 truncate text-[10px] font-bold capitalize text-slate-700 dark:text-foreground">{character.name}</span>
+                                                </div>
+                                            ))}
+                                            {lastChampionCharacters.length > 8 && (
+                                                <div className="flex items-center rounded-full border border-dashed border-slate-300 dark:border-slate-600 px-3 py-1 text-[10px] font-black text-slate-500 dark:text-muted-foreground">
+                                                    +{lastChampionCharacters.length - 8} altri
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                                <TournamentAwardsPanel
+                                    tournamentId={lastChampionTournament.id}
+                                    tournamentFormat={lastChampionTournament.tournament_format}
+                                    standings={lastChampionTournament.standings}
+                                />
+                                <TournamentMilestonesPanel milestones={lastChampionMilestones} />
+                            </CollapsibleSection>
                         </div>
-                    )}
-                </div>
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-5 py-8 text-center">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
+                            <Trophy size={24} className="text-slate-400" />
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-muted-foreground">Nessun campione ancora</p>
+                    </div>
+                )}
             </div>
-        </section>
+        </div>
     )
 }
 

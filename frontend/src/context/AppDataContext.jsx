@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { authApi, charactersApi, circuitsApi, consolesApi, gamesApi, playersApi, pointAdjustmentsApi, racesApi, resultsApi, tournamentsApi } from '@/services/apiClient'
+import { authApi, charactersApi, circuitsApi, consolesApi, contentImagesApi, gamesApi, playersApi, pointAdjustmentsApi, racesApi, resultsApi, tournamentsApi } from '@/services/apiClient'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/services/apiClient'
 
@@ -418,6 +418,21 @@ export function AppDataProvider({ children }) {
     const [error, setError] = useState(null)
     const [errorMessage, setErrorMessage] = useState('')
     const [communityUsers, setCommunityUsers] = useState([])
+    const [contentImages, setContentImages] = useState({})
+
+    // Immagini di contenuto caricabili dal superadmin (card statistiche
+    // profilo, immagine torneo, ...) — vedi contentImagesApi/EditableContentImage.
+    // Caricata una sola volta qui invece che per-componente (prima duplicata
+    // in Faq.jsx) così ogni consumer la legge dal context senza rifetch.
+    useEffect(() => {
+        contentImagesApi.list()
+            .then((res) => setContentImages(Object.fromEntries((res.data ?? []).map((row) => [row.key, row.image_url]))))
+            .catch(() => {})
+    }, [])
+
+    const updateContentImage = useCallback((row) => {
+        setContentImages((prev) => ({ ...prev, [row.key]: row.image_url }))
+    }, [])
 
     // Caricata una sola volta per l'intera sessione (AppDataProvider è
     // montato una volta sola alla radice dell'app) — sostituisce i fetch
@@ -738,6 +753,8 @@ export function AppDataProvider({ children }) {
         results,
         circuits,
         communityUsers,
+        contentImages,
+        updateContentImage,
         playersById,
         charactersById,
         gamesById,

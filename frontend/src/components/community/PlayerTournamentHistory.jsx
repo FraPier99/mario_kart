@@ -15,10 +15,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Calendar, MapPin, Trophy } from 'lucide-react'
 import { useAppData } from '@/context/AppDataContext'
+import { useAuth } from '@/context/AuthContext'
 import { tournamentsApi } from '@/services/apiClient'
 import { toTitleCase } from '@/lib/utils'
-import { pickSessionCircuit } from '@/lib/circuitBackground'
-import CircuitBackdrop from '@/components/common/CircuitBackdrop'
+import EditableContentImage from '@/components/common/EditableContentImage'
 
 const FORMAT_LABEL = { classic: 'Classifica unica', group_stage: 'A gironi' }
 
@@ -29,8 +29,18 @@ const POSITION_BADGE = {
 }
 const DEFAULT_BADGE = 'bg-black/30 backdrop-blur-sm text-slate-300 border-white/20'
 
+// Accento del bordo sinistro della card per posizione — stesso linguaggio
+// cromatico del badge posizione, per far risaltare 1°/2°/3° a colpo d'occhio
+// anche prima di leggere il numero nel badge.
+const POSITION_BORDER = {
+    1: 'border-l-4 border-l-amber-400',
+    2: 'border-l-4 border-l-slate-300',
+    3: 'border-l-4 border-l-orange-400',
+}
+
 const PlayerTournamentHistory = ({ playerId }) => {
-    const { detailedTournaments, games, circuits } = useAppData()
+    const { detailedTournaments, games, contentImages, updateContentImage } = useAppData()
+    const { isSuperadmin } = useAuth()
     const [selectedGameId, setSelectedGameId] = useState('')
     const [groupStagePositions, setGroupStagePositions] = useState({})
 
@@ -107,21 +117,18 @@ const PlayerTournamentHistory = ({ playerId }) => {
                             position = idx === -1 ? null : idx + 1
                         }
                         const badgeClass = position != null && POSITION_BADGE[position] ? POSITION_BADGE[position] : DEFAULT_BADGE
+                        const borderCls = position != null && POSITION_BORDER[position] ? POSITION_BORDER[position] : 'border-l-4 border-l-white/10'
                         const gameName = games.find((g) => g.id === t.game_id)?.name
-                        // Sfondo "foto circuito" per la card, oggi piatta e spenta —
-                        // pescato tra i circuiti effettivamente giocati in questo
-                        // torneo, stabile per la sessione del browser.
-                        const raceCircuitIds = [...new Set((t.races ?? []).map((r) => r.circuit_id))]
-                        const bgCircuit = pickSessionCircuit(`tournament-card-${t.id}`, circuits, raceCircuitIds)
+                        const imageContentKey = `tournament-image-${t.id}`
+                        const imageUrl = contentImages[imageContentKey]
 
                         return (
                             <Link
                                 key={t.id}
                                 to={`/tournaments/${t.id}`}
-                                className="relative flex flex-col gap-2.5 overflow-hidden rounded-xl bg-slate-900 p-3.5 transition hover:brightness-110"
+                                className={`relative flex overflow-hidden rounded-xl bg-slate-900 transition hover:brightness-110 ${borderCls}`}
                             >
-                                <CircuitBackdrop imageUrl={bgCircuit?.image_url} />
-                                <div className="relative z-10 flex flex-col gap-2.5">
+                                <div className="relative z-10 flex min-w-0 flex-1 flex-col gap-2.5 p-3.5">
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0">
                                         <p title={t.name} className="truncate text-sm font-black text-white">{toTitleCase(t.name)}</p>
@@ -145,6 +152,19 @@ const PlayerTournamentHistory = ({ playerId }) => {
                                     </div>
                                 )}
                                 </div>
+                                {(imageUrl || isSuperadmin) && (
+                                    <div className="relative z-10 hidden w-24 shrink-0 sm:block" onClick={(e) => e.preventDefault()}>
+                                        <EditableContentImage
+                                            contentKey={imageContentKey}
+                                            imageUrl={imageUrl}
+                                            onUploaded={updateContentImage}
+                                            alt=""
+                                            fit="cover"
+                                            fadeEdge="left"
+                                            className="h-full w-full bg-transparent"
+                                        />
+                                    </div>
+                                )}
                             </Link>
                         )
                     })}

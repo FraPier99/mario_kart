@@ -5,8 +5,7 @@ import AppLayout from '@/components/layout/AppLayout'
 import PlayerTournamentHistory from '@/components/community/PlayerTournamentHistory'
 import ProfileHeader from '@/components/community/ProfileHeader'
 import { pickBestBadge, TIER_ACCENT_COLORS } from '@/lib/playerBadges'
-import { pickSessionCircuit } from '@/lib/circuitBackground'
-import CircuitBackdrop from '@/components/common/CircuitBackdrop'
+import StatShowcaseCard from '@/components/common/StatShowcaseCard'
 import { authApi, statsApi, getApiErrorMessage } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
 import { SkeletonPulse, SkeletonRows } from '@/components/common/Skeleton'
@@ -15,7 +14,7 @@ import { toast } from 'sonner'
 const CommunityUserPage = () => {
     const { userId } = useParams()
     const navigate = useNavigate()
-    const { statsByPlayerId, charactersById, games, getLeaderboardByGame, circuits } = useAppData()
+    const { statsByPlayerId, charactersById, games, getLeaderboardByGame, contentImages, updateContentImage } = useAppData()
     const [communityUser, setCommunityUser] = useState(null)
     const [loading, setLoading] = useState(true)
     const [notFound, setNotFound] = useState(false)
@@ -60,8 +59,6 @@ const CommunityUserPage = () => {
     }, [player])
 
     const bestBadge = useMemo(() => pickBestBadge(badges), [badges])
-    // Sfondo "foto circuito" per la card header profilo — vedi ProfileDashboard.jsx.
-    const profileBgCircuit = useMemo(() => pickSessionCircuit('profile-header', circuits), [circuits])
     const activeBadge = useMemo(() => {
         if (!selectedGameId) return bestBadge
         return badges.find((b) => b.game_id === Number(selectedGameId)) ?? bestBadge
@@ -142,7 +139,6 @@ const CommunityUserPage = () => {
                             : { boxShadow: 'var(--circuit-shadow-md)' }
                     })()}
                 >
-                    <CircuitBackdrop imageUrl={profileBgCircuit?.image_url} />
                     <div className="relative z-10">
                     <ProfileHeader
                         avatarSrc={player?.img_url || communityUser?.img_url}
@@ -206,21 +202,22 @@ const CommunityUserPage = () => {
                         {activeStats ? (
                             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                                 {[
-                                    { label: 'Tornei vinti', value: activeStats.tournamentWins, sub: `di ${activeStats.tournamentsPlayed} giocati`, iconCls: 'bg-amber-500/10 text-amber-600', Icon: Trophy },
-                                    { label: 'Vittorie gara', value: activeStats.raceWins, sub: `Win Rate ${activeStats.winRate}%`, iconCls: 'bg-emerald-500/10 text-emerald-600', Icon: Flag },
-                                    { label: 'Podi totali', value: activeStats.podiums, sub: `Podium Rate ${activeStats.podiumRate}%`, iconCls: 'bg-blue-500/10 text-blue-600', Icon: Star },
-                                    { label: 'Punti totali', value: activeStats.points, sub: `Efficienza ${activeStats.avgEfficiency}%`, iconCls: 'bg-violet-500/10 text-violet-600', Icon: BarChart3 },
-                                ].map(({ label, value, sub, iconCls, Icon }) => (
-                                    <div key={label} className="flex items-start gap-3 rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-4" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconCls}`}>
-                                            <Icon size={16} />
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className="font-title text-[9px] tracking-wide text-slate-400">{label}</p>
-                                            <p className="font-title mt-1 text-xl leading-none text-slate-900 dark:text-foreground">{value}</p>
-                                            <p className="mt-1 text-[10px] leading-snug text-slate-500 dark:text-muted-foreground">{sub}</p>
-                                        </div>
-                                    </div>
+                                    { label: 'Tornei vinti', value: activeStats.tournamentWins, sub: `di ${activeStats.tournamentsPlayed} giocati`, accent: 'amber', contentKey: 'stat-icon-tornei', Icon: Trophy },
+                                    { label: 'Vittorie gara', value: activeStats.raceWins, sub: `Win Rate ${activeStats.winRate}%`, accent: 'emerald', contentKey: 'stat-icon-gare', Icon: Flag },
+                                    { label: 'Podi totali', value: activeStats.podiums, sub: `Podium Rate ${activeStats.podiumRate}%`, accent: 'blue', contentKey: 'stat-icon-podi', Icon: Star },
+                                    { label: 'Punti totali', value: activeStats.points, sub: `Efficienza ${activeStats.avgEfficiency}%`, accent: 'violet', contentKey: 'stat-icon-punti', Icon: BarChart3 },
+                                ].map(({ label, value, sub, accent, contentKey, Icon }) => (
+                                    <StatShowcaseCard
+                                        key={label}
+                                        label={label}
+                                        value={value}
+                                        sub={sub}
+                                        Icon={Icon}
+                                        accent={accent}
+                                        contentKey={contentKey}
+                                        imageUrl={contentImages[contentKey]}
+                                        onUploaded={updateContentImage}
+                                    />
                                 ))}
                             </div>
                         ) : (

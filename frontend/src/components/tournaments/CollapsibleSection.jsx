@@ -8,14 +8,24 @@
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 
-const CollapsibleSection = ({ title, subtitle, icon, defaultOpen = false, badge, children }) => {
-    const [open, setOpen] = useState(defaultOpen)
+// `open`/`onOpenChange`: uso controllato opzionale (es. Hero.jsx, dove lo
+// stesso stato pilota anche un pulsante esterno "Mostra dettagli") — se
+// `open` non è passato la sezione resta uncontrolled come prima
+// (stato interno inizializzato da `defaultOpen`).
+const CollapsibleSection = ({ title, subtitle, icon, defaultOpen = false, badge, children, open: controlledOpen, onOpenChange }) => {
+    const [internalOpen, setInternalOpen] = useState(defaultOpen)
+    const isControlled = controlledOpen !== undefined
+    const open = isControlled ? controlledOpen : internalOpen
+    const toggle = () => {
+        if (isControlled) onOpenChange?.(!open)
+        else setInternalOpen((o) => !o)
+    }
 
     return (
         <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden">
             <button
                 type="button"
-                onClick={() => setOpen((o) => !o)}
+                onClick={toggle}
                 className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition hover:bg-slate-50 dark:hover:bg-muted/40"
             >
                 <div className="flex items-center gap-3 min-w-0">

@@ -4,8 +4,6 @@ import { Rss, Trophy, Flag, Award, Flame } from 'lucide-react'
 import { useAppData } from '@/context/AppDataContext'
 import { buildActivityFeed } from '@/lib/activityFeed'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
-import { pickSessionCircuit } from '@/lib/circuitBackground'
-import CircuitBackdrop from '@/components/common/CircuitBackdrop'
 
 const formatEventDate = (value) => {
     if (!value) return null
@@ -54,55 +52,45 @@ const EventBadge = ({ type, avatar, primary }) => {
 }
 
 const ActivityFeed = () => {
-    const { detailedTournaments, statsByPlayerId, games, circuits } = useAppData()
+    const { detailedTournaments, statsByPlayerId, games } = useAppData()
 
     const events = useMemo(
         () => buildActivityFeed({ detailedTournaments, statsByPlayerId, games, limit: 10 }),
         [detailedTournaments, statsByPlayerId, games]
     )
 
-    // Sfondo "foto circuito" per l'intero riquadro — non legato a un torneo
-    // specifico (la lista ne raccoglie più d'uno), casuale e stabile per la
-    // sessione del browser.
-    const bgCircuit = pickSessionCircuit('activity-feed', circuits)
-
     if (events.length === 0) return null
 
     return (
-        <section className="mx-auto max-w-7xl px-4 pb-8">
-            <div className="relative overflow-hidden rounded-[2rem] border-2 border-white/15 bg-slate-900 p-6" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
-                <CircuitBackdrop imageUrl={bgCircuit?.image_url} />
-                <div className="relative z-10">
-                <div className="mb-4 flex items-center gap-2">
-                    <Rss size={16} className="text-emerald-400" />
-                    <p className="font-title text-[10px] tracking-[0.3em] text-slate-200">Attività recente</p>
-                </div>
-                <ul className="space-y-2">
-                    {events.map((event) => (
-                        <li key={event.id}>
-                            <Link
-                                to={`/tournaments/${event.tournamentId}`}
-                                className="flex items-start gap-3 rounded-xl border border-white/15 bg-black/30 backdrop-blur-sm p-2.5 transition hover:border-emerald-400/50 hover:bg-emerald-950/30"
-                            >
-                                <EventBadge type={event.type} avatar={event.avatar} primary={event.primary} />
-                                {/* Niente `truncate`: con 3+ nomi uniti (traguardi raggiunti
-                                    insieme) il testo va a capo su più righe invece di tagliarsi
-                                    illeggibile, soprattutto su mobile dove lo spazio orizzontale
-                                    è poco. */}
-                                <span className="min-w-0 flex-1 break-words capitalize text-sm">
-                                    {event.primary && <span className="font-black text-white">{event.primary} </span>}
-                                    <span className="text-slate-300">{event.secondary}</span>
-                                </span>
-                                <span className="shrink-0 text-[10px] font-black uppercase tracking-wide text-slate-400">
-                                    {formatEventDate(event.date)}
-                                </span>
-                            </Link>
-                        </li>
-                    ))}
-                </ul>
-                </div>
+        <div className="flex flex-col">
+            <div className="mb-4 flex items-center gap-2">
+                <Rss size={16} className="text-emerald-400" />
+                <p className="font-title text-[10px] tracking-[0.3em] text-slate-200">Attività recente</p>
             </div>
-        </section>
+            <ul className="space-y-1.5">
+                {events.map((event) => (
+                    <li key={event.id}>
+                        <Link
+                            to={`/tournaments/${event.tournamentId}`}
+                            className={`flex items-center gap-3 rounded-lg bg-white/5 px-2.5 py-2 transition hover:bg-white/10 ${event.type === 'win' ? 'border-l-2 border-amber-400/70' : ''}`}
+                        >
+                            <EventBadge type={event.type} avatar={event.avatar} primary={event.primary} />
+                            {/* Niente `truncate`: con 3+ nomi uniti (traguardi raggiunti
+                                insieme) il testo va a capo su più righe invece di tagliarsi
+                                illeggibile, soprattutto su mobile dove lo spazio orizzontale
+                                è poco. */}
+                            <span className="min-w-0 flex-1 break-words capitalize text-xs leading-snug">
+                                {event.primary && <span className="font-black text-white">{event.primary} </span>}
+                                <span className="text-slate-300">{event.secondary}</span>
+                            </span>
+                            <span className="shrink-0 text-[9px] font-black uppercase tracking-wide text-slate-400">
+                                {formatEventDate(event.date)}
+                            </span>
+                        </Link>
+                    </li>
+                ))}
+            </ul>
+        </div>
     )
 }
 

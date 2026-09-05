@@ -21,6 +21,13 @@ const CARD_BORDER = {
     2: 'border-slate-300/70 dark:border-slate-500/40',
     3: 'border-orange-400/70 dark:border-orange-500/40',
 }
+// Tint di sfondo per posizione — le card podio risaltavano poco su un
+// bg-white/bg-card piatto identico a qualunque altra card della pagina.
+const CARD_BG = {
+    1: 'bg-gradient-to-b from-amber-50 to-white dark:from-amber-500/15 dark:to-card',
+    2: 'bg-gradient-to-b from-slate-100 to-white dark:from-slate-500/15 dark:to-card',
+    3: 'bg-gradient-to-b from-orange-50 to-white dark:from-orange-500/15 dark:to-card',
+}
 
 const PodiumSteps = ({ players = [], onPlayerClick = null, firstPlaceBadge = null }) => {
     if (players.length < 3) return null
@@ -41,7 +48,7 @@ const PodiumSteps = ({ players = [], onPlayerClick = null, firstPlaceBadge = nul
                         tabIndex={clickable ? 0 : undefined}
                         onClick={clickable ? () => onPlayerClick(player) : undefined}
                         onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onPlayerClick(player) } } : undefined}
-                        className={`relative flex w-24 sm:w-48 md:w-64 flex-col items-center rounded-2xl border-2 bg-white dark:bg-card ${CARD_BORDER[position]} ${clickable ? 'cursor-pointer transition-transform hover:-translate-y-1' : ''} ${isFirst ? 'pt-6 pb-2.5 px-1.5 sm:pt-8 sm:pb-5 sm:px-4 md:px-5 -translate-y-2 sm:-translate-y-3 md:-translate-y-5' : 'pt-5 pb-2 px-1 sm:pt-7 sm:pb-4 sm:px-3 md:px-4'}`}
+                        className={`relative flex w-24 sm:w-48 md:w-64 flex-col items-center rounded-2xl border-2 ${CARD_BG[position]} ${CARD_BORDER[position]} ${clickable ? 'cursor-pointer transition-transform hover:-translate-y-1' : ''} ${isFirst ? 'pt-6 pb-2.5 px-1.5 sm:pt-8 sm:pb-5 sm:px-4 md:px-5 -translate-y-2 sm:-translate-y-3 md:-translate-y-5' : 'pt-5 pb-2 px-1 sm:pt-7 sm:pb-4 sm:px-3 md:px-4'}`}
                         style={{
                             boxShadow: isFirst
                                 ? '0 8px 30px rgba(245,158,11,0.25), 0 0 60px rgba(245,158,11,0.08)'
@@ -57,7 +64,7 @@ const PodiumSteps = ({ players = [], onPlayerClick = null, firstPlaceBadge = nul
 
                         {/* Avatar with glow */}
                         <div className="relative shrink-0">
-                            <div className="absolute inset-0 rounded-full blur-lg opacity-50 scale-125" style={{ background: RING_COLORS[position] }} />
+                            <div className={`absolute inset-0 rounded-full blur-lg scale-125 ${isFirst ? 'opacity-70 scale-150' : 'opacity-50'}`} style={{ background: RING_COLORS[position] }} />
                             <img
                                 src={player.img_url || buildAvatarPlaceholder(player.nickname)}
                                 alt={player.nickname}

@@ -16,8 +16,7 @@ import PlayerTournamentHistory from '@/components/community/PlayerTournamentHist
 import PlayerBadge from '@/components/community/PlayerBadge'
 import ProfileHeader from '@/components/community/ProfileHeader'
 import { pickBestBadge, TIER_ACCENT_COLORS } from '@/lib/playerBadges'
-import { pickSessionCircuit } from '@/lib/circuitBackground'
-import CircuitBackdrop from '@/components/common/CircuitBackdrop'
+import StatShowcaseCard from '@/components/common/StatShowcaseCard'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { authApi, schedineApi, inventoryApi, ownershipApi, statsApi, getApiErrorMessage } from '@/services/apiClient'
@@ -329,7 +328,7 @@ const AccentColorPicker = ({ value, onChange }) => (
 
 const Dashboard = () => {
     const { user, isSuperadmin, refreshMe, isAuthenticated } = useAuth()
-    const { charactersById, statsByPlayerId, patchPlayer, getTournamentById, games, consoles, getLeaderboardByGame, circuits } = useAppData()
+    const { charactersById, statsByPlayerId, patchPlayer, getTournamentById, games, consoles, getLeaderboardByGame, contentImages, updateContentImage } = useAppData()
     const characters = useMemo(() => [...charactersById.values()], [charactersById])
     const player = user?.player ?? null
     const playerStats = player ? (statsByPlayerId.get(player.id) ?? null) : null
@@ -347,7 +346,6 @@ const Dashboard = () => {
     // Sfondo "foto circuito" per la card header profilo, oggi piatta —
     // casuale tra tutti i circuiti (non legata a un torneo specifico),
     // stabile per la sessione del browser (vedi lib/circuitBackground.js).
-    const profileBgCircuit = useMemo(() => pickSessionCircuit('profile-header', circuits), [circuits])
     const [selectedGameId, setSelectedGameId] = useState('')
     const activeBadge = useMemo(() => {
         if (!selectedGameId) return bestBadge
@@ -616,7 +614,6 @@ const Dashboard = () => {
                             : { boxShadow: 'var(--circuit-shadow-md)' }
                     })()}
                 >
-                    <CircuitBackdrop imageUrl={profileBgCircuit?.image_url} />
                     <div className="relative z-10">
                         <ProfileHeader
                             avatarSrc={form.img_url || player?.img_url}
@@ -845,21 +842,22 @@ const Dashboard = () => {
                         <div className="space-y-4">
                         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                             {[
-                                { label: 'Tornei vinti', value: playerStats?.tournamentWins ?? 0, sub: `di ${playerStats?.tournamentsPlayed ?? 0} giocati`, Icon: Trophy, iconCls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400', cardCls: 'border-slate-200 dark:border-border bg-white dark:bg-card' },
-                                { label: 'Vittorie gara', value: playerStats?.raceWins ?? 0, sub: `di ${playerStats?.racesPlayed ?? 0} gare`, Icon: Flag, iconCls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', cardCls: 'border-slate-200 dark:border-border bg-white dark:bg-card' },
-                                { label: 'Podi totali', value: playerStats?.podiums ?? 0, sub: `Podium Rate ${playerStats?.podiumRate ?? 0}%`, Icon: Star, iconCls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', cardCls: 'border-slate-200 dark:border-border bg-white dark:bg-card' },
-                                { label: 'Punti totali', value: playerStats?.points ?? 0, sub: `Efficienza ${playerStats?.avgEfficiency ?? 0}%`, Icon: BarChart3, iconCls: 'bg-violet-500/10 text-violet-600 dark:text-violet-400', cardCls: 'border-slate-200 dark:border-border bg-white dark:bg-card' },
-                            ].map(({ label, value, sub, Icon, iconCls, cardCls }) => (
-                                <div key={label} className={`flex items-start gap-3 rounded-2xl border-2 p-4 ${cardCls}`} style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconCls}`}>
-                                        <Icon size={16} />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="font-title text-[9px] tracking-wide text-slate-400">{label}</p>
-                                        <p className="mt-1 font-title text-2xl leading-none text-slate-900 dark:text-foreground">{value}</p>
-                                        <p className="mt-1 text-[10px] leading-snug text-slate-500 dark:text-muted-foreground">{sub}</p>
-                                    </div>
-                                </div>
+                                { label: 'Tornei vinti', value: playerStats?.tournamentWins ?? 0, sub: `di ${playerStats?.tournamentsPlayed ?? 0} giocati`, Icon: Trophy, accent: 'amber', contentKey: 'stat-icon-tornei' },
+                                { label: 'Vittorie gara', value: playerStats?.raceWins ?? 0, sub: `di ${playerStats?.racesPlayed ?? 0} gare`, Icon: Flag, accent: 'emerald', contentKey: 'stat-icon-gare' },
+                                { label: 'Podi totali', value: playerStats?.podiums ?? 0, sub: `Podium Rate ${playerStats?.podiumRate ?? 0}%`, Icon: Star, accent: 'blue', contentKey: 'stat-icon-podi' },
+                                { label: 'Punti totali', value: playerStats?.points ?? 0, sub: `Efficienza ${playerStats?.avgEfficiency ?? 0}%`, Icon: BarChart3, accent: 'violet', contentKey: 'stat-icon-punti' },
+                            ].map(({ label, value, sub, Icon, accent, contentKey }) => (
+                                <StatShowcaseCard
+                                    key={label}
+                                    label={label}
+                                    value={value}
+                                    sub={sub}
+                                    Icon={Icon}
+                                    accent={accent}
+                                    contentKey={contentKey}
+                                    imageUrl={contentImages[contentKey]}
+                                    onUploaded={updateContentImage}
+                                />
                             ))}
                         </div>
 

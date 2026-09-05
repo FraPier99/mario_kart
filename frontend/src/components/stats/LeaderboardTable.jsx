@@ -79,11 +79,22 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
         return ''
     }
 
+    // Ring colorato attorno all'avatar per far risaltare il podio (oro/
+    // argento/bronzo) rispetto alle righe normali (ring neutro discreto) —
+    // stessi colori di medalClasses/podiumBg per coerenza visiva con badge
+    // posizione e sfondo riga.
+    const avatarRingStyle = (index) => {
+        if (index === 0) return { boxShadow: '0 0 0 3px #f59e0b, 0 0 16px rgba(245,158,11,0.45)' }
+        if (index === 1) return { boxShadow: '0 0 0 3px #94a3b8, 0 0 12px rgba(148,163,184,0.35)' }
+        if (index === 2) return { boxShadow: '0 0 0 3px #cd7f32, 0 0 12px rgba(205,127,50,0.35)' }
+        return { boxShadow: '0 0 0 2px rgba(255,255,255,0.7)' }
+    }
+
     // L'intera cella giocatore è cliccabile (non solo il testo del nickname):
     // un piccolo testo come unico target era troppo facile da mancare,
     // specialmente su mobile — il problema persisteva anche dopo aver
     // ingrandito leggermente il padding del solo nickname.
-    const PlayerCell = ({ row, charactersUsed, onPlayerClick }) => (
+    const PlayerCell = ({ row, charactersUsed, onPlayerClick, avatarIndex = null }) => (
         <button
             type="button"
             onClick={() => onPlayerClick?.(row)}
@@ -96,6 +107,7 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                     loading="lazy"
                     decoding="async"
                     className="h-14 w-14 rounded-full object-cover shrink-0"
+                    style={avatarIndex != null ? avatarRingStyle(avatarIndex) : undefined}
                 />
             </div>
             <div className="min-w-0">
@@ -145,7 +157,7 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                                     </span>
                                 )}
                             </div>
-                            <PlayerCell row={row} charactersUsed={charactersUsed} onPlayerClick={onPlayerClick} />
+                            <PlayerCell row={row} charactersUsed={charactersUsed} onPlayerClick={onPlayerClick} avatarIndex={absoluteIndex} />
                             <div className="flex items-center justify-between gap-3 text-sm">
                                 <div className="flex flex-col gap-0.5">
                                     {showTournamentWins ? (
@@ -206,7 +218,7 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                                     </td>
                                     <td className="px-5 py-4 text-center align-middle w-[35%]">
                                         <div className="flex justify-center">
-                                            <PlayerCell row={row} charactersUsed={charactersUsed} onPlayerClick={onPlayerClick} />
+                                            <PlayerCell row={row} charactersUsed={charactersUsed} onPlayerClick={onPlayerClick} avatarIndex={absoluteIndex} />
                                         </div>
                                     </td>
                                     <td className="px-5 py-4 text-center align-middle">

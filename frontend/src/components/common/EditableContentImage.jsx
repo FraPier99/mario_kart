@@ -15,7 +15,12 @@ import { contentImagesApi, getApiErrorMessage } from '@/services/apiClient'
 // 'cover' (riempie il riquadro ritagliando gli eccessi — sensato solo con un
 // riquadro poco sensibile al ritaglio, es. un quadrato/4:3 di formato
 // prevedibile, come nella coppia di foto affiancate in /faq).
-const EditableContentImage = ({ contentKey, imageUrl, onUploaded, alt = '', className = '', fit = 'contain' }) => {
+// `fadeEdge`: 'left' | 'right' | 'none' (default) — applica una maschera a
+// gradiente sul lato indicato così l'immagine caricata sfuma nello sfondo
+// della card che la ospita, qualunque esso sia, invece di avere un bordo
+// netto — usato per le immagini decorative "a bleed" (stat card profilo,
+// card torneo) dove l'admin non deve preoccuparsi di pre-processare la foto.
+const EditableContentImage = ({ contentKey, imageUrl, onUploaded, alt = '', className = '', fit = 'contain', fadeEdge = 'none' }) => {
     const { isSuperadmin } = useAuth()
     const [uploading, setUploading] = useState(false)
     const inputRef = useRef(null)
@@ -37,13 +42,19 @@ const EditableContentImage = ({ contentKey, imageUrl, onUploaded, alt = '', clas
         }
     }
 
+    const maskStyle = fadeEdge === 'right'
+        ? { maskImage: 'linear-gradient(to right, transparent, black 55%)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 55%)' }
+        : fadeEdge === 'left'
+            ? { maskImage: 'linear-gradient(to left, transparent, black 55%)', WebkitMaskImage: 'linear-gradient(to left, transparent, black 55%)' }
+            : undefined
+
     return (
         <div className={`group relative overflow-hidden bg-slate-100 dark:bg-muted ${className}`}>
             {imageUrl ? (
                 // `block` toglie lo spazio extra sotto l'immagine che un <img>
                 // inline lascia per default (altrimenti sembrava "non adattarsi"
                 // bene al riquadro).
-                <img src={imageUrl} alt={alt} className={`block h-full w-full object-center ${fit === 'cover' ? 'object-cover' : 'object-contain'}`} />
+                <img src={imageUrl} alt={alt} style={maskStyle} className={`block h-full w-full object-center ${fit === 'cover' ? 'object-cover' : 'object-contain'}`} />
             ) : (
                 <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-slate-100 dark:bg-muted text-slate-400 dark:text-muted-foreground">
                     <ImagePlus size={28} />
