@@ -142,13 +142,13 @@ const PlayerTournamentHistory = ({ playerId }) => {
                                             onUploaded={updateContentImage}
                                             alt=""
                                             fit="cover"
-                                            imageClassName="blur-[1px] brightness-75"
+                                            imageClassName="blur-[0.5px] brightness-90"
                                             className="absolute inset-0 h-full w-full bg-transparent"
                                         />
-                                        <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-slate-900/80 via-slate-900/40 to-slate-900/80" />
+                                        <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-slate-900/65 via-slate-900/20 to-slate-900/65" />
                                     </>
                                 )}
-                                <div className="relative z-10 flex flex-col gap-2.5">
+                                <div className="relative z-10 flex flex-col gap-2.5 **:drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0">
                                         <p title={t.name} className="truncate text-sm font-black text-white">{toTitleCase(t.name)}</p>

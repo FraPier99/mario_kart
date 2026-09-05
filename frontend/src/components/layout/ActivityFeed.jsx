@@ -62,14 +62,14 @@ const ActivityFeed = () => {
     if (events.length === 0) return null
 
     return (
-        <div className="overflow-hidden rounded-[2rem] border-2 border-white/20 bg-slate-900 p-6" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
+        <div className="overflow-hidden rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-6" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
             <div className="mb-4 flex items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
                     <Rss size={18} />
                 </span>
                 <div className="min-w-0">
-                    <p className="font-title text-sm tracking-wide text-white">Attività recenti</p>
-                    <p className="text-xs text-slate-400">Tutte le tue attività in un unico posto</p>
+                    <p className="font-title text-sm tracking-wide text-slate-900 dark:text-foreground">Attività recenti</p>
+                    <p className="text-xs text-slate-500 dark:text-muted-foreground">Tutte le tue attività in un unico posto</p>
                 </div>
             </div>
             <ul className="space-y-1.5">
@@ -77,7 +77,7 @@ const ActivityFeed = () => {
                     <li key={event.id}>
                         <Link
                             to={`/tournaments/${event.tournamentId}`}
-                            className={`flex items-center gap-3 rounded-lg bg-white/5 px-2.5 py-2 transition hover:bg-white/10 ${event.type === 'win' ? 'border-l-2 border-amber-400/70' : ''}`}
+                            className={`flex items-center gap-3 rounded-lg bg-slate-50 dark:bg-white/5 px-2.5 py-2 transition hover:bg-slate-100 dark:hover:bg-white/10 ${event.type === 'win' ? 'border-l-2 border-amber-400/70' : ''}`}
                         >
                             <EventBadge type={event.type} avatar={event.avatar} primary={event.primary} />
                             {/* Niente `truncate`: con 3+ nomi uniti (traguardi raggiunti
@@ -85,10 +85,10 @@ const ActivityFeed = () => {
                                 illeggibile, soprattutto su mobile dove lo spazio orizzontale
                                 è poco. */}
                             <span className="min-w-0 flex-1 break-words capitalize text-xs leading-snug">
-                                {event.primary && <span className="font-black text-white">{event.primary} </span>}
-                                <span className="text-slate-300">{event.secondary}</span>
+                                {event.primary && <span className="font-black text-slate-900 dark:text-foreground">{event.primary} </span>}
+                                <span className="text-slate-500 dark:text-muted-foreground">{event.secondary}</span>
                             </span>
-                            <span className="shrink-0 text-[9px] font-black uppercase tracking-wide text-slate-400">
+                            <span className="shrink-0 text-[9px] font-black uppercase tracking-wide text-slate-400 dark:text-muted-foreground">
                                 {formatEventDate(event.date)}
                             </span>
                         </Link>

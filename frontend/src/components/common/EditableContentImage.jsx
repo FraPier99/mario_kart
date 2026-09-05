@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { useAuth } from '@/context/AuthContext'
 import { compressImage } from '@/lib/imageCompression'
 import { contentImagesApi, getApiErrorMessage } from '@/services/apiClient'
+import { cn } from '@/lib/utils'
 
 // Slot immagine di contenuto statico (es. foto "La Lega" nella pagina /faq):
 // mostra l'immagine se presente, altrimenti un placeholder. Il superadmin
@@ -59,12 +60,21 @@ const EditableContentImage = ({ contentKey, imageUrl, onUploaded, alt = '', clas
     const imageStyle = { ...maskStyle, opacity: imageOpacity }
 
     return (
-        <div className={`group relative overflow-hidden bg-slate-100 dark:bg-muted ${className}`}>
+        // `cn()` (twMerge) invece della semplice concatenazione di stringhe:
+        // quando un consumer passa `absolute`/`bg-transparent` in `className`
+        // per usare questo componente come livello di sfondo full-bleed, una
+        // concatenazione naive lascia `relative`/`bg-slate-100` di base nella
+        // stessa stringa — con specificità identica, chi vince dipende
+        // dall'ordine nel CSS generato (non dall'ordine nella stringa), quindi
+        // "absolute" poteva perdere contro "relative" e il livello immagine
+        // restava nel flusso del layout invece di finire dietro al contenuto
+        // come sfondo assoluto (bug segnalato: l'immagine "spostava" il testo).
+        <div className={cn('group relative overflow-hidden bg-slate-100 dark:bg-muted', className)}>
             {imageUrl ? (
                 // `block` toglie lo spazio extra sotto l'immagine che un <img>
                 // inline lascia per default (altrimenti sembrava "non adattarsi"
                 // bene al riquadro).
-                <img src={imageUrl} alt={alt} style={imageStyle} className={`block h-full w-full object-center ${fit === 'cover' ? 'object-cover' : 'object-contain'} ${imageClassName}`} />
+                <img src={imageUrl} alt={alt} style={imageStyle} className={cn('block h-full w-full object-center', fit === 'cover' ? 'object-cover' : 'object-contain', imageClassName)} />
             ) : (
                 <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-slate-100 dark:bg-muted text-slate-400 dark:text-muted-foreground">
                     <ImagePlus size={28} />

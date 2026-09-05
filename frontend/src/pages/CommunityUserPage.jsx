@@ -131,7 +131,7 @@ const CommunityUserPage = () => {
                 {/* Profile card — compatta (max-w-md), non max-w-3xl come il
                     resto della pagina: il contenuto è intrinsecamente stretto. */}
                 <div
-                    className="relative mx-auto max-w-md overflow-hidden rounded-[2rem] border-2 border-white/15 bg-slate-900 p-6"
+                    className="relative mx-auto max-w-md overflow-hidden rounded-[2rem] border-2 border-slate-200 dark:border-white/15 bg-white dark:bg-slate-900 p-6"
                     style={(() => {
                         const tierAccent = TIER_ACCENT_COLORS[(viewedUserIsSuperadmin ? 'leggenda' : bestBadge?.tier)]
                         return tierAccent

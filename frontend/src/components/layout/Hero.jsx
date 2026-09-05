@@ -98,19 +98,19 @@ const Hero = () => {
     // proprie statistiche/tornei — qui gli si spiega la situazione invece.
     if (user && !isSuperadmin && !player) {
         return (
-            <div className="overflow-hidden rounded-[2rem] border-2 border-blue-500/30 bg-blue-950 p-6 md:p-8">
+            <div className="overflow-hidden rounded-[2rem] border-2 border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-950 p-6 md:p-8">
                 <div className="flex flex-col items-center gap-3 text-center md:flex-row md:items-start md:text-left">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-500/15">
-                        <UserPlus size={24} className="text-blue-300" />
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-500/15">
+                        <UserPlus size={24} className="text-blue-600 dark:text-blue-300" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-xs font-black uppercase tracking-widest text-blue-300">Benvenuto in Lega Kart</p>
-                        <h2 className="mt-1 text-xl font-black text-white">Il tuo account non è ancora collegato a un giocatore</h2>
-                        <p className="mt-1.5 text-sm text-slate-300">
+                        <p className="text-xs font-black uppercase tracking-widest text-blue-700 dark:text-blue-300">Benvenuto in Lega Kart</p>
+                        <h2 className="mt-1 text-xl font-black text-slate-900 dark:text-foreground">Il tuo account non è ancora collegato a un giocatore</h2>
+                        <p className="mt-1.5 text-sm text-slate-600 dark:text-muted-foreground">
                             Finché un admin non ti collega a un profilo giocatore non vedrai tornei, statistiche o badge personali — puoi comunque esplorare classifiche, tornei e regolamento nel frattempo.
                         </p>
                         <div className="mt-3 flex flex-wrap justify-center gap-2 md:justify-start">
-                            <Link to="/history" className="font-title rounded-xl border-2 border-blue-500/40 bg-transparent px-4 py-2 text-[10px] tracking-wide text-blue-300 transition hover:bg-blue-500/10">
+                            <Link to="/history" className="font-title rounded-xl border-2 border-blue-300 dark:border-blue-500/40 bg-white dark:bg-transparent px-4 py-2 text-[10px] tracking-wide text-blue-700 dark:text-blue-300 transition hover:bg-blue-100 dark:hover:bg-blue-500/10">
                                 Sfoglia i tornei
                             </Link>
                             <Link to="/faq" className="font-title rounded-xl bg-blue-600 px-4 py-2 text-[10px] tracking-wide text-white transition hover:bg-blue-500">
@@ -123,43 +123,37 @@ const Hero = () => {
         )
     }
 
-    // Sfondo fisso, indipendente dal tema del sito e dall'accento profilo
-    // dell'utente collegato — questo pannello vive dentro la dashboard Home,
-    // già scura a prescindere dal tema (vedi Home.jsx), quindi non deve
-    // seguire light/dark né il colore del personaggio preferito (creava un
-    // riquadro quasi bianco o dai colori più disparati dentro un contenitore
-    // nero, segnalato dall'utente).
+    // Pannello a tema del sito (light/dark), non più forzato scuro — non ha
+    // più un'immagine di sfondo dietro (rimossa), quindi non c'è più motivo
+    // di restare un'isola scura indipendente dal tema come le card con foto.
     return (
-        <div
-            className="overflow-hidden rounded-[2rem] border-2 border-white/20 transition-all duration-500"
-            style={{ background: 'linear-gradient(135deg, rgba(30,41,59,1), rgba(15,23,42,1))', boxShadow: 'var(--circuit-shadow-lg)' }}
-        >
+        <div className="overflow-hidden rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
             <div className="flex items-center gap-3 px-6 pt-5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-400">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400">
                     <Trophy size={18} />
                 </span>
                 <div className="min-w-0">
-                    <p className="font-title text-sm tracking-wide text-white">Ultimo torneo</p>
-                    <p className="text-xs text-slate-400">Rivivi i momenti salienti e scopri la classifica</p>
+                    <p className="font-title text-sm tracking-wide text-slate-900 dark:text-foreground">Ultimo torneo</p>
+                    <p className="text-xs text-slate-500 dark:text-muted-foreground">Rivivi i momenti salienti e scopri la classifica</p>
                 </div>
             </div>
 
             <div className="p-6 pt-3">
                 {lastChampion ? (
-                    <div className="overflow-hidden rounded-3xl border border-white/10 bg-slate-900"
+                    <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted"
                         style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                         {/* Accento oro ridotto a barra superiore — non più riempimento
                             pieno dietro tutto il blocco. */}
                         <div className="h-1 bg-linear-to-r from-circuit-gold/30 via-circuit-gold to-circuit-gold/30" />
 
-                        <div className="bg-slate-900 p-5 md:p-6">
+                        <div className="p-5 md:p-6">
                             {/* ── 1. Torneo ── */}
-                            <p title={lastChampionTournament.name} className="text-2xl md:text-3xl font-black text-white leading-tight">{formatTournamentTitle(lastChampionTournament.name, 60)}</p>
+                            <p title={lastChampionTournament.name} className="text-2xl md:text-3xl font-black text-slate-900 dark:text-foreground leading-tight">{formatTournamentTitle(lastChampionTournament.name, 60)}</p>
 
                             {/* ── 2. Vincitore — focal point della card, subito dopo il titolo.
                                 Riga semplice separata da un divider sottile invece di una
                                 mini-card con sfondo proprio ("incollata sopra" il genitore). ── */}
-                            <div className="mt-4 flex items-center gap-4 border-t border-white/15 pt-4">
+                            <div className="mt-4 flex items-center gap-4 border-t border-slate-200 dark:border-border pt-4">
                                 {lastChampionBadge && TIER_BADGE_IMAGES[lastChampionBadge.tier] ? (
                                     <img
                                         src={TIER_BADGE_IMAGES[lastChampionBadge.tier]}
@@ -180,9 +174,9 @@ const Hero = () => {
                                     </div>
                                 )}
                                 <div className="min-w-0">
-                                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-300">Vinto da</p>
-                                    <p className="truncate text-xl font-black capitalize text-white leading-tight">{lastChampion.nickname}</p>
-                                    <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-black text-circuit-gold">
+                                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Vinto da</p>
+                                    <p className="truncate text-xl font-black capitalize text-slate-900 dark:text-foreground leading-tight">{lastChampion.nickname}</p>
+                                    <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-black text-amber-600 dark:text-circuit-gold">
                                         {lastChampionBadge?.label ?? <><Trophy size={11} /></>}
                                         {(lastChampionStats?.tournamentWins ?? 1) > 1 ? ` · ${lastChampionStats.tournamentWins}° titolo` : ' · 1° titolo'}
                                     </span>
@@ -195,35 +189,35 @@ const Hero = () => {
                             <div className="mt-4">
                                 <Link
                                     to={`/tournaments/${lastChampionTournament.id}`}
-                                    className="font-title flex w-full items-center justify-center gap-1.5 rounded-xl border-2 border-circuit-gold/40 bg-slate-800 px-3 py-2.5 text-[10px] tracking-widest text-amber-200 transition active:translate-y-px hover:bg-slate-700"
+                                    className="font-title flex w-full items-center justify-center gap-1.5 rounded-xl border-2 border-amber-300 dark:border-circuit-gold/40 bg-white dark:bg-slate-800 px-3 py-2.5 text-[10px] tracking-widest text-amber-700 dark:text-amber-200 transition active:translate-y-px hover:bg-amber-50 dark:hover:bg-slate-700"
                                 >
                                     Vai al torneo <ArrowRight size={13} />
                                 </Link>
                             </div>
 
                             {/* ── 4. Riga compatta modalità/partecipanti/gare/data ── */}
-                            <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-300">
+                            <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-500 dark:text-muted-foreground">
                                 {lastChampionGame && (
-                                    <span className="inline-flex items-center gap-1"><Gamepad2 size={11} className="text-amber-400/80" /> <span className="capitalize font-semibold text-slate-200">{lastChampionGame.name}</span></span>
+                                    <span className="inline-flex items-center gap-1"><Gamepad2 size={11} className="text-amber-500/80" /> <span className="capitalize font-semibold text-slate-700 dark:text-foreground">{lastChampionGame.name}</span></span>
                                 )}
                                 <span className="text-amber-400/40">·</span>
-                                <span className="font-medium text-slate-200">{lastChampionFormatLabel}</span>
+                                <span className="font-medium text-slate-700 dark:text-foreground">{lastChampionFormatLabel}</span>
                                 {lastChampionParticipants > 0 && (
                                     <>
                                         <span className="text-amber-400/40">·</span>
-                                        <span className="inline-flex items-center gap-1"><Users2 size={11} className="text-amber-400/80" /> {lastChampionParticipants}</span>
+                                        <span className="inline-flex items-center gap-1"><Users2 size={11} className="text-amber-500/80" /> {lastChampionParticipants}</span>
                                     </>
                                 )}
                                 {lastChampionRaceCount > 0 && (
                                     <>
                                         <span className="text-amber-400/40">·</span>
-                                        <span className="inline-flex items-center gap-1"><Flag size={11} className="text-amber-400/80" /> {lastChampionRaceCount} gare</span>
+                                        <span className="inline-flex items-center gap-1"><Flag size={11} className="text-amber-500/80" /> {lastChampionRaceCount} gare</span>
                                     </>
                                 )}
                                 {lastChampionDateLabel && (
                                     <>
                                         <span className="text-amber-400/40">·</span>
-                                        <span className="inline-flex items-center gap-1"><Calendar size={11} className="text-amber-400/80" /> {lastChampionDateLabel}</span>
+                                        <span className="inline-flex items-center gap-1"><Calendar size={11} className="text-amber-500/80" /> {lastChampionDateLabel}</span>
                                     </>
                                 )}
                             </div>
@@ -232,12 +226,12 @@ const Hero = () => {
                                 posto graficamente più marcato. ── */}
                             {lastChampionPodium.length > 0 && (
                                 <div className="mt-4">
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-amber-400/70">Podio finale</p>
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-amber-600/70 dark:text-amber-400/60">Podio finale</p>
                                     <div className="mt-1.5 grid grid-cols-1 gap-2 sm:grid-cols-3">
                                         {lastChampionPodium.map((standing, idx) => (
                                             <div
                                                 key={standing.playerId}
-                                                className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 ${idx === 0 ? 'bg-amber-500/15 ring-1 ring-inset ring-amber-400/50' : 'bg-slate-800'}`}
+                                                className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 ${idx === 0 ? 'bg-amber-50 dark:bg-amber-500/15 ring-1 ring-inset ring-amber-300 dark:ring-amber-400/50' : 'bg-white dark:bg-slate-800'}`}
                                             >
                                                 <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-black ${idx === 0 ? 'bg-amber-400 text-amber-950' : idx === 1 ? 'bg-slate-300 text-slate-700' : 'bg-orange-400 text-orange-950'}`}>
                                                     {idx + 1}
@@ -249,9 +243,9 @@ const Hero = () => {
                                                     decoding="async"
                                                     className={`shrink-0 rounded-full object-cover ${idx === 0 ? 'h-10 w-10' : 'h-9 w-9'}`}
                                                 />
-                                                <span className="min-w-0 flex-1 truncate text-sm font-bold capitalize text-white">{standing.nickname}</span>
+                                                <span className="min-w-0 flex-1 truncate text-sm font-bold capitalize text-slate-800 dark:text-foreground">{standing.nickname}</span>
                                                 {standing.points != null && (
-                                                    <span className="text-xs font-black text-amber-300">{standing.points}pt</span>
+                                                    <span className="text-xs font-black text-amber-600/80 dark:text-amber-400/70">{standing.points}pt</span>
                                                 )}
                                             </div>
                                         ))}
@@ -261,11 +255,9 @@ const Hero = () => {
                         </div>
 
                         {/* ── 6. Dettagli torneo — personaggi usati + premi + traguardi,
-                            unico capitolo collassabile (variante scura, coerente col
-                            resto del pannello). ── */}
+                            unico capitolo collassabile. ── */}
                         <div className="p-5 pt-4 md:p-6 md:pt-4">
                             <CollapsibleSection
-                                dark
                                 title="Dettagli torneo"
                                 subtitle="Personaggi usati, premi e traguardi"
                                 icon={<Sparkles size={16} />}
@@ -273,22 +265,22 @@ const Hero = () => {
                             >
                                 {lastChampionCharacters.length > 0 && (
                                     <div>
-                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Personaggi usati dal vincitore</p>
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">Personaggi usati dal vincitore</p>
                                         <div className="mt-1.5 flex flex-wrap gap-2">
                                             {lastChampionCharacters.slice(0, 8).map((character) => (
-                                                <div key={character.id} className="flex items-center gap-1.5 rounded-full bg-slate-700/60 py-1 pl-1 pr-3">
-                                                    <div className="h-6 w-6 shrink-0 overflow-hidden rounded-full border border-slate-600 bg-slate-700/60">
+                                                <div key={character.id} className="flex items-center gap-1.5 rounded-full bg-slate-100 dark:bg-muted py-1 pl-1 pr-3">
+                                                    <div className="h-6 w-6 shrink-0 overflow-hidden rounded-full border border-white dark:border-card bg-slate-100 dark:bg-slate-700/60">
                                                         {character.img_url ? (
                                                             <img src={character.img_url} alt={character.name} className="h-full w-full object-cover" />
                                                         ) : (
                                                             <div className="flex h-full w-full items-center justify-center text-[10px] font-black text-slate-400">{character.name.charAt(0).toUpperCase()}</div>
                                                         )}
                                                     </div>
-                                                    <span className="max-w-24 truncate text-[10px] font-bold capitalize text-slate-200">{character.name}</span>
+                                                    <span className="max-w-24 truncate text-[10px] font-bold capitalize text-slate-700 dark:text-foreground">{character.name}</span>
                                                 </div>
                                             ))}
                                             {lastChampionCharacters.length > 8 && (
-                                                <div className="flex items-center rounded-full border border-dashed border-slate-600 px-3 py-1 text-[10px] font-black text-slate-400">
+                                                <div className="flex items-center rounded-full border border-dashed border-slate-300 dark:border-slate-600 px-3 py-1 text-[10px] font-black text-slate-500 dark:text-muted-foreground">
                                                     +{lastChampionCharacters.length - 8} altri
                                                 </div>
                                             )}
@@ -305,11 +297,11 @@ const Hero = () => {
                         </div>
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-slate-600 bg-slate-800 p-5 py-8 text-center">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-700">
+                    <div className="flex flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-muted p-5 py-8 text-center">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
                             <Trophy size={24} className="text-slate-400" />
                         </div>
-                        <p className="text-xs text-slate-400">Nessun campione ancora</p>
+                        <p className="text-xs text-slate-500 dark:text-muted-foreground">Nessun campione ancora</p>
                     </div>
                 )}
             </div>

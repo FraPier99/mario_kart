@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Check, ChevronDown, Image as ImageIcon, PenLine, Search, Upload, X, Clock, AlertTriangle, Zap, Trophy, Flag, BarChart3, Star, Crown } from 'lucide-react'
+import { Check, ChevronDown, Image as ImageIcon, PenLine, Search, Upload, X, Clock, AlertTriangle, Zap, Trophy, Flag, BarChart3, Star } from 'lucide-react'
 import PowerCard from '@/components/cards/PowerCard'
 import { toast } from 'sonner'
 import { toast as soundToast } from '@/lib/soundToast'
@@ -13,7 +13,6 @@ import ConfirmModal from '@/components/common/ConfirmModal'
 import ApiBanner from '@/components/common/ApiBanner'
 import { SkeletonRows } from '@/components/common/Skeleton'
 import PlayerTournamentHistory from '@/components/community/PlayerTournamentHistory'
-import PlayerBadge from '@/components/community/PlayerBadge'
 import ProfileHeader from '@/components/community/ProfileHeader'
 import { pickBestBadge, TIER_ACCENT_COLORS } from '@/lib/playerBadges'
 import StatShowcaseCard from '@/components/common/StatShowcaseCard'
@@ -343,14 +342,7 @@ const Dashboard = () => {
         return () => { active = false }
     }, [player])
     const bestBadge = useMemo(() => pickBestBadge(badges), [badges])
-    // Sfondo "foto circuito" per la card header profilo, oggi piatta —
-    // casuale tra tutti i circuiti (non legata a un torneo specifico),
-    // stabile per la sessione del browser (vedi lib/circuitBackground.js).
     const [selectedGameId, setSelectedGameId] = useState('')
-    const activeBadge = useMemo(() => {
-        if (!selectedGameId) return bestBadge
-        return badges.find((b) => b.game_id === Number(selectedGameId)) ?? bestBadge
-    }, [badges, selectedGameId, bestBadge])
     const gameStats = useMemo(() => {
         if (!selectedGameId || !player) return null
         const leaderboard = getLeaderboardByGame(selectedGameId)
@@ -606,7 +598,7 @@ const Dashboard = () => {
                     profilo in Navbar — niente più bottone "Esci" duplicato
                     qui, niente più nome/cognome (ridondante col nickname). */}
                 <div
-                    className="relative mx-auto max-w-md overflow-hidden rounded-[2rem] border-2 border-white/15 bg-slate-900 p-6"
+                    className="relative mx-auto max-w-md overflow-hidden rounded-[2rem] border-2 border-slate-200 dark:border-white/15 bg-white dark:bg-slate-900 p-6"
                     style={(() => {
                         const tierAccent = TIER_ACCENT_COLORS[(isSuperadmin ? 'leggenda' : bestBadge?.tier)]
                         return tierAccent
@@ -840,81 +832,55 @@ const Dashboard = () => {
                 {profileTab === 'statistiche' && (
                     <div className={`rounded-[2rem] border-2 p-6 ${goldBorder} ${goldBg}`} style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                         <div className="space-y-4">
-                        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                            {[
-                                { label: 'Tornei vinti', value: playerStats?.tournamentWins ?? 0, sub: `di ${playerStats?.tournamentsPlayed ?? 0} giocati`, Icon: Trophy, accent: 'amber', contentKey: 'stat-icon-tornei' },
-                                { label: 'Vittorie gara', value: playerStats?.raceWins ?? 0, sub: `di ${playerStats?.racesPlayed ?? 0} gare`, Icon: Flag, accent: 'emerald', contentKey: 'stat-icon-gare' },
-                                { label: 'Podi totali', value: playerStats?.podiums ?? 0, sub: `Podium Rate ${playerStats?.podiumRate ?? 0}%`, Icon: Star, accent: 'blue', contentKey: 'stat-icon-podi' },
-                                { label: 'Punti totali', value: playerStats?.points ?? 0, sub: `Efficienza ${playerStats?.avgEfficiency ?? 0}%`, Icon: BarChart3, accent: 'violet', contentKey: 'stat-icon-punti' },
-                            ].map(({ label, value, sub, Icon, accent, contentKey }) => (
-                                <StatShowcaseCard
-                                    key={label}
-                                    label={label}
-                                    value={value}
-                                    sub={sub}
-                                    Icon={Icon}
-                                    accent={accent}
-                                    contentKey={contentKey}
-                                    imageUrl={contentImages[contentKey]}
-                                    onUploaded={updateContentImage}
-                                />
-                            ))}
+                        {/* Un'unica sezione statistiche (select "Tutti i giochi" +
+                            aggregato/per-game), non più duplicata con una riga fissa
+                            sempre-aggregata sopra — stesso pattern di
+                            CommunityUserPage.jsx (profilo pubblico), che mostrava gli
+                            stessi 4 numeri una volta sola invece di due. */}
+                        <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
+                            <div>
+                                <p className="font-title text-[10px] tracking-wide text-emerald-600 dark:text-emerald-400">Statistiche</p>
+                                <h2 className="text-2xl font-black text-slate-900 dark:text-foreground">Andamento</h2>
+                            </div>
+                            <select
+                                value={selectedGameId}
+                                onChange={e => setSelectedGameId(e.target.value)}
+                                className="font-title rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2 text-[10px] tracking-wide text-slate-700 dark:text-foreground outline-none focus:border-emerald-400"
+                            >
+                                <option value="">Tutti i giochi</option>
+                                {games.map((g) => (
+                                    <option key={g.id} value={g.id}>{g.name}</option>
+                                ))}
+                            </select>
                         </div>
 
-                        {/* Statistiche per gioco — stesso pattern di "Tornei disputati":
-                            select con "Tutti i giochi" (aggregato, playerStats) di
-                            default invece di uno stato vuoto "seleziona un gioco". */}
-                        <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-5" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                                <p className="font-title text-[9px] tracking-wide text-slate-400">Statistiche per gioco</p>
-                                <div className="flex flex-wrap items-center gap-2">
-                                    {activeBadge && <PlayerBadge badge={activeBadge} size="sm" />}
-                                    <select value={selectedGameId} onChange={e => setSelectedGameId(e.target.value)}
-                                        className="rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2 font-title text-[9px] tracking-wide text-slate-700 dark:text-foreground outline-none focus:border-emerald-400">
-                                        <option value="">Tutti i giochi</option>
-                                        {games.map((g) => (
-                                            <option key={g.id} value={g.id}>{g.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                        {selectedGameId && !gameStats ? (
+                            <p className="text-xs text-slate-400">Nessuna statistica per questo gioco.</p>
+                        ) : (
+                            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                                {(() => {
+                                    const activeStats = selectedGameId ? gameStats : playerStats
+                                    return [
+                                        { label: 'Tornei vinti', value: activeStats?.tournamentWins ?? 0, sub: `di ${activeStats?.tournamentsPlayed ?? 0} giocati`, Icon: Trophy, accent: 'amber', contentKey: 'stat-icon-tornei' },
+                                        { label: 'Vittorie gara', value: activeStats?.raceWins ?? 0, sub: `Win Rate ${activeStats?.winRate ?? 0}%`, Icon: Flag, accent: 'emerald', contentKey: 'stat-icon-gare' },
+                                        { label: 'Podi totali', value: activeStats?.podiums ?? 0, sub: `Podium Rate ${activeStats?.podiumRate ?? 0}%`, Icon: Star, accent: 'blue', contentKey: 'stat-icon-podi' },
+                                        { label: 'Punti totali', value: activeStats?.points ?? 0, sub: `Efficienza ${activeStats?.avgEfficiency ?? 0}%`, Icon: BarChart3, accent: 'violet', contentKey: 'stat-icon-punti' },
+                                    ]
+                                })().map(({ label, value, sub, Icon, accent, contentKey }) => (
+                                    <StatShowcaseCard
+                                        key={label}
+                                        label={label}
+                                        value={value}
+                                        sub={sub}
+                                        Icon={Icon}
+                                        accent={accent}
+                                        contentKey={contentKey}
+                                        imageUrl={contentImages[contentKey]}
+                                        onUploaded={updateContentImage}
+                                    />
+                                ))}
                             </div>
-                            {selectedGameId && !gameStats ? (
-                                <p className="text-xs text-slate-400">Nessuna statistica per questo gioco.</p>
-                            ) : (
-                                <div className="space-y-4">
-                                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                                        {(selectedGameId ? [
-                                            { label: 'Posizione', value: `#${gameStats.rank}`, sub: `di ${gameStats.totalPlayers}`, iconCls: gameStats.rank === 1 ? 'bg-amber-400/25 text-amber-600' : 'bg-slate-500/10 text-slate-600', Icon: Trophy },
-                                            { label: 'Tornei vinti', value: gameStats.tournamentWins, sub: `di ${gameStats.tournamentsPlayed} giocati`, iconCls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400', Icon: Crown },
-                                            { label: 'Podi totali', value: gameStats.podiums, sub: `Podium Rate ${gameStats.podiumRate}%`, iconCls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', Icon: Star },
-                                            { label: 'Vittorie gara', value: gameStats.raceWins, sub: `Win Rate ${gameStats.winRate}%`, iconCls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', Icon: Flag },
-                                        ] : [
-                                            { label: 'Tornei vinti', value: playerStats?.tournamentWins ?? 0, sub: `di ${playerStats?.tournamentsPlayed ?? 0} giocati`, iconCls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400', Icon: Crown },
-                                            { label: 'Vittorie gara', value: playerStats?.raceWins ?? 0, sub: `Win Rate ${playerStats?.winRate ?? 0}%`, iconCls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', Icon: Flag },
-                                            { label: 'Podi totali', value: playerStats?.podiums ?? 0, sub: `Podium Rate ${playerStats?.podiumRate ?? 0}%`, iconCls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', Icon: Star },
-                                            { label: 'Punti totali', value: playerStats?.points ?? 0, sub: `Efficienza ${playerStats?.avgEfficiency ?? 0}%`, iconCls: 'bg-violet-500/10 text-violet-600 dark:text-violet-400', Icon: BarChart3 },
-                                        ]).map(({ label, value, sub, iconCls, Icon }) => (
-                                            <div key={label} className="flex items-start gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-4" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                                                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconCls}`}>
-                                                    <Icon size={16} />
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <p className="font-title text-[9px] tracking-wide text-slate-400">{label}</p>
-                                                    <p className="mt-1 font-title text-2xl leading-none text-slate-900 dark:text-foreground">{value}</p>
-                                                    <p className="mt-1 text-[10px] leading-snug text-slate-500 dark:text-muted-foreground">{sub}</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="flex flex-wrap gap-2 text-[10px] text-slate-500 dark:text-muted-foreground">
-                                        {selectedGameId && <span className="rounded-lg bg-slate-100 dark:bg-muted px-2.5 py-1">Punti totali: {gameStats.points}</span>}
-                                        <span className="rounded-lg bg-slate-100 dark:bg-muted px-2.5 py-1">Gare giocate: {(selectedGameId ? gameStats.racesPlayed : playerStats?.racesPlayed) ?? 0}</span>
-                                        <span className="rounded-lg bg-slate-100 dark:bg-muted px-2.5 py-1">Placement Index: {((selectedGameId ? gameStats.placementIndex : playerStats?.placementIndex))?.toFixed(2) ?? '—'}</span>
-                                        {selectedGameId && <span className="rounded-lg bg-slate-100 dark:bg-muted px-2.5 py-1">Efficienza: {gameStats.avgEfficiency}%</span>}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                        )}
 
                         {player && <PlayerTournamentHistory playerId={player.id} />}
 
