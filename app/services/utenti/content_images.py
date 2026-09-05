@@ -20,6 +20,17 @@ def get_content_image(db: Session, key: str):
     return db.query(SiteContentImage).filter(SiteContentImage.key == key).first()
 
 
+def delete_content_image(db: Session, key: str) -> bool:
+    from app.models import SiteContentImage
+
+    row = db.query(SiteContentImage).filter(SiteContentImage.key == key).first()
+    if not row:
+        return False
+    db.delete(row)
+    db.commit()
+    return True
+
+
 def upsert_content_image(db: Session, key: str, image_data: str, user_id: int):
     from app.core.image_optim import optimize_image_data_url
     from app.models import SiteContentImage

@@ -601,7 +601,7 @@ const Dashboard = () => {
                     profilo in Navbar — niente più bottone "Esci" duplicato
                     qui, niente più nome/cognome (ridondante col nickname). */}
                 <div
-                    className="relative mx-auto max-w-md overflow-hidden rounded-[2rem] border-2 border-slate-200 dark:border-white/15 bg-white dark:bg-slate-900 p-6"
+                    className="relative mx-auto max-w-md overflow-hidden rounded-[2rem] border-2 border-slate-200 dark:border-white/15 bg-white/85 dark:bg-slate-900/85 backdrop-blur-sm p-6"
                     style={(() => {
                         const tierAccent = TIER_ACCENT_COLORS[(isSuperadmin ? 'leggenda' : bestBadge?.tier)]
                         return tierAccent

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Upload, ImagePlus } from 'lucide-react'
+import { Upload, ImagePlus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/context/AuthContext'
 import { compressImage } from '@/lib/imageCompression'
@@ -33,6 +33,7 @@ import { cn } from '@/lib/utils'
 const EditableContentImage = ({ contentKey, imageUrl, onUploaded, alt = '', className = '', fit = 'contain', fadeEdge = 'none', imageOpacity = 1, imageClassName = '' }) => {
     const { isSuperadmin } = useAuth()
     const [uploading, setUploading] = useState(false)
+    const [removing, setRemoving] = useState(false)
     const inputRef = useRef(null)
 
     const handleFile = async (e) => {
@@ -49,6 +50,21 @@ const EditableContentImage = ({ contentKey, imageUrl, onUploaded, alt = '', clas
             toast.error('Caricamento fallito', { description: getApiErrorMessage(error) })
         } finally {
             setUploading(false)
+        }
+    }
+
+    const handleRemove = async (e) => {
+        e.stopPropagation()
+        if (!window.confirm('Rimuovere questa immagine?')) return
+        setRemoving(true)
+        try {
+            await contentImagesApi.remove(contentKey)
+            onUploaded?.({ key: contentKey, image_url: null })
+            toast.success('Immagine rimossa')
+        } catch (error) {
+            toast.error('Rimozione fallita', { description: getApiErrorMessage(error) })
+        } finally {
+            setRemoving(false)
         }
     }
 
@@ -87,7 +103,7 @@ const EditableContentImage = ({ contentKey, imageUrl, onUploaded, alt = '', clas
                     <button
                         type="button"
                         onClick={() => inputRef.current?.click()}
-                        disabled={uploading}
+                        disabled={uploading || removing}
                         className="absolute inset-0 flex items-center justify-center gap-2 bg-black/0 text-transparent transition group-hover:bg-black/50 group-hover:text-white disabled:cursor-wait"
                     >
                         <Upload size={18} />
@@ -95,6 +111,20 @@ const EditableContentImage = ({ contentKey, imageUrl, onUploaded, alt = '', clas
                             {uploading ? 'Caricamento…' : imageUrl ? 'Sostituisci' : 'Carica immagine'}
                         </span>
                     </button>
+                    {imageUrl && (
+                        // Pulsante di rimozione separato dal click "sostituisci" a
+                        // piena card — prima non c'era alcun modo di tornare allo
+                        // stato "nessuna immagine" una volta caricata una foto.
+                        <button
+                            type="button"
+                            onClick={handleRemove}
+                            disabled={uploading || removing}
+                            title="Rimuovi immagine"
+                            className="absolute right-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-md bg-black/60 text-white opacity-0 transition group-hover:opacity-100 hover:bg-rose-600 disabled:cursor-wait"
+                        >
+                            <Trash2 size={12} />
+                        </button>
+                    )}
                     <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
                 </>
             )}

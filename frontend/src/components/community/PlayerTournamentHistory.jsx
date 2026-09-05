@@ -81,7 +81,7 @@ const PlayerTournamentHistory = ({ playerId }) => {
     if (myTournaments.length === 0) return null
 
     return (
-        <div className="rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-4 sm:p-5" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+        <div className="rounded-2xl border-2 border-slate-200 dark:border-border bg-white/85 dark:bg-card/85 backdrop-blur-sm p-4 sm:p-5" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                     <Trophy size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -131,7 +131,7 @@ const PlayerTournamentHistory = ({ playerId }) => {
                                 className={
                                     hasImage
                                         ? `relative flex flex-col gap-2.5 overflow-hidden rounded-xl bg-slate-900 p-3.5 transition hover:brightness-110 ${borderCls}`
-                                        : `relative flex flex-col gap-2.5 overflow-hidden rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card p-3.5 transition hover:brightness-95 dark:hover:brightness-110 ${borderCls}`
+                                        : `relative flex flex-col gap-2.5 overflow-hidden rounded-xl border border-slate-200 dark:border-border bg-white/85 dark:bg-card/85 backdrop-blur-sm p-3.5 transition hover:brightness-95 dark:hover:brightness-110 ${borderCls}`
                                 }
                             >
                                 {/* Composizione a 3 livelli SOLO quando c'è un'immagine: 1)
@@ -164,7 +164,7 @@ const PlayerTournamentHistory = ({ playerId }) => {
                                         className="absolute right-2 top-2 h-8 w-8 rounded-lg"
                                     />
                                 ) : null}
-                                <div className={`relative z-10 flex flex-col gap-2.5 ${hasImage ? '**:drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]' : ''}`}>
+                                <div className="relative z-10 flex flex-col gap-2.5">
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0">
                                         <p title={t.name} className={`truncate text-sm font-black ${hasImage ? 'text-white' : 'text-slate-900 dark:text-foreground'}`}>{toTitleCase(t.name)}</p>

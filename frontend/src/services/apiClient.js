@@ -261,6 +261,7 @@ export const statsApi = {
 export const contentImagesApi = {
     list: () => _get('/content-images'),
     upload: (key, imageData) => _put(`/content-images/${key}`, { image_data: imageData }),
+    remove: (key) => _delete(`/content-images/${key}`),
 }
 
 export const authStorage = {

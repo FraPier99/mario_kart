@@ -78,7 +78,7 @@ const ActivityFeed = () => {
 
     return (
         <div
-            className={`relative overflow-hidden rounded-[2rem] border-2 p-6 ${hasBg ? 'border-white/20 bg-slate-900' : 'border-slate-200 dark:border-border bg-white dark:bg-card'}`}
+            className={`relative overflow-hidden rounded-[2rem] border-2 p-6 ${hasBg ? 'border-white/20 bg-slate-900' : 'border-slate-200 dark:border-border bg-white/85 dark:bg-card/85 backdrop-blur-sm'}`}
             style={{ boxShadow: 'var(--circuit-shadow-lg)' }}
         >
             {hasBg && (

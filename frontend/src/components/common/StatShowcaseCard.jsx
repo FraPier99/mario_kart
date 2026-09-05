@@ -45,7 +45,7 @@ const StatShowcaseCard = ({ label, value, sub, Icon, accent = 'amber', contentKe
             className={
                 hasImage
                     ? `relative flex min-h-26 items-center overflow-hidden rounded-2xl border-2 bg-slate-900 ${border}`
-                    : 'relative flex min-h-26 items-center overflow-hidden rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card'
+                    : 'relative flex min-h-26 items-center overflow-hidden rounded-2xl border-2 border-slate-200 dark:border-border bg-white/85 dark:bg-card/85 backdrop-blur-sm'
             }
             style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
         >

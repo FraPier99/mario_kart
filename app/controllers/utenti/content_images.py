@@ -9,6 +9,7 @@ from app.controllers.utenti.schemas.content_images import (
     UploadContentImagePayload,
 )
 from app.services.utenti.content_images import (
+    delete_content_image,
     get_content_image,
     list_content_images,
     upsert_content_image,
@@ -51,3 +52,12 @@ def upload_image(
 ):
     row = upsert_content_image(db, key, payload.image_data, current_user.id)
     return {"key": row.key, "image_url": _image_url(row.key, row.image_data)}
+
+
+@router.delete("/{key}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_image(
+    key: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_roles("superadmin")),
+):
+    delete_content_image(db, key)
