@@ -126,9 +126,22 @@ const PlayerTournamentHistory = ({ playerId }) => {
                             <Link
                                 key={t.id}
                                 to={`/tournaments/${t.id}`}
-                                className={`relative flex overflow-hidden rounded-xl bg-slate-900 transition hover:brightness-110 ${borderCls}`}
+                                className={`relative flex flex-col gap-2.5 overflow-hidden rounded-xl bg-slate-900 p-3.5 transition hover:brightness-110 ${borderCls}`}
                             >
-                                <div className="relative z-10 flex min-w-0 flex-1 flex-col gap-2.5 p-3.5">
+                                {(imageUrl || isSuperadmin) && (
+                                    <>
+                                        <EditableContentImage
+                                            contentKey={imageContentKey}
+                                            imageUrl={imageUrl}
+                                            onUploaded={updateContentImage}
+                                            alt=""
+                                            fit="cover"
+                                            className="absolute inset-0 h-full w-full bg-transparent"
+                                        />
+                                        <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-black/55 via-black/70 to-black/85" />
+                                    </>
+                                )}
+                                <div className="relative z-10 flex flex-col gap-2.5">
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0">
                                         <p title={t.name} className="truncate text-sm font-black text-white">{toTitleCase(t.name)}</p>
@@ -152,19 +165,6 @@ const PlayerTournamentHistory = ({ playerId }) => {
                                     </div>
                                 )}
                                 </div>
-                                {(imageUrl || isSuperadmin) && (
-                                    <div className="relative z-10 hidden w-24 shrink-0 sm:block" onClick={(e) => e.preventDefault()}>
-                                        <EditableContentImage
-                                            contentKey={imageContentKey}
-                                            imageUrl={imageUrl}
-                                            onUploaded={updateContentImage}
-                                            alt=""
-                                            fit="cover"
-                                            fadeEdge="left"
-                                            className="h-full w-full bg-transparent"
-                                        />
-                                    </div>
-                                )}
                             </Link>
                         )
                     })}

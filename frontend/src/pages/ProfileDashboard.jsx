@@ -861,7 +861,9 @@ const Dashboard = () => {
                             ))}
                         </div>
 
-                        {/* Statistiche per gioco */}
+                        {/* Statistiche per gioco — stesso pattern di "Tornei disputati":
+                            select con "Tutti i giochi" (aggregato, playerStats) di
+                            default invece di uno stato vuoto "seleziona un gioco". */}
                         <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-5" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                                 <p className="font-title text-[9px] tracking-wide text-slate-400">Statistiche per gioco</p>
@@ -869,22 +871,29 @@ const Dashboard = () => {
                                     {activeBadge && <PlayerBadge badge={activeBadge} size="sm" />}
                                     <select value={selectedGameId} onChange={e => setSelectedGameId(e.target.value)}
                                         className="rounded-xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2 font-title text-[9px] tracking-wide text-slate-700 dark:text-foreground outline-none focus:border-emerald-400">
-                                        <option value="">Seleziona un gioco</option>
+                                        <option value="">Tutti i giochi</option>
                                         {games.map((g) => (
                                             <option key={g.id} value={g.id}>{g.name}</option>
                                         ))}
                                     </select>
                                 </div>
                             </div>
-                            {gameStats ? (
+                            {selectedGameId && !gameStats ? (
+                                <p className="text-xs text-slate-400">Nessuna statistica per questo gioco.</p>
+                            ) : (
                                 <div className="space-y-4">
                                     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                                        {[
+                                        {(selectedGameId ? [
                                             { label: 'Posizione', value: `#${gameStats.rank}`, sub: `di ${gameStats.totalPlayers}`, iconCls: gameStats.rank === 1 ? 'bg-amber-400/25 text-amber-600' : 'bg-slate-500/10 text-slate-600', Icon: Trophy },
                                             { label: 'Tornei vinti', value: gameStats.tournamentWins, sub: `di ${gameStats.tournamentsPlayed} giocati`, iconCls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400', Icon: Crown },
                                             { label: 'Podi totali', value: gameStats.podiums, sub: `Podium Rate ${gameStats.podiumRate}%`, iconCls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', Icon: Star },
                                             { label: 'Vittorie gara', value: gameStats.raceWins, sub: `Win Rate ${gameStats.winRate}%`, iconCls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', Icon: Flag },
-                                        ].map(({ label, value, sub, iconCls, Icon }) => (
+                                        ] : [
+                                            { label: 'Tornei vinti', value: playerStats?.tournamentWins ?? 0, sub: `di ${playerStats?.tournamentsPlayed ?? 0} giocati`, iconCls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400', Icon: Crown },
+                                            { label: 'Vittorie gara', value: playerStats?.raceWins ?? 0, sub: `Win Rate ${playerStats?.winRate ?? 0}%`, iconCls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', Icon: Flag },
+                                            { label: 'Podi totali', value: playerStats?.podiums ?? 0, sub: `Podium Rate ${playerStats?.podiumRate ?? 0}%`, iconCls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', Icon: Star },
+                                            { label: 'Punti totali', value: playerStats?.points ?? 0, sub: `Efficienza ${playerStats?.avgEfficiency ?? 0}%`, iconCls: 'bg-violet-500/10 text-violet-600 dark:text-violet-400', Icon: BarChart3 },
+                                        ]).map(({ label, value, sub, iconCls, Icon }) => (
                                             <div key={label} className="flex items-start gap-3 rounded-2xl border-2 border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-4" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                                                 <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconCls}`}>
                                                     <Icon size={16} />
@@ -898,16 +907,12 @@ const Dashboard = () => {
                                         ))}
                                     </div>
                                     <div className="flex flex-wrap gap-2 text-[10px] text-slate-500 dark:text-muted-foreground">
-                                        <span className="rounded-lg bg-slate-100 dark:bg-muted px-2.5 py-1">Punti totali: {gameStats.points}</span>
-                                        <span className="rounded-lg bg-slate-100 dark:bg-muted px-2.5 py-1">Gare giocate: {gameStats.racesPlayed}</span>
-                                        <span className="rounded-lg bg-slate-100 dark:bg-muted px-2.5 py-1">Placement Index: {gameStats.placementIndex?.toFixed(2) ?? '—'}</span>
-                                        <span className="rounded-lg bg-slate-100 dark:bg-muted px-2.5 py-1">Efficienza: {gameStats.avgEfficiency}%</span>
+                                        {selectedGameId && <span className="rounded-lg bg-slate-100 dark:bg-muted px-2.5 py-1">Punti totali: {gameStats.points}</span>}
+                                        <span className="rounded-lg bg-slate-100 dark:bg-muted px-2.5 py-1">Gare giocate: {(selectedGameId ? gameStats.racesPlayed : playerStats?.racesPlayed) ?? 0}</span>
+                                        <span className="rounded-lg bg-slate-100 dark:bg-muted px-2.5 py-1">Placement Index: {((selectedGameId ? gameStats.placementIndex : playerStats?.placementIndex))?.toFixed(2) ?? '—'}</span>
+                                        {selectedGameId && <span className="rounded-lg bg-slate-100 dark:bg-muted px-2.5 py-1">Efficienza: {gameStats.avgEfficiency}%</span>}
                                     </div>
                                 </div>
-                            ) : selectedGameId ? (
-                                <p className="text-xs text-slate-400">Nessuna statistica per questo gioco.</p>
-                            ) : (
-                                <p className="text-xs text-slate-400">Seleziona un gioco per vedere le statistiche.</p>
                             )}
                         </div>
 

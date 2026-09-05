@@ -57,15 +57,23 @@ const PlayerBadge = ({ badge, size = 'md', className = '' }) => {
                 )}
             </div>
             {extras.length > 0 && (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2.5">
                     {extras.map(({ key, tooltip }) => {
                         const extraImage = EXTRA_BADGE_IMAGES[key]
+                        const label = EXTRA_BADGES[key]?.label
                         return (
-                            <div key={key} title={tooltip}>
+                            // Stessa coppia icona+didascalia del badge di tier — prima
+                            // gli extra avevano solo un tooltip al passaggio del mouse,
+                            // senza alcun testo visibile, mentre il tier ha sempre la
+                            // sua descrizione accanto.
+                            <div key={key} title={tooltip} className="inline-flex items-center gap-1.5">
                                 {extraImage ? (
                                     <img src={extraImage} alt={tooltip} className="shrink-0 object-contain" style={{ width: medallionSize, height: medallionSize }} />
                                 ) : (
                                     <ExtraMedallion type={key} size={medallionSize} />
+                                )}
+                                {label && (
+                                    <span className={`font-bold normal-case tracking-normal text-slate-500 dark:text-muted-foreground ${size === 'sm' ? 'text-[10px]' : 'text-xs'}`}>{label}</span>
                                 )}
                             </div>
                         )
