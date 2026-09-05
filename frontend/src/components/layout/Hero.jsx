@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Trophy, Gamepad2, Users2, Calendar, ArrowRight, Sparkles, UserPlus, Flag } from 'lucide-react'
+import { Trophy, Gamepad2, Users2, Calendar, ArrowRight, Sparkles, UserPlus, Flag, ChevronDown, List } from 'lucide-react'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import { formatTournamentTitle } from '@/lib/utils'
 import TournamentAwardsPanel from '@/components/layout/TournamentAwardsPanel'
 import TournamentMilestonesPanel from '@/components/layout/TournamentMilestonesPanel'
-import CollapsibleSection from '@/components/tournaments/CollapsibleSection'
+import EditableContentImage from '@/components/common/EditableContentImage'
 import { detectTournamentMilestones } from '@/lib/milestones'
 import { statsApi } from '@/services/apiClient'
 import { TIER_BADGE_IMAGES } from '@/lib/playerBadges'
@@ -21,7 +21,7 @@ const formatChampionDate = (value) => {
 }
 
 const Hero = () => {
-    const { statsByPlayerId, charactersById, detailedTournaments, games } = useAppData()
+    const { statsByPlayerId, charactersById, detailedTournaments, games, contentImages, updateContentImage } = useAppData()
     const { user, isSuperadmin } = useAuth()
     const player = user?.player ?? null
     useEffect(() => {
@@ -33,12 +33,11 @@ const Hero = () => {
         return () => { active = false }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [player])
-    // "Dettagli torneo" (personaggi usati/premi/traguardi) chiuso di default
-    // su mobile — dove impilare tutto sotto podio+meta creava troppo scroll
-    // — aperto di default su desktop, dove lo spazio non manca. Calcolato
-    // una sola volta al mount (non serve reagire al resize di una sezione
-    // già aperta/chiusa manualmente dall'utente).
-    const [detailsDefaultOpen] = useState(() => (
+    // "Mostra dettagli" — unico controllo per podio + personaggi/premi/
+    // traguardi (prima un secondo header cliccabile più sotto duplicava
+    // questo stesso pulsante). Chiuso di default su mobile, aperto su
+    // desktop dove lo spazio non manca — calcolato una sola volta al mount.
+    const [detailsOpen, setDetailsOpen] = useState(() => (
         typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches
     ))
     // "Ultimo campione": non usare lastWinner/lastWinnerStats del context — quelli
@@ -92,6 +91,13 @@ const Hero = () => {
         })
         : []
 
+    // Sfondo opzionale del pannello, caricabile dal superadmin (tab
+    // "Immagini" di /superadmin) — stesso principio delle altre card a
+    // immagine: SOLO con uno sfondo caricato il pannello diventa un'isola
+    // scura con testo chiaro; senza, segue il tema del sito.
+    const heroBgUrl = contentImages['home-hero-bg']
+    const hasBg = Boolean(heroBgUrl)
+
     // Un account loggato ma senza Player collegato (in attesa che un admin lo
     // colleghi a un giocatore) vedeva finora la stessa card "Ultimo torneo"
     // di chiunque altro, senza alcuna spiegazione del perché non trova le
@@ -123,185 +129,219 @@ const Hero = () => {
         )
     }
 
-    // Pannello a tema del sito (light/dark), non più forzato scuro — non ha
-    // più un'immagine di sfondo dietro (rimossa), quindi non c'è più motivo
-    // di restare un'isola scura indipendente dal tema come le card con foto.
+    // Classi di testo/bordo condizionate da `hasBg`: con sfondo il pannello
+    // è un'isola scura a tema fisso (testo chiaro, leggibile su una foto
+    // qualsiasi), senza sfondo segue il tema del sito come le altre card.
+    const textStrong = hasBg ? 'text-white' : 'text-slate-900 dark:text-foreground'
+    const textSoft = hasBg ? 'text-slate-300' : 'text-slate-500 dark:text-muted-foreground'
+    const textFaint = hasBg ? 'text-slate-400' : 'text-slate-400 dark:text-muted-foreground'
+    const borderSoft = hasBg ? 'border-white/15' : 'border-slate-200 dark:border-border'
+    const chipBg = hasBg ? 'bg-slate-800' : 'bg-slate-50 dark:bg-muted'
+
     return (
-        <div className="overflow-hidden rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
-            <div className="flex items-center gap-3 px-6 pt-5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400">
+        <div
+            className={`relative overflow-hidden rounded-[2rem] border-2 ${hasBg ? 'border-white/20 bg-slate-900' : 'border-slate-200 dark:border-border bg-white dark:bg-card'}`}
+            style={{ boxShadow: 'var(--circuit-shadow-lg)' }}
+        >
+            {hasBg && (
+                <>
+                    <EditableContentImage
+                        contentKey="home-hero-bg"
+                        imageUrl={heroBgUrl}
+                        onUploaded={updateContentImage}
+                        alt=""
+                        fit="cover"
+                        imageClassName="blur-md brightness-[0.45]"
+                        className="absolute inset-0 h-full w-full bg-transparent"
+                    />
+                    <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-slate-900/40 via-slate-900/60 to-slate-900/90" />
+                </>
+            )}
+            {!hasBg && isSuperadmin && (
+                <EditableContentImage
+                    contentKey="home-hero-bg"
+                    imageUrl={null}
+                    onUploaded={updateContentImage}
+                    alt=""
+                    fit="cover"
+                    className="absolute right-3 top-3 z-20 h-9 w-9 rounded-lg"
+                />
+            )}
+
+            <div className={`relative z-10 flex items-center gap-3 px-6 pt-5 ${hasBg ? '' : ''}`}>
+                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${hasBg ? 'bg-amber-500/15 text-amber-400' : 'bg-amber-100 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400'}`}>
                     <Trophy size={18} />
                 </span>
                 <div className="min-w-0">
-                    <p className="font-title text-sm tracking-wide text-slate-900 dark:text-foreground">Ultimo torneo</p>
-                    <p className="text-xs text-slate-500 dark:text-muted-foreground">Rivivi i momenti salienti e scopri la classifica</p>
+                    <p className={`font-title text-sm tracking-wide ${textStrong}`}>Ultimo torneo</p>
+                    <p className={`text-xs ${textSoft}`}>Rivivi i momenti salienti e scopri la classifica</p>
                 </div>
             </div>
 
-            <div className="p-6 pt-3">
+            <div className="relative z-10 p-6 pt-3">
                 {lastChampion ? (
-                    <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted"
-                        style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-                        {/* Accento oro ridotto a barra superiore — non più riempimento
-                            pieno dietro tutto il blocco. */}
-                        <div className="h-1 bg-linear-to-r from-circuit-gold/30 via-circuit-gold to-circuit-gold/30" />
-
-                        <div className="p-5 md:p-6">
-                            {/* ── 1. Torneo ── */}
-                            <p title={lastChampionTournament.name} className="text-2xl md:text-3xl font-black text-slate-900 dark:text-foreground leading-tight">{formatTournamentTitle(lastChampionTournament.name, 60)}</p>
-
-                            {/* ── 2. Vincitore — focal point della card, subito dopo il titolo.
-                                Riga semplice separata da un divider sottile invece di una
-                                mini-card con sfondo proprio ("incollata sopra" il genitore). ── */}
-                            <div className="mt-4 flex items-center gap-4 border-t border-slate-200 dark:border-border pt-4">
-                                {lastChampionBadge && TIER_BADGE_IMAGES[lastChampionBadge.tier] ? (
-                                    <img
-                                        src={TIER_BADGE_IMAGES[lastChampionBadge.tier]}
-                                        alt={`Badge ${lastChampionBadge.label}`}
-                                        className="h-14 w-14 shrink-0 object-contain"
-                                    />
-                                ) : lastChampionBadge ? (
-                                    <TierMedallion tier={lastChampionBadge.tier} size={56} />
-                                ) : (
-                                    <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-circuit-gold">
-                                        <img
-                                            src={lastChampion.img_url || buildAvatarPlaceholder(lastChampion.nickname)}
-                                            alt={lastChampion.nickname}
-                                            loading="lazy"
-                                            decoding="async"
-                                            className="h-full w-full object-cover"
-                                        />
-                                    </div>
-                                )}
-                                <div className="min-w-0">
-                                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Vinto da</p>
-                                    <p className="truncate text-xl font-black capitalize text-slate-900 dark:text-foreground leading-tight">{lastChampion.nickname}</p>
-                                    <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-black text-amber-600 dark:text-circuit-gold">
-                                        {lastChampionBadge?.label ?? <><Trophy size={11} /></>}
-                                        {(lastChampionStats?.tournamentWins ?? 1) > 1 ? ` · ${lastChampionStats.tournamentWins}° titolo` : ' · 1° titolo'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* ── 3. CTA — un solo pulsante: la sezione "Dettagli torneo"
-                                più sotto è già espandibile dal proprio header, un
-                                secondo pulsante qui sarebbe ridondante. ── */}
-                            <div className="mt-4">
-                                <Link
-                                    to={`/tournaments/${lastChampionTournament.id}`}
-                                    className="font-title flex w-full items-center justify-center gap-1.5 rounded-xl border-2 border-amber-300 dark:border-circuit-gold/40 bg-white dark:bg-slate-800 px-3 py-2.5 text-[10px] tracking-widest text-amber-700 dark:text-amber-200 transition active:translate-y-px hover:bg-amber-50 dark:hover:bg-slate-700"
-                                >
-                                    Vai al torneo <ArrowRight size={13} />
-                                </Link>
-                            </div>
-
-                            {/* ── 4. Riga compatta modalità/partecipanti/gare/data ── */}
-                            <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-500 dark:text-muted-foreground">
-                                {lastChampionGame && (
-                                    <span className="inline-flex items-center gap-1"><Gamepad2 size={11} className="text-amber-500/80" /> <span className="capitalize font-semibold text-slate-700 dark:text-foreground">{lastChampionGame.name}</span></span>
-                                )}
-                                <span className="text-amber-400/40">·</span>
-                                <span className="font-medium text-slate-700 dark:text-foreground">{lastChampionFormatLabel}</span>
-                                {lastChampionParticipants > 0 && (
-                                    <>
-                                        <span className="text-amber-400/40">·</span>
-                                        <span className="inline-flex items-center gap-1"><Users2 size={11} className="text-amber-500/80" /> {lastChampionParticipants}</span>
-                                    </>
-                                )}
-                                {lastChampionRaceCount > 0 && (
-                                    <>
-                                        <span className="text-amber-400/40">·</span>
-                                        <span className="inline-flex items-center gap-1"><Flag size={11} className="text-amber-500/80" /> {lastChampionRaceCount} gare</span>
-                                    </>
-                                )}
-                                {lastChampionDateLabel && (
-                                    <>
-                                        <span className="text-amber-400/40">·</span>
-                                        <span className="inline-flex items-center gap-1"><Calendar size={11} className="text-amber-500/80" /> {lastChampionDateLabel}</span>
-                                    </>
-                                )}
-                            </div>
-
-                            {/* ── 5. Podio finale — sempre visibile, tre chip orizzontali, 1°
-                                posto graficamente più marcato. ── */}
-                            {lastChampionPodium.length > 0 && (
-                                <div className="mt-4">
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-amber-600/70 dark:text-amber-400/60">Podio finale</p>
-                                    <div className="mt-1.5 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                                        {lastChampionPodium.map((standing, idx) => (
-                                            <div
-                                                key={standing.playerId}
-                                                className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 ${idx === 0 ? 'bg-amber-50 dark:bg-amber-500/15 ring-1 ring-inset ring-amber-300 dark:ring-amber-400/50' : 'bg-white dark:bg-slate-800'}`}
-                                            >
-                                                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-black ${idx === 0 ? 'bg-amber-400 text-amber-950' : idx === 1 ? 'bg-slate-300 text-slate-700' : 'bg-orange-400 text-orange-950'}`}>
-                                                    {idx + 1}
-                                                </span>
-                                                <img
-                                                    src={standing.img_url || buildAvatarPlaceholder(standing.nickname)}
-                                                    alt={standing.nickname}
-                                                    loading="lazy"
-                                                    decoding="async"
-                                                    className={`shrink-0 rounded-full object-cover ${idx === 0 ? 'h-10 w-10' : 'h-9 w-9'}`}
-                                                />
-                                                <span className="min-w-0 flex-1 truncate text-sm font-bold capitalize text-slate-800 dark:text-foreground">{standing.nickname}</span>
-                                                {standing.points != null && (
-                                                    <span className="text-xs font-black text-amber-600/80 dark:text-amber-400/70">{standing.points}pt</span>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+                    <div>
+                        {/* ── 1. Torneo ── */}
+                        <div className="flex items-start justify-between gap-3">
+                            <p title={lastChampionTournament.name} className={`text-2xl md:text-3xl font-black leading-tight ${textStrong}`}>{formatTournamentTitle(lastChampionTournament.name, 60)}</p>
+                            {lastChampionDateLabel && (
+                                <span className={`shrink-0 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black ${borderSoft} ${textSoft}`}>
+                                    <Calendar size={11} /> {lastChampionDateLabel}
+                                </span>
                             )}
                         </div>
 
-                        {/* ── 6. Dettagli torneo — personaggi usati + premi + traguardi,
-                            unico capitolo collassabile. ── */}
-                        <div className="p-5 pt-4 md:p-6 md:pt-4">
-                            <CollapsibleSection
-                                title="Dettagli torneo"
-                                subtitle="Personaggi usati, premi e traguardi"
-                                icon={<Sparkles size={16} />}
-                                defaultOpen={detailsDefaultOpen}
+                        {/* ── 2. Vincitore — focal point della card, subito dopo il titolo. ── */}
+                        <div className={`mt-4 flex items-center gap-4 border-t pt-4 ${borderSoft}`}>
+                            {lastChampionBadge && TIER_BADGE_IMAGES[lastChampionBadge.tier] ? (
+                                <img
+                                    src={TIER_BADGE_IMAGES[lastChampionBadge.tier]}
+                                    alt={`Badge ${lastChampionBadge.label}`}
+                                    className="h-14 w-14 shrink-0 object-contain"
+                                />
+                            ) : lastChampionBadge ? (
+                                <TierMedallion tier={lastChampionBadge.tier} size={56} />
+                            ) : (
+                                <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-circuit-gold">
+                                    <img
+                                        src={lastChampion.img_url || buildAvatarPlaceholder(lastChampion.nickname)}
+                                        alt={lastChampion.nickname}
+                                        loading="lazy"
+                                        decoding="async"
+                                        className="h-full w-full object-cover"
+                                    />
+                                </div>
+                            )}
+                            <div className="min-w-0">
+                                <p className={`text-[11px] font-black uppercase tracking-widest ${textSoft}`}>Vinto da</p>
+                                <p className={`truncate text-xl font-black capitalize leading-tight ${textStrong}`}>{lastChampion.nickname}</p>
+                                <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-black text-amber-500">
+                                    {lastChampionBadge?.label ?? <><Trophy size={11} /></>}
+                                    {(lastChampionStats?.tournamentWins ?? 1) > 1 ? ` · ${lastChampionStats.tournamentWins}° titolo` : ' · 1° titolo'}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* ── 3. Pulsanti affiancati — unico controllo dettagli
+                            (podio + personaggi/premi/traguardi insieme) + CTA. ── */}
+                        <div className="mt-4 flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setDetailsOpen((v) => !v)}
+                                className="font-title flex flex-1 items-center justify-center gap-1.5 rounded-xl border-[1.5px] border-circuit-gold px-3 py-2.5 text-[10px] tracking-widest text-circuit-gold transition hover:bg-circuit-gold/10"
                             >
-                                {lastChampionCharacters.length > 0 && (
+                                <List size={13} /> Mostra dettagli
+                                <ChevronDown size={12} className={`transition-transform ${detailsOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            <Link
+                                to={`/tournaments/${lastChampionTournament.id}`}
+                                className="font-title flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-circuit-gold bg-circuit-gold px-3 py-2.5 text-[10px] tracking-widest text-circuit-ink transition active:translate-y-px hover:brightness-105"
+                            >
+                                Vai al torneo <ArrowRight size={13} />
+                            </Link>
+                        </div>
+
+                        {/* ── 4. Riga compatta modalità/partecipanti/gare/data ── */}
+                        <div className={`mt-3 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] ${textSoft}`}>
+                            {lastChampionGame && (
+                                <span className="inline-flex items-center gap-1"><Gamepad2 size={11} className="text-amber-500/80" /> <span className={`capitalize font-semibold ${textStrong}`}>{lastChampionGame.name}</span></span>
+                            )}
+                            <span className="text-amber-400/40">|</span>
+                            <span className={`font-medium ${textStrong}`}>{lastChampionFormatLabel}</span>
+                            {lastChampionParticipants > 0 && (
+                                <>
+                                    <span className="text-amber-400/40">|</span>
+                                    <span className="inline-flex items-center gap-1"><Users2 size={11} className="text-amber-500/80" /> {lastChampionParticipants}</span>
+                                </>
+                            )}
+                            {lastChampionRaceCount > 0 && (
+                                <>
+                                    <span className="text-amber-400/40">|</span>
+                                    <span className="inline-flex items-center gap-1"><Flag size={11} className="text-amber-500/80" /> {lastChampionRaceCount} gare</span>
+                                </>
+                            )}
+                        </div>
+
+                        {/* ── 5. Dettagli — podio + personaggi + premi + traguardi,
+                            tutti dietro l'unico pulsante "Mostra dettagli" sopra. ── */}
+                        {detailsOpen && (
+                            <div className={`mt-5 space-y-5 border-t pt-4 ${borderSoft}`}>
+                                {lastChampionPodium.length > 0 && (
                                     <div>
-                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">Personaggi usati dal vincitore</p>
-                                        <div className="mt-1.5 flex flex-wrap gap-2">
-                                            {lastChampionCharacters.slice(0, 8).map((character) => (
-                                                <div key={character.id} className="flex items-center gap-1.5 rounded-full bg-slate-100 dark:bg-muted py-1 pl-1 pr-3">
-                                                    <div className="h-6 w-6 shrink-0 overflow-hidden rounded-full border border-white dark:border-card bg-slate-100 dark:bg-slate-700/60">
-                                                        {character.img_url ? (
-                                                            <img src={character.img_url} alt={character.name} className="h-full w-full object-cover" />
-                                                        ) : (
-                                                            <div className="flex h-full w-full items-center justify-center text-[10px] font-black text-slate-400">{character.name.charAt(0).toUpperCase()}</div>
-                                                        )}
-                                                    </div>
-                                                    <span className="max-w-24 truncate text-[10px] font-bold capitalize text-slate-700 dark:text-foreground">{character.name}</span>
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-amber-500/80">Podio finale</p>
+                                        <div className="mt-1.5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                            {lastChampionPodium.map((standing, idx) => (
+                                                <div
+                                                    key={standing.playerId}
+                                                    className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 ${idx === 0 ? 'bg-amber-500/15 ring-1 ring-inset ring-amber-400/50' : chipBg}`}
+                                                >
+                                                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-black ${idx === 0 ? 'bg-amber-400 text-amber-950' : idx === 1 ? 'bg-slate-300 text-slate-700' : 'bg-orange-400 text-orange-950'}`}>
+                                                        {idx + 1}
+                                                    </span>
+                                                    <img
+                                                        src={standing.img_url || buildAvatarPlaceholder(standing.nickname)}
+                                                        alt={standing.nickname}
+                                                        loading="lazy"
+                                                        decoding="async"
+                                                        className={`shrink-0 rounded-full object-cover ${idx === 0 ? 'h-10 w-10' : 'h-9 w-9'}`}
+                                                    />
+                                                    <span className={`min-w-0 flex-1 truncate text-sm font-bold capitalize ${textStrong}`}>{standing.nickname}</span>
+                                                    {standing.points != null && (
+                                                        <span className="text-xs font-black text-amber-500">{standing.points}pt</span>
+                                                    )}
                                                 </div>
                                             ))}
-                                            {lastChampionCharacters.length > 8 && (
-                                                <div className="flex items-center rounded-full border border-dashed border-slate-300 dark:border-slate-600 px-3 py-1 text-[10px] font-black text-slate-500 dark:text-muted-foreground">
-                                                    +{lastChampionCharacters.length - 8} altri
-                                                </div>
-                                            )}
                                         </div>
                                     </div>
                                 )}
-                                <TournamentAwardsPanel
-                                    tournamentId={lastChampionTournament.id}
-                                    tournamentFormat={lastChampionTournament.tournament_format}
-                                    standings={lastChampionTournament.standings}
-                                />
-                                <TournamentMilestonesPanel milestones={lastChampionMilestones} />
-                            </CollapsibleSection>
-                        </div>
+
+                                <div>
+                                    <p className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] ${textFaint}`}>
+                                        <Sparkles size={13} className="text-amber-500" /> Dettagli torneo
+                                    </p>
+                                    <p className={`mt-0.5 text-xs ${textSoft}`}>Personaggi usati, premi e traguardi</p>
+                                    <div className="mt-3 space-y-4">
+                                        {lastChampionCharacters.length > 0 && (
+                                            <div>
+                                                <p className={`text-[9px] font-black uppercase tracking-widest ${textFaint}`}>Personaggi usati dal vincitore</p>
+                                                <div className="mt-1.5 flex flex-wrap gap-2">
+                                                    {lastChampionCharacters.slice(0, 8).map((character) => (
+                                                        <div key={character.id} className={`flex items-center gap-1.5 rounded-full py-1 pl-1 pr-3 ${chipBg}`}>
+                                                            <div className="h-6 w-6 shrink-0 overflow-hidden rounded-full border border-white/20 bg-slate-700/60">
+                                                                {character.img_url ? (
+                                                                    <img src={character.img_url} alt={character.name} className="h-full w-full object-cover" />
+                                                                ) : (
+                                                                    <div className="flex h-full w-full items-center justify-center text-[10px] font-black text-slate-400">{character.name.charAt(0).toUpperCase()}</div>
+                                                                )}
+                                                            </div>
+                                                            <span className={`max-w-24 truncate text-[10px] font-bold capitalize ${textStrong}`}>{character.name}</span>
+                                                        </div>
+                                                    ))}
+                                                    {lastChampionCharacters.length > 8 && (
+                                                        <div className={`flex items-center rounded-full border border-dashed px-3 py-1 text-[10px] font-black ${borderSoft} ${textFaint}`}>
+                                                            +{lastChampionCharacters.length - 8} altri
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                        <TournamentAwardsPanel
+                                            tournamentId={lastChampionTournament.id}
+                                            tournamentFormat={lastChampionTournament.tournament_format}
+                                            standings={lastChampionTournament.standings}
+                                        />
+                                        <TournamentMilestonesPanel milestones={lastChampionMilestones} />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-muted p-5 py-8 text-center">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
+                    <div className={`flex flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed p-5 py-8 text-center ${hasBg ? 'border-slate-600' : 'border-slate-300 dark:border-slate-600'} ${chipBg}`}>
+                        <div className={`flex h-16 w-16 items-center justify-center rounded-full ${hasBg ? 'bg-slate-700' : 'bg-slate-200 dark:bg-slate-700'}`}>
                             <Trophy size={24} className="text-slate-400" />
                         </div>
-                        <p className="text-xs text-slate-500 dark:text-muted-foreground">Nessun campione ancora</p>
+                        <p className={`text-xs ${textSoft}`}>Nessun campione ancora</p>
                     </div>
                 )}
             </div>

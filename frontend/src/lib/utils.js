@@ -29,6 +29,18 @@ export function formatTournamentTitle(name, maxLength = null) {
     return maxLength ? truncateAtWord(titled, maxLength) : titled
 }
 
+// Per le immagini di contenuto con una variante scura opzionale (es. le 4
+// card statistiche profilo): in dark mode preferisce `${baseKey}-dark` se
+// il superadmin l'ha caricata, altrimenti ricade sulla versione base (così
+// funziona anche se è stata impostata una sola immagine). Restituisce sia
+// l'URL da mostrare sia la chiave su cui un eventuale upload deve scrivere
+// (quella del tema corrente, per non sovrascrivere l'altra variante).
+export function resolveThemedContentImage(contentImages, baseKey, dark) {
+    const activeKey = dark ? `${baseKey}-dark` : baseKey
+    const imageUrl = contentImages[activeKey] || contentImages[baseKey]
+    return { activeKey, imageUrl }
+}
+
 export function downloadCSV(headers, rows, filename) {
     const csvContent = [
         headers.join(','),

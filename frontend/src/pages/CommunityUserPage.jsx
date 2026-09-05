@@ -8,6 +8,8 @@ import { pickBestBadge, TIER_ACCENT_COLORS } from '@/lib/playerBadges'
 import StatShowcaseCard from '@/components/common/StatShowcaseCard'
 import { authApi, statsApi, getApiErrorMessage } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
+import { useTheme } from '@/context/ThemeContext'
+import { resolveThemedContentImage } from '@/lib/utils'
 import { SkeletonPulse, SkeletonRows } from '@/components/common/Skeleton'
 import { toast } from 'sonner'
 
@@ -15,6 +17,7 @@ const CommunityUserPage = () => {
     const { userId } = useParams()
     const navigate = useNavigate()
     const { statsByPlayerId, charactersById, games, getLeaderboardByGame, contentImages, updateContentImage } = useAppData()
+    const { dark } = useTheme()
     const [communityUser, setCommunityUser] = useState(null)
     const [loading, setLoading] = useState(true)
     const [notFound, setNotFound] = useState(false)
@@ -206,19 +209,22 @@ const CommunityUserPage = () => {
                                     { label: 'Vittorie gara', value: activeStats.raceWins, sub: `Win Rate ${activeStats.winRate}%`, accent: 'emerald', contentKey: 'stat-icon-gare', Icon: Flag },
                                     { label: 'Podi totali', value: activeStats.podiums, sub: `Podium Rate ${activeStats.podiumRate}%`, accent: 'blue', contentKey: 'stat-icon-podi', Icon: Star },
                                     { label: 'Punti totali', value: activeStats.points, sub: `Efficienza ${activeStats.avgEfficiency}%`, accent: 'violet', contentKey: 'stat-icon-punti', Icon: BarChart3 },
-                                ].map(({ label, value, sub, accent, contentKey, Icon }) => (
-                                    <StatShowcaseCard
-                                        key={label}
-                                        label={label}
-                                        value={value}
-                                        sub={sub}
-                                        Icon={Icon}
-                                        accent={accent}
-                                        contentKey={contentKey}
-                                        imageUrl={contentImages[contentKey]}
-                                        onUploaded={updateContentImage}
-                                    />
-                                ))}
+                                ].map(({ label, value, sub, accent, contentKey: baseKey, Icon }) => {
+                                    const { activeKey, imageUrl } = resolveThemedContentImage(contentImages, baseKey, dark)
+                                    return (
+                                        <StatShowcaseCard
+                                            key={label}
+                                            label={label}
+                                            value={value}
+                                            sub={sub}
+                                            Icon={Icon}
+                                            accent={accent}
+                                            contentKey={activeKey}
+                                            imageUrl={imageUrl}
+                                            onUploaded={updateContentImage}
+                                        />
+                                    )
+                                })}
                             </div>
                         ) : (
                             <div className="rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-muted/30 p-6 text-center">

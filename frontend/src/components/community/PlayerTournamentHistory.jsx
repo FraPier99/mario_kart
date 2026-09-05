@@ -27,7 +27,8 @@ const POSITION_BADGE = {
     2: 'bg-slate-300 text-slate-800 border-circuit-ink',
     3: 'bg-orange-400 text-orange-950 border-circuit-ink',
 }
-const DEFAULT_BADGE = 'bg-black/30 backdrop-blur-sm text-slate-300 border-white/20'
+const DEFAULT_BADGE_IMAGE = 'bg-black/30 backdrop-blur-sm text-slate-300 border-white/20'
+const DEFAULT_BADGE_FLAT = 'bg-slate-100 dark:bg-muted text-slate-500 dark:text-muted-foreground border-slate-200 dark:border-border'
 
 // Accento del bordo sinistro della card per posizione — stesso linguaggio
 // cromatico del badge posizione, per far risaltare 1°/2°/3° a colpo d'occhio
@@ -116,8 +117,9 @@ const PlayerTournamentHistory = ({ playerId }) => {
                             const idx = t.standings.findIndex((s) => s.playerId === playerId)
                             position = idx === -1 ? null : idx + 1
                         }
-                        const badgeClass = position != null && POSITION_BADGE[position] ? POSITION_BADGE[position] : DEFAULT_BADGE
-                        const borderCls = position != null && POSITION_BORDER[position] ? POSITION_BORDER[position] : 'border-l-4 border-l-white/10'
+                        const hasImage = Boolean(contentImages[`tournament-image-${t.id}`])
+                        const badgeClass = position != null && POSITION_BADGE[position] ? POSITION_BADGE[position] : (hasImage ? DEFAULT_BADGE_IMAGE : DEFAULT_BADGE_FLAT)
+                        const borderCls = position != null && POSITION_BORDER[position] ? POSITION_BORDER[position] : (hasImage ? 'border-l-4 border-l-white/10' : 'border-l-4 border-l-slate-200 dark:border-l-border')
                         const gameName = games.find((g) => g.id === t.game_id)?.name
                         const imageContentKey = `tournament-image-${t.id}`
                         const imageUrl = contentImages[imageContentKey]
@@ -126,15 +128,20 @@ const PlayerTournamentHistory = ({ playerId }) => {
                             <Link
                                 key={t.id}
                                 to={`/tournaments/${t.id}`}
-                                className={`relative flex flex-col gap-2.5 overflow-hidden rounded-xl bg-slate-900 p-3.5 transition hover:brightness-110 ${borderCls}`}
+                                className={
+                                    hasImage
+                                        ? `relative flex flex-col gap-2.5 overflow-hidden rounded-xl bg-slate-900 p-3.5 transition hover:brightness-110 ${borderCls}`
+                                        : `relative flex flex-col gap-2.5 overflow-hidden rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card p-3.5 transition hover:brightness-95 dark:hover:brightness-110 ${borderCls}`
+                                }
                             >
-                                {/* Composizione a 3 livelli: 1) immagine full-bleed (bordo a
-                                    bordo, leggermente scurita/sfocata via filtro CSS, non una
-                                    colonna separata), 2) overlay a gradiente sopra l'immagine —
-                                    più scuro in alto/basso dove sta il testo (titolo e riga
-                                    punti/vittorie/podi), più chiaro al centro — 3) contenuto,
-                                    sempre sopra, mai spostato dall'immagine. */}
-                                {(imageUrl || isSuperadmin) && (
+                                {/* Composizione a 3 livelli SOLO quando c'è un'immagine: 1)
+                                    immagine full-bleed (bordo a bordo, leggermente scurita/
+                                    sfocata via filtro CSS, non una colonna separata), 2) overlay
+                                    a gradiente sopra l'immagine — più scuro in alto/basso dove
+                                    sta il testo, più chiaro al centro — 3) contenuto, sempre
+                                    sopra, mai spostato dall'immagine. Senza immagine la card
+                                    resta semplicemente a tema (niente isola scura vuota). */}
+                                {hasImage ? (
                                     <>
                                         <EditableContentImage
                                             contentKey={imageContentKey}
@@ -147,12 +154,21 @@ const PlayerTournamentHistory = ({ playerId }) => {
                                         />
                                         <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-slate-900/65 via-slate-900/20 to-slate-900/65" />
                                     </>
-                                )}
-                                <div className="relative z-10 flex flex-col gap-2.5 **:drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                                ) : isSuperadmin ? (
+                                    <EditableContentImage
+                                        contentKey={imageContentKey}
+                                        imageUrl={null}
+                                        onUploaded={updateContentImage}
+                                        alt=""
+                                        fit="cover"
+                                        className="absolute right-2 top-2 h-8 w-8 rounded-lg"
+                                    />
+                                ) : null}
+                                <div className={`relative z-10 flex flex-col gap-2.5 ${hasImage ? '**:drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]' : ''}`}>
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0">
-                                        <p title={t.name} className="truncate text-sm font-black text-white">{toTitleCase(t.name)}</p>
-                                        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-slate-300">
+                                        <p title={t.name} className={`truncate text-sm font-black ${hasImage ? 'text-white' : 'text-slate-900 dark:text-foreground'}`}>{toTitleCase(t.name)}</p>
+                                        <div className={`mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] ${hasImage ? 'text-slate-300' : 'text-slate-500 dark:text-muted-foreground'}`}>
                                             <span className="flex items-center gap-1"><Calendar size={10} />{t.date}</span>
                                             {gameName && <span className="flex items-center gap-1"><MapPin size={10} />{gameName}</span>}
                                         </div>
@@ -161,14 +177,14 @@ const PlayerTournamentHistory = ({ playerId }) => {
                                         {position ?? '—'}
                                     </span>
                                 </div>
-                                <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-300">
+                                <div className={`flex items-center gap-2 text-[9px] font-black uppercase tracking-widest ${hasImage ? 'text-slate-300' : 'text-slate-500 dark:text-muted-foreground'}`}>
                                     <span>{FORMAT_LABEL[t.tournament_format] ?? t.tournament_format}</span>
                                 </div>
                                 {standing && (
-                                    <div className="flex items-center gap-3 border-t border-white/15 pt-2 text-xs">
-                                        <span className="font-black text-slate-200">{standing.points} pt</span>
-                                        <span className="text-slate-400">{standing.raceWins} vittorie</span>
-                                        <span className="text-slate-400">{standing.podiums} podi</span>
+                                    <div className={`flex items-center gap-3 border-t pt-2 text-xs ${hasImage ? 'border-white/15' : 'border-slate-200 dark:border-border'}`}>
+                                        <span className={`font-black ${hasImage ? 'text-slate-200' : 'text-slate-800 dark:text-foreground'}`}>{standing.points} pt</span>
+                                        <span className={hasImage ? 'text-slate-400' : 'text-slate-500 dark:text-muted-foreground'}>{standing.raceWins} vittorie</span>
+                                        <span className={hasImage ? 'text-slate-400' : 'text-slate-500 dark:text-muted-foreground'}>{standing.podiums} podi</span>
                                     </div>
                                 )}
                                 </div>

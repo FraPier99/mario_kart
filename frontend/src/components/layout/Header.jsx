@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Users, Flag, ArrowRight, User } from "lucide-react";
+import { Flag, ArrowRight, User } from "lucide-react";
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
@@ -81,24 +81,23 @@ const Header = () => {
                             {isScheduled ? 'Inizia' : 'Continua'}: {activeTournament.name}
                             <ArrowRight size={14} />
                         </Link>
-                    ) : (
+                    ) : identityLink && (
                         <div className="flex shrink-0 flex-wrap gap-3">
+                            {/* Unico CTA rimasto — accento neon nel colore del tema
+                                personale (stesso `theme.accent` dell'alone dietro
+                                l'avatar), non più un bordo grigio generico uguale a
+                                qualsiasi altro pulsante. */}
                             <Link
-                                to="/stats"
-                                className="font-title inline-flex items-center gap-2 rounded-xl border-2 border-slate-900 dark:border-white/20 bg-white px-4 py-3 text-[10px] tracking-wide text-slate-700 transition active:translate-y-px hover:border-slate-700 dark:bg-card dark:text-foreground"
-                                style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
+                                to={identityLink}
+                                className="font-title inline-flex items-center gap-2 rounded-xl border-2 bg-transparent px-4 py-3 text-[10px] tracking-wide transition active:translate-y-px hover:brightness-110"
+                                style={{
+                                    borderColor: theme.accent,
+                                    color: theme.accent,
+                                    boxShadow: `0 0 14px ${theme.accent}55, 0 0 2px ${theme.accent}`,
+                                }}
                             >
-                                <Users size={14} /> Classifica
+                                <User size={14} /> {player ? 'Il mio profilo' : 'Dashboard'}
                             </Link>
-                            {identityLink && (
-                                <Link
-                                    to={identityLink}
-                                    className="font-title inline-flex items-center gap-2 rounded-xl border-2 border-slate-900 dark:border-white/20 bg-white px-4 py-3 text-[10px] tracking-wide text-slate-700 transition active:translate-y-px hover:border-slate-700 dark:bg-card dark:text-foreground"
-                                    style={{ boxShadow: 'var(--circuit-shadow-sm)' }}
-                                >
-                                    <User size={14} /> {player ? 'Il mio profilo' : 'Dashboard'}
-                                </Link>
-                            )}
                         </div>
                     )}
                 </div>

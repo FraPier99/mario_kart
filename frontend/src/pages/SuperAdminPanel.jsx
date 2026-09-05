@@ -47,6 +47,14 @@ const STAT_IMAGE_SLOTS = [
     { contentKey: 'stat-icon-punti', label: 'Punti totali', icon: BarChart3, accent: 'text-violet-500' },
 ]
 
+// Sfondo opzionale dei due pannelli Home — senza immagine caricata i
+// pannelli seguono semplicemente il tema del sito (vedi Hero.jsx/
+// ActivityFeed.jsx), quindi questi due slot non sono obbligatori.
+const HOME_BG_SLOTS = [
+    { contentKey: 'home-hero-bg', label: 'Ultimo torneo' },
+    { contentKey: 'home-activity-bg', label: 'Attività recenti' },
+]
+
 // ── Sparkline SVG ────────────────────────────────────────────────
 const Sparkline = ({ data, color = '#10b981', height = 30, width = 72 }) => {
     if (!data?.length || data.length < 2) return null
@@ -1028,9 +1036,47 @@ export default function SuperAdminPanel() {
                 {activeTab === 'immagini' && (
                     <div className="space-y-6">
                         <div>
-                            <p className="font-title text-[10px] tracking-wide text-slate-500 dark:text-muted-foreground mb-3">Card statistiche profilo (uguali per tutti)</p>
+                            <p className="font-title text-[10px] tracking-wide text-slate-500 dark:text-muted-foreground mb-3">Card statistiche profilo (uguali per tutti) — versione chiara e scura</p>
                             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                                 {STAT_IMAGE_SLOTS.map(({ contentKey, label, icon: Icon, accent }) => (
+                                    <div key={contentKey} className="overflow-hidden rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card">
+                                        <div className="flex items-center gap-2 px-3 pt-2.5">
+                                            <Icon size={14} className={accent} />
+                                            <p className="text-xs font-black text-slate-700 dark:text-foreground">{label}</p>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 p-2">
+                                            <div>
+                                                <EditableContentImage
+                                                    contentKey={contentKey}
+                                                    imageUrl={contentImages[contentKey]}
+                                                    onUploaded={updateContentImage}
+                                                    alt={`${label} — chiara`}
+                                                    fit="cover"
+                                                    className="h-20 w-full rounded-lg"
+                                                />
+                                                <p className="mt-1 text-center text-[9px] font-black uppercase tracking-wide text-slate-400">Chiara</p>
+                                            </div>
+                                            <div>
+                                                <EditableContentImage
+                                                    contentKey={`${contentKey}-dark`}
+                                                    imageUrl={contentImages[`${contentKey}-dark`]}
+                                                    onUploaded={updateContentImage}
+                                                    alt={`${label} — scura`}
+                                                    fit="cover"
+                                                    className="h-20 w-full rounded-lg"
+                                                />
+                                                <p className="mt-1 text-center text-[9px] font-black uppercase tracking-wide text-slate-400">Scura (opzionale)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <p className="font-title text-[10px] tracking-wide text-slate-500 dark:text-muted-foreground mb-3">Sfondo pannelli Home (opzionale)</p>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                {HOME_BG_SLOTS.map(({ contentKey, label }) => (
                                     <div key={contentKey} className="overflow-hidden rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card">
                                         <EditableContentImage
                                             contentKey={contentKey}
@@ -1038,12 +1084,9 @@ export default function SuperAdminPanel() {
                                             onUploaded={updateContentImage}
                                             alt={label}
                                             fit="cover"
-                                            className="h-28 w-full"
+                                            className="h-32 w-full"
                                         />
-                                        <div className="flex items-center gap-2 px-3 py-2.5">
-                                            <Icon size={14} className={accent} />
-                                            <p className="text-xs font-black text-slate-700 dark:text-foreground">{label}</p>
-                                        </div>
+                                        <p className="px-3 py-2.5 text-xs font-black text-slate-700 dark:text-foreground">{label}</p>
                                     </div>
                                 ))}
                             </div>
