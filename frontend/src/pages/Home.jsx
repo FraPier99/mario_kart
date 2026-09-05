@@ -3,16 +3,10 @@ import Header from "@/components/layout/Header";
 import Hero from "@/components/layout/Hero";
 import ActivityFeed from "@/components/layout/ActivityFeed";
 import ApiBanner from '@/components/common/ApiBanner'
-import CircuitBackdrop from '@/components/common/CircuitBackdrop'
-import { pickSessionCircuit } from '@/lib/circuitBackground'
 import { useAppData } from '@/context/AppDataContext'
 
 const Home = () =>{
-    const { errorMessage, refresh, circuits } = useAppData()
-    // Un'unica immagine di atmosfera (sfocata/scurita) dietro l'intera
-    // dashboard invece che una per pannello — stabile per la sessione del
-    // browser come le altre selezioni di lib/circuitBackground.js.
-    const dashboardBgCircuit = pickSessionCircuit('home-dashboard', circuits)
+    const { errorMessage, refresh } = useAppData()
 
     return (
         <AppLayout>
@@ -32,14 +26,11 @@ const Home = () =>{
                     ) : null}
                 />
             </div>
-            <section className="mx-auto max-w-7xl px-4 py-8">
-                <div className="relative overflow-hidden rounded-[2rem] border-2 border-white/15 bg-slate-900" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
-                    <CircuitBackdrop imageUrl={dashboardBgCircuit?.image_url} blurred />
-                    <div className="relative z-10 flex flex-col gap-6 p-4 sm:p-6">
-                        <Hero />
-                        <ActivityFeed />
-                    </div>
-                </div>
+            {/* Due pannelli separati (non più un unico contenitore condiviso con
+                sfondo pista sfocato) — ognuno è la sua card autonoma. */}
+            <section className="mx-auto max-w-7xl space-y-6 px-4 py-8">
+                <Hero />
+                <ActivityFeed />
             </section>
         </AppLayout>
     )

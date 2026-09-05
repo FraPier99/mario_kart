@@ -3,10 +3,11 @@ import EditableContentImage from '@/components/common/EditableContentImage'
 
 // Card statistica "vetrina" per l'header del profilo (Tornei vinti/Vittorie
 // gara/Podi/Punti) — isola scura a tema fisso (indipendente da light/dark,
-// come le altre card con immagine dell'app), con un'immagine decorativa
-// caricabile dal superadmin a piena card, resa semi-trasparente (non un
-// overlay scuro che la copre quasi del tutto) così resta un elemento
-// decorativo leggero e il testo sopra è sempre perfettamente leggibile.
+// come le altre card con immagine dell'app). L'immagine caricabile dal
+// superadmin vive in una colonna propria a destra (non sovrapposta al
+// testo): un vero figlio flex separato dalla colonna di testo, non un
+// livello assoluto sotto tutta la card — così, qualunque sia la lunghezza
+// di label/valore/sottotitolo, non può mai finire dietro/sopra l'immagine.
 // `contentKey` è globale (stessa immagine per tutti i profili) — vedi
 // StatShowcaseCard nei punti d'uso per l'elenco delle 4 chiavi fisse.
 const ACCENT = {
@@ -21,19 +22,8 @@ const StatShowcaseCard = ({ label, value, sub, Icon, accent = 'amber', contentKe
     const { border, iconBg } = ACCENT[accent] ?? ACCENT.amber
 
     return (
-        <div className={`relative flex min-h-26 items-center overflow-hidden rounded-2xl border-2 bg-slate-900 ${border}`} style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-            {(imageUrl || isSuperadmin) && (
-                <EditableContentImage
-                    contentKey={contentKey}
-                    imageUrl={imageUrl}
-                    onUploaded={onUploaded}
-                    alt=""
-                    fit="cover"
-                    imageOpacity={0.22}
-                    className="absolute inset-0 h-full w-full bg-transparent"
-                />
-            )}
-            <div className="relative z-10 flex min-w-0 flex-1 items-start gap-3 p-4">
+        <div className={`flex min-h-26 overflow-hidden rounded-2xl border-2 bg-slate-900 ${border}`} style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+            <div className="flex min-w-0 flex-1 items-start gap-3 p-4">
                 <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
                     <Icon size={16} />
                 </div>
@@ -43,6 +33,19 @@ const StatShowcaseCard = ({ label, value, sub, Icon, accent = 'amber', contentKe
                     <p className="mt-1 text-[10px] leading-snug text-slate-400">{sub}</p>
                 </div>
             </div>
+            {(imageUrl || isSuperadmin) && (
+                <div className="relative w-2/5 shrink-0 sm:w-[38%]">
+                    <EditableContentImage
+                        contentKey={contentKey}
+                        imageUrl={imageUrl}
+                        onUploaded={onUploaded}
+                        alt=""
+                        fit="cover"
+                        fadeEdge="left"
+                        className="h-full w-full bg-transparent"
+                    />
+                </div>
+            )}
         </div>
     )
 }

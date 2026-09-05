@@ -126,20 +126,9 @@ const PlayerTournamentHistory = ({ playerId }) => {
                             <Link
                                 key={t.id}
                                 to={`/tournaments/${t.id}`}
-                                className={`relative flex flex-col gap-2.5 overflow-hidden rounded-xl bg-slate-900 p-3.5 transition hover:brightness-110 ${borderCls}`}
+                                className={`flex overflow-hidden rounded-xl bg-slate-900 transition hover:brightness-110 ${borderCls}`}
                             >
-                                {(imageUrl || isSuperadmin) && (
-                                    <EditableContentImage
-                                        contentKey={imageContentKey}
-                                        imageUrl={imageUrl}
-                                        onUploaded={updateContentImage}
-                                        alt=""
-                                        fit="cover"
-                                        imageOpacity={0.22}
-                                        className="absolute inset-0 h-full w-full bg-transparent"
-                                    />
-                                )}
-                                <div className="relative z-10 flex flex-col gap-2.5">
+                                <div className="flex min-w-0 flex-1 flex-col gap-2.5 p-3.5">
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0">
                                         <p title={t.name} className="truncate text-sm font-black text-white">{toTitleCase(t.name)}</p>
@@ -156,13 +145,29 @@ const PlayerTournamentHistory = ({ playerId }) => {
                                     <span>{FORMAT_LABEL[t.tournament_format] ?? t.tournament_format}</span>
                                 </div>
                                 {standing && (
-                                    <div className="flex items-center gap-3 border-t border-white/15 pt-2 text-xs">
+                                    <div className="mt-auto flex items-center gap-3 border-t border-white/15 pt-2 text-xs">
                                         <span className="font-black text-slate-200">{standing.points} pt</span>
                                         <span className="text-slate-400">{standing.raceWins} vittorie</span>
                                         <span className="text-slate-400">{standing.podiums} podi</span>
                                     </div>
                                 )}
                                 </div>
+                                {/* Immagine in una colonna propria a destra (non un livello
+                                    assoluto sotto il testo) — non può mai finire sopra/sotto
+                                    titolo o statistiche, qualunque sia la loro lunghezza. */}
+                                {(imageUrl || isSuperadmin) && (
+                                    <div className="relative w-24 shrink-0 sm:w-28">
+                                        <EditableContentImage
+                                            contentKey={imageContentKey}
+                                            imageUrl={imageUrl}
+                                            onUploaded={updateContentImage}
+                                            alt=""
+                                            fit="cover"
+                                            fadeEdge="left"
+                                            className="h-full w-full bg-transparent"
+                                        />
+                                    </div>
+                                )}
                             </Link>
                         )
                     })}

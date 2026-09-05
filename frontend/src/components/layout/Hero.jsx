@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Trophy, Gamepad2, Users2, Calendar, ArrowRight, Sparkles, UserPlus, BarChart3, Flag } from 'lucide-react'
+import { Trophy, Gamepad2, Users2, Calendar, ArrowRight, Sparkles, UserPlus, Flag } from 'lucide-react'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
@@ -134,10 +134,14 @@ const Hero = () => {
             className="overflow-hidden rounded-[2rem] border-2 border-white/20 transition-all duration-500"
             style={{ background: 'linear-gradient(135deg, rgba(30,41,59,1), rgba(15,23,42,1))', boxShadow: 'var(--circuit-shadow-lg)' }}
         >
-            <div className="px-6 pt-5">
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-400/90">
-                    🏁 Ultimo torneo
-                </p>
+            <div className="flex items-center gap-3 px-6 pt-5">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-400">
+                    <Trophy size={18} />
+                </span>
+                <div className="min-w-0">
+                    <p className="font-title text-sm tracking-wide text-white">Ultimo torneo</p>
+                    <p className="text-xs text-slate-400">Rivivi i momenti salienti e scopri la classifica</p>
+                </div>
             </div>
 
             <div className="p-6 pt-3">
@@ -185,19 +189,13 @@ const Hero = () => {
                                 </div>
                             </div>
 
-                            {/* ── 3. Pulsanti principali affiancati — due azioni distinte
-                                (statistiche vs pagina torneo), non un toggle "dettagli"
-                                duplicato con la sezione collassabile più sotto. ── */}
-                            <div className="mt-4 flex items-center gap-2">
-                                <Link
-                                    to={`/tournaments/${lastChampionTournament.id}/stats`}
-                                    className="font-title flex flex-1 items-center justify-center gap-1.5 rounded-xl border-[1.5px] border-circuit-gold px-3 py-2.5 text-[10px] tracking-widest text-circuit-gold transition hover:bg-circuit-gold/10"
-                                >
-                                    <BarChart3 size={13} /> Statistiche
-                                </Link>
+                            {/* ── 3. CTA — un solo pulsante: la sezione "Dettagli torneo"
+                                più sotto è già espandibile dal proprio header, un
+                                secondo pulsante qui sarebbe ridondante. ── */}
+                            <div className="mt-4">
                                 <Link
                                     to={`/tournaments/${lastChampionTournament.id}`}
-                                    className="font-title flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-circuit-gold/40 bg-slate-800 px-3 py-2.5 text-[10px] tracking-widest text-amber-200 transition active:translate-y-px hover:bg-slate-700"
+                                    className="font-title flex w-full items-center justify-center gap-1.5 rounded-xl border-2 border-circuit-gold/40 bg-slate-800 px-3 py-2.5 text-[10px] tracking-widest text-amber-200 transition active:translate-y-px hover:bg-slate-700"
                                 >
                                     Vai al torneo <ArrowRight size={13} />
                                 </Link>

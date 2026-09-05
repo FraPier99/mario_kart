@@ -62,10 +62,15 @@ const ActivityFeed = () => {
     if (events.length === 0) return null
 
     return (
-        <div className="flex flex-col">
-            <div className="mb-4 flex items-center gap-2">
-                <Rss size={16} className="text-emerald-400" />
-                <p className="font-title text-[10px] tracking-[0.3em] text-slate-200">Attività recente</p>
+        <div className="overflow-hidden rounded-[2rem] border-2 border-white/20 bg-slate-900 p-6" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
+            <div className="mb-4 flex items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
+                    <Rss size={18} />
+                </span>
+                <div className="min-w-0">
+                    <p className="font-title text-sm tracking-wide text-white">Attività recenti</p>
+                    <p className="text-xs text-slate-400">Tutte le tue attività in un unico posto</p>
+                </div>
             </div>
             <ul className="space-y-1.5">
                 {events.map((event) => (
