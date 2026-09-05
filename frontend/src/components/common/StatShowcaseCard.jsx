@@ -4,10 +4,9 @@ import EditableContentImage from '@/components/common/EditableContentImage'
 // Card statistica "vetrina" per l'header del profilo (Tornei vinti/Vittorie
 // gara/Podi/Punti) — isola scura a tema fisso (indipendente da light/dark,
 // come le altre card con immagine dell'app). L'immagine caricabile dal
-// superadmin vive in una colonna propria a destra (non sovrapposta al
-// testo): un vero figlio flex separato dalla colonna di testo, non un
-// livello assoluto sotto tutta la card — così, qualunque sia la lunghezza
-// di label/valore/sottotitolo, non può mai finire dietro/sopra l'immagine.
+// superadmin è lo sfondo dell'intera card (non solo di una porzione),
+// mantenuta semi-trasparente in modo che il testo sopra resti sempre
+// perfettamente leggibile senza bisogno di un overlay scuro che la nasconda.
 // `contentKey` è globale (stessa immagine per tutti i profili) — vedi
 // StatShowcaseCard nei punti d'uso per l'elenco delle 4 chiavi fisse.
 const ACCENT = {
@@ -22,30 +21,28 @@ const StatShowcaseCard = ({ label, value, sub, Icon, accent = 'amber', contentKe
     const { border, iconBg } = ACCENT[accent] ?? ACCENT.amber
 
     return (
-        <div className={`flex min-h-26 overflow-hidden rounded-2xl border-2 bg-slate-900 ${border}`} style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
-            <div className="flex min-w-0 flex-1 items-start gap-3 p-4">
+        <div className={`relative flex min-h-26 items-center overflow-hidden rounded-2xl border-2 bg-slate-900 ${border}`} style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
+            {(imageUrl || isSuperadmin) && (
+                <EditableContentImage
+                    contentKey={contentKey}
+                    imageUrl={imageUrl}
+                    onUploaded={onUploaded}
+                    alt=""
+                    fit="cover"
+                    imageOpacity={0.32}
+                    className="absolute inset-0 h-full w-full bg-transparent"
+                />
+            )}
+            <div className="relative z-10 flex min-w-0 flex-1 items-start gap-3 p-4">
                 <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
                     <Icon size={16} />
                 </div>
                 <div className="min-w-0">
-                    <p className="font-title text-[9px] tracking-wide text-slate-400">{label}</p>
-                    <p className="mt-1 font-title text-2xl leading-none text-white">{value}</p>
-                    <p className="mt-1 text-[10px] leading-snug text-slate-400">{sub}</p>
+                    <p className="font-title text-[9px] tracking-wide text-slate-400 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{label}</p>
+                    <p className="mt-1 font-title text-2xl leading-none text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">{value}</p>
+                    <p className="mt-1 text-[10px] leading-snug text-slate-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{sub}</p>
                 </div>
             </div>
-            {(imageUrl || isSuperadmin) && (
-                <div className="relative w-2/5 shrink-0 sm:w-[38%]">
-                    <EditableContentImage
-                        contentKey={contentKey}
-                        imageUrl={imageUrl}
-                        onUploaded={onUploaded}
-                        alt=""
-                        fit="cover"
-                        fadeEdge="left"
-                        className="h-full w-full bg-transparent"
-                    />
-                </div>
-            )}
         </div>
     )
 }
