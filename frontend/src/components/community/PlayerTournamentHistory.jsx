@@ -129,17 +129,15 @@ const PlayerTournamentHistory = ({ playerId }) => {
                                 className={`relative flex flex-col gap-2.5 overflow-hidden rounded-xl bg-slate-900 p-3.5 transition hover:brightness-110 ${borderCls}`}
                             >
                                 {(imageUrl || isSuperadmin) && (
-                                    <>
-                                        <EditableContentImage
-                                            contentKey={imageContentKey}
-                                            imageUrl={imageUrl}
-                                            onUploaded={updateContentImage}
-                                            alt=""
-                                            fit="cover"
-                                            className="absolute inset-0 h-full w-full bg-transparent"
-                                        />
-                                        <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-black/55 via-black/70 to-black/85" />
-                                    </>
+                                    <EditableContentImage
+                                        contentKey={imageContentKey}
+                                        imageUrl={imageUrl}
+                                        onUploaded={updateContentImage}
+                                        alt=""
+                                        fit="cover"
+                                        imageOpacity={0.22}
+                                        className="absolute inset-0 h-full w-full bg-transparent"
+                                    />
                                 )}
                                 <div className="relative z-10 flex flex-col gap-2.5">
                                 <div className="flex items-start justify-between gap-2">

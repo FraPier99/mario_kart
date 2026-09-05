@@ -20,7 +20,13 @@ import { contentImagesApi, getApiErrorMessage } from '@/services/apiClient'
 // della card che la ospita, qualunque esso sia, invece di avere un bordo
 // netto — usato per le immagini decorative "a bleed" (stat card profilo,
 // card torneo) dove l'admin non deve preoccuparsi di pre-processare la foto.
-const EditableContentImage = ({ contentKey, imageUrl, onUploaded, alt = '', className = '', fit = 'contain', fadeEdge = 'none' }) => {
+// `imageOpacity`: 0-1 (default 1) — applicata solo all'<img>, non al
+// pulsante di upload che ci si sovrappone in hover (che deve restare a piena
+// opacità per il superadmin) — usata per un'immagine "a piena card" che
+// resta un elemento decorativo trasparente sopra cui il testo del contenuto
+// deve restare perfettamente leggibile, invece di un overlay scuro che la
+// copre quasi del tutto.
+const EditableContentImage = ({ contentKey, imageUrl, onUploaded, alt = '', className = '', fit = 'contain', fadeEdge = 'none', imageOpacity = 1 }) => {
     const { isSuperadmin } = useAuth()
     const [uploading, setUploading] = useState(false)
     const inputRef = useRef(null)
@@ -47,6 +53,7 @@ const EditableContentImage = ({ contentKey, imageUrl, onUploaded, alt = '', clas
         : fadeEdge === 'left'
             ? { maskImage: 'linear-gradient(to left, transparent, black 55%)', WebkitMaskImage: 'linear-gradient(to left, transparent, black 55%)' }
             : undefined
+    const imageStyle = { ...maskStyle, opacity: imageOpacity }
 
     return (
         <div className={`group relative overflow-hidden bg-slate-100 dark:bg-muted ${className}`}>
@@ -54,7 +61,7 @@ const EditableContentImage = ({ contentKey, imageUrl, onUploaded, alt = '', clas
                 // `block` toglie lo spazio extra sotto l'immagine che un <img>
                 // inline lascia per default (altrimenti sembrava "non adattarsi"
                 // bene al riquadro).
-                <img src={imageUrl} alt={alt} style={maskStyle} className={`block h-full w-full object-center ${fit === 'cover' ? 'object-cover' : 'object-contain'}`} />
+                <img src={imageUrl} alt={alt} style={imageStyle} className={`block h-full w-full object-center ${fit === 'cover' ? 'object-cover' : 'object-contain'}`} />
             ) : (
                 <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-slate-100 dark:bg-muted text-slate-400 dark:text-muted-foreground">
                     <ImagePlus size={28} />
