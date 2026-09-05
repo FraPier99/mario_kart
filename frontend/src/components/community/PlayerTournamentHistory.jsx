@@ -128,22 +128,27 @@ const PlayerTournamentHistory = ({ playerId }) => {
                                 to={`/tournaments/${t.id}`}
                                 className={`relative flex flex-col gap-2.5 overflow-hidden rounded-xl bg-slate-900 p-3.5 transition hover:brightness-110 ${borderCls}`}
                             >
-                                {/* Immagine a sfondo dell'intera card, semi-trasparente
-                                    (non un overlay scuro che la nasconde quasi del tutto) —
-                                    text-shadow sui contenuti sopra per restare leggibili
-                                    qualunque sia il contrasto della foto caricata. */}
+                                {/* Composizione a 3 livelli: 1) immagine full-bleed (bordo a
+                                    bordo, leggermente scurita/sfocata via filtro CSS, non una
+                                    colonna separata), 2) overlay a gradiente sopra l'immagine —
+                                    più scuro in alto/basso dove sta il testo (titolo e riga
+                                    punti/vittorie/podi), più chiaro al centro — 3) contenuto,
+                                    sempre sopra, mai spostato dall'immagine. */}
                                 {(imageUrl || isSuperadmin) && (
-                                    <EditableContentImage
-                                        contentKey={imageContentKey}
-                                        imageUrl={imageUrl}
-                                        onUploaded={updateContentImage}
-                                        alt=""
-                                        fit="cover"
-                                        imageOpacity={0.32}
-                                        className="absolute inset-0 h-full w-full bg-transparent"
-                                    />
+                                    <>
+                                        <EditableContentImage
+                                            contentKey={imageContentKey}
+                                            imageUrl={imageUrl}
+                                            onUploaded={updateContentImage}
+                                            alt=""
+                                            fit="cover"
+                                            imageClassName="blur-[1px] brightness-75"
+                                            className="absolute inset-0 h-full w-full bg-transparent"
+                                        />
+                                        <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-slate-900/80 via-slate-900/40 to-slate-900/80" />
+                                    </>
                                 )}
-                                <div className="relative z-10 flex flex-col gap-2.5 **:drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                                <div className="relative z-10 flex flex-col gap-2.5">
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0">
                                         <p title={t.name} className="truncate text-sm font-black text-white">{toTitleCase(t.name)}</p>
