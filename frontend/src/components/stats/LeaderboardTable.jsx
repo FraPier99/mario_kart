@@ -1,4 +1,23 @@
+import { Trophy, Percent, Flag, Medal } from 'lucide-react'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
+
+// Badge icona circolare colorato per statistica — stesso linguaggio di
+// PodiumSteps (STAT_ICONS), ma mostrato per OGNI riga (non solo il podio)
+// così le colonne si riconoscono a colpo d'occhio anche sotto la 3ª posizione.
+const STAT_ICON_CLS = {
+    placement: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+    tornei: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+    gare: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+    podi: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
+}
+const StatIcon = ({ kind, size = 12 }) => {
+    const Icon = kind === 'tornei' ? Trophy : kind === 'gare' ? Flag : kind === 'podi' ? Medal : Percent
+    return (
+        <span className={`inline-flex shrink-0 items-center justify-center rounded-full ${STAT_ICON_CLS[kind]}`} style={{ width: size + 10, height: size + 10 }}>
+            <Icon size={size} />
+        </span>
+    )
+}
 
 const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = null, theme = null, highlightPlayerId = null, isSuperadmin = false, onPlayerClick = null, startIndex = 0 }) => {
     if (!rows.length) {
@@ -162,26 +181,26 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                                 <div className="flex flex-col gap-0.5">
                                     {showTournamentWins ? (
                                         <>
-                                            <span className={`text-sm font-black ${placementTextColor(absoluteIndex)}`}>{row.placementIndex ?? 0}%</span>
+                                            <span className={`flex items-center gap-1.5 text-sm font-black ${placementTextColor(absoluteIndex)}`}><StatIcon kind="placement" size={11} />{row.placementIndex ?? 0}%</span>
                                             <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">placement</span>
                                             <span className="text-[10px] text-slate-400">{row.points} pt</span>
                                         </>
                                     ) : (
                                         <>
-                                            <span className={`text-sm font-black ${placementTextColor(absoluteIndex)}`}>{row.points} pt</span>
+                                            <span className={`flex items-center gap-1.5 text-sm font-black ${placementTextColor(absoluteIndex)}`}><StatIcon kind="placement" size={11} />{row.points} pt</span>
                                             <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">punti</span>
                                         </>
                                     )}
                                 </div>
                                 <div className="flex flex-col items-end gap-0.5">
-                                    <span className="text-xs font-black text-emerald-700 dark:text-emerald-400">{row.raceWins} vittorie</span>
+                                    <span className="flex items-center gap-1.5 text-xs font-black text-emerald-700 dark:text-emerald-400"><StatIcon kind="gare" size={11} />{row.raceWins} vittorie</span>
                                     <div className="w-16 h-1 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
                                         <div className="h-full rounded-full bg-emerald-400" style={{ width: `${Math.min(row.winRate ?? 0, 100)}%` }} />
                                     </div>
                                     <span className="text-[10px] text-slate-400">{row.winRate}% WR</span>
                                 </div>
                                 <div className="flex flex-col items-end gap-0.5">
-                                    <span className="text-xs font-black text-blue-700 dark:text-blue-400">{row.podiums} podi</span>
+                                    <span className="flex items-center gap-1.5 text-xs font-black text-blue-700 dark:text-blue-400"><StatIcon kind="podi" size={11} />{row.podiums} podi</span>
                                     <div className="w-16 h-1 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
                                         <div className="h-full rounded-full bg-blue-400" style={{ width: `${Math.min(row.podiumRate ?? 0, 100)}%` }} />
                                     </div>
@@ -224,28 +243,43 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                                     <td className="px-5 py-4 text-center align-middle">
                                         {showTournamentWins ? (
                                             <>
-                                                <span className={`text-lg font-black ${placementTextColor(absoluteIndex)}`}>{row.placementIndex ?? 0}%</span>
+                                                <div className="flex items-center justify-center gap-1.5">
+                                                    <StatIcon kind="placement" />
+                                                    <span className={`text-lg font-black ${placementTextColor(absoluteIndex)}`}>{row.placementIndex ?? 0}%</span>
+                                                </div>
                                                 <div className="text-[10px] text-slate-400 leading-tight">{row.points} pt</div>
                                             </>
                                         ) : (
-                                            <span className={`text-lg font-black ${placementTextColor(absoluteIndex)}`}>{row.points} pt</span>
+                                            <div className="flex items-center justify-center gap-1.5">
+                                                <StatIcon kind="placement" />
+                                                <span className={`text-lg font-black ${placementTextColor(absoluteIndex)}`}>{row.points} pt</span>
+                                            </div>
                                         )}
                                     </td>
                                     {showTournamentWins && (
                                         <td className="px-5 py-4 text-center align-middle">
-                                            <span className="text-sm font-black text-amber-700 dark:text-amber-400">{row.tournamentWins}</span>
+                                            <div className="flex items-center justify-center gap-1.5">
+                                                <StatIcon kind="tornei" />
+                                                <span className="text-sm font-black text-amber-700 dark:text-amber-400">{row.tournamentWins}</span>
+                                            </div>
                                             <div className="text-[10px] text-slate-400 leading-tight">di {row.tournamentsPlayed}</div>
                                         </td>
                                     )}
                                     <td className="px-5 py-4 text-center align-middle">
-                                        <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">{row.raceWins}</span>
+                                        <div className="flex items-center justify-center gap-1.5">
+                                            <StatIcon kind="gare" />
+                                            <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">{row.raceWins}</span>
+                                        </div>
                                         <div className="mt-1 h-1 w-14 mx-auto rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
                                             <div className="h-full rounded-full bg-emerald-400 dark:bg-emerald-500 transition-all" style={{ width: `${Math.min(row.winRate ?? 0, 100)}%` }} />
                                         </div>
                                         <div className="text-[10px] text-slate-400 leading-tight mt-0.5">{row.winRate}% WR</div>
                                     </td>
                                     <td className="px-5 py-4 text-center align-middle">
-                                        <span className="text-sm font-black text-blue-700 dark:text-blue-400">{row.podiums}</span>
+                                        <div className="flex items-center justify-center gap-1.5">
+                                            <StatIcon kind="podi" />
+                                            <span className="text-sm font-black text-blue-700 dark:text-blue-400">{row.podiums}</span>
+                                        </div>
                                         <div className="mt-1 h-1 w-14 mx-auto rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
                                             <div className="h-full rounded-full bg-blue-400 dark:bg-blue-500 transition-all" style={{ width: `${Math.min(row.podiumRate ?? 0, 100)}%` }} />
                                         </div>

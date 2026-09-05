@@ -3,13 +3,15 @@ import { Link } from 'react-router-dom'
 import {
     Activity, Award, BarChart3, Check, Clock, Database,
     ExternalLink, Key, LayoutDashboard, Play, Plus, RefreshCw,
-    Search, Shield, Trophy, Users, X, Zap, Trash2, Square, Flag, AlertTriangle, Copy, PartyPopper
+    Search, Shield, Trophy, Users, X, Zap, Trash2, Square, Flag, AlertTriangle, Copy, PartyPopper, Image as ImageIcon,
+    Star
 } from 'lucide-react'
 import { toast } from 'sonner'
 import AppLayout from '@/components/layout/AppLayout'
 import ConfirmModal from '@/components/common/ConfirmModal'
 import DatabaseTab from '@/components/superadmin/DatabaseTab'
 import TournamentStatusBadge from '@/components/common/TournamentStatusBadge'
+import EditableContentImage from '@/components/common/EditableContentImage'
 import { SkeletonRows } from '@/components/common/Skeleton'
 import { useAppData } from '@/context/AppDataContext'
 import { useAuth } from '@/context/AuthContext'
@@ -30,8 +32,19 @@ const TABS = [
     { key: 'panoramica', label: 'Panoramica', icon: LayoutDashboard },
     { key: 'utenti',     label: 'Utenti',     icon: Users },
     { key: 'tornei',     label: 'Tornei',     icon: Trophy },
+    { key: 'immagini',   label: 'Immagini',   icon: ImageIcon },
     { key: 'database',   label: 'Database',   icon: Database },
     { key: 'log',        label: 'Audit Log',  icon: Activity },
+]
+
+// Card statistica globale (uguale ovunque nell'app) — chiave content-image
+// fissa, upload diretto qui invece che dover aprire il profilo di un
+// giocatore qualunque solo per trovare la stessa card.
+const STAT_IMAGE_SLOTS = [
+    { contentKey: 'stat-icon-tornei', label: 'Tornei vinti', icon: Trophy, accent: 'text-amber-500' },
+    { contentKey: 'stat-icon-gare', label: 'Vittorie gara', icon: Flag, accent: 'text-emerald-500' },
+    { contentKey: 'stat-icon-podi', label: 'Podi totali', icon: Star, accent: 'text-blue-500' },
+    { contentKey: 'stat-icon-punti', label: 'Punti totali', icon: BarChart3, accent: 'text-violet-500' },
 ]
 
 // ── Sparkline SVG ────────────────────────────────────────────────
@@ -249,7 +262,7 @@ const TournamentTimeline = ({ tournament }) => {
 // ── component ────────────────────────────────────────────────────────
 export default function SuperAdminPanel() {
     const { user } = useAuth()
-    const { tournaments, players, refresh, homeMetrics, charactersById } = useAppData()
+    const { tournaments, players, refresh, homeMetrics, charactersById, contentImages, updateContentImage } = useAppData()
     const [activeTab, setActiveTab] = useState('panoramica')
 
     // Users
@@ -1004,6 +1017,71 @@ export default function SuperAdminPanel() {
                                     })}
                                 </div>
                             )}
+                        </div>
+                    </div>
+                )}
+
+                {/* ── TAB: IMMAGINI — upload diretto delle immagini caricabili
+                    dal superadmin (card statistiche profilo + immagine per
+                    torneo/"tornei disputati"), senza dover aprire il profilo
+                    di un giocatore per trovare la stessa card. ── */}
+                {activeTab === 'immagini' && (
+                    <div className="space-y-6">
+                        <div>
+                            <p className="font-title text-[10px] tracking-wide text-slate-500 dark:text-muted-foreground mb-3">Card statistiche profilo (uguali per tutti)</p>
+                            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                                {STAT_IMAGE_SLOTS.map(({ contentKey, label, icon: Icon, accent }) => (
+                                    <div key={contentKey} className="overflow-hidden rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card">
+                                        <EditableContentImage
+                                            contentKey={contentKey}
+                                            imageUrl={contentImages[contentKey]}
+                                            onUploaded={updateContentImage}
+                                            alt={label}
+                                            fit="cover"
+                                            className="h-28 w-full"
+                                        />
+                                        <div className="flex items-center gap-2 px-3 py-2.5">
+                                            <Icon size={14} className={accent} />
+                                            <p className="text-xs font-black text-slate-700 dark:text-foreground">{label}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <p className="font-title text-[10px] tracking-wide text-slate-500 dark:text-muted-foreground mb-3">Immagine per torneo (card "Tornei disputati")</p>
+                            <div className="rounded-[2rem] border-2 border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden" style={{ boxShadow: 'var(--circuit-shadow-md)' }}>
+                                {tournaments.length === 0 ? (
+                                    <p className="py-10 text-center text-sm text-slate-400">Nessun torneo disponibile.</p>
+                                ) : (
+                                    <div className="divide-y divide-slate-100 dark:divide-white/5">
+                                        {[...tournaments].sort((a, b) => new Date(b.date ?? 0) - new Date(a.date ?? 0)).map((t) => {
+                                            const contentKey = `tournament-image-${t.id}`
+                                            return (
+                                                <div key={t.id} className="flex items-center gap-4 px-5 py-3">
+                                                    <div className="h-16 w-24 shrink-0 overflow-hidden rounded-xl">
+                                                        <EditableContentImage
+                                                            contentKey={contentKey}
+                                                            imageUrl={contentImages[contentKey]}
+                                                            onUploaded={updateContentImage}
+                                                            alt={t.name}
+                                                            fit="cover"
+                                                            className="h-full w-full"
+                                                        />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="text-sm font-black text-slate-900 dark:text-foreground truncate">{t.name}</p>
+                                                        <p className="text-xs text-slate-500 dark:text-muted-foreground mt-0.5">
+                                                            {t.date ? new Date(t.date).toLocaleDateString('it-IT') : '—'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}

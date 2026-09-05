@@ -36,15 +36,23 @@ const Players = () => {
         return map
     }, [users])
 
+    // Un account superadmin non gioca mai — se per qualche motivo risulta
+    // comunque collegato a un Player, non deve comparire in questa lista
+    // pubblica di giocatori.
+    const superadminPlayerIds = useMemo(() => (
+        new Set(users.filter((u) => u.role === 'superadmin' && u.player_id).map((u) => u.player_id))
+    ), [users])
+
     const filteredPlayers = useMemo(() => {
-        if (!searchTerm.trim()) return players
+        const base = players.filter((p) => !superadminPlayerIds.has(p.id))
+        if (!searchTerm.trim()) return base
         const term = searchTerm.toLowerCase()
-        return players.filter((p) =>
+        return base.filter((p) =>
             p.nickname.toLowerCase().includes(term) ||
             p.first_name.toLowerCase().includes(term) ||
             p.last_name.toLowerCase().includes(term)
         )
-    }, [players, searchTerm])
+    }, [players, searchTerm, superadminPlayerIds])
 
     const handlePlayerClick = (player) => {
         const userId = userIdByPlayerId.get(player.id)

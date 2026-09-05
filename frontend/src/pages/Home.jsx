@@ -35,9 +35,9 @@ const Home = () =>{
             <section className="mx-auto max-w-7xl px-4 py-8">
                 <div className="relative overflow-hidden rounded-[2rem] border-2 border-white/15 bg-slate-900" style={{ boxShadow: 'var(--circuit-shadow-lg)' }}>
                     <CircuitBackdrop imageUrl={dashboardBgCircuit?.image_url} blurred />
-                    <div className="relative z-10 grid grid-cols-1 gap-6 p-4 sm:p-6 lg:grid-cols-[360px_1fr] lg:items-start">
-                        <ActivityFeed />
+                    <div className="relative z-10 flex flex-col gap-6 p-4 sm:p-6">
                         <Hero />
+                        <ActivityFeed />
                     </div>
                 </div>
             </section>
