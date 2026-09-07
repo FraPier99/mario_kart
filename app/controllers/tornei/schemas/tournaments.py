@@ -68,6 +68,10 @@ class TournamentResponse(BaseModel):
     consolation_winner_id: Optional[int] = None
     last_phase_change_at: Optional[datetime] = None
     is_friendly: bool = False
+    # Testo overlay festeggiamento congelato al momento della decretazione —
+    # None per i tornei decretati prima dell'introduzione di questo campo
+    # (il frontend ricade sul caricamento live per-gioco in quel caso).
+    celebration_text: Optional[dict] = None
 
     model_config = {"from_attributes": True}
 
@@ -86,12 +90,17 @@ class UpdateTournament(BaseModel):
     tournament_format: Optional[TournamentFormat] = None
     consolation_winner_id: Optional[int] = None
     format_data: Optional[dict] = None
+    # Testo overlay risolto lato client al momento del click "Decreta
+    # Vincitore" (vedi WinnerFinalizeCard.jsx) — salvato solo se il torneo
+    # viene effettivamente concluso in questa stessa richiesta.
+    celebration_text: Optional[dict] = None
 
 
 class TournamentPlayoffRequest(BaseModel):
     player_one_id: int
     player_two_id: int
     winner_id: int
+    celebration_text: Optional[dict] = None
 
 
 class SetPlayerWithdrawal(BaseModel):

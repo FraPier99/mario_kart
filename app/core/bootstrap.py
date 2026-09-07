@@ -864,6 +864,20 @@ def ensure_tournament_is_friendly_column():
             )
 
 
+def ensure_tournament_celebration_text_column():
+    """Aggiunge 'celebration_text' — il testo dell'overlay di festeggiamento
+    congelato al momento della decretazione del vincitore, così un successivo
+    cambio ai testi per-gioco non altera il replay dei festeggiamenti già
+    avvenuti."""
+    inspector = inspect(engine)
+    cols = {c["name"] for c in inspector.get_columns("tournaments")}
+    if "celebration_text" not in cols:
+        with engine.begin() as connection:
+            connection.execute(
+                text("ALTER TABLE tournaments ADD COLUMN celebration_text JSON")
+            )
+
+
 def ensure_schedina_deluxe_vincitori_gironi_column():
     """Aggiunge la colonna 'vincitori_gironi' (legacy, sostituita da 'classifiche_gironi')."""
     inspector = inspect(engine)
@@ -1086,6 +1100,7 @@ def bootstrap_database():
     ensure_result_position_constraint_deferrable()
     ensure_inventory_uses_columns()
     ensure_tournament_is_friendly_column()
+    ensure_tournament_celebration_text_column()
     # seed_circuits()
     seed_mk8d_data()
     seed_consoles()

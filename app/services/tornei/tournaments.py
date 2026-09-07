@@ -37,6 +37,45 @@ def _reject_superadmin_participants(db: Session, participant_ids: list[int]) -> 
         )
 
 
+def _build_winner_broadcast_standings(db: Session, tournament: Tournament) -> list[dict]:
+    """Classifica completa da includere nel broadcast Socket.IO alla
+    decretazione del vincitore — prima veniva inviato solo il vincitore, e
+    ogni client spettatore doveva recuperarsi la classifica da solo via
+    GET /leaderboard (con un retry-se-troppo-corta che non sempre bastava,
+    causando l'overlay di festeggiamento con il solo 1° classificato per chi
+    guardava in live). Ordine autorevole (rispetta l'esito degli spareggi,
+    a differenza di get_leaderboard da sola) unito ai dati punti/nickname
+    già calcolati da get_leaderboard, così non si duplica quel calcolo.
+    """
+    from app.services.tornei.stats import get_leaderboard
+
+    try:
+        order = (
+            get_group_stage_overall_classifica(db, tournament.id)
+            if tournament.tournament_format == "group_stage"
+            else get_classic_final_classifica(db, tournament.id)
+        )
+    except Exception:
+        order = []
+
+    rows_by_id = {row["id"]: row for row in get_leaderboard(db, tournament.id)}
+
+    ordered_ids = [pid for pid in order if pid in rows_by_id]
+    ordered_ids += [pid for pid in rows_by_id if pid not in ordered_ids]
+
+    standings = []
+    for pid in ordered_ids:
+        row = rows_by_id[pid]
+        player = db.query(Player).filter(Player.id == pid).first()
+        standings.append({
+            "playerId": pid,
+            "nickname": row["nickname"],
+            "points": row["total_point"],
+            "img_url": to_image_url(f"/players/{pid}/avatar", player.img_url) if player else None,
+        })
+    return standings
+
+
 # Soglie del tracking partecipazione (vedi PlayerGameParticipation): tornei
 # consecutivi giocati/saltati oltre le quali scattano rispettivamente il
 # badge "Costanza" (calcolato a lettura, in stats.py) e il promemoria di
@@ -667,6 +706,7 @@ def update_tournament(db: Session, tmentData: UpdateTournament, tournament_id: i
                         "winner_nickname": winner_name,
                         "winner_img_url": winner_img,
                         "winner_favorite_character_id": winner.favorite_character_id if winner else None,
+                        "standings": _build_winner_broadcast_standings(db, t),
                     },
                 )
             except Exception:
@@ -733,6 +773,8 @@ def set_tournament_playoff_winner(
 
     tournament.winner_id = playoffData.winner_id
     tournament.status = "concluso"
+    if playoffData.celebration_text is not None:
+        tournament.celebration_text = playoffData.celebration_text
     if not tournament.is_friendly:
         if tournament.tournament_format == "group_stage":
             from app.services.schedine.schedine_deluxe import settle_deluxe_schedine
@@ -786,6 +828,7 @@ def set_tournament_playoff_winner(
                         "winner_nickname": winner_name,
                         "winner_img_url": winner_img,
                         "winner_favorite_character_id": winner.favorite_character_id if winner else None,
+                        "standings": _build_winner_broadcast_standings(db, tournament),
                     },
                 )
             except Exception:

@@ -72,6 +72,20 @@ def update_player(db: Session, player_data: UpdatePlayer, player_id: int):
 
     update_data = player_data.model_dump(exclude_unset=True)
 
+    # `img_url` in lettura è già riscritto in un URL servito dall'app
+    # (to_image_url, /players/{id}/avatar?v=...), mai il base64 originale —
+    # se il form lo rimanda indietro invariato (form salvato senza toccare
+    # la foto), qui arriverebbe un valore che NON è né un caricamento fresco
+    # (data: URL) né una cancellazione esplicita (stringa vuota/None).
+    # Scriverlo comunque distruggerebbe per sempre l'immagine reale (il
+    # prossimo /avatar risponderebbe 404, "immagine persa"). Si ignora
+    # silenziosamente qualunque valore che non sia uno dei due casi validi,
+    # lasciando la colonna esistente intatta.
+    if "img_url" in update_data:
+        img_url = update_data["img_url"]
+        if img_url and not img_url.startswith("data:"):
+            del update_data["img_url"]
+
     nickname_changed = False
     if "nickname" in update_data and update_data["nickname"]:
         sanitized = sanitize_nickname(update_data["nickname"])

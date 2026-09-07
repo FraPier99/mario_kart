@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { Sparkles } from 'lucide-react'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import { getApiErrorMessage, tournamentsApi } from '@/services/apiClient'
+import { loadOverlayTexts } from '@/lib/overlayTexts'
 
 const getStatusLabel = (status) => {
     if (status === 'da_svolgere') return 'da svolgere'
@@ -161,7 +162,15 @@ const WinnerFinalizeCard = ({ tournament, leader, onFinalized, onReplayCelebrati
         }
 
         try {
-            await tournamentsApi.update(tournament.id, { winner_id: leader.playerId, status: 'concluso' })
+            // Congela il testo overlay risolto ORA per questo gioco — un
+            // successivo cambio a texts.json non altererà più il replay del
+            // festeggiamento di questo torneo (vedi lib/overlayTexts.js).
+            const celebrationText = await loadOverlayTexts(tournament.game_id).catch(() => null)
+            await tournamentsApi.update(tournament.id, {
+                winner_id: leader.playerId,
+                status: 'concluso',
+                ...(celebrationText ? { celebration_text: celebrationText } : {}),
+            })
             await onFinalized()
         }
         catch (error) {

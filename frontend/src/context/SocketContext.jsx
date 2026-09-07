@@ -157,21 +157,39 @@ export function SocketProvider({ children }) {
                     favoriteCharacterId: data.winner_favorite_character_id ?? null,
                 }
 
-                const { standings, tournament: t } = await withRetryOnShortStandings(async () => {
-                    const [tournRes, lbRes] = await Promise.allSettled([
-                        tournamentsApi.get(data.tournament_id),
-                        tournamentsApi.leaderboard(data.tournament_id),
-                    ])
-                    const tournament = tournRes.status === 'fulfilled' ? tournRes.value.data ?? {} : {}
-                    const standings = tournament.standings?.length ? tournament.standings
-                        : lbRes.status === 'fulfilled' && Array.isArray(lbRes.value.data) && lbRes.value.data.length
-                            ? lbRes.value.data.map((p) => ({
-                                playerId: p.id, nickname: p.nickname,
-                                points: p.total_point ?? 0,
-                            }))
-                            : []
-                    return { standings, tournament }
-                })
+                // Il backend ormai calcola e invia la classifica completa
+                // (ordine autorevole, rispetta gli spareggi) direttamente nel
+                // payload — si usa subito, senza il fetch+retry separato che
+                // prima poteva comunque arrivare corto (bug: overlay con il
+                // solo vincitore per chi guardava in live). Il fetch/retry
+                // resta solo come fallback per un evento senza `standings`
+                // (compatibilità con un backend non ancora aggiornato).
+                let standings = Array.isArray(data.standings) ? data.standings : []
+                let t = {}
+                if (standings.length) {
+                    try {
+                        const tournRes = await tournamentsApi.get(data.tournament_id)
+                        t = tournRes.data ?? {}
+                    } catch { /* metadata torneo non essenziale per l'overlay */ }
+                } else {
+                    const fallback = await withRetryOnShortStandings(async () => {
+                        const [tournRes, lbRes] = await Promise.allSettled([
+                            tournamentsApi.get(data.tournament_id),
+                            tournamentsApi.leaderboard(data.tournament_id),
+                        ])
+                        const tournament = tournRes.status === 'fulfilled' ? tournRes.value.data ?? {} : {}
+                        const fallbackStandings = tournament.standings?.length ? tournament.standings
+                            : lbRes.status === 'fulfilled' && Array.isArray(lbRes.value.data) && lbRes.value.data.length
+                                ? lbRes.value.data.map((p) => ({
+                                    playerId: p.id, nickname: p.nickname,
+                                    points: p.total_point ?? 0,
+                                }))
+                                : []
+                        return { standings: fallbackStandings, tournament }
+                    })
+                    standings = fallback.standings
+                    t = fallback.tournament
+                }
                 triggerRef.current(leader, standings.length ? standings : [leader], {
                     id: data.tournament_id, name: data.tournament_name, ...(t ?? {}),
                 })

@@ -12,8 +12,6 @@ import { COLORS } from '@/lib/constants'
 
 const ImageUpload = ({ value, onChange }) => {
   const [isDragging, setIsDragging] = useState(false)
-  const [showUrlInput, setShowUrlInput] = useState(false)
-  const [urlDraft, setUrlDraft] = useState('')
   const inputRef = useRef(null)
 
   const processFile = async (file) => {
@@ -34,12 +32,6 @@ const ImageUpload = ({ value, onChange }) => {
   const handleFileChange = (e) => {
     processFile(e.target.files?.[0])
     e.target.value = ''
-  }
-
-  const handleUrlConfirm = () => {
-    if (urlDraft.trim()) onChange(urlDraft.trim())
-    setShowUrlInput(false)
-    setUrlDraft('')
   }
 
   return (
@@ -86,26 +78,7 @@ const ImageUpload = ({ value, onChange }) => {
                 <XIcon size={10} /> Rimuovi
               </button>
             )}
-            <button type="button" onClick={() => setShowUrlInput((v) => !v)}
-              className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 transition hover:text-emerald-600 dark:hover:text-emerald-300">
-              {showUrlInput ? 'Annulla URL' : '+ Inserisci URL'}
-            </button>
           </div>
-          {showUrlInput && (
-            <div className="flex gap-2">
-              <input
-                value={urlDraft}
-                onChange={(e) => setUrlDraft(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleUrlConfirm()}
-                placeholder="https://..."
-                className="flex-1 rounded-xl border-2 border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-emerald-400"
-              />
-              <button type="button" onClick={handleUrlConfirm}
-                className="rounded-xl bg-emerald-600 px-3 py-1.5 text-[9px] font-black text-white transition hover:bg-emerald-500">
-                OK
-              </button>
-            </div>
-          )}
         </div>
       </div>
 

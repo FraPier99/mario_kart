@@ -141,6 +141,14 @@ class Tournament(Base):
     # Vincitore della finale di consolazione (gruppo "bottom" della Fase 2)
     consolation_winner_id = Column(Integer, ForeignKey("players.id"), nullable=True)
 
+    # Testo dell'overlay di festeggiamento "congelato" al momento della
+    # decretazione del vincitore (vedi frontend lib/overlayTexts.js) — così
+    # un successivo cambio ai testi per-gioco non altera retroattivamente il
+    # replay dei festeggiamenti già avvenuti. Nullo per i tornei decretati
+    # prima dell'introduzione di questo campo: il frontend ricade in quel
+    # caso sul caricamento live per-gioco.
+    celebration_text = Column(JSON, nullable=True)
+
     # Audit: creazione e ultimo avanzamento di fase del torneo.
     created_at = Column(DateTime, nullable=True, default=now_rome)
     created_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)

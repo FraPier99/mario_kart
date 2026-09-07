@@ -29,7 +29,10 @@ const DEFAULT_TEXTS = {
 
 let cachedTexts = {}
 
-const resolveGameKey = (gameId) => {
+// Esportata (non più solo interna a questo file) — usata anche da
+// lib/overlayAssets.js per risolvere la stessa cartella "per gioco" per gli
+// sprite (mugshot/item), con la stessa identica logica dei testi.
+export const resolveGameKey = (gameId) => {
     if (gameId === 2) return 'mk8d'
     return 'mkds'
 }

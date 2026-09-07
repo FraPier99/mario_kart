@@ -14,24 +14,30 @@
     import { getCelebrationConfig } from '@/config/celebrationConfig'
     import { loadOverlayTexts } from '@/lib/overlayTexts'
     import { useAppData } from '@/context/AppDataContext'
-    import { getTransparentItemImage } from '@/assets/images/mkds/items'
-    import { MUGSHOTS_STRIP, CHARACTER_OFFSETS } from '@/assets/images/mkds/mugshots'
+    import { getGameAssets } from '@/lib/overlayAssets'
 
     // Componente top-level (non ridefinito ad ogni render del genitore): carica
     // la versione a sfondo trasparente (chroma key via canvas, vedi items.js)
     // del frame richiesto la prima volta che appare un dato itemKey, poi la
     // riusa dalla cache in memoria per le apparizioni successive.
-    const ItemSprite = ({ itemKey, className, style }) => {
+    // `getImage` è la `getTransparentItemImage` del set di sprite del gioco
+    // corrente (vedi lib/overlayAssets.js) — passata come prop, non importata
+    // qui direttamente, perché questo componente resta top-level (stabile,
+    // non ridefinito ad ogni render) e quindi non ha accesso al game_id del
+    // torneo. `null` quando quel gioco non ha ancora uno sprite sheet item:
+    // nessun frame mostrato invece di un errore.
+    const ItemSprite = ({ itemKey, getImage, className, style }) => {
         const [transparentSrc, setTransparentSrc] = useState(null)
 
         useEffect(() => {
             let active = true
             setTransparentSrc(null)
-            getTransparentItemImage(itemKey).then((dataUrl) => {
+            if (!getImage) return undefined
+            getImage(itemKey).then((dataUrl) => {
                 if (active) setTransparentSrc(dataUrl)
             })
             return () => { active = false }
-        }, [itemKey])
+        }, [itemKey, getImage])
 
         if (!transparentSrc) return null
         return (
@@ -49,6 +55,10 @@
         () => externalConfig ?? getCelebrationConfig(tournament?.game_id),
         [externalConfig, tournament?.game_id]
     )
+    // Sprite (mugshot/item) del gioco di questo torneo — vedi lib/overlayAssets.js.
+    // Per un gioco senza sprite sheet ancora caricato, i campi restano
+    // null/{} e i punti d'uso più sotto ricadono già su un fallback pulito.
+    const gameAssets = useMemo(() => getGameAssets(tournament?.game_id), [tournament?.game_id])
     const { charactersById } = useAppData()
     const charactersByIdRef = useRef(charactersById)
     const leaderCharacterId = leader?.lastCharacterId ?? leader?.favoriteCharacterId
@@ -183,10 +193,17 @@
             return () => { document.body.style.overflow = '' }
         }, [])
 
-        // Load overlay texts
+        // Load overlay texts — usa lo snapshot congelato al momento della
+        // decretazione se il torneo ne ha uno (tournament.celebration_text,
+        // vedi WinnerFinalizeCard.jsx), altrimenti ricade sul caricamento
+        // live per-gioco (tornei decretati prima di questa funzionalità).
         useEffect(() => {
+            if (tournament?.celebration_text) {
+                setOverlayTexts(tournament.celebration_text)
+                return
+            }
             loadOverlayTexts(tournament?.game_id).then((texts) => setOverlayTexts(texts))
-        }, [tournament?.game_id])
+        }, [tournament?.game_id, tournament?.celebration_text])
 
     // Sound effects per phase
     useEffect(() => {
@@ -590,7 +607,7 @@
                         {el.isCrown ? (
                             <span className="text-2xl">👑</span>
                         ) : (
-                            <ItemSprite itemKey="star" className="w-full h-full" />
+                            <ItemSprite itemKey="star" getImage={gameAssets.getTransparentItemImage} className="w-full h-full" />
                         )}
                     </div>
                 ))}
@@ -689,7 +706,7 @@
                         {shellAnim === 'intro' && (
                             <div className="flex flex-col items-center gap-6">
                                 <div className="text-8xl md:text-9xl animate-blue-shell-intro drop-shadow-[0_0_50px_rgba(52,152,219,0.9)] flex items-center justify-center">
-                                    <ItemSprite itemKey="spinyShell" className="h-24 w-16 md:h-28 md:w-20" />
+                                    <ItemSprite itemKey="spinyShell" getImage={gameAssets.getTransparentItemImage} className="h-24 w-16 md:h-28 md:w-20" />
                                 </div>
                                 <p className="text-2xl md:text-4xl font-black uppercase tracking-widest text-blue-400 animate-incoming-text drop-shadow-[0_0_20px_rgba(52,152,219,0.6)]">
                                     SPINY SHELL!
@@ -707,7 +724,7 @@
                                 </div>
                                 {/* Shell explosion */}
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <ItemSprite itemKey="spinyShell" className="h-24 w-16 animate-blue-shell-impact" />
+                                    <ItemSprite itemKey="spinyShell" getImage={gameAssets.getTransparentItemImage} className="h-24 w-16 animate-blue-shell-impact" />
                                 </div>
                                 {/* Burst wave rings */}
                                 <div className="absolute inset-0 flex items-center justify-center">
@@ -744,7 +761,7 @@
                             <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
                                 <div className="flex flex-col items-center gap-4">
                                     <div className="flex items-center justify-center animate-item-roulette-cycle drop-shadow-[0_0_30px_rgba(245,158,11,0.6)]">
-                                        <ItemSprite itemKey="itemBox" className="h-20 w-12 md:h-24 md:w-14" />
+                                        <ItemSprite itemKey="itemBox" getImage={gameAssets.getTransparentItemImage} className="h-20 w-12 md:h-24 md:w-14" />
                                     </div>
                                     <p className="text-lg font-black uppercase tracking-widest text-amber-400/70 animate-suspense-pulse">
                                         In arrivo...
@@ -788,14 +805,14 @@
                                             const cid = revealPlayer.lastCharacterId || revealPlayer.favoriteCharacterId || revealPlayer.favorite_character_id
                                             const ch = cid && charactersByIdRef.current?.get(cid)
                                             if (!ch) return null
-                                            const charIdx = CHARACTER_OFFSETS[ch.name]
+                                            const charIdx = gameAssets.CHARACTER_OFFSETS[ch.name]
                                             if (charIdx !== undefined) {
-                                                const total = Object.keys(CHARACTER_OFFSETS).length
+                                                const total = Object.keys(gameAssets.CHARACTER_OFFSETS).length
                                                 const xPct = (charIdx / total) * 100
                                                 return (
                                                     <div className="absolute -bottom-2 -right-2 h-14 w-14 rounded-xl border-2 border-amber-400 overflow-hidden bg-gray-900 shadow-lg ring-2 ring-amber-400/50"
                                                         style={{
-                                                            backgroundImage: `url(${MUGSHOTS_STRIP})`,
+                                                            backgroundImage: `url(${gameAssets.MUGSHOTS_STRIP})`,
                                                             backgroundPosition: `${xPct}% 0%`,
                                                             backgroundSize: `${total * 100}% 100%`,
                                                             backgroundRepeat: 'no-repeat',
@@ -1006,14 +1023,14 @@
                                 const cid = leader.lastCharacterId || leader.favoriteCharacterId
                                 const ch = cid && charactersByIdRef.current?.get(cid)
                                 if (!ch) return null
-                                const charIdx = CHARACTER_OFFSETS[ch.name]
+                                const charIdx = gameAssets.CHARACTER_OFFSETS[ch.name]
                                 if (charIdx !== undefined) {
-                                    const total = Object.keys(CHARACTER_OFFSETS).length
+                                    const total = Object.keys(gameAssets.CHARACTER_OFFSETS).length
                                     const xPct = (charIdx / total) * 100
                                     return (
                                         <div className="absolute -bottom-2 -right-2 h-14 w-14 md:h-16 md:w-16 rounded-xl border-2 border-amber-400 overflow-hidden bg-gray-900 shadow-lg ring-2 ring-amber-400/50"
                                             style={{
-                                                backgroundImage: `url(${MUGSHOTS_STRIP})`,
+                                                backgroundImage: `url(${gameAssets.MUGSHOTS_STRIP})`,
                                                 backgroundPosition: `${xPct}% 0%`,
                                                 backgroundSize: `${total * 100}% 100%`,
                                                 backgroundRepeat: 'no-repeat',
@@ -1034,9 +1051,9 @@
 
                         <p className="text-lg sm:text-4xl md:text-6xl font-black uppercase tracking-wide sm:tracking-[0.15em] text-amber-300 drop-shadow-[0_0_30px_rgba(245,158,11,0.6)] flex flex-wrap items-center justify-center gap-1.5 sm:gap-3 px-4 text-center"
                             style={{ animation: 'text-neon-pulse 0.5s ease-in-out infinite alternate' }}>
-                            <ItemSprite itemKey="star" className="h-4 w-3.5 sm:h-8 sm:w-6 md:h-10 md:w-8 shrink-0" />
+                            <ItemSprite itemKey="star" getImage={gameAssets.getTransparentItemImage} className="h-4 w-3.5 sm:h-8 sm:w-6 md:h-10 md:w-8 shrink-0" />
                             {overlayTexts?.countdown?.labels?.campione ?? 'CAMPIONE!'}
-                            <ItemSprite itemKey="star" className="h-4 w-3.5 sm:h-8 sm:w-6 md:h-10 md:w-8 shrink-0" />
+                            <ItemSprite itemKey="star" getImage={gameAssets.getTransparentItemImage} className="h-4 w-3.5 sm:h-8 sm:w-6 md:h-10 md:w-8 shrink-0" />
                         </p>
                     </div>
                 )}
@@ -1055,7 +1072,7 @@
                                 {c.key % 2 === 0 ? (
                                     <span className="text-2xl">🪙</span>
                                 ) : (
-                                    <ItemSprite itemKey="star" className="w-full h-full" />
+                                    <ItemSprite itemKey="star" getImage={gameAssets.getTransparentItemImage} className="w-full h-full" />
                                 )}
                             </div>
                         ))}
