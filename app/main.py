@@ -28,6 +28,7 @@ from app.controllers.schedine.schedine_deluxe import router as schedine_deluxe_r
 from app.controllers.utenti.ownership import router as ownership_router
 from app.controllers.utenti.consoles import router as consoles_router
 from app.controllers.utenti.content_images import router as content_images_router
+from app.controllers.utenti.overlay_texts import router as overlay_texts_router
 
 
 tags_metadata = [
@@ -63,6 +64,10 @@ tags_metadata = [
     {
         "name": "ContentImages",
         "description": "Immagini di contenuto statico (es. pagina /faq) caricabili dal superadmin.",
+    },
+    {
+        "name": "OverlayTexts",
+        "description": "Testo dell'overlay di festeggiamento per gioco, editabile dal superadmin.",
     },
 ]
 
@@ -130,6 +135,7 @@ app.include_router(schedine_deluxe_router)
 app.include_router(ownership_router)
 app.include_router(consoles_router)
 app.include_router(content_images_router)
+app.include_router(overlay_texts_router)
 app.include_router(stats_router)
 
 # Combined ASGI app: Socket.IO on /socket.io/, everything else → FastAPI

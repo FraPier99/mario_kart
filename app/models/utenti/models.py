@@ -7,6 +7,7 @@ from sqlalchemy import (
     ForeignKey,
     DateTime,
     UniqueConstraint,
+    JSON,
 )
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -284,6 +285,28 @@ class SiteContentImage(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     key = Column(String, nullable=False, unique=True)
     image_data = Column(Text, nullable=True)
+    updated_at = Column(DateTime, nullable=True)
+    updated_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+
+    updated_by = relationship("User", foreign_keys=[updated_by_id])
+
+
+# -------------------
+# OVERLAY TEXT
+# -------------------
+class OverlayText(Base):
+    """Testo dell'overlay di festeggiamento, per gioco — stesso principio di
+    SiteContentImage (una riga per "slot", qui identificato dalla game key
+    'mkds'/'mk8d') ma editabile dal superadmin da /superadmin invece che
+    hardcoded in un file statico del frontend (frontend/src/assets/
+    overlay-texts/<key>/texts.json, tenuto solo come fallback offline).
+    `data` rispecchia la stessa forma di quel JSON (thankyou, countdown.*,
+    derapata)."""
+    __tablename__ = "overlay_texts"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    key = Column(String, nullable=False, unique=True)
+    data = Column(JSON, nullable=True)
     updated_at = Column(DateTime, nullable=True)
     updated_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 

@@ -264,6 +264,12 @@ export const contentImagesApi = {
     remove: (key) => _delete(`/content-images/${key}`),
 }
 
+export const overlayTextsApi = {
+    list: () => _get('/overlay-texts'),
+    get: (key) => _get(`/overlay-texts/${key}`),
+    upload: (key, data) => _put(`/overlay-texts/${key}`, { data }),
+}
+
 export const authStorage = {
     tokenKey: AUTH_TOKEN_KEY,
     getToken: () => localStorage.getItem(AUTH_TOKEN_KEY),

@@ -4,12 +4,13 @@ import {
     Activity, Award, BarChart3, Check, Clock, Database,
     ExternalLink, Key, LayoutDashboard, Play, Plus, RefreshCw,
     Search, Shield, Trophy, Users, X, Zap, Trash2, Square, Flag, AlertTriangle, Copy, PartyPopper, Image as ImageIcon,
-    Star
+    Star, MessageSquare
 } from 'lucide-react'
 import { toast } from 'sonner'
 import AppLayout from '@/components/layout/AppLayout'
 import ConfirmModal from '@/components/common/ConfirmModal'
 import DatabaseTab from '@/components/superadmin/DatabaseTab'
+import OverlayTextsTab from '@/components/superadmin/OverlayTextsTab'
 import TournamentStatusBadge from '@/components/common/TournamentStatusBadge'
 import EditableContentImage from '@/components/common/EditableContentImage'
 import { SkeletonRows } from '@/components/common/Skeleton'
@@ -33,6 +34,7 @@ const TABS = [
     { key: 'utenti',     label: 'Utenti',     icon: Users },
     { key: 'tornei',     label: 'Tornei',     icon: Trophy },
     { key: 'immagini',   label: 'Immagini',   icon: ImageIcon },
+    { key: 'testi',      label: 'Testi',      icon: MessageSquare },
     { key: 'database',   label: 'Database',   icon: Database },
     { key: 'log',        label: 'Audit Log',  icon: Activity },
 ]
@@ -1128,6 +1130,9 @@ export default function SuperAdminPanel() {
                         </div>
                     </div>
                 )}
+
+                {/* ── TAB: TESTI ── */}
+                {activeTab === 'testi' && <OverlayTextsTab />}
 
                 {/* ── TAB: DATABASE ── */}
                 {activeTab === 'database' && (

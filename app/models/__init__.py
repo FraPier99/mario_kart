@@ -22,6 +22,7 @@ from app.models.utenti.models import (
     UserConsoleOwnership,
     UserR4Device,
     SiteContentImage,
+    OverlayText,
 )
 from app.models.tornei.models import (
     Game,
@@ -74,4 +75,5 @@ __all__ = [
     "UserConsoleOwnership",
     "UserR4Device",
     "SiteContentImage",
+    "OverlayText",
 ]
