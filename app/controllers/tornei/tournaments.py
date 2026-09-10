@@ -229,7 +229,11 @@ def set_playoff_winner(
 ):
     tournament, outcome = set_tournament_playoff_winner(db, tournament_id, playoffData)
 
-    if outcome == "tournament_not_found" or not tournament:
+    # NOTA: ogni ramo d'errore del service restituisce tournament=None, quindi
+    # il controllo di "non trovato" deve guardare solo `outcome` — un
+    # `or not tournament` qui intercetterebbe (a torto) anche tutti gli altri
+    # esiti d'errore sotto, che diventerebbero irraggiungibili.
+    if outcome == "tournament_not_found":
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Tournament with id {tournament_id} not found",
@@ -251,6 +255,18 @@ def set_playoff_winner(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Selected players are not part of this tournament",
+        )
+
+    if outcome == "winner_is_withdrawn":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Impossibile decretare vincitore un giocatore ritirato dal torneo",
+        )
+
+    if not tournament:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Tournament with id {tournament_id} not found",
         )
 
     return tournament

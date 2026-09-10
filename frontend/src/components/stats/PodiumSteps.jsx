@@ -77,6 +77,9 @@ const PodiumSteps = ({ players = [], onPlayerClick = null, firstPlaceBadge = nul
                         <p className={`mt-1 sm:mt-2.5 md:mt-3 w-full truncate text-center font-black uppercase tracking-wide text-slate-800 dark:text-foreground ${isFirst ? 'text-[9px] sm:text-sm md:text-base' : 'text-[8px] sm:text-xs md:text-sm'}`}>
                             {player.nickname}
                         </p>
+                        {player.withdrawn && (
+                            <span className="mt-0.5 rounded-full bg-rose-500 px-1.5 py-0.5 text-[6px] sm:text-[8px] font-black uppercase tracking-wider text-white">Ritirato</span>
+                        )}
 
                         {/* Personaggi usati nel torneo */}
                         {player.characters?.length > 0 && (

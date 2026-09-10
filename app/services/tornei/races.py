@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.models import Race
+from app.models import Race, Tournament, TournamentPlayer
 from app.controllers.tornei.schemas.races import CreateRace, UpdateRace
 from app.data.punteggi import PUNTEGGI_CONFIG
 
@@ -44,7 +44,26 @@ def create_race(db: Session, race_data: CreateRace):
             if block and block.get("order") is not None:
                 raise ValueError(f"Duello già risolto per {race_data.group_name}")
 
-    new_race = Race(**race_data.model_dump())
+    # Congela il numero di giocatori attivi (non ritirati) al momento della
+    # creazione — vedi Race.active_player_count. Solo classic: group_stage ha
+    # un problema di punteggio pre-esistente e non correlato (le gare di
+    # girone punteggiano già su tournament.n_players invece che sui giocatori
+    # del singolo girone) che questa colonna non deve toccare — resta NULL e
+    # i punti di lettura ricadono su tournament.n_players come sempre.
+    active_player_count = None
+    tournament = db.query(Tournament).filter(Tournament.id == race_data.tournament_id).first()
+    if tournament and tournament.tournament_format == "classic":
+        withdrawn_count = (
+            db.query(TournamentPlayer)
+            .filter(
+                TournamentPlayer.tournament_id == tournament.id,
+                TournamentPlayer.withdrawn.is_(True),
+            )
+            .count()
+        )
+        active_player_count = tournament.n_players - withdrawn_count
+
+    new_race = Race(**race_data.model_dump(), active_player_count=active_player_count)
     db.add(new_race)
     db.commit()
     db.refresh(new_race)
@@ -111,7 +130,7 @@ def reorder_race_results(db: Session, race_id: int, assignments: list[dict]):
     if not race or not race.tournament:
         return None
 
-    total_player = race.tournament.n_players
+    total_player = race.active_player_count if race.active_player_count is not None else race.tournament.n_players
     results_by_id = {r.id: r for r in race.results}
 
     updated = []

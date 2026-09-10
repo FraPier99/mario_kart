@@ -30,8 +30,11 @@ def create_result(db: Session, resultData: CreateResult):
 
     # prendo il torneo a cui appartiene la gara
     tournament = race.tournament
-    # prendo il numero totale di giocatori del torneo
-    total_player = tournament.n_players
+    # numero di giocatori su cui punteggiare questa gara: il valore congelato
+    # alla creazione della gara (Race.active_player_count, tiene conto di
+    # eventuali ritiri avvenuti prima di questa gara) se presente, altrimenti
+    # lo statico Tournament.n_players (group_stage, o gare pre-esistenti)
+    total_player = race.active_player_count if race.active_player_count is not None else tournament.n_players
 
     try:
         # calcolo i punti in base alla posizione del risultato e al numero totale di giocatori del torneo
@@ -77,7 +80,7 @@ def update_result(db: Session, resultData: UpdateResult, result_id: int):
         if not race or not race.tournament:
             raise ValueError("Invalid Race")
 
-        total_player = race.tournament.n_players
+        total_player = race.active_player_count if race.active_player_count is not None else race.tournament.n_players
 
         try:
             result.points = PUNTEGGI_CONFIG[total_player][result.position - 1]

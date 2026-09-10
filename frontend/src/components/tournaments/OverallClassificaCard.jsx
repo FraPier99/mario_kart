@@ -4,7 +4,7 @@
  * un'unica lista ordinata. L'ordine arriva già risolto dal backend
  * (vedi GET /tournaments/{id}/group-stage/overall-classifica).
  */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Crown, Medal, Trophy } from 'lucide-react'
 import { tournamentsApi } from '@/services/apiClient'
 import RefreshButton from '@/components/common/RefreshButton'
@@ -21,6 +21,7 @@ const OverallClassificaCard = ({ tournament, playerMap, highlightPlayerId = null
     const mountedRef = useRef(true)
     useEffect(() => () => { mountedRef.current = false }, [])
     const { goToPlayerProfile } = useCommunityUserNav()
+    const withdrawnIds = useMemo(() => new Set(tournament.withdrawn_player_ids ?? []), [tournament.withdrawn_player_ids])
 
     useEffect(() => {
         tournamentsApi.overallClassifica(tournament.id)
@@ -60,7 +61,7 @@ const OverallClassificaCard = ({ tournament, playerMap, highlightPlayerId = null
                     <PodiumSteps
                         players={order.slice(0, 3).map((playerId) => {
                             const player = playerMap.get(playerId)
-                            return player ? { playerId, nickname: player.nickname, img_url: player.img_url } : null
+                            return player ? { playerId, nickname: player.nickname, img_url: player.img_url, withdrawn: withdrawnIds.has(playerId) } : null
                         }).filter(Boolean)}
                         onPlayerClick={(p) => goToPlayerProfile(p.playerId)}
                     />
@@ -92,6 +93,7 @@ const OverallClassificaCard = ({ tournament, playerMap, highlightPlayerId = null
                                 {player.nickname}
                                 {isFirst && <Crown size={10} className="inline ml-1 text-amber-500" />}
                                 {isMe && <span className="ml-1.5 rounded-full bg-amber-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-white">Tu</span>}
+                                {withdrawnIds.has(playerId) && <span className="ml-1.5 rounded-full bg-rose-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-white">Ritirato</span>}
                             </span>
                             <span className={`shrink-0 text-[9px] font-black uppercase tracking-wider ${isConsolation ? 'text-slate-400' : 'text-amber-600 dark:text-amber-400'}`}>
                                 {isConsolation ? 'Consolazione' : 'Finale'}

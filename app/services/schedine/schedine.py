@@ -281,6 +281,23 @@ def get_public_schedina_overview(db: Session, game_id: int | None = None):
     }
 
 
+def _get_withdrawn_player_ids(db: Session, tournament_id: int) -> set[int]:
+    """Id dei Player ritirati (TournamentPlayer.withdrawn=True) da questo
+    torneo — usato per escluderli dalla vincita della Carta Master (propria
+    schedina) e dal Guscio Blu (ultimo posto), senza toccare come vengono
+    punteggiati i pronostici ALTRUI che li riguardano.
+    """
+    rows = (
+        db.query(TournamentPlayer.player_id)
+        .filter(
+            TournamentPlayer.tournament_id == tournament_id,
+            TournamentPlayer.withdrawn.is_(True),
+        )
+        .all()
+    )
+    return {pid for (pid,) in rows}
+
+
 def _build_tournament_schedina_snapshot(
     db: Session, tournament_id: int, include_details: bool = True
 ):
@@ -355,6 +372,15 @@ def _build_tournament_schedina_snapshot(
         .first()
     )
 
+    # Player collegato a ciascun User autore di una schedina — serve solo a
+    # sapere se il pronosticatore stesso è un giocatore ritirato dal torneo
+    # (Carta Master/Guscio Blu, vedi _get_withdrawn_player_ids), non tocca lo
+    # scoring dei pronostici.
+    owner_player_by_user_id = {
+        u.id: u.player_id
+        for u in db.query(User).filter(User.id.in_([s.user_id for s in schedine])).all()
+    } if schedine else {}
+
     snapshot_rows = []
     for schedina in schedine:
         total_points, _breakdown = _score_schedina(schedina, actual)
@@ -375,6 +401,7 @@ def _build_tournament_schedina_snapshot(
                 "tie_breaker_distance": tie_breaker_distance,
                 "winner_match": schedina.user_id,
                 "scoring_breakdown": _breakdown,
+                "owner_player_id": owner_player_by_user_id.get(schedina.user_id),
             }
         )
 
@@ -397,7 +424,18 @@ def _build_tournament_schedina_snapshot(
                 break
 
     if winner_row is None and snapshot_rows:
-        winner_row = snapshot_rows[0]
+        # Un giocatore ritirato non può vincere la Carta Master con la
+        # propria schedina, anche se avrebbe il punteggio più alto — si
+        # sceglie la prima riga eleggibile (l'elenco è già ordinato per
+        # punteggio/tie-break); se per assurdo TUTTI fossero ritirati, si
+        # ricade sulla riga migliore comunque per non lasciare vuoto lo
+        # storico.
+        withdrawn_ids = _get_withdrawn_player_ids(db, tournament_id)
+        eligible_rows = [
+            item for item in snapshot_rows
+            if item["owner_player_id"] not in withdrawn_ids
+        ]
+        winner_row = (eligible_rows or snapshot_rows)[0]
 
     return tournament, actual, snapshot_rows, winner_row
 
@@ -509,15 +547,21 @@ def _get_actual_tournament_winner(tournament: Tournament, leaderboard):
     return None, 0
 
 
-def _get_last_id(leaderboard):
+def _get_last_id(leaderboard, withdrawn_ids: set[int] | None = None):
     if not leaderboard:
         return []
+    # La soglia 1-vs-2 destinatari resta legata alla dimensione ORIGINALE del
+    # torneo (n), non al numero di giocatori rimasti attivi — cambia solo CHI
+    # riceve il Guscio Blu, saltando chi si è ritirato (non ha senso premiare
+    # con una carta futura chi non gioca più questo torneo).
     n = len(leaderboard)
     count = 2 if n >= 7 else 1
-    return [leaderboard[-i].player_id for i in range(1, count + 1)]
+    withdrawn_ids = withdrawn_ids or set()
+    active = [row for row in leaderboard if row.player_id not in withdrawn_ids]
+    return [active[-i].player_id for i in range(1, min(count, len(active)) + 1)]
 
 
-def _last_ids_from_final_order(order: list[int]) -> list[int]:
+def _last_ids_from_final_order(order: list[int], withdrawn_ids: set[int] | None = None) -> list[int]:
     """
     Estrae l'ultimo (e, da 7 partecipanti in su, anche il penultimo)
     classificato da un ordine GIÀ risolto rispetto agli eventuali spareggi
@@ -525,12 +569,22 @@ def _last_ids_from_final_order(order: list[int]) -> list[int]:
     che ordina solo su punti/vittorie/podi e ignora l'esito dei duelli,
     quindi può indicare come "ultimo"/"penultimo" il giocatore sbagliato se
     c'è un pareggio nelle posizioni di coda.
+
+    `withdrawn_ids`, se passato, esclude i giocatori ritirati dal torneo dalla
+    selezione (un ritirato non riceve il Guscio Blu anche se la classifica
+    congelata lo piazzerebbe ultimo) — la soglia 1-vs-2 destinatari resta
+    comunque legata alla dimensione ORIGINALE dell'ordine, non a quella
+    ridotta dopo l'esclusione.
     """
     if not order:
         return []
     n = len(order)
     count = 2 if n >= 7 else 1
-    return list(reversed(order[-count:]))
+    withdrawn_ids = withdrawn_ids or set()
+    active_order = [pid for pid in order if pid not in withdrawn_ids]
+    if not active_order:
+        return []
+    return list(reversed(active_order[-count:]))
 
 
 def _score_schedina(
@@ -545,10 +599,20 @@ def _score_schedina(
     classifica = schedina.classifica_ordinata or []
     actual_classifica = actual.get("classifica_ordinata", [])
 
-    n_players = min(len(classifica), len(actual_classifica))
+    # Ignora eventuali giocatori aggiunti al torneo DOPO la compilazione di
+    # questa schedina: senza questo filtro, un giocatore aggiunto tardi che
+    # si piazza in una qualunque posizione reale sposta di un indice tutte le
+    # posizioni successive, facendo risultare "sbagliate" previsioni che
+    # erano corrette rispetto ai soli partecipanti conosciuti al momento
+    # della compilazione (schedina.classifica_ordinata è esattamente quel
+    # set, validato in create_schedina).
+    known_ids = set(classifica)
+    aligned_actual_classifica = [pid for pid in actual_classifica if pid in known_ids]
+
+    n_players = min(len(classifica), len(aligned_actual_classifica))
     for idx in range(n_players):
         pid = classifica[idx]
-        correct = pid == actual_classifica[idx]
+        correct = pid == aligned_actual_classifica[idx]
         label = f"{idx + 1}°"
         pts = PUNTI_PRONOSTICO if correct else 0
         if correct:
@@ -722,10 +786,11 @@ def settle_tournament_schedine(db: Session, tournament_id: int):
     # va usato anche qui, altrimenti il Guscio Blu rischia di andare a chi
     # risultava "ultimo"/"penultimo" prima della risoluzione di un duello
     # sulle posizioni di coda.
+    withdrawn_ids = _get_withdrawn_player_ids(db, tournament_id)
     if tournament.tournament_format == "classic":
-        last_two_ids = _last_ids_from_final_order(actual["classifica_ordinata"])
+        last_two_ids = _last_ids_from_final_order(actual["classifica_ordinata"], withdrawn_ids)
     else:
-        last_two_ids = _get_last_id(_get_leaderboard(db, tournament_id))
+        last_two_ids = _get_last_id(_get_leaderboard(db, tournament_id), withdrawn_ids)
 
     for item in snapshot_rows:
         schedina = item["schedina"]
@@ -746,6 +811,7 @@ def settle_tournament_schedine(db: Session, tournament_id: int):
         for item in snapshot_rows
         if item["total_points"] == winner_row["total_points"]
         and item["tie_breaker_distance"] == winner_row["tie_breaker_distance"]
+        and item["owner_player_id"] not in withdrawn_ids
     ]
 
     next_tournament = _find_next_tournament(db, tournament)

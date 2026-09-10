@@ -588,6 +588,19 @@ def update_tournament(db: Session, tmentData: UpdateTournament, tournament_id: i
                     "Decreta prima il vincitore della Consolazione/Finalina."
                 )
 
+    if tmentData.winner_id is not None and tmentData.winner_id != previous_winner_id:
+        withdrawn_winner = (
+            db.query(TournamentPlayer)
+            .filter(
+                TournamentPlayer.tournament_id == tournament_id,
+                TournamentPlayer.player_id == tmentData.winner_id,
+                TournamentPlayer.withdrawn.is_(True),
+            )
+            .first()
+        )
+        if withdrawn_winner:
+            raise ValueError("Impossibile decretare vincitore un giocatore ritirato dal torneo")
+
     tUpdate = tmentData.model_dump(exclude_unset=True)
     participant_ids = tUpdate.pop("participant_ids", None)
     format_data_update = tUpdate.pop("format_data", None)
@@ -758,6 +771,18 @@ def set_tournament_playoff_winner(
         missing = valid_players.difference(set(tournament.participant_ids))
         if missing:
             return None, "invalid_participants"
+
+    withdrawn_winner = (
+        db.query(TournamentPlayer)
+        .filter(
+            TournamentPlayer.tournament_id == tournament_id,
+            TournamentPlayer.player_id == playoffData.winner_id,
+            TournamentPlayer.withdrawn.is_(True),
+        )
+        .first()
+    )
+    if withdrawn_winner:
+        return None, "winner_is_withdrawn"
 
     # persist playoff history
     from app.models import PlayoffHistory

@@ -24,6 +24,7 @@ from app.services.schedine.schedine import (
     _find_next_tournament,
     _get_last_id,
     _get_leaderboard,
+    _get_withdrawn_player_ids,
     _last_ids_from_final_order,
 )
 from app.models import (
@@ -245,11 +246,16 @@ def _score_schedina_groupstage(
 
     # 2. Classifica Finale — 3 pt per ogni posizione esatta del podio (riparte da 0)
     pred_classifica = schedina.classifica_finale_ordinata or []
-    n = min(len(pred_classifica), len(actual_classifica_finale))
+    # Stesso motivo del filtro analogo in _score_schedina (classic): un
+    # finalista aggiunto dopo la compilazione di questa schedina non deve
+    # sfasare per indice le posizioni previste sui finalisti già conosciuti.
+    known_finale_ids = set(pred_classifica)
+    aligned_classifica_finale = [pid for pid in actual_classifica_finale if pid in known_finale_ids]
+    n = min(len(pred_classifica), len(aligned_classifica_finale))
     posizioni_corrette = 0
     posizioni = []
     for idx, pid in enumerate(pred_classifica):
-        correct = idx < n and pred_classifica[idx] == actual_classifica_finale[idx]
+        correct = idx < n and pred_classifica[idx] == aligned_classifica_finale[idx]
         if correct:
             posizioni_corrette += 1
         pts = PUNTI_PRONOSTICO if correct else 0
@@ -275,7 +281,12 @@ def _score_schedina_groupstage(
     gironi_breakdown = {}
     pts_gironi_totali = 0
     for girone, pred_ordine in pred_gironi.items():
-        actual_ordine = actual_classifiche_gironi.get(girone, [])
+        actual_ordine_raw = actual_classifiche_gironi.get(girone, [])
+        # Filtro per-girone: un giocatore aggiunto a QUESTO girone dopo che la
+        # schedina ne aveva già previsto l'ordine non deve sfasare per indice
+        # le posizioni previste sui partecipanti già conosciuti in quel girone.
+        known_girone_ids = set(pred_ordine)
+        actual_ordine = [pid for pid in actual_ordine_raw if pid in known_girone_ids]
         n = min(len(pred_ordine), len(actual_ordine))
         posizioni = []
         posizioni_corrette = 0
@@ -501,6 +512,7 @@ def settle_deluxe_schedine(db: Session, tournament_id: int) -> dict:
             {
                 "schedina_id": s.id,
                 "user_id": s.user_id,
+                "player_id": user.player_id if user else None,
                 "username": user.username if user else f"user-{s.user_id}",
                 "nickname": player.nickname if player else None,
                 "total_points": score,
@@ -514,8 +526,15 @@ def settle_deluxe_schedine(db: Session, tournament_id: int) -> dict:
         key=lambda r: (-r["total_points"], r["tiebreak_distance"], r["schedina_id"])
     )
 
+    withdrawn_ids = _get_withdrawn_player_ids(db, tournament_id)
+
     schedina_by_id = {s.id: s for s in schedine}
-    winner_row = rows[0]
+    # Un giocatore ritirato non può vincere la Carta Master con la propria
+    # schedina, anche se avrebbe il punteggio più alto (righe già ordinate
+    # per punteggio/tie-break sopra) — fallback sulla migliore in assoluto
+    # solo se per assurdo tutti fossero ritirati.
+    eligible_rows = [r for r in rows if r["player_id"] not in withdrawn_ids]
+    winner_row = (eligible_rows or rows)[0]
     winner_schedina = schedina_by_id[winner_row["schedina_id"]]
     winner_user = db.query(User).filter(User.id == winner_schedina.user_id).first()
     torneo.vincitore_schedina_id = winner_user.player_id if winner_user else None
@@ -527,6 +546,7 @@ def settle_deluxe_schedine(db: Session, tournament_id: int) -> dict:
         for r in rows
         if r["total_points"] == winner_row["total_points"]
         and r["tiebreak_distance"] == winner_row["tiebreak_distance"]
+        and r["player_id"] not in withdrawn_ids
     ]
 
     next_tournament = _find_next_tournament(db, torneo)
@@ -561,9 +581,9 @@ def settle_deluxe_schedine(db: Session, tournament_id: int) -> dict:
 
     overall_order = get_group_stage_overall_classifica(db, tournament_id)
     last_ids = (
-        _last_ids_from_final_order(overall_order)
+        _last_ids_from_final_order(overall_order, withdrawn_ids)
         if overall_order
-        else _get_last_id(_get_leaderboard(db, tournament_id))
+        else _get_last_id(_get_leaderboard(db, tournament_id), withdrawn_ids)
     )
     blue_shell_user_ids = []
     for player_id in last_ids:

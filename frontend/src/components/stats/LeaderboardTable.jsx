@@ -113,7 +113,7 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
     // un piccolo testo come unico target era troppo facile da mancare,
     // specialmente su mobile — il problema persisteva anche dopo aver
     // ingrandito leggermente il padding del solo nickname.
-    const PlayerCell = ({ row, charactersUsed, onPlayerClick, avatarIndex = null }) => (
+    const PlayerCell = ({ row, charactersUsed, onPlayerClick, avatarIndex = null, compact = false }) => (
         <button
             type="button"
             onClick={() => onPlayerClick?.(row)}
@@ -125,13 +125,16 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                     alt={row.nickname}
                     loading="lazy"
                     decoding="async"
-                    className="h-14 w-14 rounded-full object-cover shrink-0"
+                    className={`${compact ? 'h-11 w-11' : 'h-14 w-14'} rounded-full object-cover shrink-0`}
                     style={avatarIndex != null ? avatarRingStyle(avatarIndex) : undefined}
                 />
             </div>
             <div className="min-w-0">
-                <p className="truncate font-black text-slate-900 dark:text-foreground capitalize hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
+                <p className="flex items-center gap-1.5 truncate font-black text-slate-900 dark:text-foreground capitalize hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
                     {row.nickname}
+                    {row.withdrawn && (
+                        <span className="shrink-0 rounded-full bg-rose-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-white">Ritirato</span>
+                    )}
                 </p>
                 <div className="text-xs text-slate-500 dark:text-muted-foreground truncate capitalize">
                     {row.first_name} {row.last_name}
@@ -176,32 +179,34 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                                     </span>
                                 )}
                             </div>
-                            <PlayerCell row={row} charactersUsed={charactersUsed} onPlayerClick={onPlayerClick} avatarIndex={absoluteIndex} />
-                            <div className="flex items-center justify-between gap-3 text-sm">
+                            <PlayerCell row={row} charactersUsed={charactersUsed} onPlayerClick={onPlayerClick} avatarIndex={absoluteIndex} compact />
+                            <div className="grid grid-cols-3 gap-2 text-sm">
                                 <div className="flex flex-col gap-0.5">
                                     {showTournamentWins ? (
                                         <>
-                                            <span className={`flex items-center gap-1.5 text-sm font-black ${placementTextColor(absoluteIndex)}`}><StatIcon kind="placement" size={11} />{row.placementIndex ?? 0}%</span>
+                                            <span className={`flex items-center gap-1 text-base font-black ${placementTextColor(absoluteIndex)}`}><StatIcon kind="placement" size={11} />{row.placementIndex ?? 0}%</span>
                                             <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">placement</span>
                                             <span className="text-[10px] text-slate-400">{row.points} pt</span>
                                         </>
                                     ) : (
                                         <>
-                                            <span className={`flex items-center gap-1.5 text-sm font-black ${placementTextColor(absoluteIndex)}`}><StatIcon kind="placement" size={11} />{row.points} pt</span>
+                                            <span className={`flex items-center gap-1 text-base font-black ${placementTextColor(absoluteIndex)}`}><StatIcon kind="placement" size={11} />{row.points}</span>
                                             <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">punti</span>
                                         </>
                                     )}
                                 </div>
-                                <div className="flex flex-col items-end gap-0.5">
-                                    <span className="flex items-center gap-1.5 text-xs font-black text-emerald-700 dark:text-emerald-400"><StatIcon kind="gare" size={11} />{row.raceWins} vittorie</span>
-                                    <div className="w-16 h-1 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+                                <div className="flex flex-col gap-0.5">
+                                    <span className="flex items-center gap-1 text-base font-black text-emerald-700 dark:text-emerald-400"><StatIcon kind="gare" size={11} />{row.raceWins}</span>
+                                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">vittorie</span>
+                                    <div className="w-full h-1 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
                                         <div className="h-full rounded-full bg-emerald-400" style={{ width: `${Math.min(row.winRate ?? 0, 100)}%` }} />
                                     </div>
                                     <span className="text-[10px] text-slate-400">{row.winRate}% WR</span>
                                 </div>
-                                <div className="flex flex-col items-end gap-0.5">
-                                    <span className="flex items-center gap-1.5 text-xs font-black text-blue-700 dark:text-blue-400"><StatIcon kind="podi" size={11} />{row.podiums} podi</span>
-                                    <div className="w-16 h-1 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+                                <div className="flex flex-col gap-0.5">
+                                    <span className="flex items-center gap-1 text-base font-black text-blue-700 dark:text-blue-400"><StatIcon kind="podi" size={11} />{row.podiums}</span>
+                                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">podi</span>
+                                    <div className="w-full h-1 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
                                         <div className="h-full rounded-full bg-blue-400" style={{ width: `${Math.min(row.podiumRate ?? 0, 100)}%` }} />
                                     </div>
                                     <span className="text-[10px] text-slate-400">{row.podiumRate}% gare</span>

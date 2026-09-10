@@ -805,6 +805,19 @@ def ensure_race_is_duello_column():
             )
 
 
+def ensure_race_active_player_count_column():
+    """Aggiunge 'active_player_count' alle gare (giocatori attivi al momento
+    della creazione della gara, per punteggiare correttamente le gare giocate
+    dopo un ritiro — vedi Race.active_player_count)."""
+    inspector = inspect(engine)
+    race_cols = {col["name"] for col in inspector.get_columns("races")}
+    if "active_player_count" not in race_cols:
+        with engine.begin() as connection:
+            connection.execute(
+                text("ALTER TABLE races ADD COLUMN active_player_count INTEGER")
+            )
+
+
 def ensure_schedina_duello_pareggio_columns():
     """Aggiunge il flag 'duello_pareggio' alle due tabelle schedine (pronostico Pareggio)."""
     inspector = inspect(engine)
@@ -1089,6 +1102,7 @@ def bootstrap_database():
     ensure_schedina_deluxe_v2_columns()
     ensure_schedina_duello_pareggio_columns()
     ensure_race_is_duello_column()
+    ensure_race_active_player_count_column()
     ensure_schedina_deluxe_vincitori_gironi_column()
     ensure_schedina_deluxe_classifiche_gironi_column()
     ensure_tournament_audit_columns()

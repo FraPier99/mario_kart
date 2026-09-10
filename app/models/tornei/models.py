@@ -270,6 +270,15 @@ class Race(Base):
     # gara di Duello (gara secca / spareggio): esclusa da statistiche e classifiche
     is_duello = Column(Boolean, nullable=False, default=False, server_default="false")
 
+    # Numero di giocatori attivi (non ritirati) al momento della creazione di
+    # questa gara — usato per scegliere la riga giusta di PUNTEGGI_CONFIG
+    # invece dello statico Tournament.n_players, così una gara giocata dopo
+    # un ritiro punteggia sul numero di giocatori realmente in gara. Popolato
+    # solo per tornei classic (create_race, app/services/tornei/races.py);
+    # resta NULL per group_stage e per le gare create prima di questa
+    # colonna — in entrambi i casi si ricade su tournament.n_players.
+    active_player_count = Column(Integer, nullable=True)
+
     tournament = relationship("Tournament", back_populates="races")
     circuit = relationship("Circuit", back_populates="races")
     results = relationship(

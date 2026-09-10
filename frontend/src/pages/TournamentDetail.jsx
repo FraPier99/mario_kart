@@ -262,10 +262,12 @@ const TournamentDetail = () => {
     // le stesse metriche della tabella, stile arcade — la tabella sotto
     // parte dal 4° posto per non ripeterli. Visibile solo a torneo concluso.
     const showClassicPodium = tournamentStatus === 'concluso' && (tournament?.standings?.length ?? 0) >= 3
+    const withdrawnPlayerIdSet = useMemo(() => new Set(tournament?.withdrawn_player_ids ?? []), [tournament?.withdrawn_player_ids])
     const classicPodiumPlayers = useMemo(() => {
         if (!showClassicPodium) return []
         return (tournament?.standings ?? []).slice(0, 3).map((s) => ({
             ...s,
+            withdrawn: withdrawnPlayerIdSet.has(s.playerId),
             stats: [
                 { label: 'Punti', value: s.points },
                 { label: 'Vittorie', value: s.raceWins },
@@ -275,8 +277,11 @@ const TournamentDetail = () => {
                 .map((id) => charactersById.get(id))
                 .filter(Boolean),
         }))
-    }, [showClassicPodium, tournament?.standings, charactersById])
-    const classicTableRows = showClassicPodium ? (tournament?.standings ?? []).slice(3) : (tournament?.standings ?? [])
+    }, [showClassicPodium, tournament?.standings, charactersById, withdrawnPlayerIdSet])
+    const classicTableRows = useMemo(() => {
+        const rows = showClassicPodium ? (tournament?.standings ?? []).slice(3) : (tournament?.standings ?? [])
+        return rows.map((s) => ({ ...s, withdrawn: withdrawnPlayerIdSet.has(s.playerId) }))
+    }, [showClassicPodium, tournament?.standings, withdrawnPlayerIdSet])
 
     // Stessa condizione di visibilità di PointAdjustmentsPanel (solo classic,
     // sempre visibile ad admin/superadmin, agli altri solo se esistono
