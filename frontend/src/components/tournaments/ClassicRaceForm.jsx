@@ -305,7 +305,7 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
                             {placed.map((p, idx) => {
                                 const pendingCharacterEffect = pendingCharacterEffectsByTarget.get(p.id)
                                 return (
-                                <div key={p.id} className="flex items-center gap-2">
+                                <div key={p.id} className="flex flex-col sm:flex-row sm:items-center gap-2">
                                     <div className="min-w-0 flex-1 space-y-1">
                                         <ClickRankRow
                                             player={p}
@@ -326,20 +326,26 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
                                             </button>
                                         )}
                                     </div>
-                                    {characters.length > 0 && (
-                                        <CharacterPicker
-                                            characters={characters}
-                                            value={charactersByPlayer[p.id] ?? ''}
-                                            onChange={(id) => setPlayerCharacter(p.id, id)}
-                                            disabled={disabled}
-                                        />
-                                    )}
-                                    {punti && (
-                                        <div className="flex flex-col items-center w-8 shrink-0">
-                                            <span className="text-[7px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground leading-none">pt</span>
-                                            <span className="text-sm font-black text-slate-900 dark:text-foreground leading-tight">{punti[idx] ?? '—'}</span>
-                                        </div>
-                                    )}
+                                    {/* Su mobile, personaggio + punti in riga propria sotto al rank
+                                    row invece che sulla stessa riga (shrink-0, non si comprimono):
+                                    da sm in su `sm:contents` li fa tornare figli diretti della riga
+                                    padre, ripristinando il layout affiancato originale. */}
+                                    <div className="flex items-center justify-end gap-2 sm:contents">
+                                        {characters.length > 0 && (
+                                            <CharacterPicker
+                                                characters={characters}
+                                                value={charactersByPlayer[p.id] ?? ''}
+                                                onChange={(id) => setPlayerCharacter(p.id, id)}
+                                                disabled={disabled}
+                                            />
+                                        )}
+                                        {punti && (
+                                            <div className="flex flex-col items-center w-8 shrink-0">
+                                                <span className="text-[7px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground leading-none">pt</span>
+                                                <span className="text-sm font-black text-slate-900 dark:text-foreground leading-tight">{punti[idx] ?? '—'}</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 )
                             })}

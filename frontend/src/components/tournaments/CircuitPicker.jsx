@@ -148,16 +148,16 @@ const CircuitPicker = ({ circuits = [], value, onChange, disabled = false, usedC
                 className="flex-1 min-w-0 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3 text-left text-sm text-slate-900 dark:text-foreground outline-none transition focus:border-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
                 <div className="flex items-center justify-between gap-2">
-                    <span className="flex items-center gap-2 truncate font-semibold">
+                    <span className="flex min-w-0 flex-1 items-center gap-2 font-semibold">
                         {selectedCircuit ? (
                             <>
                                 <CircuitThumbnail circuit={selectedCircuit} size="lg" />
-                                <span className="truncate">{selectedCircuit.name}</span>
+                                <span className="min-w-0 truncate">{selectedCircuit.name}</span>
                                 <span className={`hidden sm:inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${(groupColorByName.get(selectedCircuit.description || 'Altro') ?? DEFAULT_TROPHY_COLOR).badge}`}>
                                     {selectedCircuit.description ?? 'Cup'}
                                 </span>
                             </>
-                        ) : placeholder}
+                        ) : <span className="truncate">{placeholder}</span>}
                     </span>
                     <ChevronDown size={16} className={`shrink-0 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
                 </div>
