@@ -2,7 +2,8 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import and_, or_
+from sqlalchemy.orm import Session, aliased, joinedload
 
 
 from app.core.db import get_db
@@ -42,6 +43,29 @@ def _get_participant_ids(db, tournament_id: int) -> list[int]:
         db.query(Result.player_id).filter(Result.race_id.in_(race_ids)).distinct().all()
     )
     return [r.player_id for r in rows]
+
+
+def _filter_cards_for_game(query, game_id: int):
+    """Restringe una query su UserInventory alle sole carte "utilizzabili" nel
+    gioco indicato — stessa nozione di "gioco della carta" già usata da
+    _check_game_compatibility al momento dell'uso: il torneo di provenienza
+    (source_tournament_id) se la carta è stata vinta giocando, altrimenti
+    UserInventory.game_id per le carte assegnate manualmente dall'admin senza
+    legarle a un torneo. Senza questo filtro i pannelli admin (carte
+    disponibili/detentori per torneo) mostravano le carte di un giocatore
+    per QUALSIASI gioco, non solo quelle spendibili nel torneo corrente."""
+    SourceTournament = aliased(Tournament)
+    return query.outerjoin(
+        SourceTournament, SourceTournament.id == UserInventory.source_tournament_id
+    ).filter(
+        or_(
+            SourceTournament.game_id == game_id,
+            and_(
+                UserInventory.source_tournament_id.is_(None),
+                UserInventory.game_id == game_id,
+            ),
+        )
+    )
 
 
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
@@ -178,7 +202,8 @@ def get_tournament_card_holders(
     current_user=Depends(require_roles("admin", "superadmin")),
 ):
     """Returns per-participant card counts for the live panel."""
-    if not db.query(Tournament).filter(Tournament.id == tournament_id).first():
+    tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+    if not tournament:
         raise HTTPException(status_code=404, detail="Tournament not found")
 
     participant_ids = _get_participant_ids(db, tournament_id)
@@ -191,13 +216,12 @@ def get_tournament_card_holders(
         user_obj = db.query(User).filter(User.player_id == player.id).first()
         if not user_obj:
             continue
-        cards = (
-            db.query(UserInventory)
-            .filter(
+        cards = _filter_cards_for_game(
+            db.query(UserInventory).filter(
                 UserInventory.user_id == user_obj.id, UserInventory.is_consumed == False
-            )
-            .all()
-        )
+            ),
+            tournament.game_id,
+        ).all()
         master_count = sum(1 for c in cards if c.card_type == "master")
         shell_count = sum(1 for c in cards if c.card_type == "blue_shell")
         if master_count > 0 or shell_count > 0:
@@ -292,7 +316,8 @@ def get_tournament_available_cards(
     db: Session = Depends(get_db),
     current_user=Depends(require_roles("admin", "superadmin")),
 ):
-    if not db.query(Tournament).filter(Tournament.id == tournament_id).first():
+    tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+    if not tournament:
         raise HTTPException(status_code=404, detail="Tournament not found")
 
     participant_ids = _get_participant_ids(db, tournament_id)
@@ -308,11 +333,12 @@ def get_tournament_available_cards(
     if not user_ids:
         return {"master": 0, "blue_shell": 0}
 
-    counts = (
-        db.query(UserInventory.card_type, UserInventory.is_consumed)
-        .filter(UserInventory.user_id.in_(user_ids))
-        .all()
-    )
+    counts = _filter_cards_for_game(
+        db.query(UserInventory.card_type, UserInventory.is_consumed).filter(
+            UserInventory.user_id.in_(user_ids)
+        ),
+        tournament.game_id,
+    ).all()
 
     return {
         "master": sum(1 for c, consumed in counts if c == "master" and not consumed),
