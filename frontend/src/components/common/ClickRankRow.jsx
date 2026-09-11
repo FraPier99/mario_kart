@@ -79,7 +79,7 @@ const ClickRankRow = ({
                 )}
                 <span className={`truncate text-sm font-bold ${isPlaced ? 'text-slate-900 dark:text-foreground' : 'text-slate-500 dark:text-slate-400'}`}>{player.nickname}</span>
             </div>
-            {pos === 0 && <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[9px] font-title tracking-wide text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">Vincitore</span>}
+            {pos === 0 && <span className="shrink-0 rounded-full bg-amber-100 px-2.5 py-0.5 text-[9px] font-title tracking-wide text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">Vincitore</span>}
             {pills?.(pos, total, complete)}
         </button>
     )

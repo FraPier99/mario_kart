@@ -31,7 +31,7 @@
  *   onCardEffectsResolved {function} — callback dopo aver collegato effetti in sospeso a questa gara
  */
 import { useState, useMemo } from 'react'
-import { AlertCircle, CheckCircle2, Loader2, Flag, Shield, Users, Trophy } from 'lucide-react'
+import { AlertCircle, Loader2, Flag, Shield, Users, Trophy } from 'lucide-react'
 import { toast } from 'sonner'
 import { racesApi, resultsApi, inventoryApi, getApiErrorMessage } from '@/services/apiClient'
 import { getPlayerPreviousCharacterId, resolveFavoriteCharacterId } from '@/lib/raceEntry'
@@ -213,7 +213,6 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
 
     const placed = order.map((id) => playerMap.get(id)).filter(Boolean)
     const pool = participants.filter((p) => !order.includes(p.id))
-    const readyToSave = errors.length === 0 && order.length === participants.length && circuitId
 
     return (
         <form onSubmit={handleSubmit} className={`space-y-5 rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-6 shadow-lg shadow-slate-200/60 dark:shadow-black/20 ${disabled ? 'opacity-60' : ''}`}>
@@ -223,9 +222,9 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
                     <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-70">{isEditing ? 'Modifica gara' : 'Registra gara'}</p>
                     <p className="text-sm font-black leading-tight">Gara {isEditing ? editingRace.race_order : nextRaceOrder}</p>
                 </div>
-                <div className="flex items-center gap-1.5 rounded-xl bg-white/60 dark:bg-black/20 px-2.5 py-1">
-                    <Users size={11} />
-                    <span className="text-[10px] font-black">{participants.length} piloti</span>
+                <div className="flex shrink-0 items-center gap-1.5 rounded-xl bg-white/60 dark:bg-black/20 px-2.5 py-1">
+                    <Users size={11} className="shrink-0" />
+                    <span className="text-[10px] font-black whitespace-nowrap">{participants.length} piloti</span>
                 </div>
             </div>
 
@@ -383,28 +382,6 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
                     {errors.map((err, i) => (
                         <p key={i} className="text-[11px] text-rose-500 dark:text-rose-400 pl-5">{err}</p>
                     ))}
-                </div>
-            )}
-
-            {/* Anteprima */}
-            {readyToSave && (
-                <div className="rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/8 px-4 py-3">
-                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-2">
-                        <CheckCircle2 size={13} />
-                        <p className="text-xs font-black">Pronto per il salvataggio</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-1 pl-5">
-                        {placed.map((p, i) => {
-                            const ch = characters.find((c) => String(c.id) === String(charactersByPlayer[p.id]))
-                            return (
-                                <p key={p.id} className="text-[11px] text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
-                                    {i === 0 ? <Trophy size={11} className="text-amber-500 shrink-0" /> : <span>{medalFor(i)}</span>} {p.nickname}
-                                    {ch && <span className="opacity-60">· {ch.name}</span>}
-                                    {punti && <span className="font-black ml-auto">{punti[i] ?? '—'} pt</span>}
-                                </p>
-                            )
-                        })}
-                    </div>
                 </div>
             )}
 
