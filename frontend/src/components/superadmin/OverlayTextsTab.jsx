@@ -59,12 +59,20 @@ const GameTextForm = ({ gameKey, gameLabel, gameId }) => {
             await overlayTextsApi.upload(gameKey, {
                 thankyou: form.thankyou.trim() || null,
                 countdown: {
-                    start: form.countdown.start,
-                    transition: form.countdown.transition,
-                    championReveal: form.countdown.championReveal,
-                    labels: { ...form.countdown.labels },
+                    // Vuoto -> null: il rendering (overlayTexts.js) usa ?? per
+                    // ricadere sul default sensato, che controlla solo
+                    // null/undefined, non la stringa vuota — senza questa
+                    // normalizzazione un campo lasciato vuoto qui mostrerebbe
+                    // un flash di testo bianco invece del default in overlay.
+                    start: form.countdown.start.trim() || null,
+                    transition: form.countdown.transition.trim() || null,
+                    championReveal: form.countdown.championReveal.trim() || null,
+                    labels: {
+                        campione: form.countdown.labels.campione.trim() || null,
+                        winner: form.countdown.labels.winner.trim() || null,
+                    },
                 },
-                derapata: form.derapata,
+                derapata: form.derapata.trim() || null,
             })
             invalidateOverlayTextsCache(gameId)
             toast.success(`Testo "${gameLabel}" aggiornato`)
@@ -94,31 +102,41 @@ const GameTextForm = ({ gameKey, gameLabel, gameId }) => {
                             <span className={labelCls}>Countdown — inizio</span>
                             <input value={form.countdown.start}
                                 onChange={(e) => setForm((f) => ({ ...f, countdown: { ...f.countdown, start: e.target.value } }))}
+                                placeholder="Sveliamo la classifica..."
                                 className={fieldCls} />
+                            <span className="text-[9px] text-slate-400">Flash prima di rivelare la classifica generale.</span>
                         </label>
                         <label className="block space-y-1.5">
                             <span className={labelCls}>Countdown — transizione al podio</span>
                             <input value={form.countdown.transition}
                                 onChange={(e) => setForm((f) => ({ ...f, countdown: { ...f.countdown, transition: e.target.value } }))}
+                                placeholder="E ora il podio..."
                                 className={fieldCls} />
+                            <span className="text-[9px] text-slate-400">Flash quando si passa al podio (1°-3°).</span>
                         </label>
                         <label className="block space-y-1.5">
                             <span className={labelCls}>Countdown — rivelazione campione</span>
                             <input value={form.countdown.championReveal}
                                 onChange={(e) => setForm((f) => ({ ...f, countdown: { ...f.countdown, championReveal: e.target.value } }))}
+                                placeholder="E il nostro Campione è..."
                                 className={fieldCls} />
+                            <span className="text-[9px] text-slate-400">Flash subito prima di svelare il vincitore.</span>
                         </label>
                         <label className="block space-y-1.5">
                             <span className={labelCls}>Etichetta "campione" (con emoji)</span>
                             <input value={form.countdown.labels.campione}
                                 onChange={(e) => setForm((f) => ({ ...f, countdown: { ...f.countdown, labels: { ...f.countdown.labels, campione: e.target.value } } }))}
+                                placeholder="⭐ CAMPIONE! ⭐"
                                 className={fieldCls} />
+                            <span className="text-[9px] text-slate-400">Testo grande nel momento esatto della rivelazione.</span>
                         </label>
                         <label className="block space-y-1.5">
                             <span className={labelCls}>Etichetta "campione" (breve)</span>
                             <input value={form.countdown.labels.winner}
                                 onChange={(e) => setForm((f) => ({ ...f, countdown: { ...f.countdown, labels: { ...f.countdown.labels, winner: e.target.value } } }))}
+                                placeholder="CAMPIONE!"
                                 className={fieldCls} />
+                            <span className="text-[9px] text-slate-400">Testo grande nella schermata finale, sopra al nome.</span>
                         </label>
                         <label className="block space-y-1.5">
                             <span className={labelCls}>Frase di chiusura torneo</span>
