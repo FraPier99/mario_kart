@@ -79,9 +79,18 @@ const sortLeaderboard = (left, right) => {
 const buildPlayerStats = (players, tournaments, results, races = []) => {
     const raceToTournament = new Map()
     const duelloRaceIds = new Set()
+    // Solo Gironi e Finale (Final 4, group_name "top") contano per la
+    // classifica generale/per gioco — Semifinali e Finalina/Consolazione
+    // (compresa un'eventuale suddivisione in batterie bottom_B1/B2) sono
+    // fasi con campi più piccoli che altrimenti gonfierebbero placementIndex
+    // rispetto a chi ha raggiunto la Finale vera. I tornei classic (senza
+    // phase/group_name) non sono toccati.
+    const excludedRaceIds = new Set()
     races.forEach((race) => {
         raceToTournament.set(race.id, race.tournament_id)
-        if (race.is_duello) duelloRaceIds.add(race.id)
+        if (race.is_duello) { duelloRaceIds.add(race.id); return }
+        if (race.phase === 'semifinal') { excludedRaceIds.add(race.id); return }
+        if (race.phase === 'finals' && race.group_name !== 'top') { excludedRaceIds.add(race.id) }
     })
 
     const statsByPlayerId = new Map()
@@ -120,8 +129,9 @@ const buildPlayerStats = (players, tournaments, results, races = []) => {
         // Le gare di spareggio/duello decidono solo l'ordine in classifica:
         // non devono contribuire a punti/vittorie/podi/placement index, stessa
         // regola già applicata in buildTournamentDetails per le stesse statistiche
-        // viste a livello di singolo torneo.
-        if (duelloRaceIds.has(result.race_id)) {
+        // viste a livello di singolo torneo. Semifinali/Finalina escluse per
+        // lo stesso motivo di excludedRaceIds sopra.
+        if (duelloRaceIds.has(result.race_id) || excludedRaceIds.has(result.race_id)) {
             return
         }
 

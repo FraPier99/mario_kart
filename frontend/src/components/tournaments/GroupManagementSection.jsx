@@ -17,7 +17,6 @@ import { Shuffle, Trophy, Medal, Loader2, CheckCircle2, AlertCircle, Swords, Dic
 import { toast } from 'sonner'
 import { tournamentsApi, getApiErrorMessage } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
-import CollapsibleSection from './CollapsibleSection'
 import GroupRaceForm from './GroupRaceForm'
 import PhaseCircuitsCard from './PhaseCircuitsCard'
 import GroupPlancia, { GroupCard } from './GroupPlancia'
@@ -29,6 +28,21 @@ import WinnerFinalizeCard from './WinnerFinalizeCard'
 import { consolationHeatKeysFromFormatData, groupColor, groupKeysFromFormatData, groupLabel, semifinalKeysFromFormatData, passScopeKey, isPassEnabledForScope, targetRacesForGroup } from '@/lib/groupStage'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+// Intestazione statica per ciascun capitolo di fase — stesso markup di
+// CollapsibleSection (icona + titolo + sottotitolo) ma senza bottone/stato/
+// freccia: qui il collapse non serve mai, la tab di fase già mostra un solo
+// capitolo alla volta, quindi un secondo header "cliccabile" duplicava solo
+// l'etichetta della fase senza permettere nulla di utile.
+const PhaseSectionHeader = ({ title, subtitle, icon }) => (
+    <div className="flex items-center gap-3 px-1">
+        {icon && <span className="shrink-0 text-amber-500">{icon}</span>}
+        <div className="min-w-0">
+            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-900 dark:text-foreground truncate">{title}</h3>
+            {subtitle && <p className="mt-0.5 text-xs text-slate-500 dark:text-muted-foreground truncate">{subtitle}</p>}
+        </div>
+    </div>
+)
 
 const SEED_CARD_CLASSES = {
     blue:    { border: 'border-blue-200 dark:border-blue-500/30',       bg: 'bg-blue-50/60 dark:bg-blue-900/15',       text: 'text-blue-600 dark:text-blue-400' },
@@ -264,7 +278,7 @@ const PhaseRaceEntry = ({ tournament, players, circuits, characters, results, ph
                 </button>
             )}
 
-            <PhaseCircuitsCard circuits={circuits} races={phaseGroupRaces} title={`Circuiti · ${groupLabel(activeGroup)}`} passEnabled={passEnabled} />
+            <PhaseCircuitsCard circuits={circuits} races={phaseGroupRaces} title={`Circuiti · ${groupLabel(activeGroup)}`} passEnabled={passEnabled} collapsible defaultOpen={false} />
 
             {tournament.status === 'concluso' ? (
                 <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-900/10 px-4 py-3">
@@ -889,7 +903,8 @@ const GroupManagementSection = ({
 
             {/* ── 1. Generale ───────────────────────────────────────────── */}
             {activePhaseTab === 'generale' && (
-            <CollapsibleSection title="Generale" subtitle="Stato del torneo, plancia live e composizione gironi" icon={<Flag size={16} />} defaultOpen>
+            <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-sm p-5 space-y-4">
+                <PhaseSectionHeader title="Generale" subtitle="Stato del torneo, plancia live e composizione gironi" icon={<Flag size={16} />} />
                 <PhaseStepper tournament={tournament} semiKeys={semiKeys} />
 
                 {/* I gironi vengono generati automaticamente alla creazione del torneo:
@@ -959,12 +974,13 @@ const GroupManagementSection = ({
                         </button>
                     </div>
                 </div>
-            </CollapsibleSection>
+            </div>
             )}
 
             {/* ── 2. Gironi (Fase 1) ────────────────────────────────────── */}
             {activePhaseTab === 'gironi' && (
-            <CollapsibleSection title="Gironi" subtitle="Fase 1 — inserimento gare e avanzamento" icon={<Users size={16} />} defaultOpen>
+            <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-sm p-5 space-y-4">
+                <PhaseSectionHeader title="Gironi" subtitle="Fase 1 — inserimento gare e avanzamento" icon={<Users size={16} />} />
                 {!isTournamentLocked && (
                     <PhaseRaceEntry
                         tournament={tournament}
@@ -1042,12 +1058,13 @@ const GroupManagementSection = ({
                 {allGroupsComplete && (
                     <PhaseAdvanceCard tournament={tournament} onRefresh={onRefresh} phase="group" />
                 )}
-            </CollapsibleSection>
+            </div>
             )}
 
             {/* ── 3. Semifinali (Fase 2, solo con ≥3 gironi) ────────────── */}
             {activePhaseTab === 'semifinali' && showSemifinaliSection && (
-                <CollapsibleSection title="Semifinali" subtitle="Fase 2 — batterie e avanzamento alla finale" icon={<Swords size={16} />} defaultOpen>
+                <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-sm p-5 space-y-4">
+                    <PhaseSectionHeader title="Semifinali" subtitle="Fase 2 — batterie e avanzamento alla finale" icon={<Swords size={16} />} />
                     {!semisReady ? (
                         <div className="flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3">
                             <AlertCircle size={13} className="text-slate-400 shrink-0" />
@@ -1076,12 +1093,13 @@ const GroupManagementSection = ({
                             <PhaseAdvanceCard tournament={tournament} onRefresh={onRefresh} phase="semifinal" />
                         </>
                     )}
-                </CollapsibleSection>
+                </div>
             )}
 
             {/* ── 4. Finali ──────────────────────────────────────────────── */}
             {activePhaseTab === 'finali' && (
-            <CollapsibleSection title="Finali" subtitle="Finale (Final 4) e Consolazione" icon={<Trophy size={16} />} defaultOpen>
+            <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-sm p-5 space-y-4">
+                <PhaseSectionHeader title="Finali" subtitle="Finale (Final 4) e Consolazione" icon={<Trophy size={16} />} />
                 {!finalsReady ? (
                     <div className="flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3">
                         <AlertCircle size={13} className="text-slate-400 shrink-0" />
@@ -1106,12 +1124,13 @@ const GroupManagementSection = ({
                         <ConsolazioneCard tournament={tournament} players={players} onRefresh={onRefresh} />
                     </>
                 )}
-            </CollapsibleSection>
+            </div>
             )}
 
             {/* ── 5. Classifica Finale ───────────────────────────────────── */}
             {activePhaseTab === 'classifica' && (
-            <CollapsibleSection title="Classifica Finale" subtitle="Podio Final 4, spareggi e vincitore" icon={<Medal size={16} />} defaultOpen>
+            <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-sm p-5 space-y-4">
+                <PhaseSectionHeader title="Classifica Finale" subtitle="Podio Final 4, spareggi e vincitore" icon={<Medal size={16} />} />
                 {!finalsReady ? (
                     <div className="flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3">
                         <AlertCircle size={13} className="text-slate-400 shrink-0" />
@@ -1150,7 +1169,7 @@ const GroupManagementSection = ({
                 {finalsReady && (
                     <OverallClassificaCard tournament={tournament} playerMap={playerMap} />
                 )}
-            </CollapsibleSection>
+            </div>
             )}
 
             {/* Conferma completamento girone: gare incomplete / pareggi non risolti */}
