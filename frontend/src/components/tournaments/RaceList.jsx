@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react'
-import { Search, ChevronDown, PencilLine, Trash2, X, Swords } from 'lucide-react'
+import { Search, ChevronDown, PencilLine, Trash2, X, Swords, FileDown } from 'lucide-react'
 import { toast } from 'sonner'
+import { jsPDF } from 'jspdf'
 import { getApiErrorMessage, racesApi } from '@/services/apiClient'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import CircuitThumbnail from '@/components/common/CircuitThumbnail'
 import ClassicRaceForm from '@/components/tournaments/ClassicRaceForm'
 import { groupColor, groupLabel } from '@/lib/groupStage'
+import { useAuth } from '@/context/AuthContext'
 
 // Stessa palette di GroupPlancia.jsx (COLOR_CLASSES), qui ridotta al solo
 // badge — mantiene coerenza visiva col colore di ogni girone/fase altrove.
@@ -37,7 +39,8 @@ const getCupStyle = (description = '') => {
 
 const PAGE_SIZE = 10
 
-const RaceList = ({ races, circuits = [], circuitsById, charactersById, characters = [], nPlayers, tournamentId, onChanged, canEdit = false }) => {
+const RaceList = ({ races, circuits = [], circuitsById, charactersById, characters = [], nPlayers, tournamentId, tournamentName = 'Torneo', onChanged, canEdit = false }) => {
+    const { isSuperadmin } = useAuth()
     const [searchTerm, setSearchTerm] = useState('')
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
     const [expandedRaces, setExpandedRaces] = useState(new Set())
@@ -92,6 +95,78 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
     const hasMore = visibleCount < filteredRaces.length
 
     const closeEdit = () => setEditingRace(null)
+
+    // Esporta le gare attualmente filtrate (rispetta il filtro fase/girone
+    // già selezionato — "scaricare per fase" invece di sempre tutto il
+    // torneo) in un PDF semplice: una sezione per gara con circuito e
+    // ordine d'arrivo. jsPDF è già una dipendenza del progetto, non ancora
+    // usata altrove — generazione interamente client-side, nessuna rotta
+    // backend necessaria dato che i dati sono già in memoria.
+    const handleDownloadPdf = () => {
+        const sorted = [...filteredRaces].sort((a, b) => a.race_order - b.race_order)
+        const doc = new jsPDF()
+        const marginX = 14
+        const pageHeight = doc.internal.pageSize.getHeight()
+        let y = 18
+
+        const ensureSpace = (needed) => {
+            if (y + needed > pageHeight - 14) {
+                doc.addPage()
+                y = 18
+            }
+        }
+
+        const phaseTitle = phaseFilter === 'all' ? 'Tutte le fasi' : groupLabel(phaseFilter)
+        doc.setFontSize(16)
+        doc.text(tournamentName, marginX, y)
+        y += 7
+        doc.setFontSize(11)
+        doc.setTextColor(100)
+        doc.text(phaseTitle, marginX, y)
+        doc.setTextColor(0)
+        y += 10
+
+        if (sorted.length === 0) {
+            doc.setFontSize(11)
+            doc.text('Nessuna gara in questa selezione.', marginX, y)
+        }
+
+        for (const race of sorted) {
+            ensureSpace(16)
+            doc.setFontSize(12)
+            doc.setFont(undefined, 'bold')
+            const circuitName = circuitsById?.get(race.circuit_id)?.name ?? `Circuito #${race.circuit_id}`
+            const groupSuffix = race.group_name ? ` — ${groupLabel(race.group_name)}` : ''
+            const duelloSuffix = race.is_duello ? ' — Spareggio' : ''
+            doc.text(`Gara ${race.race_order}${groupSuffix}${duelloSuffix} — ${circuitName}`, marginX, y)
+            y += 6
+            doc.setFont(undefined, 'normal')
+            doc.setFontSize(10)
+
+            const results = [...(race.results ?? [])].sort((a, b) => a.position - b.position)
+            if (results.length === 0) {
+                ensureSpace(6)
+                doc.setTextColor(120)
+                doc.text('Nessun risultato registrato.', marginX + 4, y)
+                doc.setTextColor(0)
+                y += 6
+            } else {
+                for (const result of results) {
+                    ensureSpace(6)
+                    const nickname = result.player?.nickname ?? `Player ${result.player_id}`
+                    const character = charactersById?.get(result.character_id)?.name ?? ''
+                    const line = `${result.position}°  ${nickname}${character ? ` (${character})` : ''}  —  ${result.points} pt`
+                    doc.text(line, marginX + 4, y)
+                    y += 6
+                }
+            }
+            y += 4
+        }
+
+        const phaseSlug = phaseFilter === 'all' ? 'tutte-le-fasi' : phaseFilter
+        const fileSlug = tournamentName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+        doc.save(`${fileSlug || 'torneo'}_${phaseSlug}.pdf`)
+    }
 
     const editingRaceParticipants = useMemo(() => {
         if (!editingRace) return []
@@ -179,25 +254,38 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
                 />
             </div>
 
-            <div className="flex gap-1 rounded-xl bg-slate-100 dark:bg-muted p-1 w-fit">
-                {[
-                    { key: 'all', label: 'Tutte' },
-                    { key: 'regolari', label: 'Gare' },
-                    { key: 'duelli', label: '⚔️ Spareggi' },
-                ].map(({ key, label }) => (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex gap-1 rounded-xl bg-slate-100 dark:bg-muted p-1 w-fit">
+                    {[
+                        { key: 'all', label: 'Tutte' },
+                        { key: 'regolari', label: 'Gare' },
+                        { key: 'duelli', label: '⚔️ Spareggi' },
+                    ].map(({ key, label }) => (
+                        <button
+                            key={key}
+                            type="button"
+                            onClick={() => { setDuelloFilter(key); setVisibleCount(PAGE_SIZE) }}
+                            className={`rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition ${
+                                duelloFilter === key
+                                    ? 'bg-white dark:bg-card text-slate-900 dark:text-foreground shadow-sm'
+                                    : 'text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'
+                            }`}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </div>
+
+                {isSuperadmin && (
                     <button
-                        key={key}
                         type="button"
-                        onClick={() => { setDuelloFilter(key); setVisibleCount(PAGE_SIZE) }}
-                        className={`rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition ${
-                            duelloFilter === key
-                                ? 'bg-white dark:bg-card text-slate-900 dark:text-foreground shadow-sm'
-                                : 'text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'
-                        }`}
+                        onClick={handleDownloadPdf}
+                        title={phaseFilter === 'all' ? 'Scarica PDF di tutte le fasi' : `Scarica PDF — ${groupLabel(phaseFilter)}`}
+                        className="flex items-center gap-1.5 rounded-xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 transition hover:border-emerald-300 hover:text-emerald-600"
                     >
-                        {label}
+                        <FileDown size={12} /> Scarica PDF
                     </button>
-                ))}
+                )}
             </div>
 
             {/* Filtro per fase/girone — solo per i tornei a gironi, dove le
