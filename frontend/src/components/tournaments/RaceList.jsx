@@ -67,6 +67,25 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
         return [...orderByKey.entries()].sort((a, b) => a[1] - b[1]).map(([key]) => key)
     }, [races])
 
+    // race_order è un contatore globale sul torneo (ordine cronologico
+    // complessivo fra tutte le fasi) — mostrarlo com'è confonde: la "Gara 5"
+    // di un girone dopo la "Gara 4" di un altro girone non dice quante gare
+    // ha già fatto QUEL girone. Il numero mostrato è quindi relativo alla
+    // sola fase/girone della gara (per i tornei classic, senza group_name,
+    // coincide naturalmente con l'ordine globale).
+    const phaseRaceNumberById = useMemo(() => {
+        const sorted = [...races].sort((a, b) => a.race_order - b.race_order)
+        const countByGroup = new Map()
+        const result = new Map()
+        for (const race of sorted) {
+            const key = race.group_name ?? '__classic__'
+            const nextCount = (countByGroup.get(key) ?? 0) + 1
+            countByGroup.set(key, nextCount)
+            result.set(race.id, nextCount)
+        }
+        return result
+    }, [races])
+
     const toggleRace = (id) => {
         setExpandedRaces((prev) => {
             const next = new Set(prev)
@@ -85,11 +104,11 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
         if (!searchTerm.trim()) return filtered
         const term = searchTerm.toLowerCase()
         return filtered.filter((race) => {
-            const name = (race.name || `Gara ${race.race_order}`).toLowerCase()
+            const name = (race.name || `Gara ${phaseRaceNumberById.get(race.id) ?? race.race_order}`).toLowerCase()
             const circuit = (circuitsById?.get(race.circuit_id)?.name ?? '').toLowerCase()
             return name.includes(term) || circuit.includes(term)
         })
-    }, [races, searchTerm, circuitsById, duelloFilter, phaseFilter])
+    }, [races, searchTerm, circuitsById, duelloFilter, phaseFilter, phaseRaceNumberById])
 
     const visibleRaces = filteredRaces.slice(0, visibleCount)
     const hasMore = visibleCount < filteredRaces.length
@@ -138,7 +157,7 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
             const circuitName = circuitsById?.get(race.circuit_id)?.name ?? `Circuito #${race.circuit_id}`
             const groupSuffix = race.group_name ? ` — ${groupLabel(race.group_name)}` : ''
             const duelloSuffix = race.is_duello ? ' — Spareggio' : ''
-            doc.text(`Gara ${race.race_order}${groupSuffix}${duelloSuffix} — ${circuitName}`, marginX, y)
+            doc.text(`Gara ${phaseRaceNumberById.get(race.id) ?? race.race_order}${groupSuffix}${duelloSuffix} — ${circuitName}`, marginX, y)
             y += 6
             doc.setFont(undefined, 'normal')
             doc.setFontSize(10)
@@ -233,7 +252,7 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
             {confirmDelete && (
                 <div className="fixed inset-0 z-210 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setConfirmDelete(null)}>
                     <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-slate-950 p-6 text-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
-                        <p className="text-lg font-black uppercase tracking-tight">Eliminare la gara {confirmDelete.race_order}?</p>
+                        <p className="text-lg font-black uppercase tracking-tight">Eliminare la gara {phaseRaceNumberById.get(confirmDelete.id) ?? confirmDelete.race_order}?</p>
                         <p className="mt-2 text-sm text-slate-400">L'operazione rimuove anche i risultati collegati a questa gara.</p>
                         <div className="mt-6 flex gap-3">
                             <button type="button" onClick={() => setConfirmDelete(null)} className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-black uppercase tracking-widest text-white transition hover:bg-white/10">Annulla</button>
@@ -335,7 +354,7 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
                                     <div className="flex flex-wrap items-center justify-between gap-3 p-5">
                                         <div>
                                             <p className="text-xs font-black uppercase tracking-widest text-emerald-600">
-                                                Gara {race.race_order}
+                                                Gara {phaseRaceNumberById.get(race.id) ?? race.race_order}
                                                 {race.group_name && (
                                                     <span className={`ml-2 inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${GROUP_BADGE_CLASSES[groupColor(race.group_name)]}`}>
                                                         {groupLabel(race.group_name)}
@@ -347,7 +366,7 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
                                                     </span>
                                                 )}
                                             </p>
-                                            <h4 className="text-lg font-black text-slate-900 dark:text-foreground">{race.name || `Gara ${race.race_order}`}</h4>
+                                            <h4 className="text-lg font-black text-slate-900 dark:text-foreground">{race.name || `Gara ${phaseRaceNumberById.get(race.id) ?? race.race_order}`}</h4>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {(() => {

@@ -73,6 +73,16 @@ const GroupRaceForm = ({
 
     const nextRaceOrder = useMemo(() => (tournament?.races?.length ?? 0) + 1, [tournament?.races])
 
+    // race_order è un contatore globale sul torneo (usato per l'ordine
+    // cronologico complessivo, invariato) — ma mostrarlo all'admin confonde:
+    // la "Gara 5" di un girone che segue "Gara 4" di un altro girone non ha
+    // relazione con "quante gare ha già fatto questo girone". Il numero
+    // mostrato (ed embeddato nel nome salvato) è quindi relativo alla sola
+    // fase/girone corrente.
+    const nextPhaseRaceNumber = useMemo(() => (
+        (tournament?.races ?? []).filter((r) => r.phase === phase && r.group_name === groupName).length + 1
+    ), [tournament?.races, phase, groupName])
+
     // Pool piste indipendente per fase/girone: una pista già usata in questa
     // combinazione fase+gruppo viene disabilitata, ma resta selezionabile per
     // gli altri gironi paralleli e si azzera completamente al passaggio di fase.
@@ -172,7 +182,7 @@ const GroupRaceForm = ({
         setSaving(true)
         try {
             const racePayload = {
-                name:          `Gara ${nextRaceOrder} — ${groupLabel(groupName)}`,
+                name:          `Gara ${nextPhaseRaceNumber} — ${groupLabel(groupName)}`,
                 race_order:    nextRaceOrder,
                 tournament_id: tournament.id,
                 circuit_id:    Number(circuitId),
@@ -199,7 +209,7 @@ const GroupRaceForm = ({
                 )
             )
 
-            toast.success(`Gara ${nextRaceOrder} inserita!`, {
+            toast.success(`Gara ${nextPhaseRaceNumber} inserita!`, {
                 description: `${groupLabel(groupName)} · ${circuits.find((c) => String(c.id) === String(circuitId))?.name ?? ''}`,
             })
 
@@ -233,7 +243,7 @@ const GroupRaceForm = ({
                     </p>
                     <p className="text-sm font-black leading-tight">
                         {groupLabel(groupName)}
-                        <span className="ml-2 font-normal opacity-60">· Gara {nextRaceOrder}</span>
+                        <span className="ml-2 font-normal opacity-60">· Gara {nextPhaseRaceNumber}</span>
                     </p>
                 </div>
                 <div className="flex items-center gap-1.5 rounded-xl bg-white/10 dark:bg-black/20 px-2.5 py-1">
@@ -388,7 +398,7 @@ const GroupRaceForm = ({
             >
                 {saving
                     ? <><Loader2 size={15} className="animate-spin" /> Salvataggio...</>
-                    : <><Trophy size={15} /> Salva gara {nextRaceOrder}</>
+                    : <><Trophy size={15} /> Salva gara {nextPhaseRaceNumber}</>
                 }
             </button>
         </form>
