@@ -5,6 +5,22 @@ import { getApiErrorMessage, racesApi } from '@/services/apiClient'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import CircuitThumbnail from '@/components/common/CircuitThumbnail'
 import ClassicRaceForm from '@/components/tournaments/ClassicRaceForm'
+import { groupColor, groupLabel } from '@/lib/groupStage'
+
+// Stessa palette di GroupPlancia.jsx (COLOR_CLASSES), qui ridotta al solo
+// badge — mantiene coerenza visiva col colore di ogni girone/fase altrove.
+const GROUP_BADGE_CLASSES = {
+    blue:    'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30',
+    violet:  'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-500/30',
+    emerald: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30',
+    rose:    'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30',
+    cyan:    'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-500/30',
+    fuchsia: 'bg-fuchsia-50 dark:bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-200 dark:border-fuchsia-500/30',
+    lime:    'bg-lime-50 dark:bg-lime-500/10 text-lime-700 dark:text-lime-300 border-lime-200 dark:border-lime-500/30',
+    orange:  'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-500/30',
+    amber:   'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30',
+    slate:   'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600',
+}
 
 const getCupStyle = (description = '') => {
     const d = description.toLowerCase()
@@ -29,6 +45,24 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
     const [saving, setSaving] = useState(false)
     const [confirmDelete, setConfirmDelete] = useState(null)
     const [duelloFilter, setDuelloFilter] = useState('all') // 'all' | 'duelli' | 'regolari'
+    const [phaseFilter, setPhaseFilter] = useState('all') // 'all' | race.group_name
+
+    // Chiavi di girone/fase presenti fra le gare (torneo a gironi) — assente
+    // per i tornei classic, dove group_name è sempre null e questo filtro
+    // extra non viene mostrato. Ordinate per race_order minimo del gruppo,
+    // così l'ordine segue naturalmente l'avanzamento del torneo (gironi →
+    // semifinali → finali) senza dover replicare la logica di fase.
+    const groupKeys = useMemo(() => {
+        const orderByKey = new Map()
+        for (const race of races) {
+            if (!race.group_name) continue
+            const existing = orderByKey.get(race.group_name)
+            if (existing === undefined || race.race_order < existing) {
+                orderByKey.set(race.group_name, race.race_order)
+            }
+        }
+        return [...orderByKey.entries()].sort((a, b) => a[1] - b[1]).map(([key]) => key)
+    }, [races])
 
     const toggleRace = (id) => {
         setExpandedRaces((prev) => {
@@ -43,6 +77,8 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
         if (duelloFilter === 'duelli') filtered = filtered.filter((r) => r.is_duello)
         else if (duelloFilter === 'regolari') filtered = filtered.filter((r) => !r.is_duello)
 
+        if (phaseFilter !== 'all') filtered = filtered.filter((r) => r.group_name === phaseFilter)
+
         if (!searchTerm.trim()) return filtered
         const term = searchTerm.toLowerCase()
         return filtered.filter((race) => {
@@ -50,7 +86,7 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
             const circuit = (circuitsById?.get(race.circuit_id)?.name ?? '').toLowerCase()
             return name.includes(term) || circuit.includes(term)
         })
-    }, [races, searchTerm, circuitsById, duelloFilter])
+    }, [races, searchTerm, circuitsById, duelloFilter, phaseFilter])
 
     const visibleRaces = filteredRaces.slice(0, visibleCount)
     const hasMore = visibleCount < filteredRaces.length
@@ -164,6 +200,39 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
                 ))}
             </div>
 
+            {/* Filtro per fase/girone — solo per i tornei a gironi, dove le
+                gare di Girone 1/2/.../Semifinale/Finale/Finalina altrimenti
+                si mescolano tutte insieme senza modo di distinguerle. */}
+            {groupKeys.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                    <button
+                        type="button"
+                        onClick={() => { setPhaseFilter('all'); setVisibleCount(PAGE_SIZE) }}
+                        className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider transition ${
+                            phaseFilter === 'all'
+                                ? 'border-slate-900 dark:border-white bg-slate-900 dark:bg-white text-white dark:text-slate-900'
+                                : 'border-slate-200 dark:border-border text-slate-500 dark:text-muted-foreground hover:border-slate-300 dark:hover:border-slate-600'
+                        }`}
+                    >
+                        Tutte le fasi
+                    </button>
+                    {groupKeys.map((key) => (
+                        <button
+                            key={key}
+                            type="button"
+                            onClick={() => { setPhaseFilter(key); setVisibleCount(PAGE_SIZE) }}
+                            className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider transition ${
+                                phaseFilter === key
+                                    ? GROUP_BADGE_CLASSES[groupColor(key)]
+                                    : 'border-slate-200 dark:border-border text-slate-500 dark:text-muted-foreground hover:border-slate-300 dark:hover:border-slate-600'
+                            }`}
+                        >
+                            {groupLabel(key)}
+                        </button>
+                    ))}
+                </div>
+            )}
+
             <div className="max-h-150 space-y-4 overflow-y-auto pr-1">
                 {visibleRaces.length ? (
                     <>
@@ -179,6 +248,11 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
                                         <div>
                                             <p className="text-xs font-black uppercase tracking-widest text-emerald-600">
                                                 Gara {race.race_order}
+                                                {race.group_name && (
+                                                    <span className={`ml-2 inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${GROUP_BADGE_CLASSES[groupColor(race.group_name)]}`}>
+                                                        {groupLabel(race.group_name)}
+                                                    </span>
+                                                )}
                                                 {race.is_duello && (
                                                     <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-500/20 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-300">
                                                         <Swords size={9} /> Spareggio
