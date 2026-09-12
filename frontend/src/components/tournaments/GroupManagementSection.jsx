@@ -26,7 +26,7 @@ import ConsolationPodiumDuelCard from './ConsolationPodiumDuelCard'
 import TournamentResolutionNotes from './TournamentResolutionNotes'
 import OverallClassificaCard from './OverallClassificaCard'
 import WinnerFinalizeCard from './WinnerFinalizeCard'
-import { consolationHeatKeysFromFormatData, groupColor, groupKeysFromFormatData, groupLabel, semifinalKeysFromFormatData, passScopeKey, isPassEnabledForScope } from '@/lib/groupStage'
+import { consolationHeatKeysFromFormatData, groupColor, groupKeysFromFormatData, groupLabel, semifinalKeysFromFormatData, passScopeKey, isPassEnabledForScope, targetRacesForGroup } from '@/lib/groupStage'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -908,7 +908,7 @@ const GroupManagementSection = ({
                         <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 dark:text-muted-foreground">Configurazione fasi</p>
                     </div>
                     <p className="text-sm text-slate-500 dark:text-muted-foreground">
-                        Imposta il numero di gare previsto per ogni fase (solo informativo — le gare effettive vengono create manualmente).
+                        Imposta la baseline di gare per girone/batteria (default 8/10/12 se lasciato vuoto) — solo informativo, non un tetto: le gare effettive vengono create manualmente e possono superarlo.
                     </p>
                     <div className="grid grid-cols-3 gap-3">
                         <label className="space-y-1.5">
@@ -920,7 +920,7 @@ const GroupManagementSection = ({
                                 value={phaseConfig.n_races_group_stage}
                                 onChange={(e) => setPhaseConfig((p) => ({ ...p, n_races_group_stage: e.target.value }))}
                                 className="w-full rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3 text-slate-900 dark:text-foreground outline-none transition focus:border-emerald-500"
-                                placeholder="es. 4"
+                                placeholder="es. 8"
                             />
                         </label>
                         <label className="space-y-1.5">
@@ -932,7 +932,7 @@ const GroupManagementSection = ({
                                 value={phaseConfig.n_races_semifinals}
                                 onChange={(e) => setPhaseConfig((p) => ({ ...p, n_races_semifinals: e.target.value }))}
                                 className="w-full rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3 text-slate-900 dark:text-foreground outline-none transition focus:border-emerald-500"
-                                placeholder="es. 3"
+                                placeholder="es. 10"
                             />
                         </label>
                         <label className="space-y-1.5">
@@ -944,7 +944,7 @@ const GroupManagementSection = ({
                                 value={phaseConfig.n_races_final}
                                 onChange={(e) => setPhaseConfig((p) => ({ ...p, n_races_final: e.target.value }))}
                                 className="w-full rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3 text-slate-900 dark:text-foreground outline-none transition focus:border-emerald-500"
-                                placeholder="es. 6"
+                                placeholder="es. 12"
                             />
                         </label>
                     </div>
@@ -1126,6 +1126,7 @@ const GroupManagementSection = ({
                         results={results}
                         playerMap={playerMap}
                         seedPlayerIds={fd.finals?.top ?? []}
+                        targetRaces={targetRacesForGroup('top', tournament.format_data)}
                     />
                 )}
 

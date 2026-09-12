@@ -31,7 +31,7 @@ import PhaseCircuitsCard from '@/components/tournaments/PhaseCircuitsCard'
 import SpareggioEsitiList from '@/components/tournaments/SpareggioEsitiList'
 import CardLogPanel from '@/components/tournaments/CardLogPanel'
 import OverallClassificaCard from '@/components/tournaments/OverallClassificaCard'
-import { findPlayerGroup, groupLabel, isPodiumDuelKey, isPassEnabledForScope, passScopeKey } from '@/lib/groupStage'
+import { findPlayerGroup, groupLabel, isPodiumDuelKey, isPassEnabledForScope, passScopeKey, targetRacesForGroup } from '@/lib/groupStage'
 import { useTournamentCards, MASTER_EFFECTS, SHELL_EFFECTS } from '@/hooks/useTournamentCards'
 import { getApiErrorMessage, tournamentsApi, authApi, schedineApi } from '@/services/apiClient'
 import { toast } from 'sonner'
@@ -714,6 +714,7 @@ const TournamentDetail = () => {
                                 resolvedOrder={(myGroup.phase === 'group' ? resolvedClassifiche.group?.[myGroup.groupName] : resolvedClassifiche.semifinal?.[myGroup.groupName])}
                                 onRefresh={refresh}
                                 refreshing={loading}
+                                targetRaces={targetRacesForGroup(myGroup.groupName, tournament.format_data)}
                             />
                             <TournamentResolutionNotes tournament={tournament} phaseFilter={myGroup.phase} />
                             {myCircuitsView && (
@@ -755,6 +756,7 @@ const TournamentDetail = () => {
                                     highlightPlayerId={myPlayerId}
                                     onRefresh={refresh}
                                     refreshing={loading}
+                                    targetRaces={targetRacesForGroup(myGroup.groupName, tournament.format_data)}
                                 />
                                 {myCircuitsView && (
                                     <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} onRefresh={refresh} refreshing={loading} passEnabled={myCircuitsView.passEnabled} />

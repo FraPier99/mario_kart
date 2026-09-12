@@ -19,7 +19,7 @@
  */
 import { useEffect, useMemo, useState } from 'react'
 import { Crown, Medal, Shield, Trophy } from 'lucide-react'
-import { consolationHeatKeysFromFormatData, groupColor, groupKeysFromFormatData, groupLabel, semifinalKeysFromFormatData } from '@/lib/groupStage'
+import { consolationHeatKeysFromFormatData, groupColor, groupKeysFromFormatData, groupLabel, semifinalKeysFromFormatData, targetRacesForGroup } from '@/lib/groupStage'
 import OverallClassificaCard from '@/components/tournaments/OverallClassificaCard'
 import RefreshButton from '@/components/common/RefreshButton'
 import { tournamentsApi } from '@/services/apiClient'
@@ -86,7 +86,7 @@ function computeGroupStandings(racesByGroup, results, playerMap) {
 }
 
 // Singola card di classifica per un gruppo (esportata per riuso, es. sezione "Classifica Finale")
-export const GroupCard = ({ groupKey, races, results, playerMap, seedPlayerIds = [], highlightPlayerId = null, resolvedOrder = null, onRefresh = null, refreshing = false }) => {
+export const GroupCard = ({ groupKey, races, results, playerMap, seedPlayerIds = [], highlightPlayerId = null, resolvedOrder = null, onRefresh = null, refreshing = false, targetRaces = null }) => {
     const label = groupLabel(groupKey)
     const color = groupColor(groupKey)
     const col = COLOR_CLASSES[color] ?? COLOR_CLASSES.slate
@@ -119,8 +119,8 @@ export const GroupCard = ({ groupKey, races, results, playerMap, seedPlayerIds =
                     <p className="text-xs font-black uppercase tracking-[0.3em]">{label}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-widest ${col.badge}`}>
-                        {races.length} gare
+                    <span className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-widest ${targetRaces && races.length < targetRaces ? 'bg-slate-400 text-white' : col.badge}`} title={targetRaces ? `Baseline indicativa: ${targetRaces} gare — non vincolante` : undefined}>
+                        {races.length}{targetRaces ? `/${targetRaces}` : ''} gare
                     </span>
                     {onRefresh && <RefreshButton onClick={onRefresh} loading={refreshing} />}
                 </div>
@@ -312,6 +312,7 @@ const GroupPlancia = ({ tournament, players, results, highlightPlayerId = null }
                             seedPlayerIds={seededGroups[key] ?? []}
                             highlightPlayerId={highlightPlayerId}
                             resolvedOrder={resolvedClassifiche.group?.[key]}
+                            targetRaces={targetRacesForGroup(key, tournament.format_data)}
                         />
                     ))}
                 </div>
@@ -335,6 +336,7 @@ const GroupPlancia = ({ tournament, players, results, highlightPlayerId = null }
                                 seedPlayerIds={seededSemis[key] ?? []}
                                 highlightPlayerId={highlightPlayerId}
                                 resolvedOrder={resolvedClassifiche.semifinal?.[key]}
+                                targetRaces={targetRacesForGroup(key, tournament.format_data)}
                             />
                         ))}
                     </div>
@@ -355,6 +357,7 @@ const GroupPlancia = ({ tournament, players, results, highlightPlayerId = null }
                             playerMap={playerMap}
                             seedPlayerIds={seededFinals.top ?? []}
                             highlightPlayerId={highlightPlayerId}
+                            targetRaces={targetRacesForGroup('top', tournament.format_data)}
                         />
                         {/* Consolazione: una sola card "bottom" se entra in 4, altrimenti
                             una card per batteria ("bottom_B1","bottom_B2",…) — la classifica
@@ -369,6 +372,7 @@ const GroupPlancia = ({ tournament, players, results, highlightPlayerId = null }
                                 playerMap={playerMap}
                                 seedPlayerIds={key === 'bottom' ? (seededFinals.bottom ?? []) : (seededBottomHeats[key.slice('bottom_'.length)] ?? [])}
                                 highlightPlayerId={highlightPlayerId}
+                                targetRaces={targetRacesForGroup(key, tournament.format_data)}
                             />
                         ))}
                     </div>

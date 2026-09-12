@@ -159,7 +159,7 @@ def _compute_group_stage_n_races(n_players: int) -> int:
 # (max 4 giocatori per gara/TV alla volta).
 MAX_GROUP_SIZE = 4
 # Numero minimo di partecipanti per il formato a gironi (= 2 gironi pieni).
-MIN_GROUP_STAGE_PLAYERS = 8
+MIN_GROUP_STAGE_PLAYERS = 7
 # Numero massimo di partecipanti per il formato a classifica unica.
 MAX_CLASSIC_PLAYERS = 8
 

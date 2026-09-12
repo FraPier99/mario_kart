@@ -23,6 +23,24 @@ export function isFinalsGroup(key) {
     return key === 'top' || key === 'bottom' || isConsolationHeatKey(key)
 }
 
+// Baseline informative di gare per fase — non un tetto: un girone può
+// disputare più (o meno) gare del target senza che nulla si blocchi, stesso
+// principio già usato da Tournament.n_races nei tornei classic. L'admin può
+// sovrascriverle per torneo da "Configurazione fasi" (format_data.n_races_*);
+// questi valori sono solo il fallback quando non l'ha fatto.
+const DEFAULT_TARGET_RACES = { group: 8, semifinal: 10, finals: 12 }
+
+/** Numero di gare "baseline" per il girone/batteria/fase di `groupKey`, o
+ * `null` per chiavi senza un target sensato (es. spareggi a gara secca). */
+export function targetRacesForGroup(groupKey, formatData) {
+    if (isPodiumDuelKey(groupKey) || (typeof groupKey === 'string' && groupKey.startsWith('finals_duello_'))) {
+        return null
+    }
+    if (isFinalsGroup(groupKey)) return formatData?.n_races_final ?? DEFAULT_TARGET_RACES.finals
+    if (isSemifinalKey(groupKey)) return formatData?.n_races_semifinals ?? DEFAULT_TARGET_RACES.semifinal
+    return formatData?.n_races_group_stage ?? DEFAULT_TARGET_RACES.group
+}
+
 // Spareggi a gara secca per posizioni più basse (es. "duello_podio_5_6"),
 // generati dinamicamente da get_classic_podium_ties per qualunque blocco di
 // posizioni in parità che non sia 1°/2° o 3°/4° posto.
