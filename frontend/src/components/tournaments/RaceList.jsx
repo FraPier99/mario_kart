@@ -6,23 +6,8 @@ import { getApiErrorMessage, racesApi } from '@/services/apiClient'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import CircuitThumbnail from '@/components/common/CircuitThumbnail'
 import ClassicRaceForm from '@/components/tournaments/ClassicRaceForm'
-import { groupColor, groupLabel } from '@/lib/groupStage'
+import { groupColor, groupLabel, GROUP_BADGE_CLASSES } from '@/lib/groupStage'
 import { useAuth } from '@/context/AuthContext'
-
-// Stessa palette di GroupPlancia.jsx (COLOR_CLASSES), qui ridotta al solo
-// badge — mantiene coerenza visiva col colore di ogni girone/fase altrove.
-const GROUP_BADGE_CLASSES = {
-    blue:    'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30',
-    violet:  'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-500/30',
-    emerald: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30',
-    rose:    'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30',
-    cyan:    'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-500/30',
-    fuchsia: 'bg-fuchsia-50 dark:bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-200 dark:border-fuchsia-500/30',
-    lime:    'bg-lime-50 dark:bg-lime-500/10 text-lime-700 dark:text-lime-300 border-lime-200 dark:border-lime-500/30',
-    orange:  'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-500/30',
-    amber:   'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30',
-    slate:   'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600',
-}
 
 const getCupStyle = (description = '') => {
     const d = description.toLowerCase()

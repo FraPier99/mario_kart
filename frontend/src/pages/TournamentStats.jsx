@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell,
@@ -8,6 +8,8 @@ import { ArrowLeft, BarChart3, Download, TrendingUp, Trophy, Users, CircuitBoard
 import { useAppData } from '@/context/AppDataContext'
 import AppLayout from '@/components/layout/AppLayout'
 import { downloadCSV } from '@/lib/utils'
+import { tournamentsApi } from '@/services/apiClient'
+import { groupColor, groupLabel, GROUP_BADGE_CLASSES } from '@/lib/groupStage'
 
 const COLORS = ['#059669', '#2563eb', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#db2777', '#65a30d']
 
@@ -49,56 +51,146 @@ const TournamentStats = () => {
     const { getTournamentById, circuitsById } = useAppData()
 
     const tournament = getTournamentById(tournamentId)
+    const isGroupStage = tournament?.tournament_format === 'group_stage'
+
+    // Filtro per fase/girone — solo per i tornei a gironi, dove altrimenti
+    // gironi/semifinali/finale/finalina finiscono tutti mischiati in un
+    // unico set di grafici/tabella senza modo di isolarli (stesso pattern a
+    // pillole già introdotto in RaceList.jsx).
+    const [phaseFilter, setPhaseFilter] = useState('all')
+
+    const groupKeys = useMemo(() => {
+        if (!tournament || !isGroupStage) return []
+        const orderByKey = new Map()
+        for (const race of tournament.races ?? []) {
+            if (!race.group_name) continue
+            const existing = orderByKey.get(race.group_name)
+            if (existing === undefined || race.race_order < existing) {
+                orderByKey.set(race.group_name, race.race_order)
+            }
+        }
+        return [...orderByKey.entries()].sort((a, b) => a[1] - b[1]).map(([key]) => key)
+    }, [tournament, isGroupStage])
+
+    // "Classifica finale" deve restare l'ordine ufficiale dell'intero torneo
+    // (Finale prima della Finalina, sempre) indipendentemente dal filtro
+    // fase — tournament.standings (somma punti su tutte le fasi mischiate)
+    // non lo garantisce per i tornei a gironi, va richiesto al backend.
+    const [overallOrder, setOverallOrder] = useState([])
+    useEffect(() => {
+        if (!tournament?.id || !isGroupStage) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setOverallOrder([])
+            return
+        }
+        let mounted = true
+        tournamentsApi.overallClassifica(tournament.id)
+            .then((res) => { if (mounted) setOverallOrder(res.data?.order ?? []) })
+            .catch(() => { if (mounted) setOverallOrder([]) })
+        return () => { mounted = false }
+    }, [tournament?.id, isGroupStage])
+
+    // Gare della fase selezionata, escluse quelle di spareggio — usate dai
+    // grafici (coerente con sortedRaces di prima, solo ora scoped alla fase).
+    const filteredRaces = useMemo(() => {
+        if (!tournament) return []
+        const base = (tournament.races ?? []).filter((r) => !r.is_duello)
+        if (!isGroupStage || phaseFilter === 'all') return base
+        return base.filter((r) => r.group_name === phaseFilter)
+    }, [tournament, isGroupStage, phaseFilter])
+
+    // Stessa lista ma per la tabella "Dettaglio gare"/CSV, che include
+    // deliberatamente anche gli spareggi (comportamento preesistente).
+    const tableRaces = useMemo(() => {
+        if (!tournament) return []
+        const base = [...(tournament.races ?? [])].sort((a, b) => (a.race_order ?? 0) - (b.race_order ?? 0))
+        if (!isGroupStage || phaseFilter === 'all') return base
+        return base.filter((r) => r.group_name === phaseFilter)
+    }, [tournament, isGroupStage, phaseFilter])
+
+    // Aggregazione punti/vittorie/podi scoped alla fase selezionata — quando
+    // "Tutte le fasi" resta l'aggregato cross-fase esistente (tournament.standings),
+    // qui esplicitamente solo una statistica aggregata, non la classifica ufficiale
+    // (quella è sempre standingsChart/overallOrder sopra).
+    const perPhaseStandings = useMemo(() => {
+        if (!tournament) return []
+        if (!isGroupStage || phaseFilter === 'all') return tournament.standings ?? []
+        const playerInfoById = new Map((tournament.standings ?? []).map((s) => [s.playerId, s]))
+        const byId = new Map()
+        for (const race of filteredRaces) {
+            for (const r of race.results ?? []) {
+                const info = playerInfoById.get(r.player_id)
+                if (!info) continue
+                const row = byId.get(r.player_id) ?? {
+                    playerId: r.player_id, nickname: info.nickname, img_url: info.img_url,
+                    points: 0, raceWins: 0, podiums: 0, racesPlayed: 0,
+                }
+                row.points += r.points ?? 0
+                row.racesPlayed += 1
+                if (r.position === 1) row.raceWins += 1
+                if (r.position <= 3) row.podiums += 1
+                byId.set(r.player_id, row)
+            }
+        }
+        return [...byId.values()].sort((a, b) => b.points - a.points)
+    }, [tournament, isGroupStage, phaseFilter, filteredRaces])
 
     const chartData = useMemo(() => {
         if (!tournament) return {}
 
-        // Le gare di spareggio (is_duello) non assegnano punti e vanno escluse
-        // da progressione punti e distribuzione posizioni — coerente con
-        // tournament.standings, già filtrato a monte in AppDataContext.jsx.
-        const sortedRaces = [...tournament.races].filter((r) => !r.is_duello).sort((a, b) => (a.race_order ?? 0) - (b.race_order ?? 0))
+        const sortedRaces = [...filteredRaces].sort((a, b) => (a.race_order ?? 0) - (b.race_order ?? 0))
 
         const cumulativePoints = {}
-        tournament.standings.forEach((s) => { cumulativePoints[s.playerId] = 0 })
+        perPhaseStandings.forEach((s) => { cumulativePoints[s.playerId] = 0 })
 
         const pointsProgression = sortedRaces.map((race) => {
             const point = { name: `Gara ${race.race_order}` }
             race.results.forEach((r) => {
                 cumulativePoints[r.player_id] = (cumulativePoints[r.player_id] ?? 0) + (r.points ?? 0)
             })
-            tournament.standings.forEach((s) => {
+            perPhaseStandings.forEach((s) => {
                 point[s.nickname] = cumulativePoints[s.playerId] ?? 0
             })
             return point
         })
 
-        const standingsChart = tournament.standings.map((s, idx) => ({
+        // La classifica finale ufficiale resta sempre sull'intero torneo,
+        // ordinata con l'ordine del backend per i tornei a gironi (Finale
+        // prima della Finalina) — vedi overallOrder sopra.
+        const standingsSource = (isGroupStage && overallOrder.length > 0)
+            ? (() => {
+                const byId = new Map((tournament.standings ?? []).map((s) => [s.playerId, s]))
+                return overallOrder.map((pid) => byId.get(pid)).filter(Boolean)
+            })()
+            : (tournament.standings ?? [])
+
+        const standingsChart = standingsSource.map((s, idx) => ({
             name: s.nickname,
             Punti: s.points,
             fill: COLORS[idx % COLORS.length],
         }))
 
-        const raceWinsChart = tournament.standings.map((s, idx) => ({
+        const raceWinsChart = perPhaseStandings.map((s, idx) => ({
             name: s.nickname,
             'Gare vinte': s.raceWins,
             fill: COLORS[idx % COLORS.length],
         }))
 
-        const podiumsChart = tournament.standings.map((s, idx) => ({
+        const podiumsChart = perPhaseStandings.map((s, idx) => ({
             name: s.nickname,
             Podi: s.podiums,
             fill: COLORS[idx % COLORS.length],
         }))
 
-        const maxPositions = tournament.n_players
+        const maxPositions = (isGroupStage && phaseFilter !== 'all') ? perPhaseStandings.length : tournament.n_players
         const posCounts = {}
-        tournament.standings.forEach((s) => {
+        perPhaseStandings.forEach((s) => {
             posCounts[s.nickname] = {}
             for (let i = 1; i <= maxPositions; i++) posCounts[s.nickname][i] = 0
         })
         sortedRaces.forEach((race) => {
             race.results.forEach((r) => {
-                const player = tournament.standings.find((s) => s.playerId === r.player_id)
+                const player = perPhaseStandings.find((s) => s.playerId === r.player_id)
                 if (player && posCounts[player.nickname]) {
                     posCounts[player.nickname][r.position] = (posCounts[player.nickname][r.position] ?? 0) + 1
                 }
@@ -107,13 +199,13 @@ const TournamentStats = () => {
         const positionData = []
         for (let pos = 1; pos <= maxPositions; pos++) {
             const entry = { name: `#${pos}` }
-            tournament.standings.forEach((s) => {
+            perPhaseStandings.forEach((s) => {
                 entry[s.nickname] = posCounts[s.nickname]?.[pos] ?? 0
             })
             positionData.push(entry)
         }
 
-        const avgPointsChart = tournament.standings.map((s, idx) => ({
+        const avgPointsChart = perPhaseStandings.map((s, idx) => ({
             name: s.nickname,
             'Media punti': s.racesPlayed > 0 ? Number((s.points / s.racesPlayed).toFixed(1)) : 0,
             'Media gare vinte': s.racesPlayed > 0 ? Number((s.raceWins / s.racesPlayed).toFixed(2)) : 0,
@@ -122,7 +214,7 @@ const TournamentStats = () => {
         }))
 
         return { pointsProgression, standingsChart, raceWinsChart, podiumsChart, positionData, avgPointsChart }
-    }, [tournament])
+    }, [tournament, filteredRaces, perPhaseStandings, isGroupStage, overallOrder, phaseFilter])
 
     const { pointsProgression = [], standingsChart = [], raceWinsChart = [], podiumsChart = [], positionData = [], avgPointsChart = [] } = chartData
 
@@ -193,6 +285,39 @@ const TournamentStats = () => {
                     <InfoCard icon={Trophy} label="Vincitore" value={tournament.winner?.nickname ?? 'N/D'} color="bg-amber-500" />
                 </div>
 
+                {/* Filtro fase/girone — solo tornei a gironi. "Classifica finale"
+                    resta sempre sull'intero torneo (vedi standingsChart sopra);
+                    gli altri grafici e la tabella sotto seguono questo filtro. */}
+                {groupKeys.length > 0 && (
+                    <div className="no-print mb-6 flex flex-wrap gap-1.5">
+                        <button
+                            type="button"
+                            onClick={() => setPhaseFilter('all')}
+                            className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider transition ${
+                                phaseFilter === 'all'
+                                    ? 'border-slate-900 dark:border-white bg-slate-900 dark:bg-white text-white dark:text-slate-900'
+                                    : 'border-slate-200 dark:border-border text-slate-500 dark:text-muted-foreground hover:border-slate-300 dark:hover:border-slate-600'
+                            }`}
+                        >
+                            Tutte le fasi
+                        </button>
+                        {groupKeys.map((key) => (
+                            <button
+                                key={key}
+                                type="button"
+                                onClick={() => setPhaseFilter(key)}
+                                className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider transition ${
+                                    phaseFilter === key
+                                        ? GROUP_BADGE_CLASSES[groupColor(key)]
+                                        : 'border-slate-200 dark:border-border text-slate-500 dark:text-muted-foreground hover:border-slate-300 dark:hover:border-slate-600'
+                                }`}
+                            >
+                                {groupLabel(key)}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
                 <div className="grid gap-6 lg:grid-cols-2">
                     <ChartCard title="Andamento punti" icon={TrendingUp}>
                         <ResponsiveContainer width="100%" height={320}>
@@ -202,7 +327,7 @@ const TournamentStats = () => {
                                 <YAxis tick={{ fontSize: 10, fill: '#64748b' }} />
                                 <Tooltip content={<CustomTooltip />} />
                                 <Legend wrapperStyle={{ fontSize: '10px', fontWeight: 700 }} />
-                                {tournament.standings.map((s, idx) => (
+                                {perPhaseStandings.map((s, idx) => (
                                     <Line key={s.playerId} type="monotone" dataKey={s.nickname} stroke={COLORS[idx % COLORS.length]} strokeWidth={2} dot={{ r: 3 }} />
                                 ))}
                             </LineChart>
@@ -265,7 +390,7 @@ const TournamentStats = () => {
                                 <YAxis tick={{ fontSize: 10, fill: '#64748b' }} />
                                 <Tooltip content={<CustomTooltip />} />
                                 <Legend wrapperStyle={{ fontSize: '10px', fontWeight: 700 }} />
-                                {tournament.standings.map((s, idx) => (
+                                {perPhaseStandings.map((s, idx) => (
                                     <Bar key={s.playerId} dataKey={s.nickname} fill={COLORS[idx % COLORS.length]} radius={[4, 4, 0, 0]} />
                                 ))}
                             </BarChart>
@@ -298,13 +423,13 @@ const TournamentStats = () => {
                         </h3>
                         <button
                             onClick={() => {
-                                const sortedRaces = [...tournament.races].sort((a, b) => (a.race_order ?? 0) - (b.race_order ?? 0))
-                                const headers = ['Gara', 'Circuito', ...tournament.standings.map((s) => s.nickname)]
-                                const rows = sortedRaces.map((race) => {
+                                const headers = ['Gara', ...(isGroupStage ? ['Fase'] : []), 'Circuito', ...tournament.standings.map((s) => s.nickname)]
+                                const rows = tableRaces.map((race) => {
                                     const resultMap = {}
                                     race.results.forEach((r) => { resultMap[r.player_id] = r })
                                     return [
                                         `Gara ${race.race_order}${race.is_duello ? ' (Spareggio)' : ''}`,
+                                        ...(isGroupStage ? [race.group_name ? groupLabel(race.group_name) : ''] : []),
                                         circuitsById?.get(race.circuit_id)?.name ?? '',
                                         ...tournament.standings.map((s) => {
                                             const res = resultMap[s.playerId]
@@ -326,6 +451,7 @@ const TournamentStats = () => {
                             <thead>
                                 <tr className="border-b border-slate-200 dark:border-border font-title text-[9px] tracking-wide text-slate-500 dark:text-muted-foreground">
                                     <th className="px-4 py-3">Gara</th>
+                                    {isGroupStage && <th className="px-4 py-3">Fase</th>}
                                     <th className="px-4 py-3">Circuito</th>
                                     {tournament.standings.slice().reverse().map((s) => (
                                         <th key={s.playerId} className="px-3 py-3 text-right">{s.nickname}</th>
@@ -333,7 +459,7 @@ const TournamentStats = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {[...tournament.races].sort((a, b) => (a.race_order ?? 0) - (b.race_order ?? 0)).map((race, rIdx) => {
+                                {tableRaces.map((race, rIdx) => {
                                     const resultMap = {}
                                     race.results.forEach((r) => { resultMap[r.player_id] = r })
                                     return (
@@ -342,6 +468,15 @@ const TournamentStats = () => {
                                                 Gara {race.race_order}
                                                 {race.is_duello && <span className="ms-1.5 text-[9px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">(Spareggio)</span>}
                                             </td>
+                                            {isGroupStage && (
+                                                <td className="px-4 py-3">
+                                                    {race.group_name && (
+                                                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${GROUP_BADGE_CLASSES[groupColor(race.group_name)]}`}>
+                                                            {groupLabel(race.group_name)}
+                                                        </span>
+                                                    )}
+                                                </td>
+                                            )}
                                             <td className="px-4 py-3 text-xs font-medium text-slate-500 dark:text-muted-foreground">
                                                 <span className="rounded-full bg-slate-100 dark:bg-muted px-2.5 py-1">
                                                     {circuitsById?.get(race.circuit_id)?.name ?? `Circuito #${race.circuit_id}`}
