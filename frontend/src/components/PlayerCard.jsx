@@ -3,7 +3,7 @@ import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import { TIER_BADGE_IMAGES } from '@/lib/playerBadges'
 import TierMedallion from '@/components/community/badges/TierMedallion'
 
-const PlayerCard = ({ players, bestBadgeByPlayerId, handlePlayerClick }) => {
+const PlayerCard = ({ players, badgesByPlayerId, handlePlayerClick }) => {
     if (!players.length) {
         return (
             <div className="col-span-full rounded-3xl border border-dashed border-slate-200 dark:border-border bg-white dark:bg-card px-8 py-12 text-center text-slate-500 dark:text-muted-foreground">
@@ -15,12 +15,9 @@ const PlayerCard = ({ players, bestBadgeByPlayerId, handlePlayerClick }) => {
     return (
         <>
             {players.map((p, idx) => {
-                const bestBadge = bestBadgeByPlayerId?.get(p.id)
-                // Un giocatore avrà in futuro un tier per ogni gioco della lega —
-                // questa riga è già pronta per più badge (oggi ne arriva sempre
-                // al più uno, bestBadgeByPlayerId non porta ancora l'elenco
-                // completo per gioco).
-                const playerBadges = bestBadge ? [bestBadge] : []
+                // Un badge per gioco (non solo il migliore) — riga scrollabile
+                // già pensata per più badge fin da subito.
+                const playerBadges = badgesByPlayerId?.get(p.id) ?? []
 
                 return (
                     // Nessuna colorazione bordo/sfondo legata al tier: stessa card

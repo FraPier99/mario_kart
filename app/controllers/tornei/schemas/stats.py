@@ -113,3 +113,8 @@ class PlayerBestBadgeResponse(BaseModel):
     game_name: str
     tier: Literal["leggenda", "campione", "veterano", "outsider", "esordiente", "sfidante"]
     label: str
+
+
+class PlayerBadgesResponse(BaseModel):
+    player_id: int
+    badges: list[PlayerGameBadgeResponse]

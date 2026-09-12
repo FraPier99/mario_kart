@@ -13,7 +13,7 @@ const Players = () => {
     const navigate = useNavigate()
     const [searchTerm, setSearchTerm] = useState('')
     const [users, setUsers] = useState([])
-    const [bestBadgeByPlayerId, setBestBadgeByPlayerId] = useState(new Map())
+    const [badgesByPlayerId, setBadgesByPlayerId] = useState(new Map())
 
     // /auth/community/users (a differenza di /auth/users, riservato al
     // superadmin) è raggiungibile da qualsiasi utente autenticato — serve
@@ -22,12 +22,12 @@ const Players = () => {
         authApi.listCommunityUsers().then((res) => setUsers(res.data ?? [])).catch(() => {})
     }, [])
 
-    // Un'unica chiamata bulk (non un fetch per giocatore) per lo stesso
-    // stile "carta speciale" usato in dashboard/profilo pubblico/Home.
+    // Un'unica chiamata bulk (non un fetch per giocatore) — elenco completo
+    // dei badge per gioco, non solo il migliore.
     useEffect(() => {
-        statsApi.bestBadgesByPlayer()
-            .then((res) => setBestBadgeByPlayerId(new Map((res.data ?? []).map((b) => [b.player_id, b]))))
-            .catch(() => setBestBadgeByPlayerId(new Map()))
+        statsApi.allBadgesByPlayer()
+            .then((res) => setBadgesByPlayerId(new Map((res.data ?? []).map((b) => [b.player_id, b.badges]))))
+            .catch(() => setBadgesByPlayerId(new Map()))
     }, [])
 
     const userIdByPlayerId = useMemo(() => {
@@ -119,7 +119,7 @@ const Players = () => {
                                     Nessun giocatore presente nel database.
                                 </div>
                             ) : (
-                                <PlayerCard players={filteredPlayers} bestBadgeByPlayerId={bestBadgeByPlayerId} handlePlayerClick={handlePlayerClick} />
+                                <PlayerCard players={filteredPlayers} badgesByPlayerId={badgesByPlayerId} handlePlayerClick={handlePlayerClick} />
                             )}
                         </div>
                     )}

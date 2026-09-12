@@ -62,10 +62,6 @@ const CommunityUserPage = () => {
     }, [player])
 
     const bestBadge = useMemo(() => pickBestBadge(badges), [badges])
-    const activeBadge = useMemo(() => {
-        if (!selectedGameId) return bestBadge
-        return badges.find((b) => b.game_id === Number(selectedGameId)) ?? bestBadge
-    }, [badges, selectedGameId, bestBadge])
     const gameStats = useMemo(() => {
         if (!selectedGameId || !player) return null
         const leaderboard = getLeaderboardByGame(selectedGameId)
@@ -153,8 +149,10 @@ const CommunityUserPage = () => {
                         // ruolo già visibile in Navbar.
                         role={viewedUserIsSuperadmin ? communityUser.role : null}
                         // Il superadmin non gioca mai — nessun badge di gioco anche se per
-                        // qualche motivo risultasse un player collegato.
-                        badges={!viewedUserIsSuperadmin && activeBadge ? [activeBadge] : []}
+                        // qualche motivo risultasse un player collegato. Elenco completo
+                        // (un badge per gioco), non solo il migliore — stesso comportamento
+                        // già usato dal proprio profilo in ProfileDashboard.jsx.
+                        badges={!viewedUserIsSuperadmin ? badges : []}
                         favoriteCharacter={favoriteCharacter}
                         bio={player?.bio}
                     />

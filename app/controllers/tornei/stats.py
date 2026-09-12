@@ -6,11 +6,13 @@ from app.controllers.tornei.schemas.stats import (
     CircuitStatsDetailResponse,
     CircuitStatsListItem,
     HeadToHeadResponse,
+    PlayerBadgesResponse,
     PlayerBestBadgeResponse,
     PlayerGameBadgeResponse,
 )
 from app.models import Circuit, Player
 from app.services.tornei.stats import (
+    get_badges_for_players,
     get_best_badges_for_players,
     get_circuit_stats_detail,
     get_circuit_stats_list,
@@ -85,4 +87,18 @@ def players_best_badges(db: Session = Depends(get_db)):
     return [
         {"player_id": player_id, **best}
         for player_id, best in best_by_player.items()
+    ]
+
+
+@router.get("/players/badges/all", response_model=list[PlayerBadgesResponse])
+def players_all_badges(db: Session = Depends(get_db)):
+    """Elenco completo dei badge (uno per gioco) per ogni giocatore esistente
+    — stessa ragion d'essere di /players/badges/best (evitare N+1 dal roster
+    /players), ma senza collassare al solo tier migliore: mostra i badge
+    ottenuti in tutti i giochi, non solo quello con tier più alto."""
+    player_ids = [row[0] for row in db.query(Player.id).all()]
+    badges_by_player = get_badges_for_players(db, player_ids)
+    return [
+        {"player_id": player_id, "badges": badges}
+        for player_id, badges in badges_by_player.items()
     ]

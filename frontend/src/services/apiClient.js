@@ -256,6 +256,7 @@ export const statsApi = {
     circuitDetail: (circuitId) => _get(`/stats/circuits/${circuitId}`),
     playerBadges: (playerId) => _get(`/stats/players/${playerId}/badges`),
     bestBadgesByPlayer: () => _get('/stats/players/badges/best'),
+    allBadgesByPlayer: () => _get('/stats/players/badges/all'),
 }
 
 export const contentImagesApi = {

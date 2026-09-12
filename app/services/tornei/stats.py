@@ -460,6 +460,14 @@ def get_player_badges(db: Session, player_id: int) -> list[dict]:
     ]
 
 
+def get_badges_for_players(db: Session, player_ids: list[int]) -> dict[int, list[dict]]:
+    """Elenco completo dei badge (uno per gioco) per ciascun player_id — stessa
+    forma di get_best_badges_for_players ma senza il collasso al migliore,
+    per mostrare i badge di tutti i giochi anche in vista bulk (es. roster
+    /players) invece del solo tier più alto."""
+    return {player_id: get_player_badges(db, player_id) for player_id in player_ids}
+
+
 def get_best_badges_for_players(db: Session, player_ids: list[int]) -> dict[int, dict]:
     """Badge di rango più alto per ciascun player_id, fra tutti i suoi giochi
     (stessa logica di pickBestBadge lato frontend, calcolata qui per evitare
