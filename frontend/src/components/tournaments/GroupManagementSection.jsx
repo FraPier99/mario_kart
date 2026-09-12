@@ -6,11 +6,14 @@
  *
  * La schermata è divisa in capitoli per fase, ciascuno con il proprio
  * "Avanza alla fase successiva" dove applicabile:
- *   1. Generale         — stepper di fase, seeding (legacy) e plancia live
- *   2. Gironi           — Fase 1: inserimento gare, spareggi, avanzamento
- *   3. Semifinali       — Fase 2 (solo con 3+ gironi): batterie, spareggi, avanzamento
- *   4. Finali           — Finale + Consolazione: inserimento gare
- *   5. Classifica Finale — podio Final 4, spareggi di podio e vincitore
+ *   1. Generale — stepper di fase e seeding (legacy)
+ *   2. Gironi   — Fase 1: inserimento gare, spareggi, avanzamento
+ *   3. Semifinali — Fase 2 (solo con 3+ gironi): batterie, spareggi, avanzamento
+ *   4. Finali   — Finale + Consolazione: inserimento gare, spareggi di podio e vincitore
+ *
+ * Le classifiche (per girone/semifinale/finale) sono mostrate nel tab
+ * principale "Classifica" (GroupPlancia, in TournamentDetail.jsx) — non qui,
+ * per evitare di duplicare la stessa tabella in più punti.
  */
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { Shuffle, Trophy, Medal, Loader2, CheckCircle2, AlertCircle, Swords, Dices, Flag, Users, Lock, Unlock, Settings, CreditCard } from 'lucide-react'
@@ -19,13 +22,11 @@ import { tournamentsApi, getApiErrorMessage } from '@/services/apiClient'
 import { useAppData } from '@/context/AppDataContext'
 import GroupRaceForm from './GroupRaceForm'
 import PhaseCircuitsCard from './PhaseCircuitsCard'
-import GroupPlancia, { GroupCard } from './GroupPlancia'
 import FinalsPodiumDuelCard from './FinalsPodiumDuelCard'
 import ConsolationPodiumDuelCard from './ConsolationPodiumDuelCard'
 import TournamentResolutionNotes from './TournamentResolutionNotes'
-import OverallClassificaCard from './OverallClassificaCard'
 import WinnerFinalizeCard from './WinnerFinalizeCard'
-import { consolationHeatKeysFromFormatData, groupColor, groupKeysFromFormatData, groupLabel, semifinalKeysFromFormatData, passScopeKey, isPassEnabledForScope, targetRacesForGroup } from '@/lib/groupStage'
+import { consolationHeatKeysFromFormatData, groupColor, groupKeysFromFormatData, groupLabel, semifinalKeysFromFormatData, passScopeKey, isPassEnabledForScope } from '@/lib/groupStage'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -791,8 +792,6 @@ const GroupManagementSection = ({
         }
     }, [tournament.id, phaseConfig, onRefresh])
 
-    const playerMap = useMemo(() => new Map(players.map((p) => [p.id, p])), [players])
-
     // ── Tie data per gruppo ──────────────────────────────────────────────
     const [ties, setTies] = useState(null)
     useEffect(() => {
@@ -859,8 +858,6 @@ const GroupManagementSection = ({
         }
     }
 
-    const finalsTopRaces = (tournament.races ?? []).filter((r) => r.phase === 'finals' && r.group_name === 'top')
-
     // ── Tab per fase: una sola fase visibile alla volta invece di tutta la
     // gestione (Generale/Gironi/Semifinali/Finali/Classifica Finale) impilata
     // in un'unica pagina lunga e confusa.
@@ -871,7 +868,6 @@ const GroupManagementSection = ({
         ]
         if (showSemifinaliSection) tabs.push({ key: 'semifinali', label: 'Semifinali', icon: <Swords size={13} /> })
         tabs.push({ key: 'finali', label: 'Finali', icon: <Trophy size={13} /> })
-        tabs.push({ key: 'classifica', label: 'Classifica Finale', icon: <Medal size={13} /> })
         return tabs
     }, [showSemifinaliSection])
 
@@ -882,29 +878,30 @@ const GroupManagementSection = ({
 
     return (
         <div className="space-y-4">
-            {/* ── Tab bar fase ─────────────────────────────────────────── */}
-            <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-3 shadow-sm">
-                <div className="flex flex-wrap items-center gap-2">
-                    <span className="px-2 text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Fase</span>
-                    <div className="inline-flex flex-wrap rounded-xl bg-slate-100 dark:bg-muted p-1 gap-0.5">
-                        {phaseTabs.map(({ key, label, icon }) => (
-                            <button
-                                key={key}
-                                type="button"
-                                onClick={() => setActivePhaseTab(key)}
-                                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest whitespace-nowrap transition ${activePhaseTab === key ? 'bg-emerald-500 text-white shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}
-                            >
-                                {icon} {label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+            {/* ── Tab bar fase (livello 2 di navigazione: stile "sottolineato",
+                più leggero della pillola piena dei tab principali, per segnalare
+                che è un livello subordinato) ────────────────────────────────── */}
+            <div className="flex gap-4 overflow-x-auto border-b border-slate-200 dark:border-border">
+                {phaseTabs.map(({ key, label, icon }) => (
+                    <button
+                        key={key}
+                        type="button"
+                        onClick={() => setActivePhaseTab(key)}
+                        className={`flex shrink-0 items-center gap-1.5 border-b-2 px-1 pb-2.5 text-xs font-black uppercase tracking-widest whitespace-nowrap transition -mb-px ${
+                            activePhaseTab === key
+                                ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                                : 'border-transparent text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground'
+                        }`}
+                    >
+                        {icon} {label}
+                    </button>
+                ))}
             </div>
 
             {/* ── 1. Generale ───────────────────────────────────────────── */}
             {activePhaseTab === 'generale' && (
             <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-sm p-5 space-y-4">
-                <PhaseSectionHeader title="Generale" subtitle="Stato del torneo, plancia live e composizione gironi" icon={<Flag size={16} />} />
+                <PhaseSectionHeader title="Generale" subtitle="Stato del torneo e composizione gironi" icon={<Flag size={16} />} />
                 <PhaseStepper tournament={tournament} semiKeys={semiKeys} />
 
                 {/* I gironi vengono generati automaticamente alla creazione del torneo:
@@ -914,7 +911,13 @@ const GroupManagementSection = ({
                     <SeedingCard tournament={tournament} players={players} onRefresh={onRefresh} />
                 )}
 
-                <GroupPlancia tournament={tournament} players={players} results={results} />
+                {/* Le classifiche live (per girone/semifinale/finale) sono state
+                    spostate nel tab principale "Classifica" — prima erano
+                    duplicate qui via GroupPlancia, con un secondo toggle di fase
+                    interno che si sovrapponeva a questa stessa tab bar. */}
+                <p className="text-xs text-slate-500 dark:text-muted-foreground italic">
+                    Le classifiche live di ogni girone/fase sono nel tab <span className="font-black not-italic">Classifica</span>, in alto.
+                </p>
 
                 {/* Configurazione fasi — n_races per fase (salvato in format_data) */}
                 <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm space-y-4">
@@ -1122,52 +1125,21 @@ const GroupManagementSection = ({
                             />
                         )}
                         <ConsolazioneCard tournament={tournament} players={players} onRefresh={onRefresh} />
+
+                        {/* Spareggi podio di Finale (Final 4): 1°/2° e 3°/4° posto */}
+                        <FinalsPodiumDuelCard tournament={tournament} players={players} circuits={circuits} characters={characters} onRefresh={onRefresh} />
+
+                        {/* Spareggi podio di Consolazione/Finalina — DISTINTI da quelli della Finale (5°/6° e 7°/8° posto generale) */}
+                        <ConsolationPodiumDuelCard tournament={tournament} players={players} circuits={circuits} characters={characters} onRefresh={onRefresh} />
+
+                        {/* Note automatiche sulla Finale — gli esiti di gironi/semifinali non sono rilevanti qui */}
+                        <TournamentResolutionNotes tournament={tournament} phaseFilter="finals" />
+
+                        {/* Decreta vincitore: controlla che Finale e Consolazione non abbiano
+                            spareggi aperti, altrimenti conclude il torneo, salda le schedine
+                            (Card premio incluse) e fa partire l'overlay di celebrazione. */}
+                        <WinnerFinalizeCard tournament={tournament} leader={leader} onFinalized={onFinalized} onReplayCelebration={onReplayCelebration} />
                     </>
-                )}
-            </div>
-            )}
-
-            {/* ── 5. Classifica Finale ───────────────────────────────────── */}
-            {activePhaseTab === 'classifica' && (
-            <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-sm p-5 space-y-4">
-                <PhaseSectionHeader title="Classifica Finale" subtitle="Podio Final 4, spareggi e vincitore" icon={<Medal size={16} />} />
-                {!finalsReady ? (
-                    <div className="flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3">
-                        <AlertCircle size={13} className="text-slate-400 shrink-0" />
-                        <p className="text-xs text-slate-500 dark:text-muted-foreground font-black">
-                            La classifica finale sarà disponibile dopo la composizione della Finale.
-                        </p>
-                    </div>
-                ) : (
-                    <GroupCard
-                        groupKey="top"
-                        races={finalsTopRaces}
-                        results={results}
-                        playerMap={playerMap}
-                        seedPlayerIds={fd.finals?.top ?? []}
-                        targetRaces={targetRacesForGroup('top', tournament.format_data)}
-                    />
-                )}
-
-                {/* Spareggi podio di Finale (Final 4): 1°/2° e 3°/4° posto */}
-                <FinalsPodiumDuelCard tournament={tournament} players={players} circuits={circuits} characters={characters} onRefresh={onRefresh} />
-
-                {/* Spareggi podio di Consolazione/Finalina — DISTINTI da quelli della Finale (5°/6° e 7°/8° posto generale) */}
-                <ConsolationPodiumDuelCard tournament={tournament} players={players} circuits={circuits} characters={characters} onRefresh={onRefresh} />
-
-                {/* Note automatiche sulla Finale — gli esiti di gironi/semifinali non sono rilevanti qui */}
-                <TournamentResolutionNotes tournament={tournament} phaseFilter="finals" />
-
-                {/* Decreta vincitore: controlla che Finale e Consolazione non abbiano
-                    spareggi aperti, altrimenti conclude il torneo, salda le schedine
-                    (Card premio incluse) e fa partire l'overlay di celebrazione. */}
-                {finalsReady && (
-                    <WinnerFinalizeCard tournament={tournament} leader={leader} onFinalized={onFinalized} onReplayCelebration={onReplayCelebration} />
-                )}
-
-                {/* Classifica generale combinata: Finale + Consolazione */}
-                {finalsReady && (
-                    <OverallClassificaCard tournament={tournament} playerMap={playerMap} />
                 )}
             </div>
             )}

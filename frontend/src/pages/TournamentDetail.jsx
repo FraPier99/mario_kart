@@ -1155,7 +1155,7 @@ const TournamentDetail = () => {
                 <div className="rounded-2xl border-2 border-slate-200 dark:border-border bg-white dark:bg-card p-3" style={{ boxShadow: 'var(--circuit-shadow-sm)' }}>
                     <div className="flex flex-wrap items-center gap-2 md:gap-3">
                         <span className="font-title select-none px-2 text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-muted-foreground/70 cursor-default">Gestione torneo</span>
-                        <div className="inline-flex flex-wrap rounded-xl bg-slate-100 dark:bg-muted p-1 overflow-x-auto max-w-full gap-0.5">
+                        <div className="flex flex-nowrap overflow-x-auto rounded-xl bg-slate-100 dark:bg-muted p-1 gap-0.5">
                             {[
                                 // Le più usate in cima: inserire risultati, consultare la
                                 // classifica e le carte sono le azioni ricorrenti; il resto

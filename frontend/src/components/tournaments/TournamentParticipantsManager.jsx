@@ -89,7 +89,7 @@ const TournamentParticipantsManager = ({ tournament, players = [], initialPartic
                 />
             </div>
 
-            <div className="max-h-96 overflow-y-auto pr-1">
+            <div>
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                     {filteredPlayers.map((player) => {
                         const selected = selectedIds.includes(player.id)

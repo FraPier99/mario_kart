@@ -325,7 +325,7 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
                 </div>
             )}
 
-            <div className="max-h-150 space-y-4 overflow-y-auto pr-1">
+            <div className="space-y-4">
                 {visibleRaces.length ? (
                     <>
                         {visibleRaces.map((race) => {
@@ -353,7 +353,7 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
                                             </p>
                                             <h4 className="text-lg font-black text-slate-900 dark:text-foreground">{race.name || `Gara ${phaseRaceNumberById.get(race.id) ?? race.race_order}`}</h4>
                                         </div>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-3">
                                             {(() => {
                                                 const circuit = circuitsById?.get(race.circuit_id)
                                                 const cupStyle = getCupStyle(circuit?.description ?? '')
@@ -365,24 +365,26 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
                                                 )
                                             })()}
                                             {canEdit && (
-                                                <button
-                                                    type="button"
-                                                    onClick={(event) => { event.stopPropagation(); setEditingRace(race) }}
-                                                    className="rounded-full border border-slate-200 dark:border-border bg-white dark:bg-card p-2 text-slate-500 transition hover:border-emerald-300 hover:text-emerald-600"
-                                                    aria-label="Modifica gara"
-                                                >
-                                                    <PencilLine size={14} />
-                                                </button>
-                                            )}
-                                            {canEdit && (
-                                                <button
-                                                    type="button"
-                                                    onClick={(event) => { event.stopPropagation(); setConfirmDelete(race) }}
-                                                    className="rounded-full border border-slate-200 dark:border-border bg-white dark:bg-card p-2 text-slate-500 transition hover:border-rose-300 hover:text-rose-600"
-                                                    aria-label="Elimina gara"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={(event) => { event.stopPropagation(); setEditingRace(race) }}
+                                                        className="rounded-full border border-slate-200 dark:border-border bg-white dark:bg-card p-2 text-slate-500 transition hover:border-emerald-300 hover:text-emerald-600"
+                                                        aria-label="Modifica gara"
+                                                        title="Modifica gara"
+                                                    >
+                                                        <PencilLine size={14} />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={(event) => { event.stopPropagation(); setConfirmDelete(race) }}
+                                                        className="rounded-full border border-slate-200 dark:border-border bg-white dark:bg-card p-2 text-slate-500 transition hover:border-rose-300 hover:text-rose-600"
+                                                        aria-label="Elimina gara"
+                                                        title="Elimina gara"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
                                             )}
                                             <ChevronDown size={16} className={`text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
                                         </div>
