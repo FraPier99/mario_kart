@@ -544,9 +544,37 @@ def ensure_player_game_participation_table():
                     tournaments_missed_in_a_row INTEGER NOT NULL DEFAULT 0,
                     last_tournament_id_seen INTEGER REFERENCES tournaments(id),
                     last_nudged_at_missed_count INTEGER NOT NULL DEFAULT 0,
+                    played_streak INTEGER NOT NULL DEFAULT 0,
+                    last_played_streak_tournament_id INTEGER REFERENCES tournaments(id),
                     PRIMARY KEY (player_id, game_id)
                 )
             """)
+            )
+
+
+def ensure_player_game_participation_played_streak_columns():
+    """played_streak / last_played_streak_tournament_id: contatore di "tornei
+    conclusi giocati di fila", separato da current_streak (che resta
+    registrazione-al-roster, invariato, per il promemoria di rientro) — vedi
+    bug badge Costanza assegnato dopo un solo torneo davvero giocato."""
+    inspector = inspect(engine)
+    if "player_game_participation" not in inspector.get_table_names():
+        return
+    cols = {c["name"] for c in inspector.get_columns("player_game_participation")}
+    with engine.begin() as connection:
+        if "played_streak" not in cols:
+            connection.execute(
+                text(
+                    "ALTER TABLE player_game_participation "
+                    "ADD COLUMN played_streak INTEGER NOT NULL DEFAULT 0"
+                )
+            )
+        if "last_played_streak_tournament_id" not in cols:
+            connection.execute(
+                text(
+                    "ALTER TABLE player_game_participation "
+                    "ADD COLUMN last_played_streak_tournament_id INTEGER REFERENCES tournaments(id)"
+                )
             )
 
 
@@ -1096,6 +1124,7 @@ def bootstrap_database():
     ensure_notifications_table()
     ensure_notification_source_tournament_column()
     ensure_player_game_participation_table()
+    ensure_player_game_participation_played_streak_columns()
     ensure_audit_log_table()
     ensure_format_columns()
     ensure_schedina_deluxe_table()

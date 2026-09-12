@@ -419,7 +419,7 @@ def get_player_game_badge(db: Session, player_id: int, game_id: int) -> dict:
         )
         .first()
     )
-    streak = participation.current_streak if participation else 0
+    streak = participation.played_streak if participation else 0
     improving = _compute_improving_flag(db, tournaments, player_id)
     consolation_wins = sum(1 for t in tournaments if t.consolation_winner_id == player_id)
 

@@ -229,6 +229,16 @@ class PlayerGameParticipation(Base):
     # finché il giocatore non supera una nuova soglia di assenza.
     last_nudged_at_missed_count = Column(Integer, nullable=False, default=0)
 
+    # Contatore separato da current_streak (che è iscrizione/roster-based,
+    # aggiornato alla creazione del torneo per il promemoria di rientro):
+    # played_streak conta i tornei CONCLUSI di fila in cui il giocatore ha
+    # davvero corso (almeno un Result), aggiornato solo alla conclusione
+    # reale del torneo — vedi _sync_played_streak_tracking. È la fonte del
+    # badge "Costanza" (prima leggeva erroneamente current_streak, che
+    # poteva crescere anche senza che il torneo fosse mai stato giocato).
+    played_streak = Column(Integer, nullable=False, default=0)
+    last_played_streak_tournament_id = Column(Integer, ForeignKey("tournaments.id"), nullable=True)
+
     player = relationship("Player")
     game = relationship("Game")
 

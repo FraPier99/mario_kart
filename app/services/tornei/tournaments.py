@@ -145,6 +145,115 @@ def _sync_participation_tracking(db: Session, tournament: Tournament) -> list[in
     ]
 
 
+def _sync_played_streak_tracking(db: Session, tournament: Tournament) -> None:
+    """Aggiorna PlayerGameParticipation.played_streak alla conclusione REALE
+    di un torneo (non alla creazione, a differenza di current_streak) — solo
+    per chi ha davvero corso (almeno un Result su una gara non-duello di
+    questo torneo), stesso criterio di tournaments_played in
+    get_player_game_badge (stats.py). Chiamata una sola volta per
+    conclusione, da update_tournament/set_tournament_playoff_winner, mai per
+    i tornei amichevoli (esclusi a monte da chi la chiama)."""
+    from app.models import Race, Result
+
+    played_ids = {
+        row[0]
+        for row in db.query(Result.player_id)
+        .join(Race, Race.id == Result.race_id)
+        .filter(Race.tournament_id == tournament.id, Race.is_duello.is_(False))
+        .distinct()
+        .all()
+    }
+
+    existing_rows = (
+        db.query(PlayerGameParticipation)
+        .filter(PlayerGameParticipation.game_id == tournament.game_id)
+        .all()
+    )
+    existing_by_player = {row.player_id: row for row in existing_rows}
+
+    for player_id, row in existing_by_player.items():
+        row.played_streak = row.played_streak + 1 if player_id in played_ids else 0
+        row.last_played_streak_tournament_id = tournament.id
+
+    for player_id in played_ids:
+        if player_id in existing_by_player:
+            continue
+        db.add(
+            PlayerGameParticipation(
+                player_id=player_id,
+                game_id=tournament.game_id,
+                played_streak=1,
+                last_played_streak_tournament_id=tournament.id,
+            )
+        )
+
+    db.commit()
+
+
+def _recompute_played_streak(db: Session, player_id: int, game_id: int) -> None:
+    """Ricalcola da zero played_streak per un giocatore rigiocando la storia
+    dei tornei conclusi (non amichevoli) su quel gioco, in ordine
+    cronologico — usato quando un torneo viene de-concluso
+    (undo_last_playoff) per non lasciare un played_streak gonfiato da una
+    conclusione poi annullata, e riusato dallo script di backfill una
+    tantum."""
+    from app.models import Race, Result
+
+    tournaments = (
+        db.query(Tournament)
+        .filter(
+            Tournament.game_id == game_id,
+            Tournament.is_friendly.is_(False),
+            Tournament.winner_id.isnot(None),
+        )
+        .order_by(Tournament.date.asc(), Tournament.id.asc())
+        .all()
+    )
+
+    streak = 0
+    last_tournament_id = None
+    for t in tournaments:
+        played = (
+            db.query(Result.id)
+            .join(Race, Race.id == Result.race_id)
+            .filter(
+                Race.tournament_id == t.id,
+                Race.is_duello.is_(False),
+                Result.player_id == player_id,
+            )
+            .first()
+            is not None
+        )
+        if played:
+            streak += 1
+            last_tournament_id = t.id
+        else:
+            streak = 0
+            last_tournament_id = None
+
+    row = (
+        db.query(PlayerGameParticipation)
+        .filter(
+            PlayerGameParticipation.player_id == player_id,
+            PlayerGameParticipation.game_id == game_id,
+        )
+        .first()
+    )
+    if row:
+        row.played_streak = streak
+        row.last_played_streak_tournament_id = last_tournament_id
+    elif streak > 0:
+        db.add(
+            PlayerGameParticipation(
+                player_id=player_id,
+                game_id=game_id,
+                played_streak=streak,
+                last_played_streak_tournament_id=last_tournament_id,
+            )
+        )
+    db.commit()
+
+
 def _compute_group_stage_n_races(n_players: int) -> int:
     """
     Stima indicativa del numero di gare per un torneo a gironi: una gara-slot
@@ -662,6 +771,8 @@ def update_tournament(db: Session, tmentData: UpdateTournament, tournament_id: i
         else:
             settle_tournament_schedine(db, tournament_id)
 
+        _sync_played_streak_tracking(db, t)
+
     db.commit()
     db.refresh(t)
     _load_participants(db, t)
@@ -814,6 +925,7 @@ def set_tournament_playoff_winner(
                 )
         else:
             settle_tournament_schedine(db, tournament_id)
+        _sync_played_streak_tracking(db, tournament)
     db.commit()
     db.refresh(tournament)
     _load_participants(db, tournament)
@@ -871,6 +983,8 @@ def undo_last_playoff(db: Session, tournament_id: int):
     if not tournament:
         return None, "tournament_not_found"
 
+    was_concluso = tournament.status == "concluso"
+
     # get history ordered by created_at desc, then id desc
     last = (
         db.query(PlayoffHistory)
@@ -904,6 +1018,21 @@ def undo_last_playoff(db: Session, tournament_id: int):
 
     if tournament.status == "concluso" and not tournament.is_friendly:
         settle_tournament_schedine(db, tournament_id)
+
+    # Il torneo è stato de-concluso (era "concluso", ora non più): la sua
+    # conclusione non è più valida, played_streak dei suoi partecipanti va
+    # ricalcolato da zero rigiocando la storia, non semplicemente
+    # decrementato (non sappiamo se aveva incrementato o azzerato lo streak
+    # di ciascuno al momento in cui si era concluso).
+    if was_concluso and tournament.status != "concluso" and not tournament.is_friendly:
+        participant_ids = [
+            row[0]
+            for row in db.query(TournamentPlayer.player_id)
+            .filter(TournamentPlayer.tournament_id == tournament_id)
+            .all()
+        ]
+        for player_id in participant_ids:
+            _recompute_played_streak(db, player_id, tournament.game_id)
 
     db.commit()
     db.refresh(tournament)
@@ -983,6 +1112,13 @@ def tournament_delete(db: Session, tournament_id: int):
     db.query(PlayerGameParticipation).filter(
         PlayerGameParticipation.last_tournament_id_seen == tournament_id
     ).update({PlayerGameParticipation.last_tournament_id_seen: None}, synchronize_session=False)
+
+    # Stesso principio per last_played_streak_tournament_id (FK non
+    # cascadata): preserva played_streak accumulato, il torneo cancellato
+    # smette solo di essere il riferimento dell'ultimo aggiornamento.
+    db.query(PlayerGameParticipation).filter(
+        PlayerGameParticipation.last_played_streak_tournament_id == tournament_id
+    ).update({PlayerGameParticipation.last_played_streak_tournament_id: None}, synchronize_session=False)
 
     # 5. Nullify UserInventory.consumed_in_race_id (before deleting Race/Result)
     race_ids = [
