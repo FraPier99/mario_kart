@@ -268,7 +268,10 @@ def get_all_schedine_by_tournament(
 ):
     tournaments = (
         db.query(Tournament)
-        .filter(Tournament.status.in_(["in_corso", "finito", "concluso"]))
+        .filter(
+            Tournament.status.in_(["in_corso", "finito", "concluso"]),
+            Tournament.is_friendly.is_(False),
+        )
         .order_by(Tournament.date.desc(), Tournament.id.desc())
         .all()
     )

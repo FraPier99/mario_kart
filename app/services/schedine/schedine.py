@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import date, datetime
 from app.core.timezone import now_rome
 
-from sqlalchemy import and_, case, func, or_
+from sqlalchemy import and_, case, func, literal, or_
 from sqlalchemy.orm import Session
 
 from app.core.media import to_image_url
@@ -12,6 +12,7 @@ from app.models import (
     Race,
     Result,
     SchedinaTorneo,
+    SchedinaTorneoGroupStage,
     Tournament,
     TournamentPlayer,
     User,
@@ -129,53 +130,74 @@ def get_prizes(db: Session, user_id: int | None = None, redeemed: bool | None = 
 
 
 def get_public_schedina_overview(db: Session, game_id: int | None = None):
-    winner_query = (
-        db.query(
-            PremioTorneo.user_id.label("user_id"),
-            PremioTorneo.created_at.label("created_at"),
-            PremioTorneo.redeemed_at.label("redeemed_at"),
-            Tournament.id.label("tournament_id"),
-            Tournament.name.label("tournament_name"),
-            Tournament.date.label("tournament_date"),
-            SchedinaTorneo.id.label("schedina_id"),
-            SchedinaTorneo.total_points.label("points"),
-            SchedinaTorneo.tie_breaker_distance.label("tie_breaker_distance"),
-            User.username.label("username"),
-            Player.nickname.label("nickname"),
+    # PremioTorneo è una tabella condivisa tra i due formati di torneo
+    # (classic → SchedinaTorneo, group_stage → SchedinaTorneoGroupStage): la
+    # schedina vincente di un torneo a gironi non ha alcuna riga in
+    # SchedinaTorneo, quindi un semplice join con quest'ultima esclude quei
+    # premi dallo storico vincitori. Si interroga ciascun formato per conto
+    # proprio e si uniscono i risultati in Python.
+    def _winner_rows_for(model, tie_breaker_col):
+        q = (
+            db.query(
+                PremioTorneo.user_id.label("user_id"),
+                PremioTorneo.created_at.label("created_at"),
+                PremioTorneo.redeemed_at.label("redeemed_at"),
+                Tournament.id.label("tournament_id"),
+                Tournament.name.label("tournament_name"),
+                Tournament.date.label("tournament_date"),
+                model.id.label("schedina_id"),
+                model.total_points.label("points"),
+                tie_breaker_col.label("tie_breaker_distance"),
+                User.username.label("username"),
+                Player.nickname.label("nickname"),
+            )
+            .join(
+                model,
+                and_(
+                    model.user_id == PremioTorneo.user_id,
+                    model.tournament_id == PremioTorneo.torneo_sorgente_id,
+                ),
+            )
+            .join(Tournament, Tournament.id == PremioTorneo.torneo_sorgente_id)
+            .join(User, User.id == PremioTorneo.user_id)
+            .outerjoin(Player, Player.id == User.player_id)
         )
-        .join(
-            SchedinaTorneo,
-            and_(
-                SchedinaTorneo.user_id == PremioTorneo.user_id,
-                SchedinaTorneo.tournament_id == PremioTorneo.torneo_sorgente_id,
-            ),
-        )
-        .join(Tournament, Tournament.id == PremioTorneo.torneo_sorgente_id)
-        .join(User, User.id == PremioTorneo.user_id)
-        .outerjoin(Player, Player.id == User.player_id)
+        if game_id is not None:
+            q = q.filter(Tournament.game_id == game_id)
+        return q.all()
+
+    winner_rows = list(
+        _winner_rows_for(SchedinaTorneo, SchedinaTorneo.tie_breaker_distance)
+    ) + list(
+        _winner_rows_for(SchedinaTorneoGroupStage, literal(None))
     )
-    if game_id is not None:
-        winner_query = winner_query.filter(Tournament.game_id == game_id)
-    winner_rows = winner_query.order_by(
-        Tournament.date.desc().nullslast(), Tournament.id.desc()
-    ).all()
+    winner_rows.sort(
+        key=lambda row: (
+            row.tournament_date is None,
+            row.tournament_date or date.min,
+            row.tournament_id,
+        ),
+        reverse=True,
+    )
 
-    compiled_query = db.query(
-        SchedinaTorneo.user_id.label("user_id"),
-        func.count(SchedinaTorneo.id).label("schedine_compiled"),
-        func.coalesce(func.sum(SchedinaTorneo.total_points), 0).label("total_points"),
-    ).join(Tournament, Tournament.id == SchedinaTorneo.tournament_id)
-    if game_id is not None:
-        compiled_query = compiled_query.filter(Tournament.game_id == game_id)
-    compiled_rows = compiled_query.group_by(SchedinaTorneo.user_id).all()
+    def _compiled_counts_for(model):
+        q = db.query(
+            model.user_id.label("user_id"),
+            func.count(model.id).label("schedine_compiled"),
+            func.coalesce(func.sum(model.total_points), 0).label("total_points"),
+        ).join(Tournament, Tournament.id == model.tournament_id)
+        if game_id is not None:
+            q = q.filter(Tournament.game_id == game_id)
+        return q.group_by(model.user_id).all()
 
-    compiled_counts = {
-        row.user_id: {
-            "schedine_compiled": int(row.schedine_compiled or 0),
-            "total_points": int(row.total_points or 0),
-        }
-        for row in compiled_rows
-    }
+    compiled_counts: dict[int, dict[str, int]] = {}
+    for model in (SchedinaTorneo, SchedinaTorneoGroupStage):
+        for row in _compiled_counts_for(model):
+            entry = compiled_counts.setdefault(
+                row.user_id, {"schedine_compiled": 0, "total_points": 0}
+            )
+            entry["schedine_compiled"] += int(row.schedine_compiled or 0)
+            entry["total_points"] += int(row.total_points or 0)
 
     prize_query = db.query(
         PremioTorneo.user_id.label("user_id"),

@@ -1231,8 +1231,21 @@ const Schedina = () => {
                                                         <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-foreground">{entry.tournament_name}</h3>
                                                         <p className="text-xs text-slate-500 dark:text-muted-foreground">{formatDate(entry.tournament_date)} · {entry.n_compiled}/{entry.n_participants} compilate</p>
                                                     </div>
-                                                    <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.3em] ${entry.all_compiled ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300'}`}>
-                                                        {entry.all_compiled ? 'Tutti hanno compilato' : `In corso (${entry.n_compiled}/${entry.n_participants})`}
+                                                    <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.3em] ${
+                                                        entry.all_compiled
+                                                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
+                                                            : entry.tournament_status === 'concluso'
+                                                                ? 'bg-slate-200 text-slate-600 dark:bg-white/10 dark:text-slate-300'
+                                                                : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300'
+                                                    }`}>
+                                                        {entry.all_compiled
+                                                            ? 'Tutti hanno compilato'
+                                                            : entry.tournament_status === 'concluso'
+                                                                /* Tornei conclusi da prima dell'introduzione delle schedine
+                                                                   (nessuno le ha mai compilate): il torneo è comunque finito,
+                                                                   non "in corso" — l'attesa di nuove schedine non ha senso. */
+                                                                ? 'Torneo concluso'
+                                                                : `In corso (${entry.n_compiled}/${entry.n_participants})`}
                                                     </span>
                                                 </div>
                                                 <div className="space-y-2">
