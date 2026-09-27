@@ -1,6 +1,15 @@
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session, aliased
-from app.models import Circuit, Game, Player, PlayerGameParticipation, Race, Result, Tournament
+from app.models import (
+    CampionatoStanding,
+    Circuit,
+    Game,
+    Player,
+    PlayerGameParticipation,
+    Race,
+    Result,
+    Tournament,
+)
 
 
 def get_leaderboard(db: Session, tournament_id: int):
@@ -480,3 +489,28 @@ def get_best_badges_for_players(db: Session, player_ids: list[int]) -> dict[int,
         best = min(badges, key=lambda b: BADGE_TIER_RANK.index(b["tier"]))
         result[player_id] = best
     return result
+
+
+def get_campionato_points_by_player(db: Session) -> list[dict]:
+    """Somma di campionato_points per (player_id, game_id) — non aggregata
+    per giocatore: il frontend somma/filtra per game_id client-side (stesso
+    pattern già usato per statsTournaments in AppDataContext.jsx), quindi
+    questa singola query copre sia "tutti i giochi" sia il filtro per gioco
+    senza bisogno di parametri o nuove fetch al cambio di filtro."""
+    rows = (
+        db.query(
+            CampionatoStanding.player_id.label("player_id"),
+            CampionatoStanding.game_id.label("game_id"),
+            func.sum(CampionatoStanding.campionato_points).label("campionato_points"),
+        )
+        .group_by(CampionatoStanding.player_id, CampionatoStanding.game_id)
+        .all()
+    )
+    return [
+        {
+            "player_id": row.player_id,
+            "game_id": row.game_id,
+            "campionato_points": int(row.campionato_points or 0),
+        }
+        for row in rows
+    ]

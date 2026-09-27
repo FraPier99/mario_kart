@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { authApi, charactersApi, circuitsApi, consolesApi, contentImagesApi, gamesApi, playersApi, pointAdjustmentsApi, racesApi, resultsApi, tournamentsApi } from '@/services/apiClient'
+import { authApi, charactersApi, circuitsApi, consolesApi, contentImagesApi, gamesApi, playersApi, pointAdjustmentsApi, racesApi, resultsApi, statsApi, tournamentsApi } from '@/services/apiClient'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/services/apiClient'
 
@@ -28,6 +28,7 @@ const fetchAllTournamentData = () => Promise.all([
     circuitsApi.list(),
     pointAdjustmentsApi.list(),
     consolesApi.list(),
+    statsApi.campionatoPoints(),
 ])
 
 const fetchAllWithRetry = async () => {
@@ -62,21 +63,41 @@ const sortResultByPosition = (left, right) => {
 }
 
 // Classifica equa tra formati (classic vs gironi) e dimensioni gara diverse:
-// 1) vittorie torneo (i trofei reali restano il segnale primario)
-// 2) Indice di posizione = media dei piazzamenti normalizzati (1°=100%, ultimo=0%):
-//    non penalizza chi gioca meno gare e non gonfia le vittorie dei gironi paralleli.
-// 3) podi, 4) gare giocate, 5) nickname.
+// 1) Punti campionato = somma dei punti fissi per posizione finale (vedi
+//    CampionatoStanding/compute_campionato_points sul backend — un 1° posto
+//    vale sempre lo stesso indipendentemente dal numero di partecipanti),
+//    segnale primario: premia sia il volume di buoni piazzamenti sia,
+//    implicitamente, la qualità (un 5° posto vale molto meno di un 1°).
+// 2) Indice di posizione = media dei piazzamenti normalizzati (1°=100%, ultimo=0%),
+//    come spareggio a parità di punti campionato: distingue chi gioca meno
+//    tornei ma con piazzamenti costantemente alti da chi accumula punti
+//    giocandone molti con esiti mediocri.
+// 3) vittorie torneo, 4) podi, 5) gare giocate, 6) nickname.
 const sortLeaderboard = (left, right) => {
     return (
-        right.tournamentWins - left.tournamentWins ||
+        (right.campionatoPoints ?? 0) - (left.campionatoPoints ?? 0) ||
         (right.placementIndex ?? 0) - (left.placementIndex ?? 0) ||
+        right.tournamentWins - left.tournamentWins ||
         (right.podiumRate ?? 0) - (left.podiumRate ?? 0) ||
         (right.racesPlayed ?? 0) - (left.racesPlayed ?? 0) ||
         left.nickname.localeCompare(right.nickname)
     )
 }
 
-const buildPlayerStats = (players, tournaments, results, races = []) => {
+const buildPlayerStats = (players, tournaments, results, races = [], campionatoPointsRows = []) => {
+    // Somma indipendente dai risultati/gare passati: campionatoPointsRows è
+    // già uno snapshot per (player, gioco) preso alla conclusione di ogni
+    // torneo (vedi CampionatoStanding sul backend), non va ricalcolata qui —
+    // il chiamante decide se passare tutte le righe ("tutti i giochi") o
+    // solo quelle di un game_id (vedi getLeaderboardByGame).
+    const campionatoPointsByPlayer = new Map()
+    campionatoPointsRows.forEach((row) => {
+        campionatoPointsByPlayer.set(
+            row.player_id,
+            (campionatoPointsByPlayer.get(row.player_id) ?? 0) + (row.campionato_points ?? 0)
+        )
+    })
+
     const raceToTournament = new Map()
     const duelloRaceIds = new Set()
     // Solo Gironi e Finale (Final 4, group_name "top") contano per la
@@ -111,6 +132,7 @@ const buildPlayerStats = (players, tournaments, results, races = []) => {
             placementIndex: 0,
             podiumRate: 0,
             winRate: 0,
+            campionatoPoints: campionatoPointsByPlayer.get(player.id) ?? 0,
         })
     })
 
@@ -424,6 +446,7 @@ export function AppDataProvider({ children }) {
     const [circuits, setCircuits] = useState([])
     const [pointAdjustments, setPointAdjustments] = useState([])
     const [consoles, setConsoles] = useState([])
+    const [campionatoPointsRows, setCampionatoPointsRows] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [errorMessage, setErrorMessage] = useState('')
@@ -465,7 +488,7 @@ export function AppDataProvider({ children }) {
         setErrorMessage('')
 
         try {
-            const [playersResponse, charactersResponse, gamesResponse, tournamentsResponse, racesResponse, resultsResponse, circuitsResponse, pointAdjustmentsResponse, consolesResponse] = await fetchAllWithRetry()
+            const [playersResponse, charactersResponse, gamesResponse, tournamentsResponse, racesResponse, resultsResponse, circuitsResponse, pointAdjustmentsResponse, consolesResponse, campionatoPointsResponse] = await fetchAllWithRetry()
 
             setPlayers(playersResponse.data ?? [])
             setCharacters(charactersResponse.data ?? [])
@@ -476,6 +499,7 @@ export function AppDataProvider({ children }) {
             setCircuits(circuitsResponse.data ?? [])
             setPointAdjustments(pointAdjustmentsResponse.data ?? [])
             setConsoles(consolesResponse.data ?? [])
+            setCampionatoPointsRows(campionatoPointsResponse.data ?? [])
         }
         catch (requestError) {
             const message = getApiErrorMessage(requestError, 'Impossibile caricare i dati del backend')
@@ -665,8 +689,8 @@ export function AppDataProvider({ children }) {
     }, [results, statsRaces])
 
     const { statsByPlayerId } = useMemo(() => {
-        return buildPlayerStats(players, statsTournaments, statsResults, statsRaces)
-    }, [players, statsTournaments, statsResults, statsRaces])
+        return buildPlayerStats(players, statsTournaments, statsResults, statsRaces, campionatoPointsRows)
+    }, [players, statsTournaments, statsResults, statsRaces, campionatoPointsRows])
 
     const latestTournament = detailedTournaments.find((t) => !t.is_friendly) ?? null
     const lastWinner = latestTournament?.winner ?? null
@@ -692,6 +716,7 @@ export function AppDataProvider({ children }) {
                     placementIndex: 0,
                     podiumRate: 0,
                     winRate: 0,
+                    campionatoPoints: 0,
                 }
 
                 return {
@@ -723,7 +748,8 @@ export function AppDataProvider({ children }) {
         const filteredRaces = races.filter((r) => filteredTourns.some((t) => t.id === r.tournament_id))
         const filteredRaceIds = new Set(filteredRaces.map((r) => r.id))
         const filteredResults = results.filter((r) => filteredRaceIds.has(r.race_id))
-        const { statsByPlayerId: filteredStats } = buildPlayerStats(players, filteredTourns, filteredResults, filteredRaces)
+        const filteredCampionatoPoints = campionatoPointsRows.filter((row) => row.game_id === Number(gameId))
+        const { statsByPlayerId: filteredStats } = buildPlayerStats(players, filteredTourns, filteredResults, filteredRaces, filteredCampionatoPoints)
 
         return players
             .map((player) => {
@@ -733,11 +759,12 @@ export function AppDataProvider({ children }) {
                     img_url: player.img_url, favorite_character_id: player.favorite_character_id,
                     tournamentWins: 0, raceWins: 0, podiums: 0, points: 0, racesPlayed: 0,
                     tournamentsPlayed: 0, avgEfficiency: 0, placementIndex: 0, podiumRate: 0, winRate: 0,
+                    campionatoPoints: 0,
                 }
                 return { ...ps, nickname: player.nickname, first_name: player.first_name, last_name: player.last_name, img_url: player.img_url, favorite_character_id: player.favorite_character_id }
             })
             .sort(sortLeaderboard)
-    }, [players, statsTournaments, races, results])
+    }, [players, statsTournaments, races, results, campionatoPointsRows])
 
     const getTournamentsByGame = useCallback((gameId) => {
         return detailedTournaments.filter((t) => t.game_id === Number(gameId))

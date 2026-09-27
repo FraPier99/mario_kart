@@ -118,3 +118,13 @@ class PlayerBestBadgeResponse(BaseModel):
 class PlayerBadgesResponse(BaseModel):
     player_id: int
     badges: list[PlayerGameBadgeResponse]
+
+
+class CampionatoPointsRow(BaseModel):
+    """Somma di CampionatoStanding.campionato_points per (player_id,
+    game_id) — non aggregata per gioco: il frontend somma/filtra per
+    game_id client-side, stesso pattern già usato per statsTournaments in
+    AppDataContext.jsx (nessuna nuova fetch al cambio di filtro gioco)."""
+    player_id: int
+    game_id: int
+    campionato_points: int

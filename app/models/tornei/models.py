@@ -371,3 +371,39 @@ class Prediction(Base):
     tournament = relationship("Tournament")
     predicted_player = relationship("Player", foreign_keys=[predicted_player_id])
     actual_winner = relationship("Player", foreign_keys=[actual_winner_id])
+
+
+# -------------------
+# CAMPIONATO — snapshot posizione/punti presi alla conclusione del torneo
+# -------------------
+class CampionatoStanding(Base):
+    """Una riga per (torneo, giocatore) creata quando il torneo si conclude:
+    posizione finale e punti campionato corrispondenti (vedi
+    app/data/punteggi_campionato.py — punti dipendenti solo dalla posizione,
+    mai dal numero di partecipanti). Snapshot, non calcolo live: se la
+    formula cambia in futuro, lo storico già scritto resta coerente."""
+
+    __tablename__ = "campionato_standings"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    tournament_id = Column(Integer, ForeignKey("tournaments.id"), nullable=False)
+    player_id = Column(Integer, ForeignKey("players.id"), nullable=False)
+    # Denormalizzato da Tournament.game_id per filtrare "classifica per
+    # gioco" senza dover joinare tournaments ogni volta.
+    game_id = Column(Integer, ForeignKey("games.id"), nullable=False)
+    final_position = Column(Integer, nullable=False)
+    campionato_points = Column(Integer, nullable=False)
+    computed_at = Column(DateTime, nullable=False, default=now_rome)
+
+    tournament = relationship("Tournament")
+    player = relationship("Player")
+    game = relationship("Game")
+
+    __table_args__ = (
+        UniqueConstraint(
+            "tournament_id", "player_id", name="unique_campionato_standing_per_torneo"
+        ),
+        CheckConstraint(
+            "final_position > 0", name="check_campionato_position_positive"
+        ),
+    )

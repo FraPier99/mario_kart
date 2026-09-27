@@ -47,23 +47,27 @@ const ScoreLegend = () => {
                         <p className="mb-2 text-[9px] font-black uppercase tracking-[0.25em] text-slate-400">Criteri di ordinamento (globale)</p>
                         <ol className="space-y-2 text-xs text-slate-600 dark:text-muted-foreground">
                             <li className="flex items-start gap-2">
-                                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-400 text-[8px] font-black text-slate-900 leading-none">1</span>
-                                <span><strong className="text-slate-800 dark:text-foreground">Tornei vinti</strong> — criterio principale</span>
+                                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-violet-400 text-[8px] font-black text-slate-900 leading-none">1</span>
+                                <span><strong className="text-slate-800 dark:text-foreground">Punti Campionato</strong> — criterio principale. Punti fissi per posizione finale (1°, 2°, 3°...), sempre gli stessi indipendentemente da quanti giocatori c'erano nel torneo: premia sia il numero di buoni piazzamenti sia la loro qualità.</span>
                             </li>
                             <li className="flex items-start gap-2">
                                 <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-[8px] font-black text-slate-900 leading-none">2</span>
-                                <span><strong className="text-slate-800 dark:text-foreground">Placement Index</strong> — media piazzamenti normalizzata 0–100%. Neutrale per numero di gare e dimensione griglia.</span>
+                                <span><strong className="text-slate-800 dark:text-foreground">Placement Index</strong> — spareggio a parità di punti campionato. Media piazzamenti normalizzata 0–100%, neutrale per numero di gare e dimensione griglia.</span>
                             </li>
                             <li className="flex items-start gap-2">
-                                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-blue-400 text-[8px] font-black text-slate-900 leading-none">3</span>
+                                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-400 text-[8px] font-black text-slate-900 leading-none">3</span>
+                                <span><strong className="text-slate-800 dark:text-foreground">Tornei vinti</strong></span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-blue-400 text-[8px] font-black text-slate-900 leading-none">4</span>
                                 <span><strong className="text-slate-800 dark:text-foreground">Podium Rate %</strong> — percentuale podi</span>
                             </li>
                             <li className="flex items-start gap-2">
-                                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-slate-300 dark:bg-slate-600 text-[8px] font-black text-slate-700 dark:text-slate-300 leading-none">4</span>
+                                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-slate-300 dark:bg-slate-600 text-[8px] font-black text-slate-700 dark:text-slate-300 leading-none">5</span>
                                 <span><strong className="text-slate-800 dark:text-foreground">Gare giocate</strong> — più partite = più esperienza</span>
                             </li>
                             <li className="flex items-start gap-2">
-                                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-slate-400 dark:bg-slate-500 text-[8px] font-black text-slate-700 dark:text-slate-300 leading-none">5</span>
+                                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-slate-400 dark:bg-slate-500 text-[8px] font-black text-slate-700 dark:text-slate-300 leading-none">6</span>
                                 <span><strong className="text-slate-800 dark:text-foreground">Nickname</strong> — ordine alfabetico finale</span>
                             </li>
                         </ol>
@@ -71,6 +75,9 @@ const ScoreLegend = () => {
                     <div>
                         <p className="mb-2 text-[9px] font-black uppercase tracking-[0.25em] text-slate-400">Formule delle colonne</p>
                         <ul className="space-y-2 text-xs">
+                            <li className="rounded-xl bg-slate-50 dark:bg-muted px-3 py-2 text-slate-600 dark:text-muted-foreground">
+                                <span className="font-black text-violet-600 dark:text-violet-400">Punti Campionato</span> = somma dei punti fissi ottenuti per la posizione finale di ogni torneo concluso (1°=25, 2°=19, 3°=15, ...), calcolati alla conclusione del torneo e indipendenti dal numero di partecipanti.
+                            </li>
                             <li className="rounded-xl bg-slate-50 dark:bg-muted px-3 py-2 text-slate-600 dark:text-muted-foreground">
                                 <span className="font-black text-emerald-600 dark:text-emerald-400">Placement Index %</span> = media del piazzamento normalizzato per ogni gara.<br />
                                 Ogni posizione viene convertita in 0–100%: 1° = 100%, ultimo = 0%.<br />
@@ -124,9 +131,9 @@ const Stats = () => {
         ? filteredRows.slice(0, 3).map((r) => ({
             ...r,
             stats: [
-                { label: 'Tornei', value: r.tournamentWins },
+                { label: 'Campionato', value: `${r.campionatoPoints ?? 0} pt` },
                 { label: 'Placement', value: `${r.placementIndex ?? 0}%` },
-                { label: 'Vittorie', value: r.raceWins },
+                { label: 'Tornei', value: r.tournamentWins },
                 { label: 'Podi', value: r.podiums },
             ],
         }))

@@ -1,17 +1,18 @@
-import { Trophy, Percent, Flag, Medal } from 'lucide-react'
+import { Trophy, Percent, Flag, Medal, Award } from 'lucide-react'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
 
 // Badge icona circolare colorato per statistica — stesso linguaggio di
 // PodiumSteps (STAT_ICONS), ma mostrato per OGNI riga (non solo il podio)
 // così le colonne si riconoscono a colpo d'occhio anche sotto la 3ª posizione.
 const STAT_ICON_CLS = {
+    campionato: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
     placement: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
     tornei: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
     gare: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
     podi: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
 }
 const StatIcon = ({ kind, size = 12 }) => {
-    const Icon = kind === 'tornei' ? Trophy : kind === 'gare' ? Flag : kind === 'podi' ? Medal : Percent
+    const Icon = kind === 'campionato' ? Award : kind === 'tornei' ? Trophy : kind === 'gare' ? Flag : kind === 'podi' ? Medal : Percent
     return (
         <span className={`inline-flex shrink-0 items-center justify-center rounded-full ${STAT_ICON_CLS[kind]}`} style={{ width: size + 10, height: size + 10 }}>
             <Icon size={size} />
@@ -174,9 +175,14 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                             <div className="flex items-center justify-between gap-2">
                                 <PositionBadge index={absoluteIndex} size="lg" />
                                 {showTournamentWins && (
-                                    <span className="rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-xs font-black text-amber-700 dark:text-amber-400">
-                                        {row.tournamentWins} vinti / {row.tournamentsPlayed} fatti
-                                    </span>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="rounded-full bg-violet-100 dark:bg-violet-900/30 px-2 py-0.5 text-xs font-black text-violet-700 dark:text-violet-400">
+                                            {row.campionatoPoints ?? 0} pt campionato
+                                        </span>
+                                        <span className="rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-xs font-black text-amber-700 dark:text-amber-400">
+                                            {row.tournamentWins} vinti / {row.tournamentsPlayed} fatti
+                                        </span>
+                                    </div>
                                 )}
                             </div>
                             <PlayerCell row={row} charactersUsed={charactersUsed} onPlayerClick={onPlayerClick} avatarIndex={absoluteIndex} compact />
@@ -223,6 +229,7 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                         <tr>
                             <th className="px-5 py-4 text-center">Pos</th>
                             <th className="px-5 py-4 text-center">Giocatore</th>
+                            {showTournamentWins && <th className="px-5 py-4 text-center text-violet-600 dark:text-violet-400">Campionato</th>}
                             <th className="px-5 py-4 text-center text-emerald-600 dark:text-emerald-400">{showTournamentWins ? 'Placement' : 'Punti'}</th>
                             {showTournamentWins && <th className="px-5 py-4 text-center">Tornei vinti</th>}
                             <th className="px-5 py-4 text-center">Gare vinte</th>
@@ -245,6 +252,14 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                                             <PlayerCell row={row} charactersUsed={charactersUsed} onPlayerClick={onPlayerClick} avatarIndex={absoluteIndex} />
                                         </div>
                                     </td>
+                                    {showTournamentWins && (
+                                        <td className="px-5 py-4 text-center align-middle">
+                                            <div className="flex items-center justify-center gap-1.5">
+                                                <StatIcon kind="campionato" />
+                                                <span className="text-lg font-black text-violet-700 dark:text-violet-400">{row.campionatoPoints ?? 0}</span>
+                                            </div>
+                                        </td>
+                                    )}
                                     <td className="px-5 py-4 text-center align-middle">
                                         {showTournamentWins ? (
                                             <>

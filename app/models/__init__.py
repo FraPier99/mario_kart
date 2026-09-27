@@ -37,6 +37,7 @@ from app.models.tornei.models import (
     Result,
     Prediction,
     PointAdjustment,
+    CampionatoStanding,
 )
 from app.models.schedine.models import (
     SchedinaTorneo,
@@ -66,6 +67,7 @@ __all__ = [
     "Race",
     "Result",
     "Prediction",
+    "CampionatoStanding",
     "SchedinaTorneo",
     "SchedinaTorneoGroupStage",
     "PremioTorneo",

@@ -190,6 +190,72 @@ def _sync_played_streak_tracking(db: Session, tournament: Tournament) -> None:
     db.commit()
 
 
+def _settle_campionato_standings(db: Session, tournament: Tournament) -> None:
+    """Snapshot di posizione finale + punti campionato per ogni giocatore,
+    preso alla conclusione REALE del torneo (stesso punto di aggancio di
+    _sync_played_streak_tracking, chiamata da update_tournament/
+    set_tournament_playoff_winner, mai per i tornei amichevoli — esclusi a
+    monte da chi la chiama).
+
+    I punti dipendono solo dalla posizione finale (vedi
+    app/data/punteggi_campionato.py), mai dal numero di partecipanti, in
+    vista della futura classifica a campionato multi-torneo. Idempotente
+    (upsert su tournament_id+player_id): sicura da richiamare sia dal
+    backfill one-off sia da un'eventuale ri-decretazione dello stesso
+    torneo.
+    """
+    from app.data.punteggi_campionato import compute_campionato_points
+    from app.models import CampionatoStanding
+
+    if tournament.tournament_format == "group_stage":
+        order = get_group_stage_overall_classifica(db, tournament.id)
+    else:
+        order = get_classic_final_classifica(db, tournament.id)
+    if not order:
+        return
+
+    # I giocatori ritirati non ricevono punti campionato (stessa esclusione
+    # già applicata a Carta Master/Guscio Blu, vedi
+    # _get_withdrawn_player_ids in services/schedine/schedine.py) — le
+    # posizioni dei restanti si comprimono, nessun "buco" in classifica.
+    withdrawn_ids = {
+        row.player_id
+        for row in db.query(TournamentPlayer.player_id).filter(
+            TournamentPlayer.tournament_id == tournament.id,
+            TournamentPlayer.withdrawn.is_(True),
+        )
+    }
+    eligible_order = [pid for pid in order if pid not in withdrawn_ids]
+
+    existing_rows = (
+        db.query(CampionatoStanding)
+        .filter(CampionatoStanding.tournament_id == tournament.id)
+        .all()
+    )
+    existing_by_player = {row.player_id: row for row in existing_rows}
+
+    for index, player_id in enumerate(eligible_order):
+        position = index + 1
+        points = compute_campionato_points(position)
+        row = existing_by_player.get(player_id)
+        if row:
+            row.final_position = position
+            row.campionato_points = points
+            row.game_id = tournament.game_id
+        else:
+            db.add(
+                CampionatoStanding(
+                    tournament_id=tournament.id,
+                    player_id=player_id,
+                    game_id=tournament.game_id,
+                    final_position=position,
+                    campionato_points=points,
+                )
+            )
+
+    db.commit()
+
+
 def _recompute_played_streak(db: Session, player_id: int, game_id: int) -> None:
     """Ricalcola da zero played_streak per un giocatore rigiocando la storia
     dei tornei conclusi (non amichevoli) su quel gioco, in ordine
@@ -772,6 +838,7 @@ def update_tournament(db: Session, tmentData: UpdateTournament, tournament_id: i
             settle_tournament_schedine(db, tournament_id)
 
         _sync_played_streak_tracking(db, t)
+        _settle_campionato_standings(db, t)
 
     db.commit()
     db.refresh(t)
@@ -926,6 +993,7 @@ def set_tournament_playoff_winner(
         else:
             settle_tournament_schedine(db, tournament_id)
         _sync_played_streak_tracking(db, tournament)
+        _settle_campionato_standings(db, tournament)
     db.commit()
     db.refresh(tournament)
     _load_participants(db, tournament)
@@ -1048,6 +1116,7 @@ def tournament_delete(db: Session, tournament_id: int):
         return None
 
     from app.models import (
+        CampionatoStanding,
         Notification,
         PlayerGameParticipation,
         PlayoffHistory,
@@ -1066,6 +1135,11 @@ def tournament_delete(db: Session, tournament_id: int):
     # 0. PointAdjustment (rettifiche punti manuali)
     db.query(PointAdjustment).filter(
         PointAdjustment.tournament_id == tournament_id
+    ).delete()
+
+    # 0b. CampionatoStanding (snapshot posizione/punti campionato)
+    db.query(CampionatoStanding).filter(
+        CampionatoStanding.tournament_id == tournament_id
     ).delete()
 
     # 1. PlayoffHistory

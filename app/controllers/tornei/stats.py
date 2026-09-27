@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.controllers.tornei.schemas.stats import (
+    CampionatoPointsRow,
     CircuitStatsDetailResponse,
     CircuitStatsListItem,
     HeadToHeadResponse,
@@ -14,6 +15,7 @@ from app.models import Circuit, Player
 from app.services.tornei.stats import (
     get_badges_for_players,
     get_best_badges_for_players,
+    get_campionato_points_by_player,
     get_circuit_stats_detail,
     get_circuit_stats_list,
     get_head_to_head_by_circuit,
@@ -88,6 +90,15 @@ def players_best_badges(db: Session = Depends(get_db)):
         {"player_id": player_id, **best}
         for player_id, best in best_by_player.items()
     ]
+
+
+@router.get("/campionato-points", response_model=list[CampionatoPointsRow])
+def campionato_points(db: Session = Depends(get_db)):
+    """Somma punti campionato per (player_id, game_id), su tutti i tornei
+    conclusi non amichevoli — usata dalla classifica generale /stats come
+    criterio di ordinamento primario (vedi CampionatoStanding,
+    app/services/tornei/tournaments.py::_settle_campionato_standings)."""
+    return get_campionato_points_by_player(db)
 
 
 @router.get("/players/badges/all", response_model=list[PlayerBadgesResponse])

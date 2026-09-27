@@ -1099,6 +1099,31 @@ def ensure_inventory_uses_columns():
             )
 
 
+def ensure_campionato_standings_table():
+    """Snapshot posizione finale/punti campionato per torneo, preso alla
+    conclusione (vedi _settle_campionato_standings in services/tornei/
+    tournaments.py) — punti indipendenti dal numero di partecipanti, in
+    vista della futura classifica a campionato."""
+    inspector = inspect(engine)
+    if "campionato_standings" not in inspector.get_table_names():
+        with engine.begin() as connection:
+            connection.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS campionato_standings (
+                    id SERIAL PRIMARY KEY,
+                    tournament_id INTEGER NOT NULL REFERENCES tournaments(id),
+                    player_id INTEGER NOT NULL REFERENCES players(id),
+                    game_id INTEGER NOT NULL REFERENCES games(id),
+                    final_position INTEGER NOT NULL,
+                    campionato_points INTEGER NOT NULL,
+                    computed_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                    CONSTRAINT unique_campionato_standing_per_torneo UNIQUE (tournament_id, player_id),
+                    CONSTRAINT check_campionato_position_positive CHECK (final_position > 0)
+                )
+            """)
+            )
+
+
 def bootstrap_database():
     create_tables()
     ensure_player_img_url_column()
@@ -1144,6 +1169,7 @@ def bootstrap_database():
     ensure_inventory_uses_columns()
     ensure_tournament_is_friendly_column()
     ensure_tournament_celebration_text_column()
+    ensure_campionato_standings_table()
     # seed_circuits()
     seed_mk8d_data()
     seed_consoles()

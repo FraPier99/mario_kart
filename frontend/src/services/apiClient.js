@@ -257,6 +257,7 @@ export const statsApi = {
     playerBadges: (playerId) => _get(`/stats/players/${playerId}/badges`),
     bestBadgesByPlayer: () => _get('/stats/players/badges/best'),
     allBadgesByPlayer: () => _get('/stats/players/badges/all'),
+    campionatoPoints: () => _get('/stats/campionato-points'),
 }
 
 export const contentImagesApi = {
