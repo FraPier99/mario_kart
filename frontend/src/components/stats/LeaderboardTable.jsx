@@ -192,7 +192,6 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                                         <>
                                             <span className={`flex items-center gap-1 text-base font-black ${placementTextColor(absoluteIndex)}`}><StatIcon kind="placement" size={11} />{row.placementIndex ?? 0}%</span>
                                             <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">placement</span>
-                                            <span className="text-[10px] text-slate-400">{row.points} pt</span>
                                         </>
                                     ) : (
                                         <>
@@ -262,13 +261,10 @@ const LeaderboardTable = ({ rows, showTournamentWins = true, charactersById = nu
                                     )}
                                     <td className="px-5 py-4 text-center align-middle">
                                         {showTournamentWins ? (
-                                            <>
-                                                <div className="flex items-center justify-center gap-1.5">
-                                                    <StatIcon kind="placement" />
-                                                    <span className={`text-lg font-black ${placementTextColor(absoluteIndex)}`}>{row.placementIndex ?? 0}%</span>
-                                                </div>
-                                                <div className="text-[10px] text-slate-400 leading-tight">{row.points} pt</div>
-                                            </>
+                                            <div className="flex items-center justify-center gap-1.5">
+                                                <StatIcon kind="placement" />
+                                                <span className={`text-lg font-black ${placementTextColor(absoluteIndex)}`}>{row.placementIndex ?? 0}%</span>
+                                            </div>
                                         ) : (
                                             <div className="flex items-center justify-center gap-1.5">
                                                 <StatIcon kind="placement" />

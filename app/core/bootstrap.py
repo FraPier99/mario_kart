@@ -1124,6 +1124,36 @@ def ensure_campionato_standings_table():
             )
 
 
+def ensure_campionato_standings_backfilled():
+    """Backfill automatico e idempotente di campionato_standings per i
+    tornei già conclusi. Necessario perché la feature Punti Campionato è
+    stata introdotta dopo che questi tornei erano già conclusi: senza
+    questo passo, in produzione la colonna "Campionato" resterebbe a 0 per
+    ogni torneo precedente al deploy che ha introdotto la feature, finché
+    qualcuno non lanciasse manualmente Scripts/backfill_campionato_
+    standings.py. Nessun costo di correttezza a rieseguirlo a ogni avvio:
+    _settle_campionato_standings fa upsert su (tournament_id, player_id),
+    stesso principio di tutti gli altri "ensure_*" di questo file."""
+    from app.core.db import SessionLocal
+    from app.models import Tournament
+    from app.services.tornei.tournaments import _settle_campionato_standings
+
+    db = SessionLocal()
+    try:
+        tournaments = (
+            db.query(Tournament)
+            .filter(
+                Tournament.status == "concluso",
+                Tournament.is_friendly.is_(False),
+            )
+            .all()
+        )
+        for t in tournaments:
+            _settle_campionato_standings(db, t)
+    finally:
+        db.close()
+
+
 def bootstrap_database():
     create_tables()
     ensure_player_img_url_column()
@@ -1170,6 +1200,7 @@ def bootstrap_database():
     ensure_tournament_is_friendly_column()
     ensure_tournament_celebration_text_column()
     ensure_campionato_standings_table()
+    ensure_campionato_standings_backfilled()
     # seed_circuits()
     seed_mk8d_data()
     seed_consoles()

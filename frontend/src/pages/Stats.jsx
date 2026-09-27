@@ -170,9 +170,9 @@ const Stats = () => {
             <section className="mx-auto max-w-7xl px-4 py-12">
                 <div className="mb-8 text-center">
                     <p className="font-title text-[10px] tracking-wide text-emerald-600 dark:text-emerald-400">Classifica generale</p>
-                    <h1 className="mt-3 text-4xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground">Tornei vinti, placement e podi</h1>
+                    <h1 className="mt-3 text-4xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground">Punti campionato, placement e podi</h1>
                     <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-500 dark:text-muted-foreground">
-                        La classifica ordina i piloti per tornei vinti, placement index (media piazzamenti normalizzata) e podi rate. I punti assoluti sono solo informativi.
+                        La classifica ordina i piloti per punti campionato (fissi per posizione), placement index come spareggio, tornei vinti e podi rate.
                     </p>
                     <div className="mt-4 flex justify-center">
                         <select
