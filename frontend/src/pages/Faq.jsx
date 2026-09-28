@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
     Flag, Trophy, ScrollText, Zap, Scale,
-    Crown, ChevronDown, PartyPopper, Award,
+    Crown, ChevronDown, Award,
 } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import PlayerLink from '@/components/common/PlayerLink'
@@ -55,7 +55,6 @@ const SECTIONS = [
             { key: 'tornei-gironi', label: 'Gironi' },
         ],
     },
-    { key: 'amichevoli', label: 'Amichevoli', icon: PartyPopper },
     { key: 'badge', label: 'Badge', icon: Crown },
     { key: 'punti-campionato', label: 'Punti Campionato', icon: Award },
     {
@@ -89,7 +88,6 @@ const Faq = () => {
         VALID_SECTION_KEYS.has(requestedSection) ? requestedSection : 'lega'
     )
     const [images, setImages] = useState({})
-    const [flippedCard, setFlippedCard] = useState(null)
     // Quali gruppi (Tornei/Schedina) sono espansi in sidebar — cliccando
     // sull'intestazione del gruppo si apre/chiude il relativo sottomenu.
     const [openGroups, setOpenGroups] = useState({})
@@ -133,26 +131,30 @@ const Faq = () => {
                                     const isOpen = openGroups[item.label] ?? groupActive
                                     return (
                                         <div key={item.label} className="pt-2 first:pt-0">
+                                            {/* Livello 1 (gruppo): stesso peso visivo delle voci singole
+                                                sotto — testo/icona della stessa dimensione, colore pieno di
+                                                default — cosicché non sembri una didascalia minore delle
+                                                sotto-voci che contiene. */}
                                             <button
                                                 type="button"
                                                 onClick={() => toggleGroup(item.label)}
-                                                className={`flex w-full items-center gap-2 rounded-xl px-4 py-1.5 text-[11px] font-black uppercase tracking-widest transition ${groupActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-muted-foreground hover:text-slate-600 dark:hover:text-foreground'}`}
+                                                className={`flex w-full items-center gap-2.5 rounded-xl px-4 py-3 text-left text-xs font-black uppercase tracking-widest transition ${groupActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-muted'}`}
                                             >
-                                                <item.icon size={13} />
-                                                <span className="flex-1 text-left uppercase">{item.label}</span>
-                                                <ChevronDown size={13} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                                                <item.icon size={15} />
+                                                <span className="flex-1 text-left">{item.label}</span>
+                                                <ChevronDown size={14} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                                             </button>
                                             {isOpen && (
-                                                <div className="ml-3 mt-0.5 space-y-0.5 border-l-2 border-slate-100 dark:border-border pl-3">
+                                                <div className="ml-4 mt-0.5 space-y-0.5 border-l-2 border-slate-100 dark:border-border pl-3">
                                                     {item.children.map((sub) => (
                                                         <button
                                                             key={sub.key}
                                                             type="button"
                                                             onClick={() => setActiveSection(sub.key)}
-                                                            className={`block w-full rounded-xl px-3 py-2 text-left text-xs font-bold uppercase tracking-wide transition ${
+                                                            className={`block w-full rounded-xl px-3 py-1.5 text-left text-[11px] font-bold uppercase tracking-wide transition ${
                                                                 activeSection === sub.key
                                                                     ? 'bg-emerald-500 text-white shadow-md'
-                                                                    : 'text-slate-600 dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-muted'
+                                                                    : 'text-slate-500 dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-muted'
                                                             }`}
                                                         >
                                                             {sub.label}
@@ -274,7 +276,7 @@ const Faq = () => {
                                         <li><strong className="text-slate-900 dark:text-foreground">Mario Kart DS:</strong> ogni giocatore sceglie un numero di circuiti pari a gare/partecipanti (arrotondato per eccesso); i circuiti scelti si esauriscono, i rimanenti vengono sorteggiati tra quelli non ancora usati (pool resettato se si esauriscono tutti).</li>
                                         <li><strong className="text-slate-900 dark:text-foreground">Mario Kart 8 Deluxe:</strong> la pista è sempre sorteggiata automaticamente ad ogni gara — nessuna scelta manuale. L'unico modo per scegliere deliberatamente una pista è la Carta Master, effetto "Annulla pista" (vedi <strong>Card</strong>).</li>
                                     </ul>
-                                    <p><strong className="text-slate-900 dark:text-foreground">Punteggio della singola gara:</strong> dinamico in base al numero di partecipanti n: 1° = n+1, 2° = n-1, 3° = n-2, a scalare di 1 fino a 1 punto per l'ultimo (es. con 8 giocatori: 9,7,6,5,4,3,2,1). Determina il vincitore <em>di questo torneo</em> — diverso dai <strong>Punti Campionato</strong>, fissi per posizione finale, che valgono per la classifica generale (vedi sezione dedicata).</p>
+                                    <p><strong className="text-slate-900 dark:text-foreground">Punteggio della singola gara:</strong> più siete in gara, più punti valgono le prime posizioni. Con 8 giocatori, ad esempio, si va da 9 punti per il 1° a 1 punto per l'ultimo (9, 7, 6, 5, 4, 3, 2, 1); con 4 giocatori da 5 punti a 1 (5, 3, 2, 1). Sommati su tutte le gare, decidono il vincitore <em>di questo torneo</em> — un concetto diverso dai <strong>Punti Campionato</strong>, fissi per posizione finale e usati per la classifica generale (vedi sezione dedicata).</p>
                                     <p><strong className="text-slate-900 dark:text-foreground">Spareggi (Duello):</strong> a parità su qualunque blocco di posizioni consecutive (non solo il podio, anche a 3+ giocatori in parità) si attiva un Duello — gare secche su piste scelte a caso, primo a 3 vittorie conquista la posizione. Le gare di duello non contano per la classifica/statistiche.</p>
                                     <p><strong className="text-slate-900 dark:text-foreground">Conclusione:</strong> mai automatica — risolti tutti i duelli aperti, un admin deve premere "Decreta Vincitore".</p>
                                 </div>
@@ -307,26 +309,6 @@ const Faq = () => {
                                 <p className="text-sm text-slate-700 dark:text-muted-foreground">
                                     Ogni carta ha un numero di usi proprio (Carta Master 1 uso; Guscio Blu <strong className="text-slate-900 dark:text-foreground">1 solo uso</strong> nei tornei a Gironi, fino a 3 in Classifica Unica — vedi la sezione <strong>Card</strong>), le carte non si possono usare nelle gare di spareggio/duello (il Guscio Blu, in più, nemmeno nelle Semifinali), e la schedina si chiude quando il torneo inizia (nessuna deadline automatica a tempo — decide l'admin).
                                 </p>
-                            </div>
-                        )}
-
-                        {activeSection === 'amichevoli' && (
-                            <div>
-                                <SectionHeading>Amichevoli</SectionHeading>
-                                <p className="mt-3 text-sm text-slate-600 dark:text-muted-foreground">
-                                    Un torneo può essere marcato come <strong className="text-slate-900 dark:text-foreground">amichevole</strong> —
-                                    in stile "fight club": si gioca per divertimento, senza niente in palio. Un modo in più
-                                    per far girare il sito anche fuori dai tornei ufficiali.
-                                </p>
-                                <ul className="list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-muted-foreground">
-                                    <li>Nessuna <strong className="text-slate-900 dark:text-foreground">Card</strong>, nessuna <strong className="text-slate-900 dark:text-foreground">Schedina</strong>.</li>
-                                    <li>Non conta per <strong className="text-slate-900 dark:text-foreground">Badge</strong>, classifiche o statistiche aggregate.</li>
-                                    <li>Nessuna notifica di chiusura a tutti i partecipanti.</li>
-                                    <li>Nessun vincitore ufficiale da decretare: il torneo si chiude semplicemente segnandolo come concluso — restano comunque gare e classifica in tempo reale come in un torneo normale.</li>
-                                    <li>Funziona sia in Classifica Unica che a Gironi, con lo stesso numero minimo di partecipanti già previsto per ciascun formato.</li>
-                                    <li>Non compare nello Storico Tornei pubblico per chi non è amministratore — resta visibile solo a chi lo gestisce.</li>
-                                </ul>
-                                <p className="mt-5 text-center text-[10px] text-slate-400">Per ora un torneo amichevole può essere creato solo dagli amministratori.</p>
                             </div>
                         )}
 
@@ -487,8 +469,8 @@ const Faq = () => {
                                 </p>
 
                                 <div className="mt-5 grid grid-cols-1 gap-6 md:grid-cols-2">
-                                    <PowerCard type="master" mode="flip" flipped={flippedCard === 'master'} onFlip={() => setFlippedCard(flippedCard === 'master' ? null : 'master')} />
-                                    <PowerCard type="guscio" mode="flip" flipped={flippedCard === 'guscio'} onFlip={() => setFlippedCard(flippedCard === 'guscio' ? null : 'guscio')} />
+                                    <PowerCard type="master" mode="card" />
+                                    <PowerCard type="guscio" mode="card" />
                                 </div>
 
                                 <SubHeading>Carta Master — 1 uso, quattro effetti a scelta</SubHeading>

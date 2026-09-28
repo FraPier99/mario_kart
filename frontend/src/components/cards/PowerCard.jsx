@@ -1,4 +1,3 @@
-import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Shield, Ban } from 'lucide-react'
 import { useAppData } from '@/context/AppDataContext'
@@ -64,8 +63,6 @@ function getTheme(type) {
 export default function PowerCard({
   type = 'master',
   mode = 'card',
-  flipped = false,
-  onFlip,
   consumed = false,
   sourceTournamentId,
   sourceTournamentName,
@@ -80,25 +77,6 @@ export default function PowerCard({
   const t = getTheme(type)
   const isMaster = type === 'master'
   const IconComponent = isMaster ? Shield : Ban
-
-  // Su mobile la card "flip" occupa quasi tutto lo schermo: con un click
-  // diretto su tutta l'area, qualsiasi tentativo di scorrere la pagina
-  // partendo da sopra la card veniva interpretato come un tap e la
-  // ribaltava, rendendo impossibile scrollare oltre. Si traccia lo
-  // spostamento del puntatore tra down e up: solo un tap "fermo" (sotto
-  // soglia) gira la card, un drag/scroll viene ignorato.
-  const pointerStartRef = useRef(null)
-  const handlePointerDown = (event) => {
-    pointerStartRef.current = { x: event.clientX, y: event.clientY }
-  }
-  const handlePointerUp = (event) => {
-    const start = pointerStartRef.current
-    pointerStartRef.current = null
-    if (!start) return
-    const dx = Math.abs(event.clientX - start.x)
-    const dy = Math.abs(event.clientY - start.y)
-    if (dx < 10 && dy < 10) onFlip?.()
-  }
 
   if (mode === 'mini') {
     return (
@@ -188,8 +166,8 @@ export default function PowerCard({
               <p className="text-[9px] font-black uppercase tracking-[0.3em] mb-1 text-slate-400">Effetto</p>
               <p className="text-[11px] leading-relaxed text-slate-300">
                 {isMaster
-                  ? 'Scegli tra: annulla la pista di un avversario e imponi la tua, obbliga un player a usare un personaggio specifico, o aggiungi una gara extra a fine torneo.'
-                  : 'Scegli tra: impone agli avversari di fermarsi un giro, impone agli avversari di fermarsi X secondi, o impedisce a un avversario di usare item per 30s.'}
+                  ? 'Scegli tra: scegli tu la pista della prossima gara, imponi personaggio e setup a un avversario, rendi te stesso immune a un Guscio Blu, oppure aggiungi una gara extra a fine torneo.'
+                  : 'Tutti gli avversari restano fermi per un giro mentre tu parti in vantaggio. Fino a 3 usi in Classifica Unica, 1 solo uso nei tornei a Gironi.'}
               </p>
             </div>
           )}
@@ -213,158 +191,6 @@ export default function PowerCard({
     )
   }
 
-  const dangerBar = (
-    <div className="pointer-events-none absolute top-0 left-0 right-0 h-1.5 overflow-hidden rounded-t-2xl">
-      <div className="h-full w-full"
-        style={{ background: 'repeating-linear-gradient(90deg, #06b6d4 0px, #06b6d4 8px, #1e1b4b 8px, #1e1b4b 16px)' }} />
-    </div>
-  )
-
-  const frontFace = (
-    <div
-      className="absolute inset-0 h-full w-full overflow-hidden rounded-2xl"
-      style={{
-        backfaceVisibility: 'hidden',
-        WebkitBackfaceVisibility: 'hidden',
-        // Su alcuni browser mobile backface-visibility:hidden da solo non
-        // basta a nascondere davvero la faccia (rimane visibile/sovrapposta
-        // al retro, soprattutto con animazioni continue come queste): opacity
-        // + pointer-events forzano la faccia "non attiva" a essere invisibile
-        // e non interattiva su qualsiasi browser, indipendentemente dal bug.
-        opacity: flipped ? 0 : 1,
-        pointerEvents: flipped ? 'none' : 'auto',
-        transition: 'opacity 0.2s linear',
-        background: t.gradient,
-      }}
-    >
-      {isMaster ? (
-        <div className="pointer-events-none absolute inset-0 opacity-10"
-          style={{ backgroundImage: t.texture }} />
-      ) : (
-        <>
-          <div className="pointer-events-none absolute inset-0 opacity-8"
-            style={{ backgroundImage: t.texture }} />
-          {dangerBar}
-        </>
-      )}
-      <div className="pointer-events-none absolute inset-0 rounded-2xl"
-        style={{ boxShadow: `inset 0 0 0 1.5px ${t.borderColor}, inset 0 0 30px rgba(0,0,0,0.08)` }} />
-      <div className="relative z-10 flex flex-col items-center justify-center h-full gap-5 px-6 text-center">
-        <div className={`flex items-center gap-1.5 rounded-full border px-3 py-1 ${t.rarityClass}`}>
-          <span className="text-[8px] font-black uppercase tracking-[0.3em]">{t.rarityLabel}</span>
-        </div>
-        <div className="relative">
-          <div className="absolute inset-0 rounded-2xl blur-xl" style={{ background: isMaster ? 'rgba(246,182,13,0.4)' : 'rgba(46,125,240,0.4)', transform: 'scale(1.3)' }} />
-          <div className="relative flex h-24 w-24 items-center justify-center rounded-2xl border"
-            style={{ background: t.iconGrad, borderColor: isMaster ? 'rgba(246,182,13,0.3)' : 'rgba(46,125,240,0.3)' }}>
-            <IconComponent size={44} className="text-white drop-shadow-xl" />
-          </div>
-        </div>
-        <div>
-          <p className="text-xl font-black tracking-tight" style={{ color: isMaster ? '#fcd34d' : '#22d3ee', textShadow: t.textGlow }}>
-            {customTitle || t.name}
-          </p>
-          <p className={`mt-1 text-[10px] font-black uppercase tracking-widest ${isMaster ? 'text-amber-600/70' : 'text-cyan-600/70'}`}>{t.subtitle}</p>
-          <p className="mt-3 text-[11px] text-slate-400">
-            ✦ Clicca per rivelare ✦
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-
-  const backFace = (
-    <div
-      className="absolute inset-0 flex h-full w-full flex-col rounded-2xl overflow-hidden"
-      style={{
-        backfaceVisibility: 'hidden',
-        WebkitBackfaceVisibility: 'hidden',
-        transform: 'rotateY(180deg)',
-        opacity: flipped ? 1 : 0,
-        pointerEvents: flipped ? 'auto' : 'none',
-        transition: 'opacity 0.2s linear',
-        background: t.gradientBack,
-      }}
-    >
-      <div className="pointer-events-none absolute inset-0 rounded-2xl"
-        style={{ boxShadow: `inset 0 0 0 1.5px ${isMaster ? 'rgba(246,182,13,0.35)' : 'rgba(46,125,240,0.3)'}, inset 0 0 40px rgba(0,0,0,0.06)` }} />
-
-      <div className="relative z-10 flex flex-col h-full p-5 overflow-y-auto">
-        <div className="flex items-center gap-3 shrink-0">
-          <div className={`flex h-10 w-10 items-center justify-center rounded-xl border shrink-0 ${isMaster ? 'border-amber-400/30' : 'border-cyan-400/30'}`}
-            style={{ background: isMaster ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'linear-gradient(135deg, #0e7490, #1d4ed8)' }}>
-            <IconComponent size={20} className="text-white" />
-          </div>
-          <div>
-            <p className={`text-[8px] font-black uppercase tracking-[0.35em] ${isMaster ? 'text-amber-600' : 'text-cyan-600'}`}>
-              {t.rarityLabelShort}
-            </p>
-            <p className={`text-sm font-black leading-tight ${t.textColor}`} style={{ textShadow: t.textGlowSm }}>
-              {customTitle || t.name}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-4 space-y-3 flex-1">
-          <div className="rounded-2xl border p-3" style={{ borderColor: isMaster ? 'rgba(246,182,13,0.25)' : 'rgba(46,125,240,0.25)', background: t.infoBg }}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className={isMaster ? 'text-amber-400' : 'text-cyan-400'}>{isMaster ? '🏆' : '🎯'}</span>
-              <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${isMaster ? 'text-amber-400' : 'text-cyan-400'}`}>Come si ottiene</p>
-            </div>
-            <p className="text-xs text-slate-200 leading-relaxed">
-              {isMaster ? (
-                <>Vinci la schedina di un torneo. Solo il <span className="text-amber-300 font-black">vincitore assoluto</span> riceve questo privilegio.</>
-              ) : (
-                <>Assegnata all'<span className="text-cyan-300 font-black">ultimo classificato</span> della classifica reale. Se il torneo ha 7 o più partecipanti, viene assegnata anche al penultimo.</>
-              )}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border p-3" style={{ borderColor: isMaster ? 'rgba(246,182,13,0.25)' : 'rgba(46,125,240,0.25)', background: t.infoBg }}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className={isMaster ? 'text-amber-400' : 'text-cyan-400'}>{isMaster ? '⚡' : '💥'}</span>
-              <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${isMaster ? 'text-amber-400' : 'text-cyan-400'}`}>Effetto</p>
-            </div>
-            <p className="text-xs text-slate-200 leading-relaxed">
-              {isMaster ? (
-                <><span className="text-amber-300 font-black">Scegli tra 3 effetti</span>: annulla la pista di un avversario e imponi la tua, obbliga un player a usare un personaggio specifico, o aggiungi una gara extra a fine torneo.</>
-              ) : (
-                <><span className="text-cyan-300 font-black">Scegli tra 3 effetti</span>: ferma gli avversari per un giro, fermali per X secondi, o impedisci item per 30s.</>
-              )}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-white/8 p-3" style={{ background: 'rgba(255,255,255,0.03)' }}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-slate-400">👤</span>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Come funziona</p>
-            </div>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              L'<span className="text-slate-300 font-black">organizzatore del torneo</span> registra l'uso nella pagina di gestione. Il portatore segnala prima dell'inizio della gara successiva.
-            </p>
-          </div>
-        </div>
-
-        <p className={`shrink-0 pt-3 text-center text-[9px] ${isMaster ? 'text-amber-900/70' : 'text-sky-900/70'}`}>
-          ✦ Clicca per girare ✦
-        </p>
-      </div>
-    </div>
-  )
-
-  return (
-    <div
-      className="group relative cursor-pointer touch-pan-y perspective-[1000px]"
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
-    >
-      <div
-        className="relative h-112 w-full rounded-2xl transition-transform duration-500 ease-out transform-3d"
-        style={{ transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)', willChange: 'transform' }}
-      >
-        {frontFace}
-        {backFace}
-      </div>
-    </div>
-  )
+  return null
 }
+
