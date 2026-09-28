@@ -15,7 +15,7 @@ import { Trophy, AlertCircle, CheckCircle2, Loader2, Flag, Users } from 'lucide-
 import { toast } from 'sonner'
 import { racesApi, resultsApi, getApiErrorMessage } from '@/services/apiClient'
 import { groupColor, groupLabel } from '@/lib/groupStage'
-import { getPlayerPreviousCharacterId, pickDeterministic, resolveFavoriteCharacterId } from '@/lib/raceEntry'
+import { getPlayerPreviousCharacterId, getStoredCircuitChoice, pickDeterministic, resolveFavoriteCharacterId, setStoredCircuitChoice } from '@/lib/raceEntry'
 import CircuitPicker from '@/components/tournaments/CircuitPicker'
 import CharacterPicker from '@/components/tournaments/CharacterPicker'
 import { useAppData } from '@/context/AppDataContext'
@@ -113,6 +113,11 @@ const GroupRaceForm = ({
     // SOLO la prima volta per questo specifico contesto (fase+girone, o
     // duello) — l'admin può comunque cambiarla dal menu manuale.
     const [noCircuitsLeft, setNoCircuitsLeft] = useState(false)
+    // Stesso seed passato a pickDeterministic E usato come chiave di
+    // persistenza (getStoredCircuitChoice/setStoredCircuitChoice): identifica
+    // in modo stabile "questa gara" (torneo+fase+girone+numero) a prescindere
+    // dai remount del form.
+    const circuitStorageKey = `${tournament?.id}-${phase}-${groupName}-${slotCount}-${nextPhaseRaceNumber}`
     const autoPickKeyRef = useRef(null)
     useEffect(() => {
         const key = `${phase}-${groupName}-${slotCount}`
@@ -129,17 +134,26 @@ const GroupRaceForm = ({
         // a tutte le gare ufficiali del torneo, non alla sola fase/girone).
         // Deterministico (pickDeterministic), non Math.random(): altrimenti
         // il suggerimento cambiava ogni volta che il form veniva rimontato
-        // (es. cambio tab e ritorno) prima ancora di salvare la gara.
+        // (es. cambio tab e ritorno) prima ancora di salvare la gara. Se
+        // l'admin aveva già scelto manualmente un circuito per questa stessa
+        // gara prima del remount, quella scelta (in sessionStorage) ha
+        // priorità sul suggerimento.
         const available = circuits.filter((c) => !usedCircuitIds.has(c.id))
         if (available.length === 0) {
             setNoCircuitsLeft(true)
             setCircuitId('')
         } else {
             setNoCircuitsLeft(false)
-            const pick = pickDeterministic(available, `${tournament?.id}-${key}-${nextPhaseRaceNumber}`)
-            setCircuitId(pick ? String(pick.id) : '')
+            const stored = getStoredCircuitChoice(circuitStorageKey)
+            const storedValid = stored && available.some((c) => String(c.id) === stored)
+            if (storedValid) {
+                setCircuitId(stored)
+            } else {
+                const pick = pickDeterministic(available, circuitStorageKey)
+                setCircuitId(pick ? String(pick.id) : '')
+            }
         }
-    }, [phase, groupName, slotCount, usedCircuitIds, circuits, tournament?.id, tournament?.races, randomizeCircuit, nextPhaseRaceNumber])
+    }, [phase, groupName, slotCount, usedCircuitIds, circuits, tournament?.id, tournament?.races, randomizeCircuit, nextPhaseRaceNumber, circuitStorageKey])
 
     const setSlotPlayer = (index, playerId) => {
         setSlots((prev) => prev.map((s, i) => {
@@ -216,6 +230,7 @@ const GroupRaceForm = ({
             setSlots(emptySlots())
             setCircuitId('')
             setErrors([])
+            setStoredCircuitChoice(circuitStorageKey, null)
             onCreated?.()
         } catch (err) {
             toast.error('Errore durante il salvataggio', { description: getApiErrorMessage(err) })
@@ -267,7 +282,7 @@ const GroupRaceForm = ({
                     <CircuitPicker
                         circuits={circuits}
                         value={circuitId}
-                        onChange={(id) => { setCircuitId(id); setErrors([]) }}
+                        onChange={(id) => { setCircuitId(id); setErrors([]); setStoredCircuitChoice(circuitStorageKey, id) }}
                         disabled={saving}
                         usedCircuitIds={usedCircuitIds}
                         label={`Circuito · ${groupLabel(groupName)}`}

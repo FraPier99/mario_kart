@@ -37,7 +37,7 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import { AlertCircle, Loader2, Flag, Shield, Users, Trophy } from 'lucide-react'
 import { toast } from 'sonner'
 import { racesApi, resultsApi, inventoryApi, getApiErrorMessage } from '@/services/apiClient'
-import { getPlayerPreviousCharacterId, pickDeterministic, resolveFavoriteCharacterId } from '@/lib/raceEntry'
+import { getPlayerPreviousCharacterId, getStoredCircuitChoice, pickDeterministic, resolveFavoriteCharacterId, setStoredCircuitChoice } from '@/lib/raceEntry'
 import { computePunteggi, medalFor, hasPunteggi } from '@/lib/punteggi'
 import CircuitPicker from '@/components/tournaments/CircuitPicker'
 import CharacterPicker from '@/components/tournaments/CharacterPicker'
@@ -109,17 +109,34 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
     // suggerimento cambiava ogni volta che il form veniva rimontato (es.
     // cambio tab e ritorno) prima ancora di salvare la gara.
     const autoSuggestCircuit = !isEditing && gameId === 2
+    // Stesso seed passato a pickDeterministic E usato come chiave di
+    // persistenza (getStoredCircuitChoice/setStoredCircuitChoice) — identifica
+    // in modo stabile "la prossima gara di questo torneo" a prescindere dai
+    // remount del form.
+    const circuitStorageKey = `${tournamentId}-${races.length}`
     const autoPickKeyRef = useRef(null)
     useEffect(() => {
-        if (!autoSuggestCircuit || pendingCircuitEffects.length > 0) return
+        // In modifica il circuito è già precompilato da editingRace, non va
+        // toccato. Fuori da lì, una scelta manuale già fatta per QUESTA gara
+        // (sessionStorage) ha sempre priorità sul suggerimento — altrimenti
+        // il remount la sovrascriveva silenziosamente col suggerimento
+        // deterministico anche quando l'admin aveva scelto un'altra pista.
+        if (isEditing || pendingCircuitEffects.length > 0) return
         const key = `${races.length}-${availableCircuits.length}`
         if (autoPickKeyRef.current === key) return
         autoPickKeyRef.current = key
         if (availableCircuits.length === 0) return
-        const pick = pickDeterministic(availableCircuits, `${tournamentId}-${races.length}`)
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setCircuitId(String(pick.id))
-    }, [autoSuggestCircuit, pendingCircuitEffects, availableCircuits, races.length, tournamentId])
+
+        const stored = getStoredCircuitChoice(circuitStorageKey)
+        const storedValid = stored && availableCircuits.some((c) => String(c.id) === stored)
+        if (storedValid) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setCircuitId(stored)
+        } else if (autoSuggestCircuit) {
+            const pick = pickDeterministic(availableCircuits, circuitStorageKey)
+            setCircuitId(String(pick.id))
+        }
+    }, [isEditing, autoSuggestCircuit, pendingCircuitEffects, availableCircuits, races.length, circuitStorageKey])
 
     // Il personaggio "precedente" si calcola al VOLO quando un pilota viene
     // piazzato (stesso approccio di GroupRaceForm.setSlotPlayer), non con un
@@ -212,6 +229,7 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
                 setOrder([])
                 setCircuitId('')
                 setCharactersByPlayer({})
+                setStoredCircuitChoice(circuitStorageKey, null)
             }
             setErrors([])
             onSaved?.()
@@ -307,7 +325,11 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
                         <CircuitPicker
                             circuits={circuits}
                             value={circuitId}
-                            onChange={(id) => { setCircuitId(id); setErrors([]) }}
+                            onChange={(id) => {
+                                setCircuitId(id)
+                                setErrors([])
+                                if (!isEditing) setStoredCircuitChoice(circuitStorageKey, id)
+                            }}
                             usedCircuitIds={usedCircuitIds}
                             label="Circuito"
                             placeholder="Seleziona un circuito"

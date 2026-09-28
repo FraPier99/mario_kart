@@ -79,3 +79,41 @@ export const pickDeterministic = (list, seed) => {
     }
     return list[hash % list.length]
 }
+
+const CIRCUIT_CHOICE_PREFIX = 'kart_circuit_choice:'
+
+/**
+ * La scelta MANUALE dell'admin (dal menu del CircuitPicker) va persistita
+ * oltre pickDeterministic: quest'ultimo dà solo il SUGGERIMENTO iniziale, ma
+ * lo stato del form (circuitId) vive in useState e sparisce comunque a ogni
+ * remount (es. cambio tab e ritorno) prima del salvataggio — senza questa
+ * persistenza, al rientro l'effetto di auto-suggerimento ripartiva da zero e
+ * sovrascriveva silenziosamente la scelta manuale con quella suggerita.
+ * sessionStorage (non localStorage): la bozza deve sopravvivere alla
+ * navigazione ma non ha senso che resti per sempre dopo il salvataggio o la
+ * chiusura del browser.
+ *
+ * @param {string} key stesso seed usato per pickDeterministic in questo contesto
+ * @returns {string|null} id circuito salvato, o null se assente/non disponibile
+ */
+export const getStoredCircuitChoice = (key) => {
+    try {
+        return sessionStorage.getItem(CIRCUIT_CHOICE_PREFIX + key)
+    } catch {
+        return null
+    }
+}
+
+/**
+ * @param {string} key stesso seed usato per pickDeterministic in questo contesto
+ * @param {string|number|null} circuitId id da salvare, o null/'' per rimuovere la voce
+ */
+export const setStoredCircuitChoice = (key, circuitId) => {
+    try {
+        if (circuitId) sessionStorage.setItem(CIRCUIT_CHOICE_PREFIX + key, String(circuitId))
+        else sessionStorage.removeItem(CIRCUIT_CHOICE_PREFIX + key)
+    } catch {
+        // sessionStorage non disponibile (es. modalità privata): il
+        // suggerimento deterministico resta comunque un fallback valido
+    }
+}
