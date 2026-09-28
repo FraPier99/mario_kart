@@ -51,12 +51,12 @@ const ScoreLegend = () => {
                                 <span><strong className="text-slate-800 dark:text-foreground">Punti Campionato</strong> — criterio principale. Punti fissi per posizione finale (1°, 2°, 3°...), sempre gli stessi indipendentemente da quanti giocatori c'erano nel torneo: premia sia il numero di buoni piazzamenti sia la loro qualità.</span>
                             </li>
                             <li className="flex items-start gap-2">
-                                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-[8px] font-black text-slate-900 leading-none">2</span>
-                                <span><strong className="text-slate-800 dark:text-foreground">Placement Index</strong> — spareggio a parità di punti campionato. Media piazzamenti normalizzata 0–100%, neutrale per numero di gare e dimensione griglia.</span>
+                                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-400 text-[8px] font-black text-slate-900 leading-none">2</span>
+                                <span><strong className="text-slate-800 dark:text-foreground">Tornei vinti</strong> — spareggio principale a parità di punti campionato</span>
                             </li>
                             <li className="flex items-start gap-2">
-                                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-400 text-[8px] font-black text-slate-900 leading-none">3</span>
-                                <span><strong className="text-slate-800 dark:text-foreground">Tornei vinti</strong></span>
+                                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-[8px] font-black text-slate-900 leading-none">3</span>
+                                <span><strong className="text-slate-800 dark:text-foreground">Placement Index</strong> — ulteriore spareggio. Media piazzamenti normalizzata 0–100%, neutrale per numero di gare e dimensione griglia.</span>
                             </li>
                             <li className="flex items-start gap-2">
                                 <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-blue-400 text-[8px] font-black text-slate-900 leading-none">4</span>
@@ -172,7 +172,7 @@ const Stats = () => {
                     <p className="font-title text-[10px] tracking-wide text-emerald-600 dark:text-emerald-400">Classifica generale</p>
                     <h1 className="mt-3 text-4xl font-black uppercase tracking-tight text-slate-900 dark:text-foreground">Punti campionato, placement e podi</h1>
                     <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-500 dark:text-muted-foreground">
-                        La classifica ordina i piloti per punti campionato (fissi per posizione), placement index come spareggio, tornei vinti e podi rate.
+                        La classifica ordina i piloti per punti campionato (fissi per posizione), tornei vinti, placement index e podi rate.
                     </p>
                     <div className="mt-4 flex justify-center">
                         <select

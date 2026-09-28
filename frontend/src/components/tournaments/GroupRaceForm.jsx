@@ -108,12 +108,10 @@ const GroupRaceForm = ({
     // `tournament.races` una nuova identità di array ad ogni ciclo, che a
     // sua volta cambia `usedCircuitIds`/`circuits` e rieseguirebbe l'intero
     // effetto: senza la guardia sul key, questo cancellava silenziosamente
-    // pilota/personaggio già selezionati (e, per i duelli con
-    // randomizeCircuit, ri-randomizzava la pista) mentre l'utente stava
-    // ancora compilando il form dal vivo. Se randomizeCircuit è attivo (es.
-    // Spareggio a gara secca o duello podio), la stessa guardia preseleziona
-    // una pista a caso tra quelle non ancora usate SOLO la prima volta per
-    // questo specifico duello.
+    // pilota/personaggio già selezionati (e ri-randomizzava la pista) mentre
+    // l'utente stava ancora compilando il form dal vivo. La stessa guardia
+    // preseleziona una pista a caso tra quelle non ancora usate SOLO la
+    // prima volta per questo specifico contesto (fase+girone, o duello).
     const [noCircuitsLeft, setNoCircuitsLeft] = useState(false)
     const autoPickKeyRef = useRef(null)
     useEffect(() => {
@@ -124,12 +122,11 @@ const GroupRaceForm = ({
         setSlots(emptySlots())
         setErrors([])
 
-        if (!randomizeCircuit) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setCircuitId('')
-            return
-        }
-
+        // Piste sempre random nei tornei a gironi (ogni gioco): questo form è
+        // usato SOLO per il formato group_stage, quindi il sorteggio
+        // automatico si applica a ogni gara (non solo agli spareggi, dove
+        // randomizeCircuit=true serve solo ad allargare il pool di esclusione
+        // a tutte le gare ufficiali del torneo, non alla sola fase/girone).
         const available = circuits.filter((c) => !usedCircuitIds.has(c.id))
         if (available.length === 0) {
             setNoCircuitsLeft(true)
@@ -260,7 +257,7 @@ const GroupRaceForm = ({
                             Tutti i circuiti sono già stati usati in questo torneo.
                         </p>
                         <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">
-                            Non ci sono piste disponibili per un nuovo duello. Elimina una gara per liberare un circuito.
+                            Non ci sono piste disponibili per una nuova gara. Elimina una gara per liberare un circuito.
                         </p>
                     </div>
                 ) : (
@@ -272,6 +269,7 @@ const GroupRaceForm = ({
                         usedCircuitIds={usedCircuitIds}
                         label={`Circuito · ${groupLabel(groupName)}`}
                         placeholder="Seleziona un circuito"
+                        lockedRandom
                     />
                 )}
             </div>

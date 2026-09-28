@@ -15,12 +15,14 @@ tra codice, DB e regolamento. Per il dettaglio completo vedi
 
 | Regola | Classic | Group Stage |
 |---|---|---|
-| Carte Potere: usi per carta | Master **1 uso**, Guscio Blu **fino a 3 usi** (`item.uses_remaining`, stesso limite in entrambi i formati) |
+| Carte Potere: usi per carta | Master **1 uso** (identico in entrambi); Guscio Blu **fino a 3 usi** | Guscio Blu **1 solo uso** (`grant_card`, `app/services/cards/inventory.py`, override basato su `tournament.tournament_format` letto tramite `source_tournament_id`) |
+| Guscio Blu non usabile in Semifinale (oltre agli spareggi) | n/a (nessuna fase "semifinal" in classic) | ✅ — la Master resta invece utilizzabile in Semifinale (`_check_not_duello_race`, `app/controllers/cards/inventory.py`) |
 | Card non usabili su gare di spareggio | ✅ | ✅ |
 | Card usabile solo su torneo dello stesso gioco di provenienza | ✅ | ✅ |
 | Una sola schedina per torneo per utente | ✅ (`schedine_torneo`) | ✅ (`schedine_torneo_deluxe`) |
 | Punteggio schedina: ogni pronostico esatto | **+3 pt** (`PUNTI_PRONOSTICO`) | **+3 pt** |
 | Ritiro giocatore (risultati pregressi validi) | ✅ | ✅ |
+| Punti Campionato (posizione finale, indipendenti dal formato/N partecipanti) | ✅ (`compute_campionato_points`, `app/data/punteggi_campionato.py`) | ✅ |
 
 Le regole che **cambiano** in base al formato sono quelle legate alla
 struttura della classifica (gironi vs unica) — vedi sezioni 3 e 4.
@@ -29,11 +31,17 @@ struttura della classifica (gironi vs unica) — vedi sezioni 3 e 4.
 > qualunque sia il tipo di carta" (`_check_player_card_limit`). Con
 > l'introduzione del Guscio Blu a 3 usi il limite cross-tipo è stato
 > abbandonato: ora ogni carta ha un `max_uses`/`uses_remaining` proprio
-> (Master 1, Guscio Blu 3, configurabile in `CARD_META` —
+> (Master sempre 1, Guscio Blu 3 in classic — configurabile in `CARD_META`,
 > `app/services/cards/inventory.py`), verificato da
 > `_check_activation_tournament` (`app/controllers/cards/inventory.py`), che
 > vincola gli usi residui di una carta parzialmente usata al **primo torneo**
-> in cui è stata attivata.
+> in cui è stata attivata. Il Guscio Blu ha poi ricevuto un secondo override,
+> stavolta per formato: `grant_card` risolve `source_tournament_id` e forza
+> `max_uses=1` quando `tournament.tournament_format == "group_stage"`
+> (`BLUE_SHELL_MAX_USES_GROUP_STAGE`), applicato una sola volta al momento
+> della creazione della riga `UserInventory` — un Guscio Blu già assegnato
+> non cambia `max_uses` retroattivamente se il formato del torneo venisse
+> (teoricamente) modificato dopo.
 
 ---
 
@@ -189,9 +197,12 @@ il proprio girone, e dopo l'avanzamento solo la fase in cui si trova
 | Pareggi podio classic/finale | `get_classic_podium_ties`, `get_finals_podium_ties` — idem |
 | Conclusione torneo (manuale, mai automatica) | `update_tournament`/`set_tournament_playoff_winner` + `_has_unresolved_ties` — idem |
 | Limite usi carta + attivazione singolo torneo | `_check_card_available`, `_check_activation_tournament` — `app/controllers/cards/inventory.py` |
-| Card non su gare di spareggio | `_check_not_duello_race` — idem |
+| Card non su gare di spareggio (+ Guscio Blu non su Semifinale) | `_check_not_duello_race(db, race_id, card_type)` — idem (il parametro `card_type` è quello che abilita il blocco aggiuntivo solo per `blue_shell`) |
+| Guscio Blu: 1 uso nei tornei a gironi | `grant_card` — `app/services/cards/inventory.py` (`BLUE_SHELL_MAX_USES_GROUP_STAGE`) |
 | Effetti in sospeso (Master ban_pista/imponi_personaggio senza gara ancora creata) | `get_pending_card_usages`, `resolve_pending_card_usage` — `app/services/cards/inventory.py` |
-| Punteggio gare (griglia dinamica) | `app/data/punteggi.py` (`PUNTEGGI_CONFIG`) |
+| Selezione circuiti a sorteggio obbligatorio (gironi, MK8D classic) | `CircuitPicker` prop `lockedRandom` — `frontend/src/components/tournaments/CircuitPicker.jsx`; auto-pick in `GroupRaceForm.jsx` (sempre attivo) e `ClassicRaceForm.jsx` (se `gameId === 2`) |
+| Punteggio gare (griglia dinamica, per-gara) | `app/data/punteggi.py` (`PUNTEGGI_CONFIG`) |
+| Punti Campionato (fissi per posizione finale, cross-torneo) | `app/data/punteggi_campionato.py` (`compute_campionato_points`); snapshot in `CampionatoStanding`, popolato da `_settle_campionato_standings` — `app/services/tornei/tournaments.py` |
 | Punteggio schedine | `PUNTI_PRONOSTICO = 3` — `app/services/schedine/*` |
 | Standings per-girone lato frontend | `GroupCard`, `computeGroupStandings` — `frontend/src/components/tournaments/GroupPlancia.jsx` |
 | Torneo amichevole (flag, non un terzo formato) | `Tournament.is_friendly` — `app/models/tornei/models.py`; guardie in `update_tournament`/`set_tournament_playoff_winner`/`undo_last_playoff` (`app/services/tornei/tournaments.py`), `_check_not_friendly_tournament` (`app/controllers/cards/inventory.py`), `create_schedina`/`create_schedina_deluxe` (`app/services/schedine/*`), filtri in `app/services/tornei/stats.py` |
@@ -218,6 +229,9 @@ torneo normale, in entrambi i formati — cambia solo cosa viene **disattivato**
   dedicato allo storico-per-giocatore: viene derivato client-side da
   `detailedTournaments`, che include deliberatamente anche i tornei
   amichevoli perché serve anche alla pagina di dettaglio del singolo torneo)
+- **Non compare nello storico tornei pubblico** (`/history`, `History.jsx`)
+  per chi non è admin/superadmin — stesso filtro `!t.is_friendly`, gated su
+  `useAuth().isAdmin`/`isSuperadmin`: un admin continua a vederli tutti
 - **Nessun** "Decreta Vincitore": lo stato può avanzare direttamente a
   `concluso` dalla pipeline (`TournamentStatusManager`, prop
   `allowDirectConclusion`), senza passare per un vincitore ufficiale

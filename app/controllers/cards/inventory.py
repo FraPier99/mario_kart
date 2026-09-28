@@ -162,17 +162,28 @@ def _check_activation_tournament(
         )
 
 
-def _check_not_duello_race(db: Session, race_id: int | None) -> None:
-    """Le gare secche di spareggio (Duello/Tie-break) non ammettono l'uso di Card."""
+def _check_not_duello_race(db: Session, race_id: int | None, card_type: str | None = None) -> None:
+    """Le gare secche di spareggio (Duello/Tie-break) non ammettono l'uso di
+    nessuna Card. Il Guscio Blu, inoltre, non è utilizzabile nemmeno nelle
+    gare di Semifinale vere e proprie (non solo negli spareggi che le
+    riguardano) — fase con campi ridotti dove l'effetto sarebbe
+    sproporzionato; la Master resta invece utilizzabile in Semifinale."""
     if race_id is None:
         return
     from app.models import Race
 
     race = db.query(Race).filter(Race.id == race_id).first()
-    if race and race.is_duello:
+    if not race:
+        return
+    if race.is_duello:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Le Card non possono essere usate nelle gare di spareggio.",
+        )
+    if card_type == "blue_shell" and race.phase == "semifinal":
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Il Guscio Blu non può essere usato nelle gare di Semifinale.",
         )
 
 
@@ -482,7 +493,7 @@ def admin_use_inventory_item(
     _check_game_compatibility(db, item, body.race_id, body.tournament_id)
     _check_card_available(item)
     _check_activation_tournament(db, item, body.tournament_id)
-    _check_not_duello_race(db, body.race_id)
+    _check_not_duello_race(db, body.race_id, body.card_type)
     _check_not_friendly_tournament(db, _resolve_tournament_id(db, body.tournament_id, body.race_id))
 
     item, log = record_card_usage(
@@ -690,7 +701,7 @@ def use_inventory_item(
     _check_game_compatibility(db, item, body.race_id, body.tournament_id)
     _check_card_available(item)
     _check_activation_tournament(db, item, resolved_tournament_id)
-    _check_not_duello_race(db, body.race_id)
+    _check_not_duello_race(db, body.race_id, item.card_type)
     _check_not_friendly_tournament(db, resolved_tournament_id)
     item = consume_inventory_item(
         db, item_id, current_user.id,

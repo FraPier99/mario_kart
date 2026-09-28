@@ -3,20 +3,26 @@ import { ChevronDown } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import TournamentHistoryCard from '@/components/history/TournamentHistoryCard'
 import { useAppData } from '@/context/AppDataContext'
+import { useAuth } from '@/context/AuthContext'
 import ApiBanner from '@/components/common/ApiBanner'
 
 const PAGE_SIZE = 10
 
 const History = () => {
     const { detailedTournaments, loading, errorMessage, refresh, games, getTournamentsByGame } = useAppData()
+    const { isAdmin, isSuperadmin } = useAuth()
     const [selectedGameId, setSelectedGameId] = useState('')
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
     const filteredTournaments = useMemo(() => {
-        const list = detailedTournaments ?? []
-        if (!selectedGameId) return list
-        return getTournamentsByGame(selectedGameId)
-    }, [selectedGameId, detailedTournaments, getTournamentsByGame])
+        const list = !selectedGameId ? (detailedTournaments ?? []) : getTournamentsByGame(selectedGameId)
+        // I tornei amichevoli non hanno nulla in palio (niente carte/schedine/
+        // statistiche) e sono pensati come sessioni informali fuori lega —
+        // visibili solo a chi li gestisce (admin/superadmin), non nello
+        // storico pubblico.
+        if (isAdmin || isSuperadmin) return list
+        return list.filter((t) => !t.is_friendly)
+    }, [selectedGameId, detailedTournaments, getTournamentsByGame, isAdmin, isSuperadmin])
 
     const visibleTournaments = filteredTournaments.slice(0, visibleCount)
     const hasMore = visibleCount < filteredTournaments.length

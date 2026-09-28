@@ -68,16 +68,17 @@ const sortResultByPosition = (left, right) => {
 //    vale sempre lo stesso indipendentemente dal numero di partecipanti),
 //    segnale primario: premia sia il volume di buoni piazzamenti sia,
 //    implicitamente, la qualità (un 5° posto vale molto meno di un 1°).
-// 2) Indice di posizione = media dei piazzamenti normalizzati (1°=100%, ultimo=0%),
-//    come spareggio a parità di punti campionato: distingue chi gioca meno
-//    tornei ma con piazzamenti costantemente alti da chi accumula punti
-//    giocandone molti con esiti mediocri.
-// 3) vittorie torneo, 4) podi, 5) gare giocate, 6) nickname.
+// 2) Tornei vinti = conteggio letterale dei trofei, spareggio principale.
+// 3) Indice di posizione = media dei piazzamenti normalizzati (1°=100%, ultimo=0%),
+//    come ulteriore spareggio: distingue chi gioca meno tornei ma con
+//    piazzamenti costantemente alti da chi accumula punti giocandone molti
+//    con esiti mediocri.
+// 4) podi, 5) gare giocate, 6) nickname.
 const sortLeaderboard = (left, right) => {
     return (
         (right.campionatoPoints ?? 0) - (left.campionatoPoints ?? 0) ||
-        (right.placementIndex ?? 0) - (left.placementIndex ?? 0) ||
         right.tournamentWins - left.tournamentWins ||
+        (right.placementIndex ?? 0) - (left.placementIndex ?? 0) ||
         (right.podiumRate ?? 0) - (left.podiumRate ?? 0) ||
         (right.racesPlayed ?? 0) - (left.racesPlayed ?? 0) ||
         left.nickname.localeCompare(right.nickname)

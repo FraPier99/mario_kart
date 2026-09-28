@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
     Flag, Trophy, ScrollText, Zap, Scale,
-    Crown, ChevronDown, PartyPopper,
+    Crown, ChevronDown, PartyPopper, Award,
 } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import PlayerLink from '@/components/common/PlayerLink'
@@ -57,6 +57,7 @@ const SECTIONS = [
     },
     { key: 'amichevoli', label: 'Amichevoli', icon: PartyPopper },
     { key: 'badge', label: 'Badge', icon: Crown },
+    { key: 'punti-campionato', label: 'Punti Campionato', icon: Award },
     {
         label: 'Schedina', icon: ScrollText, children: [
             { key: 'schedina-classic', label: 'Classifica Unica' },
@@ -267,15 +268,20 @@ const Faq = () => {
                                 <SectionHeading>Tornei · Classifica Unica</SectionHeading>
                                 <div className="mt-5 space-y-3 text-sm text-slate-700 dark:text-muted-foreground">
                                     <p><strong className="text-slate-900 dark:text-foreground">Struttura e partecipanti:</strong> tutti i partecipanti gareggiano insieme nello stesso insieme di gare; la classifica finale è la somma dei punti di tutte le gare.</p>
-                                    <p><strong className="text-slate-900 dark:text-foreground">Svolgimento:</strong> massimo 20 gare per torneo. Ogni giocatore sceglie un numero di circuiti pari a gare/partecipanti (arrotondato per eccesso); i circuiti scelti si esauriscono, i rimanenti vengono sorteggiati tra quelli non ancora usati (pool resettato se si esauriscono tutti).</p>
-                                    <p><strong className="text-slate-900 dark:text-foreground">Punteggio:</strong> dinamico in base al numero di partecipanti n: 1° = n+1, 2° = n-1, 3° = n-2, a scalare di 1 fino a 1 punto per l'ultimo (es. con 8 giocatori: 9,7,6,5,4,3,2,1).</p>
+                                    <p><strong className="text-slate-900 dark:text-foreground">Svolgimento:</strong> massimo 20 gare per torneo.</p>
+                                    <p><strong className="text-slate-900 dark:text-foreground">Selezione circuiti — dipende dal gioco:</strong></p>
+                                    <ul className="list-disc space-y-1.5 pl-5">
+                                        <li><strong className="text-slate-900 dark:text-foreground">Mario Kart DS:</strong> ogni giocatore sceglie un numero di circuiti pari a gare/partecipanti (arrotondato per eccesso); i circuiti scelti si esauriscono, i rimanenti vengono sorteggiati tra quelli non ancora usati (pool resettato se si esauriscono tutti).</li>
+                                        <li><strong className="text-slate-900 dark:text-foreground">Mario Kart 8 Deluxe:</strong> la pista è sempre sorteggiata automaticamente ad ogni gara — nessuna scelta manuale. L'unico modo per scegliere deliberatamente una pista è la Carta Master, effetto "Annulla pista" (vedi <strong>Card</strong>).</li>
+                                    </ul>
+                                    <p><strong className="text-slate-900 dark:text-foreground">Punteggio della singola gara:</strong> dinamico in base al numero di partecipanti n: 1° = n+1, 2° = n-1, 3° = n-2, a scalare di 1 fino a 1 punto per l'ultimo (es. con 8 giocatori: 9,7,6,5,4,3,2,1). Determina il vincitore <em>di questo torneo</em> — diverso dai <strong>Punti Campionato</strong>, fissi per posizione finale, che valgono per la classifica generale (vedi sezione dedicata).</p>
                                     <p><strong className="text-slate-900 dark:text-foreground">Spareggi (Duello):</strong> a parità su qualunque blocco di posizioni consecutive (non solo il podio, anche a 3+ giocatori in parità) si attiva un Duello — gare secche su piste scelte a caso, primo a 3 vittorie conquista la posizione. Le gare di duello non contano per la classifica/statistiche.</p>
                                     <p><strong className="text-slate-900 dark:text-foreground">Conclusione:</strong> mai automatica — risolti tutti i duelli aperti, un admin deve premere "Decreta Vincitore".</p>
                                 </div>
 
                                 <SubHeading>Regole comuni a entrambi i formati</SubHeading>
                                 <p className="text-sm text-slate-700 dark:text-muted-foreground">
-                                    Ogni carta ha un numero di usi proprio (Carta Master 1 uso, Guscio Blu fino a 3 nello stesso torneo — vedi la sezione <strong>Card</strong>), le carte non si possono usare nelle gare di spareggio/duello, e la schedina si chiude quando il torneo inizia (nessuna deadline automatica a tempo — decide l'admin).
+                                    Ogni carta ha un numero di usi proprio (Carta Master 1 uso in entrambi i formati; Guscio Blu fino a 3 in Classifica Unica, <strong className="text-slate-900 dark:text-foreground">1 solo uso</strong> nei tornei a Gironi — vedi la sezione <strong>Card</strong>), le carte non si possono usare nelle gare di spareggio/duello (il Guscio Blu, in più, nemmeno nelle Semifinali dei tornei a gironi), e la schedina si chiude quando il torneo inizia (nessuna deadline automatica a tempo — decide l'admin).
                                 </p>
                             </div>
                         )}
@@ -284,17 +290,22 @@ const Faq = () => {
                             <div>
                                 <SectionHeading>Tornei · Gironi</SectionHeading>
                                 <div className="mt-5 space-y-3 text-sm text-slate-700 dark:text-muted-foreground">
-                                    <p><strong className="text-slate-900 dark:text-foreground">Requisiti:</strong> almeno 8 partecipanti. I gironi vengono calcolati automaticamente: il minor numero possibile, massimo 4 giocatori a girone, scarto massimo di 1 tra gironi.</p>
-                                    <p><strong className="text-slate-900 dark:text-foreground">Fase 1 — Gironi:</strong> ogni girone gioca gare indipendenti dagli altri, punteggio fisso per gara (1°=5, 2°=3, 3°=2, 4°=1). I circuiti sono indipendenti per girone e si resettano a ogni nuova fase.</p>
-                                    <p><strong className="text-slate-900 dark:text-foreground">Qualificazione:</strong> i primi 2 di ogni girone avanzano. In caso di parità: prima vittorie di gara, poi podi, poi uno spareggio al meglio (primo a 2 vittorie).</p>
+                                    <p><strong className="text-slate-900 dark:text-foreground">Requisiti:</strong> almeno 8 partecipanti. I gironi vengono calcolati automaticamente: il minor numero possibile, massimo 4 giocatori a girone, scarto massimo di 1 tra gironi. Esempi: 8 → 4+4, 9 → 3+3+3, 10 → 4+3+3, 11 → 4+4+3, 12 → 4+4+4.</p>
+                                    <p><strong className="text-slate-900 dark:text-foreground">Fase 1 — Gironi:</strong> ogni girone gioca gare indipendenti dagli altri. Punteggio dinamico in base ai piloti effettivamente in gara in quel girone: 4 piloti → 1°=5, 2°=3, 3°=2, 4°=1; 3 piloti (girone da 3) → 1°=4, 2°=2, 3°=1. Le piste sono sempre sorteggiate automaticamente (nessuna scelta manuale — l'unica eccezione è la Carta Master, vedi <strong>Card</strong>); i circuiti sono indipendenti per girone e si resettano a ogni nuova fase. Valori di riferimento per il numero di gare (organizzativi, non un tetto): 8 per girone/semifinale, 12 in Finale/Finalina.</p>
+                                    <p><strong className="text-slate-900 dark:text-foreground">Qualificazione:</strong> i primi 2 di ogni girone avanzano — <em>vale identico per un girone da 3 o da 4</em>, cambia solo il punteggio delle gare, non chi si qualifica. In caso di parità: prima vittorie di gara, poi podi, poi uno spareggio al meglio (primo a 2 vittorie, piste random).</p>
                                     <p><strong className="text-slate-900 dark:text-foreground">Fase 2:</strong> se i qualificati sono al massimo 4, si passa direttamente a Finale (podio) + Consolazione/"Finalina". Se sono più di 4, si generano prima le Semifinali (batterie da massimo 4); chi viene eliminato in semifinale si unisce ai 3°/4° dei gironi nella Finalina invece di restare senza piazzamento.</p>
+                                    <p className="rounded-xl bg-slate-50 dark:bg-muted px-3 py-2.5">
+                                        <strong className="text-slate-900 dark:text-foreground">Esempio con gironi da 3:</strong> 9 giocatori → 3 gironi da 3 → 2 qualificati ciascuno = 6 qualificati (&gt; 4) → si passa dalle Semifinali, 2 batterie da 3 → la Finale prende i migliori 4, gli altri 2 eliminati in semifinale si uniscono ai 3 esclusi dai gironi → Finalina da 5.<br />
+                                        <strong className="text-slate-900 dark:text-foreground">Esempio con gironi misti:</strong> 10 giocatori → 1 girone da 4 + 2 gironi da 3 → sempre 2 qualificati per girone = 6 qualificati totali, stessa dinamica di sopra (Semifinali, poi Finale + Finalina da 5).
+                                    </p>
                                     <p><strong className="text-slate-900 dark:text-foreground">Spareggi di Finale/Consolazione:</strong> stesso meccanismo del Duello (primo a 3 vittorie), ma la Finale e la Consolazione hanno spareggi completamente separati e indipendenti tra loro.</p>
+                                    <p><strong className="text-slate-900 dark:text-foreground">Statistiche:</strong> solo le gare di Girone e della Finale principale (Final 4) contano per placement index, podi, vittorie di gara e classifica generale/per-gioco. Le Semifinali e la Finalina/Consolazione <em>non</em> contribuiscono a nessuna statistica aggregata — sono fasi con campi più piccoli che altrimenti la gonfierebbero rispetto a chi ha raggiunto la Finale vera.</p>
                                     <p><strong className="text-slate-900 dark:text-foreground">Conclusione:</strong> come per la Classifica Unica, mai automatica.</p>
                                 </div>
 
                                 <SubHeading>Regole comuni a entrambi i formati</SubHeading>
                                 <p className="text-sm text-slate-700 dark:text-muted-foreground">
-                                    Ogni carta ha un numero di usi proprio (Carta Master 1 uso, Guscio Blu fino a 3 nello stesso torneo — vedi la sezione <strong>Card</strong>), le carte non si possono usare nelle gare di spareggio/duello, e la schedina si chiude quando il torneo inizia (nessuna deadline automatica a tempo — decide l'admin).
+                                    Ogni carta ha un numero di usi proprio (Carta Master 1 uso; Guscio Blu <strong className="text-slate-900 dark:text-foreground">1 solo uso</strong> nei tornei a Gironi, fino a 3 in Classifica Unica — vedi la sezione <strong>Card</strong>), le carte non si possono usare nelle gare di spareggio/duello (il Guscio Blu, in più, nemmeno nelle Semifinali), e la schedina si chiude quando il torneo inizia (nessuna deadline automatica a tempo — decide l'admin).
                                 </p>
                             </div>
                         )}
@@ -313,8 +324,45 @@ const Faq = () => {
                                     <li>Nessuna notifica di chiusura a tutti i partecipanti.</li>
                                     <li>Nessun vincitore ufficiale da decretare: il torneo si chiude semplicemente segnandolo come concluso — restano comunque gare e classifica in tempo reale come in un torneo normale.</li>
                                     <li>Funziona sia in Classifica Unica che a Gironi, con lo stesso numero minimo di partecipanti già previsto per ciascun formato.</li>
+                                    <li>Non compare nello Storico Tornei pubblico per chi non è amministratore — resta visibile solo a chi lo gestisce.</li>
                                 </ul>
                                 <p className="mt-5 text-center text-[10px] text-slate-400">Per ora un torneo amichevole può essere creato solo dagli amministratori.</p>
+                            </div>
+                        )}
+
+                        {activeSection === 'punti-campionato' && (
+                            <div>
+                                <SectionHeading>Punti Campionato</SectionHeading>
+                                <p className="mt-3 text-sm text-slate-600 dark:text-muted-foreground">
+                                    Due sistemi di punteggio coesistono, per due scopi diversi.
+                                </p>
+
+                                <SubHeading>Punti-gara vs Punti Campionato</SubHeading>
+                                <ul className="list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-muted-foreground">
+                                    <li><strong className="text-slate-900 dark:text-foreground">Punti-gara</strong> (sezioni Tornei): variabili in base al numero di partecipanti alla gara, sommati determinano il vincitore/podio <em>ufficiale di quel singolo torneo</em>.</li>
+                                    <li><strong className="text-slate-900 dark:text-foreground">Punti Campionato</strong>: fissi in base alla <em>posizione finale</em> raggiunta nel torneo, sempre gli stessi indipendentemente da quanti partecipanti c'erano — pensati per confrontare tornei di dimensioni diverse e sommarli nel tempo in un'unica classifica generale.</li>
+                                </ul>
+
+                                <SubHeading>Come si calcolano</SubHeading>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground">
+                                    Alla conclusione di un torneo non amichevole, ogni giocatore riceve punti campionato in base solo alla propria posizione finale — un 1° posto vale sempre <strong className="text-slate-900 dark:text-foreground">25 punti</strong>, sia in un torneo da 4 giocatori sia in uno da 12.
+                                </p>
+                                <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6">
+                                    {[['1°', 25], ['2°', 19], ['3°', 15], ['4°', 11], ['5°', 9], ['6°', 7], ['7°', 6], ['8°', 5], ['9°', 4], ['10°', 3], ['11°', 2], ['12°', 1]].map(([pos, pts]) => (
+                                        <div key={pos} className="rounded-xl border border-slate-200 dark:border-border px-2 py-2 text-center">
+                                            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{pos}</p>
+                                            <p className="text-sm font-black text-violet-600 dark:text-violet-400">{pts} pt</p>
+                                        </div>
+                                    ))}
+                                </div>
+                                <p className="mt-3 text-sm text-slate-700 dark:text-muted-foreground">
+                                    Un giocatore ritirato non riceve punti campionato per quel torneo; le posizioni dei restanti si comprimono senza lasciare "buchi" in classifica.
+                                </p>
+
+                                <SubHeading>Dove si vedono</SubHeading>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground">
+                                    Sono il <strong className="text-slate-900 dark:text-foreground">criterio principale</strong> della classifica generale (pagina Classifiche), seguiti da tornei vinti, Placement Index (media dei piazzamenti normalizzata), percentuale podi e gare giocate come ulteriori spareggi a parità.
+                                </p>
                             </div>
                         )}
 
@@ -443,22 +491,29 @@ const Faq = () => {
                                     <PowerCard type="guscio" mode="flip" flipped={flippedCard === 'guscio'} onFlip={() => setFlippedCard(flippedCard === 'guscio' ? null : 'guscio')} />
                                 </div>
 
-                                <SubHeading>Carta Master — 1 uso, tre effetti a scelta</SubHeading>
-                                <p className="text-sm text-slate-700 dark:text-muted-foreground">Assegnata a chi vince la schedina (e ai pari merito). Chi la possiede sceglie <strong>uno</strong> dei tre effetti al momento dell'uso:</p>
+                                <SubHeading>Carta Master — 1 uso, quattro effetti a scelta</SubHeading>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground">Assegnata a chi vince la schedina (e ai pari merito). Chi la possiede sceglie <strong>uno</strong> dei quattro effetti al momento dell'uso:</p>
                                 <ul className="list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-muted-foreground">
-                                    <li><strong className="text-slate-900 dark:text-foreground">Annulla pista:</strong> invalida la pista scelta da un avversario per la sua prossima gara e la sostituisce con quella scelta dal possessore della carta.</li>
-                                    <li><strong className="text-slate-900 dark:text-foreground">Impone personaggio:</strong> obbliga un avversario a usare, per una gara, il personaggio scelto dal possessore della carta.</li>
+                                    <li><strong className="text-slate-900 dark:text-foreground">Annulla pista:</strong> invalida la pista scelta da un avversario per la sua prossima gara e la sostituisce con quella scelta dal possessore della carta. Nei tornei dove la pista è sempre a sorteggio (Mario Kart 8 Deluxe in Classifica Unica, e qualunque torneo a Gironi — vedi le sezioni Tornei), questo effetto diventa l'unico modo per scegliere deliberatamente una pista: il possessore la sceglie lui stesso al posto del sorteggio automatico.</li>
+                                    <li><strong className="text-slate-900 dark:text-foreground">Impone personaggio e/o setup:</strong> obbliga un avversario a usare, per una gara, il personaggio e/o il setup (kart, ruote, e su Mario Kart 8 Deluxe anche l'aliante — componente che Mario Kart DS non ha) scelto dal possessore della carta. La scelta effettiva si concorda e applica dal vivo tra i giocatori; il sistema ne registra solo l'uso.</li>
+                                    <li><strong className="text-slate-900 dark:text-foreground">Immunità dal Guscio Blu:</strong> rende chi la usa immune agli effetti di un Guscio Blu avversario per una gara (nessun bersaglio: protegge chi la attiva).</li>
                                     <li><strong className="text-slate-900 dark:text-foreground">Gara extra:</strong> aggiunge una gara a fine torneo (nessun bersaglio).</li>
                                 </ul>
                                 <p className="text-sm text-slate-700 dark:text-muted-foreground">I primi due effetti possono essere dichiarati dall'admin anche prima che la gara che devono influenzare esista: restano "in sospeso" e vengono applicati automaticamente alla prossima gara che coinvolge il bersaglio scelto.</p>
 
-                                <SubHeading>Guscio Blu — fino a 3 usi nello stesso torneo</SubHeading>
-                                <p className="text-sm text-slate-700 dark:text-muted-foreground">Assegnata a chi arriva ultimo (e al penultimo, con 7+ partecipanti). Un solo effetto: <strong className="text-slate-900 dark:text-foreground">tutti i giocatori tranne chi la usa restano fermi per un giro</strong> — chi la usa parte con un giro pieno di vantaggio, gli altri partono quando il primo inizia il secondo giro (regola di gioco dal vivo: il tracker registra soltanto l'uso). Può essere attivata fino a 3 volte nello stesso torneo; una volta usata la prima volta, gli usi restanti restano vincolati a quel torneo e non si possono risparmiare per uno successivo.</p>
+                                <SubHeading>Guscio Blu — usi variabili per formato</SubHeading>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground">Assegnata a chi arriva ultimo (e al penultimo, con 7+ partecipanti). Un solo effetto: <strong className="text-slate-900 dark:text-foreground">tutti i giocatori tranne chi la usa restano fermi per un giro</strong> — chi la usa parte con un giro pieno di vantaggio, gli altri partono quando il primo inizia il secondo giro (regola di gioco dal vivo: il tracker registra soltanto l'uso).</p>
+                                <ul className="list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-muted-foreground">
+                                    <li>Può essere attivata <strong className="text-slate-900 dark:text-foreground">fino a 3 volte</strong> nello stesso torneo a <strong className="text-slate-900 dark:text-foreground">Classifica Unica</strong>.</li>
+                                    <li>Nei tornei <strong className="text-slate-900 dark:text-foreground">a Gironi</strong>, solo <strong className="text-slate-900 dark:text-foreground">1 volta</strong>: il campo ridotto per girone/batteria rende l'effetto proporzionalmente più forte.</li>
+                                </ul>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground">Una volta usata la prima volta, gli usi restanti restano vincolati a quel torneo e non si possono risparmiare per uno successivo. <strong className="text-slate-900 dark:text-foreground">Non è utilizzabile nelle gare di Semifinale</strong> (oltre agli spareggi, vietati per ogni carta — vedi sotto): la Carta Master resta invece utilizzabile in Semifinale.</p>
 
                                 <SubHeading>Limiti generali</SubHeading>
                                 <ul className="list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-muted-foreground">
                                     <li><strong className="text-slate-900 dark:text-foreground">Stesso gioco:</strong> una carta vinta in un gioco (es. Mario Kart DS) non si può usare in un torneo di un altro gioco.</li>
                                     <li><strong className="text-slate-900 dark:text-foreground">Niente spareggi:</strong> le carte non si possono usare nelle gare di Duello/spareggio.</li>
+                                    <li><strong className="text-slate-900 dark:text-foreground">Guscio Blu, niente Semifinali:</strong> in più rispetto al punto sopra, non è utilizzabile nelle gare di Semifinale dei tornei a Gironi.</li>
                                 </ul>
                                 <p className="mt-5 text-center text-[10px] text-slate-400">Le carte vengono attivate dall'organizzatore nella pagina di gestione del torneo. Una volta esauriti tutti gli usi non sono più recuperabili.</p>
                             </div>

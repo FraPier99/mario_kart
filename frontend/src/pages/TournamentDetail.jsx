@@ -1306,7 +1306,7 @@ const TournamentDetail = () => {
                                 </button>
                             </div>
                         </div>
-                        <ClassicRaceForm tournamentId={tournament.id} races={tournament.races} nPlayers={tournament.n_players} participants={activeTournamentParticipants} circuits={tournamentCircuits} characters={charactersByGameId.get(tournament?.game_id ?? 0) ?? []} disabled={isTournamentLocked} pendingEffects={pendingEffects} onCardEffectsResolved={refreshPendingEffects} onSaved={refresh} />
+                        <ClassicRaceForm tournamentId={tournament.id} races={tournament.races} nPlayers={tournament.n_players} participants={activeTournamentParticipants} circuits={tournamentCircuits} gameId={tournament?.game_id ?? null} characters={charactersByGameId.get(tournament?.game_id ?? 0) ?? []} disabled={isTournamentLocked} pendingEffects={pendingEffects} onCardEffectsResolved={refreshPendingEffects} onSaved={refresh} />
 
                         {/* Fallback per gare incomplete create col vecchio flusso (un
                         risultato alla volta): ClassicRaceForm crea sempre gara +

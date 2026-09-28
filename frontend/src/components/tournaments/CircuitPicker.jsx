@@ -58,7 +58,7 @@ const useDropdownPosition = (triggerRef, menuRef, open) => {
     return menuPos
 }
 
-const CircuitPicker = ({ circuits = [], value, onChange, disabled = false, usedCircuitIds = new Set(), label = 'Circuito', placeholder = 'Seleziona un circuito' }) => {
+const CircuitPicker = ({ circuits = [], value, onChange, disabled = false, usedCircuitIds = new Set(), label = 'Circuito', placeholder = 'Seleziona un circuito', lockedRandom = false }) => {
     const [open, setOpen] = useState(false)
     const [query, setQuery] = useState('')
     const triggerRef = useRef(null)
@@ -134,6 +134,35 @@ const CircuitPicker = ({ circuits = [], value, onChange, disabled = false, usedC
         if (availableCircuits.length === 0) return
         const pick = availableCircuits[Math.floor(Math.random() * availableCircuits.length)]
         onChange(pick.id)
+    }
+
+    // Piste sempre random per i gironi (ogni gioco) e la classifica unica su
+    // Mario Kart 8 Deluxe (vedi TOURNAMENT_TRACKER_RULES.md): il chiamante ha
+    // già estratto/imposto il circuito (sorteggio automatico, o la scelta
+    // deliberata di un possessore di Carta Master) — qui si mostra solo il
+    // risultato, senza menu manuale né bottone Random: non è una scelta
+    // dell'admin.
+    if (lockedRandom) {
+        return (
+            <div className="flex flex-col gap-2">
+                <div className="flex-1 min-w-0 rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3">
+                    <div className="flex items-center gap-2 font-semibold">
+                        {selectedCircuit ? (
+                            <>
+                                <CircuitThumbnail circuit={selectedCircuit} size="lg" />
+                                <span className="min-w-0 truncate text-slate-900 dark:text-foreground">{selectedCircuit.name}</span>
+                                <span className={`hidden sm:inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${(groupColorByName.get(selectedCircuit.description || 'Altro') ?? DEFAULT_TROPHY_COLOR).badge}`}>
+                                    {selectedCircuit.description ?? 'Cup'}
+                                </span>
+                            </>
+                        ) : <span className="truncate text-slate-400">Nessun circuito disponibile</span>}
+                    </div>
+                    <div className="mt-1 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">
+                        <Shuffle size={11} /> {label} · Sorteggiata automaticamente
+                    </div>
+                </div>
+            </div>
+        )
     }
 
     return (

@@ -23,10 +23,10 @@ Se il conto è dispari, si decide insieme se aggiungere gare extra per pareggiar
 
 ### 2b. Selezione circuiti
 
-- Ogni giocatore sceglie i propri circuiti tra quelli disponibili
-- I circuiti scelti si **esauriscono** (non più selezionabili da altri)
-- I circuiti rimanenti vengono **sorteggiati random** tra quelli non ancora utilizzati
-- Se tutti i circuiti vengono esauriti prima della fine, si **resetta** il pool
+Dipende dal gioco:
+
+- **Mario Kart DS** (`game_id=1`): ogni giocatore sceglie i propri circuiti tra quelli disponibili. I circuiti scelti si **esauriscono** (non più selezionabili da altri); i rimanenti vengono **sorteggiati random** tra quelli non ancora utilizzati; se tutti i circuiti vengono esauriti prima della fine, si **resetta** il pool.
+- **Mario Kart 8 Deluxe** (`game_id=2`): la pista è **sempre sorteggiata automaticamente** a ogni gara, senza alcuna scelta manuale — stessa regola dei tornei a gironi (vedi 3a). L'unico modo per scegliere deliberatamente una pista è la **Carta Master**, effetto "Annulla pista" (vedi 7a): in questo contesto il suo significato pratico diventa "il possessore sceglie lui stesso la pista al posto del sorteggio", non "annulla la scelta di un avversario" (che in un contesto random non esiste).
 
 ### 2c. Sistema di punteggio
 
@@ -43,6 +43,8 @@ I punti per ogni gara sono dinamici in base al numero di partecipanti (`n`):
 
 **Esempio** con 8 partecipanti: `[9, 7, 6, 5, 4, 3, 2, 1]`
 **Esempio** con 4 partecipanti: `[5, 3, 2, 1]`
+
+Questi sono i **punti-gara**: sommati su tutte le gare del torneo determinano il vincitore/podio **di quel singolo torneo**. Sono un concetto diverso dai **Punti Campionato** (vedi sezione 11): quelli si ottengono in base alla posizione **finale** raggiunta a fine torneo e sono sempre gli stessi indipendentemente da quanti partecipanti c'erano — servono per la classifica generale che somma i risultati di più tornei nel tempo, non per decidere chi vince il singolo torneo.
 
 ### 2d. Spareggio — Duello di podio
 
@@ -70,10 +72,11 @@ Richiede **almeno 8 partecipanti**. Il sistema calcola automaticamente il numero
 ### 3a. Fase 1 — Gironi
 
 - Ogni girone gioca le proprie gare indipendentemente dagli altri
-- Il numero di gare per fase viene **deciso insieme** all'inizio del torneo
+- Il numero di gare per fase viene **deciso insieme** all'inizio del torneo — valori di riferimento: **8 gare per girone e per semifinale** (100cc), **12 gare in Finale/Finalina** (150cc). Sono numeri organizzativi, non un tetto imposto dal sistema: si può crearne di più o di meno
+- Le piste sono **sempre sorteggiate automaticamente** a ogni gara, in ogni fase (Gironi, Semifinali, Finale, Finalina) e per qualunque gioco — nessuna scelta manuale. L'unico modo per scegliere deliberatamente una pista è la Carta Master, effetto "Annulla pista" (vedi 2b e 7a)
 - I circuiti sono **indipendenti per ogni girone**: lo stesso circuito può essere usato in gironi diversi
-- A ogni nuova fase i circuiti vengono **resettati** (ri-disponibili per tutti i gironi della fase successiva)
-- Punteggio per ogni gara: `[5, 3, 2, 1]`
+- A ogni nuova fase i circuiti vengono **resettati** (ri-disponibili per tutti i gironi/batterie della fase successiva, anche se già usati in una fase precedente)
+- Punteggio per ogni gara: stessa tabella dinamica della Classifica Unica (2c), in base al numero di piloti **effettivamente in gara** in quel girone/batteria specifica — girone da 4: `[5, 3, 2, 1]`; girone da 3: `[4, 2, 1]`
 
 ### 3b. Qualificazione
 
@@ -88,7 +91,8 @@ In caso di parità nel girone, l'ordine è determinato da:
 
 - Se i qualificati (top 2 per girone) sono **≤ 4**: si passa direttamente alla Finale (gruppo "top", Final 4) + Consolazione/"Finalina" (gruppo "bottom")
 - Se i qualificati sono **> 4**: vengono generate **Semifinali** (batterie S1, S2, ..., massimo 4 per batteria) prima della Finale. Per scegliere i 4 finalisti tra più batterie: prima i vincitori di ogni batteria, poi i migliori "secondi" per punti, fino a riempire i 4 posti
-- **Chi viene eliminato in semifinale** (qualificato dal girone ma escluso dal Final 4) **si unisce ai 3°/4° classificati dei gironi nella Finalina**, invece di restare senza piazzamento. Esempio: 9 giocatori → 3 gironi da 3 → 6 qualificati → semifinale in 2 batterie da 3 → Finale prende i migliori 4, gli altri 2 si uniscono ai 3 esclusi dai gironi → **Finalina da 5**
+- **La dimensione del girone non cambia la regola di qualificazione**: "i primi 2 di ogni girone" vale identico sia per un girone da 4 sia per uno da 3 — cambia solo quanti punti valgono le gare in quel girone (3a), non chi si qualifica. Esempio con gironi misti: **10 giocatori → 1 girone da 4 + 2 gironi da 3** (`[4, 3, 3]`) → 2 qualificati da ciascuno = **6 qualificati** in totale, esattamente come nell'esempio a 9 giocatori sotto → essendo &gt; 4, si passa comunque dalle Semifinali
+- **Chi viene eliminato in semifinale** (qualificato dal girone ma escluso dal Final 4) **si unisce ai 3°/4° classificati dei gironi nella Finalina**, invece di restare senza piazzamento. Esempio: 9 giocatori → 3 gironi da 3 (`[3, 3, 3]`) → 6 qualificati → semifinale in 2 batterie da 3 → Finale prende i migliori 4, gli altri 2 si uniscono ai 3 esclusi dai gironi → **Finalina da 5**
 - **Se la Finalina supera i 4 giocatori** (vincolo schermo, come i gironi): viene divisa in batterie "B1", "B2", ... **per livello di merito**, non a caso. Chi è stato eliminato in semifinale (ha comunque superato il proprio girone) gioca sempre per le posizioni più alte della Finalina; chi è uscito direttamente ai gironi gioca per quelle più basse. I due gruppi non si mescolano mai nella stessa batteria, anche se un escluso dai gironi ha fatto più punti di un eliminato in semifinale. L'ordine finale all'interno di ciascun livello si stabilisce per punti (stesso criterio della semifinale), e i livelli si concatenano dal migliore al peggiore. Esempio: con 9 giocatori la Finalina da 5 ha B1 = i 2 eliminati in semifinale (posti 5°-6°) e B2 = i 3 esclusi dai gironi (posti 7°-8°-9°)
 - La classifica della Finale riparte da zero (indipendente dai gironi)
 
@@ -169,25 +173,31 @@ Il badge di un gioco non influenza quello di un altro: si può essere Leggenda s
 
 Assegnate automaticamente alla chiusura delle schedine: **Carta Master** al/i vincitore/i della schedina (anche in caso di parità), **Guscio Blu** all'ultimo classificato (e al penultimo, con 7+ partecipanti).
 
-### 7a. Carta Master — 1 uso, tre effetti a scelta
+### 7a. Carta Master — 1 uso, quattro effetti a scelta
 
-Chi la possiede sceglie **uno** dei tre effetti al momento dell'uso:
+Chi la possiede sceglie **uno** dei quattro effetti al momento dell'uso:
 
-1. **Annulla pista** — invalida la pista scelta da un **avversario** per la sua prossima gara e la sostituisce con quella scelta dal possessore della carta
-2. **Impone personaggio** — obbliga un **avversario** a usare, per una gara, il personaggio scelto dal possessore della carta
-3. **Gara extra** — aggiunge una gara a fine torneo (nessun bersaglio)
+1. **Annulla pista** — invalida la pista scelta da un **avversario** per la sua prossima gara e la sostituisce con quella scelta dal possessore della carta. Nei contesti dove la pista è sempre a sorteggio (Mario Kart 8 Deluxe classifica unica, e qualunque torneo a gironi — vedi 2b/3a), il significato pratico diventa: **il possessore sceglie lui stesso la pista al posto del sorteggio automatico**, l'unico modo per farlo in quei contesti
+2. **Impone personaggio e/o setup** — obbliga un **avversario** a usare, per una gara, il personaggio **e/o il setup** (kart, ruote, aliante) scelto dal possessore della carta. Il sistema storicizza solo che l'effetto è stato usato (e il personaggio imposto, se registrato) — la scelta effettiva del setup si concorda e applica dal vivo, non è tracciata come dato separato
+3. **Immunità dal Guscio Blu** — rende chi la usa immune agli effetti di un Guscio Blu avversario per una gara (nessun bersaglio: protegge sé stessi). Come tutti gli effetti carta, è una regola applicata dal vivo: il sistema ne registra solo l'uso
+4. **Gara extra** — aggiunge una gara a fine torneo (nessun bersaglio)
 
 Gli effetti 1 e 2 possono essere dichiarati **prima ancora che la gara che devono influenzare esista**: l'admin registra l'effetto (bersaglio + pista/personaggio imposto) e resta "in sospeso" finché non viene creata la prossima gara che coinvolge quel bersaglio, momento in cui viene applicato e la carta risulta consumata.
 
-### 7b. Guscio Blu — fino a 3 usi nello stesso torneo, un solo effetto
+### 7b. Guscio Blu — usi variabili per formato, un solo effetto
 
 Effetto: **tutti i giocatori tranne chi usa la carta restano fermi per un giro** — chi la usa parte con un giro pieno di vantaggio, gli altri partono quando il primo inizia il secondo giro. È una regola di gioco dal vivo: il tracker si limita a registrare l'uso collegandolo alla gara.
 
-Il Guscio Blu può essere usato **fino a 3 volte nello stesso torneo**. Una volta usato per la prima volta ("attivato") in un torneo, gli usi restanti restano vincolati a **quello stesso torneo** — non possono essere risparmiati per un torneo successivo.
+Il Guscio Blu può essere usato:
+- **fino a 3 volte** nello stesso torneo a **Classifica Unica**;
+- **1 sola volta** nei tornei **a Gironi** — il campo ridotto per girone/batteria rende l'effetto proporzionalmente più impattante, da qui il limite più stretto.
+
+Una volta usato per la prima volta ("attivato") in un torneo, gli usi restanti restano vincolati a **quello stesso torneo** — non possono essere risparmiati per un torneo successivo. **Non è utilizzabile nelle gare di Semifinale** (oltre agli spareggi, già vietati per ogni carta — vedi 7c): la Carta Master resta invece utilizzabile in Semifinale.
 
 ### 7c. Limiti generali
 
 - Le Card non possono essere usate nelle gare di spareggio/duello
+- Il Guscio Blu, in aggiunta, non può essere usato nelle gare di Semifinale (vedi 7b) — la Master non ha questa restrizione ulteriore
 - Le carte vinte in un gioco non possono essere usate in un altro gioco
 
 ---
@@ -225,3 +235,32 @@ Disciplina i provvedimenti in punti applicabili ai partecipanti in caso di ritar
 - **Bonus aiuto organizzativo**: **+2 punti**, in base al contributo effettivo.
 - **Motivazione valida**: circostanze personali/familiari/lavorative/di salute o impreviste che rendano ragionevolmente impossibile rispettare gli impegni presi — valutate dall'organizzazione.
 - Penalità e richiami sono registrati nello storico disciplinare del partecipante; la recidività pesa sui provvedimenti successivi. Casi non previsti sono valutati caso per caso dall'organizzazione.
+
+---
+
+## 11. Punti Campionato
+
+Due sistemi di punteggio diversi coesistono, per due scopi diversi:
+
+- **Punti-gara** (sezione 2c/3a): variabili in base al numero di partecipanti alla gara, sommati determinano il vincitore/podio **ufficiale di quel singolo torneo** — sono la fonte di verità per spareggi, badge, premi schedina e carte.
+- **Punti Campionato**: **fissi per posizione finale**, sempre gli stessi indipendentemente da quanti partecipanti c'erano nel torneo — pensati per confrontare tornei di dimensioni diverse e sommarli nel tempo in un'unica classifica generale.
+
+### Come si calcolano
+
+Alla conclusione di un torneo non amichevole, ogni giocatore riceve punti campionato in base **solo** alla propria posizione finale (1°, 2°, 3°, ...) in quel torneo:
+
+| Posizione | Punti | Posizione | Punti |
+|---|---|---|---|
+| 1° | 25 | 8° | 5 |
+| 2° | 19 | 9° | 4 |
+| 3° | 15 | 10° | 3 |
+| 4° | 11 | 11° | 2 |
+| 5° | 9 | 12° | 1 |
+| 6° | 7 | 13°+ | 0 |
+| 7° | 6 | | |
+
+Un 1° posto vale sempre 25 punti campionato, sia in un torneo da 4 giocatori sia in uno da 12 — a differenza dei punti-gara, che scalano con la grandezza del campo. Un giocatore ritirato non riceve punti campionato per quel torneo; le posizioni dei restanti si comprimono senza lasciare "buchi" in classifica.
+
+### Dove si vedono
+
+I Punti Campionato sono il **criterio principale** della classifica generale (pagina Classifiche), seguiti da tornei vinti, Placement Index (media dei piazzamenti normalizzata), percentuale podi e gare giocate come ulteriori spareggi a parità.

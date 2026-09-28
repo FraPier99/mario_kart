@@ -9,15 +9,20 @@ from app.models import CardUsageLog, Race, UserInventory
 CARD_META = {
     "master": {
         "card_name": "Carta Master",
-        "description": "Puoi usarla dal vivo nel torneo successivo per annullare la pista scelta da un avversario e imporre la tua, imporre un personaggio a un avversario per una gara, oppure aggiungere una gara a fine torneo.",
+        "description": "Puoi usarla dal vivo nel torneo successivo per annullare la pista scelta da un avversario e imporre la tua (anche scegliendo tu stesso una pista quando la selezione è a sorteggio), imporre un personaggio E/O il setup (kart/ruote/aliante) a un avversario per una gara, renderti immune a un Guscio Blu per una gara, oppure aggiungere una gara a fine torneo.",
         "max_uses": 1,
     },
     "blue_shell": {
         "card_name": "Carta Guscio Blu",
-        "description": "Puoi usarla nel torneo successivo per fermare tutti gli altri per un giro: parti con un giro di vantaggio. Attivabile fino a 3 volte nello stesso torneo.",
+        "description": "Puoi usarla nel torneo successivo per fermare tutti gli altri per un giro: parti con un giro di vantaggio. Attivabile fino a 3 volte nello stesso torneo (1 sola volta nei tornei a gironi). Non utilizzabile nelle gare di spareggio o di semifinale.",
         "max_uses": 3,
     },
 }
+# Nei tornei a gironi il Guscio Blu è più impattante (campo ridotto per
+# girone/batteria): un solo uso invece dei 3 della classifica unica — vedi
+# grant_card più sotto, che applica questo override quando conosce il
+# torneo di provenienza.
+BLUE_SHELL_MAX_USES_GROUP_STAGE = 1
 
 
 def grant_card(
@@ -52,6 +57,15 @@ def grant_card(
             return existing
 
     max_uses = meta["max_uses"]
+    if card_type == "blue_shell" and source_tournament_id is not None:
+        from app.models import Tournament
+
+        tournament = (
+            db.query(Tournament).filter(Tournament.id == source_tournament_id).first()
+        )
+        if tournament and tournament.tournament_format == "group_stage":
+            max_uses = BLUE_SHELL_MAX_USES_GROUP_STAGE
+
     item = UserInventory(
         user_id=user_id,
         card_type=card_type,

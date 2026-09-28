@@ -3,18 +3,26 @@ import { getApiErrorMessage, inventoryApi, tournamentsApi, cardLog as cardLogUti
 import { findPlayerGroup } from '@/lib/groupStage'
 import { toast } from 'sonner'
 
-// Tre effetti Master, ciascuno su un AVVERSARIO (bersaglio scelto dal
-// possessore della carta) tranne "gara_extra" che non ne ha bisogno:
+// Quattro effetti Master, ciascuno su un AVVERSARIO (bersaglio scelto dal
+// possessore della carta) tranne "gara_extra" e "immunita_guscio" che non ne
+// hanno bisogno (agiscono su/per chi usa la carta):
 //   - ban_pista/imponi_personaggio riguardano una gara che potrebbe non
 //     esistere ancora (creazione gara+risultati è un unico salvataggio, vedi
 //     ClassicRaceForm) — needsRace è false apposta: si dichiarano "in
 //     sospeso" (nessuna gara scelta qui) e vengono proposti/risolti alla
-//     prossima gara che coinvolge il bersaglio.
+//     prossima gara che coinvolge il bersaglio. Su gironi/MK8D, dove la pista
+//     è sempre a sorteggio, "ban_pista" è l'unico modo per sceglierne una
+//     deliberatamente (vedi CircuitPicker lockedRandom).
+//   - immunita_guscio protegge chi la usa (nessun bersaglio): solo
+//     storicizzazione dell'uso, nessuna logica di blocco automatico — come
+//     tutte le carte, l'effetto si applica dal vivo, il software ne tiene
+//     solo il log.
 //   - ferma_tutti (Guscio Blu) è invece retroattivo su una gara già
 //     giocata dal vivo: needsRace resta true, si sceglie tra le gare esistenti.
 export const MASTER_EFFECTS = [
-    { value: 'ban_pista', label: 'Annulla la pista scelta da un avversario e impone la propria', needsTarget: true, needsCircuit: true },
-    { value: 'imponi_personaggio', label: 'Impone un personaggio a un avversario per una gara', needsTarget: true, needsCharacter: true },
+    { value: 'ban_pista', label: 'Annulla la pista scelta da un avversario e impone la propria (o ne sceglie una a sorteggio già avvenuto)', needsTarget: true, needsCircuit: true },
+    { value: 'imponi_personaggio', label: 'Impone un personaggio e/o il setup (kart/ruote/aliante) a un avversario per una gara', needsTarget: true, needsCharacter: true },
+    { value: 'immunita_guscio', label: 'Ti rende immune a un Guscio Blu per una gara', needsTarget: false },
     { value: 'gara_extra', label: 'Aggiunge una gara a fine torneo', needsTarget: false },
 ]
 export const SHELL_EFFECTS = [
