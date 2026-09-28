@@ -54,3 +54,28 @@ export const resolveFavoriteCharacterId = (player, characters = []) => {
     if (favoriteId == null) return null
     return characters.some((c) => String(c.id) === String(favoriteId)) ? favoriteId : null
 }
+
+/**
+ * Suggerisce un circuito "casuale" ma STABILE tra un elemento di una lista,
+ * derivato da una stringa seed invece che da Math.random(). Usato per
+ * pre-selezionare un circuito nei tornei/giochi dove la pista è a sorteggio
+ * (gironi, classifica unica su Mario Kart 8 Deluxe): con Math.random() il
+ * suggerimento cambiava a ogni nuovo montaggio del form (es. cambio tab e
+ * ritorno, prima che la gara sia stata salvata davvero) — confuso e
+ * imprevedibile. Con lo stesso seed (es. torneo+fase+girone+numero gara
+ * successiva) il suggerimento resta identico finché il contesto non cambia
+ * per davvero (la gara viene creata, o la pista non è più disponibile).
+ * Resta comunque solo un SUGGERIMENTO: l'admin può sempre scegliere un
+ * circuito diverso dal menu manuale.
+ *
+ * @param {Array}  list  elementi tra cui scegliere (non vuota)
+ * @param {string} seed  stringa stabile che identifica il contesto
+ * @returns {*} un elemento di `list`, sempre lo stesso per lo stesso seed+list
+ */
+export const pickDeterministic = (list, seed) => {
+    let hash = 0
+    for (let i = 0; i < seed.length; i++) {
+        hash = (hash * 31 + seed.charCodeAt(i)) >>> 0
+    }
+    return list[hash % list.length]
+}

@@ -15,7 +15,7 @@ import { Trophy, AlertCircle, CheckCircle2, Loader2, Flag, Users } from 'lucide-
 import { toast } from 'sonner'
 import { racesApi, resultsApi, getApiErrorMessage } from '@/services/apiClient'
 import { groupColor, groupLabel } from '@/lib/groupStage'
-import { getPlayerPreviousCharacterId, resolveFavoriteCharacterId } from '@/lib/raceEntry'
+import { getPlayerPreviousCharacterId, pickDeterministic, resolveFavoriteCharacterId } from '@/lib/raceEntry'
 import CircuitPicker from '@/components/tournaments/CircuitPicker'
 import CharacterPicker from '@/components/tournaments/CharacterPicker'
 import { useAppData } from '@/context/AppDataContext'
@@ -108,10 +108,10 @@ const GroupRaceForm = ({
     // `tournament.races` una nuova identità di array ad ogni ciclo, che a
     // sua volta cambia `usedCircuitIds`/`circuits` e rieseguirebbe l'intero
     // effetto: senza la guardia sul key, questo cancellava silenziosamente
-    // pilota/personaggio già selezionati (e ri-randomizzava la pista) mentre
-    // l'utente stava ancora compilando il form dal vivo. La stessa guardia
-    // preseleziona una pista a caso tra quelle non ancora usate SOLO la
-    // prima volta per questo specifico contesto (fase+girone, o duello).
+    // pilota/personaggio già selezionati mentre l'utente stava ancora
+    // compilando il form dal vivo. La stessa guardia suggerisce una pista
+    // SOLO la prima volta per questo specifico contesto (fase+girone, o
+    // duello) — l'admin può comunque cambiarla dal menu manuale.
     const [noCircuitsLeft, setNoCircuitsLeft] = useState(false)
     const autoPickKeyRef = useRef(null)
     useEffect(() => {
@@ -122,21 +122,24 @@ const GroupRaceForm = ({
         setSlots(emptySlots())
         setErrors([])
 
-        // Piste sempre random nei tornei a gironi (ogni gioco): questo form è
-        // usato SOLO per il formato group_stage, quindi il sorteggio
-        // automatico si applica a ogni gara (non solo agli spareggi, dove
+        // Pista suggerita di default nei tornei a gironi (ogni gioco): questo
+        // form è usato SOLO per il formato group_stage, quindi il
+        // suggerimento si applica a ogni gara (non solo agli spareggi, dove
         // randomizeCircuit=true serve solo ad allargare il pool di esclusione
         // a tutte le gare ufficiali del torneo, non alla sola fase/girone).
+        // Deterministico (pickDeterministic), non Math.random(): altrimenti
+        // il suggerimento cambiava ogni volta che il form veniva rimontato
+        // (es. cambio tab e ritorno) prima ancora di salvare la gara.
         const available = circuits.filter((c) => !usedCircuitIds.has(c.id))
         if (available.length === 0) {
             setNoCircuitsLeft(true)
             setCircuitId('')
         } else {
             setNoCircuitsLeft(false)
-            const pick = available[Math.floor(Math.random() * available.length)]
+            const pick = pickDeterministic(available, `${tournament?.id}-${key}-${nextPhaseRaceNumber}`)
             setCircuitId(pick ? String(pick.id) : '')
         }
-    }, [phase, groupName, slotCount, usedCircuitIds, circuits, tournament?.races, randomizeCircuit])
+    }, [phase, groupName, slotCount, usedCircuitIds, circuits, tournament?.id, tournament?.races, randomizeCircuit, nextPhaseRaceNumber])
 
     const setSlotPlayer = (index, playerId) => {
         setSlots((prev) => prev.map((s, i) => {
@@ -269,7 +272,6 @@ const GroupRaceForm = ({
                         usedCircuitIds={usedCircuitIds}
                         label={`Circuito · ${groupLabel(groupName)}`}
                         placeholder="Seleziona un circuito"
-                        lockedRandom
                     />
                 )}
             </div>

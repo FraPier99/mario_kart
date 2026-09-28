@@ -37,7 +37,7 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import { AlertCircle, Loader2, Flag, Shield, Users, Trophy } from 'lucide-react'
 import { toast } from 'sonner'
 import { racesApi, resultsApi, inventoryApi, getApiErrorMessage } from '@/services/apiClient'
-import { getPlayerPreviousCharacterId, resolveFavoriteCharacterId } from '@/lib/raceEntry'
+import { getPlayerPreviousCharacterId, pickDeterministic, resolveFavoriteCharacterId } from '@/lib/raceEntry'
 import { computePunteggi, medalFor, hasPunteggi } from '@/lib/punteggi'
 import CircuitPicker from '@/components/tournaments/CircuitPicker'
 import CharacterPicker from '@/components/tournaments/CharacterPicker'
@@ -101,23 +101,25 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
         return map
     }, [relevantPendingEffects])
 
-    // Pista sempre random su Mario Kart 8 Deluxe (game_id=2, vedi
-    // TOURNAMENT_TRACKER_RULES.md) — l'unico modo per scegliere deliberatamente
-    // una pista resta la Carta Master (pendingCircuitEffects sopra, applicata
-    // con un click su "Applica"): se non c'è un effetto pendente, la pista si
-    // sorteggia da sola e il menu manuale sparisce (vedi lockedRandom sotto).
-    const lockedRandom = !isEditing && gameId === 2
+    // Pista suggerita di default su Mario Kart 8 Deluxe (game_id=2, vedi
+    // TOURNAMENT_TRACKER_RULES.md) — resta comunque un suggerimento: il menu
+    // manuale resta visibile e l'admin può sempre scegliere un'altra pista
+    // (o applicare un effetto Master "Annulla pista" pendente, vedi sopra).
+    // Deterministico (pickDeterministic), non Math.random(): altrimenti il
+    // suggerimento cambiava ogni volta che il form veniva rimontato (es.
+    // cambio tab e ritorno) prima ancora di salvare la gara.
+    const autoSuggestCircuit = !isEditing && gameId === 2
     const autoPickKeyRef = useRef(null)
     useEffect(() => {
-        if (!lockedRandom || pendingCircuitEffects.length > 0) return
+        if (!autoSuggestCircuit || pendingCircuitEffects.length > 0) return
         const key = `${races.length}-${availableCircuits.length}`
         if (autoPickKeyRef.current === key) return
         autoPickKeyRef.current = key
         if (availableCircuits.length === 0) return
-        const pick = availableCircuits[Math.floor(Math.random() * availableCircuits.length)]
+        const pick = pickDeterministic(availableCircuits, `${tournamentId}-${races.length}`)
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setCircuitId(String(pick.id))
-    }, [lockedRandom, pendingCircuitEffects, availableCircuits, races.length])
+    }, [autoSuggestCircuit, pendingCircuitEffects, availableCircuits, races.length, tournamentId])
 
     // Il personaggio "precedente" si calcola al VOLO quando un pilota viene
     // piazzato (stesso approccio di GroupRaceForm.setSlotPlayer), non con un
@@ -310,7 +312,6 @@ const ClassicRaceForm = ({ tournamentId, races = [], nPlayers, participants = []
                             label="Circuito"
                             placeholder="Seleziona un circuito"
                             disabled={disabled}
-                            lockedRandom={lockedRandom && pendingCircuitEffects.length === 0}
                         />
                     )}
                 </div>
