@@ -172,13 +172,19 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated, allo
     const currentStep = PIPELINE[safeIndex]
     const nextStep = safeIndex < PIPELINE.length - 1 ? PIPELINE[safeIndex + 1] : null
 
-    // Il torneo amichevole non ha un vincitore da decretare: la descrizione
-    // dello step "concluso" della pipeline statica (PIPELINE, sopra) non si
-    // applica, va sovrascritta qui invece di duplicare l'intera pipeline.
-    const describeStep = (step) =>
-        step?.value === 'concluso' && allowDirectConclusion
-            ? 'Avete finito di giocare. Il torneo è chiuso — nessun vincitore ufficiale da impostare.'
-            : step?.description
+    // Il torneo amichevole non ha un vincitore da decretare né una schedina:
+    // le descrizioni "concluso" e "da_svolgere" della pipeline statica
+    // (PIPELINE, sopra) non si applicano, vanno sovrascritte qui invece di
+    // duplicare l'intera pipeline.
+    const describeStep = (step) => {
+        if (step?.value === 'concluso' && allowDirectConclusion) {
+            return 'Avete finito di giocare. Il torneo è chiuso — nessun vincitore ufficiale da impostare.'
+        }
+        if (step?.value === 'da_svolgere' && allowDirectConclusion) {
+            return 'Il torneo non è ancora iniziato.'
+        }
+        return step?.description
+    }
 
     const doSetStatus = async (value) => {
         setSaving(true)
@@ -297,8 +303,11 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated, allo
                     })}
                 </div>
 
-                {/* STATO ATTUALE + SCHEDINE — due fatti "pari grado", affiancati invece che impilati */}
-                <div className="grid gap-3 sm:grid-cols-2">
+                {/* STATO ATTUALE + SCHEDINE — due fatti "pari grado", affiancati invece
+                    che impilati. I tornei amichevoli non hanno schedine (vedi
+                    is_friendly/allowDirectConclusion): il riquadro Schedine sparisce
+                    del tutto, "Stato attuale" prende tutta la larghezza. */}
+                <div className={`grid gap-3 ${allowDirectConclusion ? '' : 'sm:grid-cols-2'}`}>
                     <div className={`rounded-2xl p-3 text-sm ${
                         rawStatus === 'da_svolgere' ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300' :
                         rawStatus === 'in_corso' ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300' :
@@ -311,37 +320,39 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated, allo
                         )}
                     </div>
 
-                    {/* SCHEDINE */}
-                    <div className={`flex flex-wrap items-start sm:items-center justify-between gap-3 rounded-2xl p-3 text-sm ${
-                        tournament?.schedine_locked
-                            ? 'bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-300'
-                            : 'bg-sky-50 dark:bg-sky-950/20 text-sky-700 dark:text-sky-300'
-                    }`}>
-                        <div className="min-w-0 flex items-center gap-2">
-                            <Lock size={14} className="shrink-0" />
-                            <div>
-                                <p className="font-black uppercase tracking-wider text-[10px] opacity-70">Schedine</p>
-                                <p className="font-bold">
-                                    {tournament?.schedine_locked ? 'Chiuse — nessun nuovo pronostico ammesso' : 'Aperte alla compilazione'}
-                                </p>
+                    {/* SCHEDINE — nessun torneo amichevole ne ha una */}
+                    {!allowDirectConclusion && (
+                        <div className={`flex flex-wrap items-start sm:items-center justify-between gap-3 rounded-2xl p-3 text-sm ${
+                            tournament?.schedine_locked
+                                ? 'bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-300'
+                                : 'bg-sky-50 dark:bg-sky-950/20 text-sky-700 dark:text-sky-300'
+                        }`}>
+                            <div className="min-w-0 flex items-center gap-2">
+                                <Lock size={14} className="shrink-0" />
+                                <div>
+                                    <p className="font-black uppercase tracking-wider text-[10px] opacity-70">Schedine</p>
+                                    <p className="font-bold">
+                                        {tournament?.schedine_locked ? 'Chiuse — nessun nuovo pronostico ammesso' : 'Aperte alla compilazione'}
+                                    </p>
+                                </div>
                             </div>
+                            {!tournament?.schedine_locked && !disabled && rawStatus === 'da_svolgere' && (
+                                <button
+                                    type="button"
+                                    onClick={handleCloseSchedine}
+                                    disabled={closingSchedine}
+                                    className="w-full sm:w-auto shrink-0 flex items-center justify-center gap-1.5 rounded-2xl bg-rose-500 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white transition hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+                                >
+                                    {closingSchedine ? 'Chiusura...' : (
+                                        <>
+                                            <Lock size={12} />
+                                            Chiudi Schedine
+                                        </>
+                                    )}
+                                </button>
+                            )}
                         </div>
-                        {!tournament?.schedine_locked && !disabled && rawStatus === 'da_svolgere' && (
-                            <button
-                                type="button"
-                                onClick={handleCloseSchedine}
-                                disabled={closingSchedine}
-                                className="w-full sm:w-auto shrink-0 flex items-center justify-center gap-1.5 rounded-2xl bg-rose-500 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white transition hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
-                            >
-                                {closingSchedine ? 'Chiusura...' : (
-                                    <>
-                                        <Lock size={12} />
-                                        Chiudi Schedine
-                                    </>
-                                )}
-                            </button>
-                        )}
-                    </div>
+                    )}
                 </div>
 
                 {/* AVANZA — solo per da_svolgere → in_corso. La conclusione NON
