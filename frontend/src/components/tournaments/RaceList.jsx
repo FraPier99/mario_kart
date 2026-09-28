@@ -80,7 +80,14 @@ const RaceList = ({ races, circuits = [], circuitsById, charactersById, characte
     }
 
     const filteredRaces = useMemo(() => {
-        let filtered = races
+        // Ordinato per race_order: l'array `races` in ingresso non ha un
+        // ordine garantito (dipende da come lo restituisce il backend/lo
+        // stato client) — senza questo sort, una gara di un girone poteva
+        // essere renderizzata PRIMA di un'altra dello stesso girone con un
+        // numero "Gara N" più basso (calcolato invece su una copia ordinata,
+        // vedi phaseRaceNumberById sopra), mostrando es. "Gara 2 Girone 1"
+        // sopra "Gara 1 Girone 1". Stesso sort già usato in handleDownloadPdf.
+        let filtered = [...races].sort((a, b) => a.race_order - b.race_order)
         if (duelloFilter === 'duelli') filtered = filtered.filter((r) => r.is_duello)
         else if (duelloFilter === 'regolari') filtered = filtered.filter((r) => !r.is_duello)
 

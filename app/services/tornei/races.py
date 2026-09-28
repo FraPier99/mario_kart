@@ -5,7 +5,13 @@ from app.data.punteggi import PUNTEGGI_CONFIG
 
 
 def get_races(db: Session):
-    return db.query(Race).all()
+    # Senza order_by l'ordine delle righe non è garantito (dipende dal piano
+    # di query/storage fisico, non dall'ordine di inserimento) — i consumer
+    # frontend (es. RaceList.jsx) derivano da questo l'ordine cronologico
+    # delle gare per girone, quindi un ordine non deterministico può mostrare
+    # "Gara 2 Girone 1" prima di "Gara 1 Girone 1" pur avendo i race_order
+    # corretti.
+    return db.query(Race).order_by(Race.race_order.asc()).all()
 
 
 def create_race(db: Session, race_data: CreateRace):
