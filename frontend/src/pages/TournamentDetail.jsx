@@ -31,7 +31,7 @@ import PhaseCircuitsCard from '@/components/tournaments/PhaseCircuitsCard'
 import SpareggioEsitiList from '@/components/tournaments/SpareggioEsitiList'
 import CardLogPanel from '@/components/tournaments/CardLogPanel'
 import OverallClassificaCard from '@/components/tournaments/OverallClassificaCard'
-import { findPlayerGroup, groupLabel, isPodiumDuelKey, isPassEnabledForScope, passScopeKey, targetRacesForGroup } from '@/lib/groupStage'
+import { findPlayerGroup, groupLabel, isPodiumDuelKey, isPassEnabledForScope, passScopeKey, targetRacesForGroup, GROUP_BADGE_CLASSES } from '@/lib/groupStage'
 import { useTournamentCards, MASTER_EFFECTS, SHELL_EFFECTS } from '@/hooks/useTournamentCards'
 import { getApiErrorMessage, tournamentsApi, authApi, schedineApi } from '@/services/apiClient'
 import { toast } from 'sonner'
@@ -528,7 +528,13 @@ const TournamentDetail = () => {
     // Un Admin è sempre e solo in vista gestionale, anche quando è a sua
     // volta partecipante: ha già tutti i tool, non serve uno switch.
     if (!isAdmin && !isSuperadmin) {
-        const raceProgress = tournament.n_races > 0
+        const isGroupStageView = tournament.tournament_format === 'group_stage'
+        // n_races per i tornei a gironi è solo una stima grezza calcolata
+        // alla creazione (n_giocatori × 2, vedi _compute_group_stage_n_races
+        // nel backend), senza relazione con le gare reali per fase/girone —
+        // il conteggio/barra di progresso ha senso solo per i classic, dove
+        // n_races è un target scelto davvero dall'admin.
+        const raceProgress = !isGroupStageView && tournament.n_races > 0
             ? Math.round(((tournament.raceCount ?? 0) / tournament.n_races) * 100)
             : 0
 
@@ -543,7 +549,6 @@ const TournamentDetail = () => {
             ? localCardLog
             : localCardLog.filter((e) => e.group_name === myGroup.groupName)
 
-        const isGroupStageView = tournament.tournament_format === 'group_stage'
         // Nei tornei a gironi le vecchie tab "Classifica"/"Gare" (tutto
         // mischiato) sono sostituite da una tab dedicata alla fase in cui si
         // trova il giocatore (Girone/Semifinale, poi Finale/Consolazione) e
@@ -580,21 +585,29 @@ const TournamentDetail = () => {
                                 <h1 title={tournament.name} className="mt-1 text-3xl font-black tracking-tight text-slate-900 dark:text-foreground">{toTitleCase(tournament.name)}</h1>
                                 <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-500 dark:text-muted-foreground">
                                     <span>{tournament.date}</span>
-                                    <span>·</span>
-                                    <span>{tournament.raceCount}/{tournament.n_races} gare</span>
+                                    {!isGroupStageView && (
+                                        <>
+                                            <span>·</span>
+                                            <span>{tournament.raceCount}/{tournament.n_races} gare</span>
+                                        </>
+                                    )}
                                     {tournament.winner && (
                                         <><span>·</span><span className="font-black text-amber-600 dark:text-amber-400">🏆 {tournament.winner.nickname}</span></>
                                     )}
                                 </div>
-                                {/* Progress bar gare */}
+                                {/* Progress bar gare — solo classic, vedi raceProgress sopra */}
                                 <div className="mt-2 flex items-center gap-2">
-                                    <div className="h-2 w-32 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                                        <div
-                                            className="h-full rounded-full bg-emerald-400 dark:bg-emerald-500 transition-all duration-500"
-                                            style={{ width: `${Math.min(raceProgress, 100)}%` }}
-                                        />
-                                    </div>
-                                    <span className="text-[10px] font-black text-slate-400">{raceProgress}%</span>
+                                    {!isGroupStageView && (
+                                        <>
+                                            <div className="h-2 w-32 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                                                <div
+                                                    className="h-full rounded-full bg-emerald-400 dark:bg-emerald-500 transition-all duration-500"
+                                                    style={{ width: `${Math.min(raceProgress, 100)}%` }}
+                                                />
+                                            </div>
+                                            <span className="text-[10px] font-black text-slate-400">{raceProgress}%</span>
+                                        </>
+                                    )}
                                     <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest ${getTournamentStatusBadge(tournamentStatus)}`}>
                                         {getTournamentStatusLabel(tournamentStatus)}
                                     </span>
@@ -1087,9 +1100,14 @@ const TournamentDetail = () => {
                         <div className="min-w-0 sm:flex-1">
                             <h1 title={tournament.name} className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">{toTitleCase(tournament.name)}</h1>
                             <div className="mt-4 flex flex-wrap gap-2 text-sm">
-                                <span className="whitespace-nowrap rounded-full bg-slate-100 dark:bg-white/10 px-3 py-1 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-white/10">Data: {tournament.date}</span>
-                                <span className="whitespace-nowrap rounded-full bg-slate-100 dark:bg-white/10 px-3 py-1 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-white/10">Gioco: {games.find((game) => game.id === tournament.game_id)?.name ?? `#${tournament.game_id}`}</span>
-                                <span className="whitespace-nowrap rounded-full bg-slate-100 dark:bg-white/10 px-3 py-1 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-white/10">Gare: {tournament.raceCount}/{tournament.n_races}</span>
+                                <span className={`whitespace-nowrap rounded-full px-3 py-1 border-2 ${GROUP_BADGE_CLASSES.blue}`}>Data: {tournament.date}</span>
+                                <span className={`whitespace-nowrap rounded-full px-3 py-1 border-2 ${GROUP_BADGE_CLASSES.violet}`}>Gioco: {games.find((game) => game.id === tournament.game_id)?.name ?? `#${tournament.game_id}`}</span>
+                                {/* n_races per i gironi è solo una stima grezza (n_giocatori × 2),
+                                    senza relazione con le gare reali per fase/girone — vedi la
+                                    stessa nota nella vista lettura sopra. */}
+                                {tournament.tournament_format !== 'group_stage' && (
+                                    <span className={`whitespace-nowrap rounded-full px-3 py-1 border-2 ${GROUP_BADGE_CLASSES.cyan}`}>Gare: {tournament.raceCount}/{tournament.n_races}</span>
+                                )}
                                 <span className={`font-title whitespace-nowrap rounded-full px-3 py-1 text-[10px] tracking-wide border-2 ${getTournamentStatusBadge(tournamentStatus)}`}>
                                     Stato: {getTournamentStatusLabel(tournamentStatus)}
                                 </span>
@@ -1217,7 +1235,7 @@ const TournamentDetail = () => {
                 {isAdmin && activeSection === 'setup' && (
                     <div className="space-y-4">
                         <CollapsibleSection title="Stato torneo" icon={<Settings size={16} />} defaultOpen>
-                            <TournamentStatusManager tournament={tournament} disabled={!isAdmin} onUpdated={refresh} allowDirectConclusion={tournament.is_friendly} />
+                            <TournamentStatusManager tournament={tournament} disabled={!isAdmin} patchTournament={patchTournament} allowDirectConclusion={tournament.is_friendly} />
                         </CollapsibleSection>
 
                         {tournament.tournament_format === 'classic' && (circuitsByGameId.get(tournament?.game_id ?? 0) ?? []).some((c) => c.requires_pass) && (

@@ -14,7 +14,7 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import { Trophy, AlertCircle, CheckCircle2, Loader2, Flag, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { racesApi, resultsApi, getApiErrorMessage } from '@/services/apiClient'
-import { groupColor, groupLabel } from '@/lib/groupStage'
+import { groupColor, groupLabel, targetRacesForGroup } from '@/lib/groupStage'
 import { getPlayerPreviousCharacterId, getStoredCircuitChoice, pickDeterministic, resolveFavoriteCharacterId, setStoredCircuitChoice } from '@/lib/raceEntry'
 import CircuitPicker from '@/components/tournaments/CircuitPicker'
 import CharacterPicker from '@/components/tournaments/CharacterPicker'
@@ -253,6 +253,11 @@ const GroupRaceForm = ({
 
     const groupColorClass = GROUP_COLOR_CLASSES[groupColor(groupName)] ?? GROUP_COLOR_CLASSES.slate
 
+    // Baseline informativa (non vincolante, vedi targetRacesForGroup): null
+    // per gli spareggi a gara secca, dove non ha senso un totale previsto.
+    const targetRaces = targetRacesForGroup(groupName, tournament?.format_data)
+    const racesInGroup = nextPhaseRaceNumber - 1
+
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
 
@@ -272,6 +277,15 @@ const GroupRaceForm = ({
                     <Users size={11} />
                     <span className="text-[10px] font-black">{activeGroupPlayers.length} piloti</span>
                 </div>
+                {targetRaces && (
+                    <div
+                        className="flex items-center gap-1.5 rounded-xl bg-white/10 dark:bg-black/20 px-2.5 py-1"
+                        title={`Baseline indicativa: ${targetRaces} gare — non vincolante`}
+                    >
+                        <Trophy size={11} />
+                        <span className="text-[10px] font-black">{racesInGroup}/{targetRaces} gare</span>
+                    </div>
+                )}
             </div>
 
             {/* Circuito — pool indipendente per questa fase/girone */}

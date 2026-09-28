@@ -161,10 +161,9 @@ const SafetyModal = ({ warnings, targetLabel, onConfirm, onCancel }) => {
     )
 }
 
-const TournamentStatusManager = ({ tournament, disabled = false, onUpdated, allowDirectConclusion = false }) => {
+const TournamentStatusManager = ({ tournament, disabled = false, patchTournament, allowDirectConclusion = false }) => {
     const rawStatus = tournament?.status ?? 'da_svolgere'
     const [saving, setSaving] = useState(false)
-    const [closingSchedine, setClosingSchedine] = useState(false)
     const [pendingTarget, setPendingTarget] = useState(null) // { value, label, warnings }
 
     const currentIndex = PIPELINE.findIndex((s) => s.value === getNormalizedStatus(rawStatus))
@@ -189,9 +188,27 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated, allo
     const doSetStatus = async (value) => {
         setSaving(true)
         try {
-            await tournamentsApi.update(tournament.id, { status: value })
+            const res = await tournamentsApi.update(tournament.id, { status: value })
+            // GET /tournaments ha una cache HTTP di 10s (vedi commento sul
+            // controller). NIENTE onUpdated()/refresh() qui: un refresh()
+            // subito dopo il PUT riceve quasi sempre dal browser la risposta
+            // cache-ata PRE-avanzamento, e siccome refresh() sostituisce
+            // l'intero array tornei (setTournaments(...), non un merge),
+            // sovrascriverebbe silenziosamente anche il patchTournament qui
+            // sotto — dando l'impressione che il bottone "Avanza" non abbia
+            // fatto nulla finché la cache non scade (~10s dopo, da cui il
+            // "serve premerlo due volte"). patchTournament applica la
+            // risposta reale del PUT (non cache-ata) ed è l'unica fonte di
+            // verità per questa azione — stesso principio già usato accanto
+            // a questo componente in TournamentDetail.jsx per pass-circuits
+            // (commento "Niente refresh() qui" allo stesso punto). Un PUT di
+            // solo status non tocca altri campi lato backend a parte
+            // schedine_locked (impostato a true avanzando a "in_corso").
+            patchTournament?.(tournament.id, {
+                status: res.data?.status ?? value,
+                schedine_locked: res.data?.schedine_locked ?? tournament.schedine_locked,
+            })
             toast.success(`Stato aggiornato: "${PIPELINE.find((s) => s.value === value)?.label ?? value}"`)
-            await onUpdated?.()
         } catch (error) {
             toast.error('Aggiornamento stato fallito', { description: getApiErrorMessage(error) })
         } finally {
@@ -213,19 +230,6 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated, allo
     const handleAdvance = () => {
         if (!nextStep) return
         requestSetStatus(nextStep.value)
-    }
-
-    const handleCloseSchedine = async () => {
-        setClosingSchedine(true)
-        try {
-            await tournamentsApi.closeSchedine(tournament.id)
-            toast.success('Schedine chiuse', { description: 'Non sarà più possibile compilare o modificare pronostici per questo torneo.' })
-            await onUpdated?.()
-        } catch (error) {
-            toast.error('Chiusura schedine fallita', { description: getApiErrorMessage(error) })
-        } finally {
-            setClosingSchedine(false)
-        }
     }
 
     const isConcluded = rawStatus === 'concluso'
@@ -257,10 +261,8 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated, allo
                         <Info size={14} className="shrink-0 mt-0.5" />
                         <p>
                             <span className="font-black">Ordine consigliato:</span> verifica i partecipanti nella sezione qui sotto,
-                            {!tournament?.is_friendly && (
-                                <> poi quando i pronostici sono pronti premi <span className="font-black">Chiudi Schedine</span>,</>
-                            )}
-                            {' '}infine <span className="font-black">Avanza</span> per avviare il torneo e iniziare a inserire le gare.
+                            {' '}poi premi <span className="font-black">Avanza</span> per avviare il torneo e iniziare a inserire le gare
+                            {!tournament?.is_friendly && ' (le schedine si chiudono automaticamente)'}.
                         </p>
                     </div>
                 )}
@@ -320,7 +322,10 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated, allo
                         )}
                     </div>
 
-                    {/* SCHEDINE — nessun torneo amichevole ne ha una */}
+                    {/* SCHEDINE — nessun torneo amichevole ne ha una. Solo
+                        indicatore di stato: si chiudono da sole avanzando a
+                        "in corso" (vedi doSetStatus), nessuna azione manuale
+                        separata. */}
                     {!allowDirectConclusion && (
                         <div className={`flex flex-wrap items-start sm:items-center justify-between gap-3 rounded-2xl p-3 text-sm ${
                             tournament?.schedine_locked
@@ -336,21 +341,6 @@ const TournamentStatusManager = ({ tournament, disabled = false, onUpdated, allo
                                     </p>
                                 </div>
                             </div>
-                            {!tournament?.schedine_locked && !disabled && rawStatus === 'da_svolgere' && (
-                                <button
-                                    type="button"
-                                    onClick={handleCloseSchedine}
-                                    disabled={closingSchedine}
-                                    className="w-full sm:w-auto shrink-0 flex items-center justify-center gap-1.5 rounded-2xl bg-rose-500 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white transition hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
-                                >
-                                    {closingSchedine ? 'Chiusura...' : (
-                                        <>
-                                            <Lock size={12} />
-                                            Chiudi Schedine
-                                        </>
-                                    )}
-                                </button>
-                            )}
                         </div>
                     )}
                 </div>
