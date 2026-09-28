@@ -153,10 +153,19 @@ Qualificati ≤ 4 ?
 Quando c'è una fase di semifinale, la Consolazione/"Finalina" finale non è
 solo i 3°/4° dei gironi: si uniscono anche i qualificati dal girone che NON
 rientrano nel Final 4 (eliminati in semifinale) — altrimenti resterebbero
-senza piazzamento. Esempio concreto, 9 giocatori (3 gironi da 3): 6
-qualificati → semifinale in 2 batterie da 3 → Finale prende i migliori 4,
-gli altri 2 (eliminati in semifinale) si uniscono ai 3 esclusi dai gironi →
-Finalina da 5.
+senza piazzamento, ma su una gara SEPARATA e di livello superiore, mai
+mescolati con gli esclusi diretti dai gironi (vedi sotto).
+
+**Esempio 9 giocatori — chi vince il titolo di Finalina? Il 5° posto, mai il
+7°**, anche se il 7° ha vinto la propria gara. Da dove vengono questi numeri
+(3 gironi da 3): il 3° di ciascun girone (1 a girone) non si qualifica alla
+semifinale → 3 "perdenti dei gironi"; la semifinale si gioca in 2 batterie da
+3 → il 3° di ciascuna batteria (1 a batteria) non si qualifica alla Finale →
+2 "perdenti di semifinale". Questi due gruppi giocano due gare SEPARATE
+(mai un'unica gara da 3+2=5 — il vincolo di 4 a gara vale sempre): Gara A = i
+2 perdenti di semifinale per il 5°-6° posto, Gara B = i 3 perdenti dei gironi
+per il 7°-8°-9°. "Finalina da 5" è quindi solo il totale di teste coinvolte
+nella fase, MAI il numero di giocatori in un'unica gara.
 
 Se la Finalina supera i 4 (vincolo schermo) viene divisa in batterie
 "B1","B2",… **per livello di merito**, non a caso (`_build_consolation_tiers`):
@@ -167,7 +176,11 @@ uscito in semifinale resta sempre davanti a chi è uscito ai gironi, anche con
 meno punti (`_consolation_classifica` fonde le batterie dentro ogni tier con
 `_merge_consolation_heats`, poi concatena i tier). Esempio, Finalina da 5
 (caso 9 giocatori): B1 = 2 eliminati in semifinale (5°-6°), B2 = 3 esclusi
-dai gironi (7°-8°-9°).
+dai gironi (7°-8°-9°). Conseguenza diretta: `decree_consolation_winner`
+(`app/services/tornei/tournaments.py:2517`) legge `order[0]` da
+`get_consolation_final_classifica`, già tier-aware — il "vincitore Finalina"
+è sempre chi ha il miglior piazzamento in assoluto (in questo esempio il
+vincitore di B1, 5° posto generale), mai il vincitore di un tier inferiore.
 
 - **Requisito minimo**: 8 partecipanti (`tournament_format = "group_stage"`)
 - **Composizione gironi**: il minor numero di gironi possibile, max 4
@@ -204,6 +217,7 @@ il proprio girone, e dopo l'avanzamento solo la fase in cui si trova
 | Punteggio gare (griglia dinamica, per-gara) | `app/data/punteggi.py` (`PUNTEGGI_CONFIG`) |
 | Punti Campionato (fissi per posizione finale, cross-torneo) | `app/data/punteggi_campionato.py` (`compute_campionato_points`); snapshot in `CampionatoStanding`, popolato da `_settle_campionato_standings` — `app/services/tornei/tournaments.py` |
 | Punteggio schedine | `PUNTI_PRONOSTICO = 3` — `app/services/schedine/*` |
+| N. gare di riferimento per fase (Gironi/Semifinali/Finale/Finalina, informativo, no tetto) | `n_races_group_stage`/`n_races_semifinals`/`n_races_final`/`n_races_finalina` — `CreateTournament` schema + `format_data`, UI in "Configurazione fasi" (`GroupManagementSection.jsx`) |
 | Standings per-girone lato frontend | `GroupCard`, `computeGroupStandings` — `frontend/src/components/tournaments/GroupPlancia.jsx` |
 | Torneo amichevole (flag, non un terzo formato) | `Tournament.is_friendly` — `app/models/tornei/models.py`; guardie in `update_tournament`/`set_tournament_playoff_winner`/`undo_last_playoff` (`app/services/tornei/tournaments.py`), `_check_not_friendly_tournament` (`app/controllers/cards/inventory.py`), `create_schedina`/`create_schedina_deluxe` (`app/services/schedine/*`), filtri in `app/services/tornei/stats.py` |
 | Tracking partecipazione (streak/promemoria rientro) | `_sync_participation_tracking` — `app/services/tornei/tournaments.py`, chiamata da `create_tournament` per tornei non amichevoli; badge "Costanza"/"In crescita"/"Re della Consolazione" derivati in `get_player_game_badge` — `app/services/tornei/stats.py` |

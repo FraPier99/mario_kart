@@ -25,6 +25,9 @@ class CreateTournament(BaseModel):
     n_races_final: Optional[int] = Field(
         default=None, gt=0, description="Gare per finale (solo torneo a gironi)"
     )
+    n_races_finalina: Optional[int] = Field(
+        default=None, gt=0, description="Gare per finalina/consolazione (solo torneo a gironi)"
+    )
     date: date
     game_id: int
     status: TournamentStatus = "da_svolgere"

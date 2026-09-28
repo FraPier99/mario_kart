@@ -773,6 +773,7 @@ const GroupManagementSection = ({
         n_races_group_stage: tournament.format_data?.n_races_group_stage ?? '',
         n_races_semifinals: tournament.format_data?.n_races_semifinals ?? '',
         n_races_final: tournament.format_data?.n_races_final ?? '',
+        n_races_finalina: tournament.format_data?.n_races_finalina ?? '',
     }))
     const [savingConfig, setSavingConfig] = useState(false)
     const handleSavePhaseConfig = useCallback(async () => {
@@ -782,6 +783,7 @@ const GroupManagementSection = ({
             if (phaseConfig.n_races_group_stage !== '') payload.n_races_group_stage = Number(phaseConfig.n_races_group_stage)
             if (phaseConfig.n_races_semifinals !== '') payload.n_races_semifinals = Number(phaseConfig.n_races_semifinals)
             if (phaseConfig.n_races_final !== '') payload.n_races_final = Number(phaseConfig.n_races_final)
+            if (phaseConfig.n_races_finalina !== '') payload.n_races_finalina = Number(phaseConfig.n_races_finalina)
             await tournamentsApi.update(tournament.id, { format_data: payload })
             toast.success('Configurazione fasi salvata!')
             await onRefresh()
@@ -926,9 +928,9 @@ const GroupManagementSection = ({
                         <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 dark:text-muted-foreground">Configurazione fasi</p>
                     </div>
                     <p className="text-sm text-slate-500 dark:text-muted-foreground">
-                        Imposta la baseline di gare per girone/batteria (default 8/10/12 se lasciato vuoto) — solo informativo, non un tetto: le gare effettive vengono create manualmente e possono superarlo.
+                        Imposta la baseline di gare per girone/batteria/finalina (default 8/10/12/8 se lasciato vuoto) — solo informativo, non un tetto: le gare effettive vengono create manualmente e possono superarlo.
                     </p>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <label className="space-y-1.5">
                             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Gironi</span>
                             <input
@@ -963,6 +965,18 @@ const GroupManagementSection = ({
                                 onChange={(e) => setPhaseConfig((p) => ({ ...p, n_races_final: e.target.value }))}
                                 className="w-full rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3 text-slate-900 dark:text-foreground outline-none transition focus:border-emerald-500"
                                 placeholder="es. 12"
+                            />
+                        </label>
+                        <label className="space-y-1.5">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Finalina</span>
+                            <input
+                                type="number"
+                                min="1"
+                                max="16"
+                                value={phaseConfig.n_races_finalina}
+                                onChange={(e) => setPhaseConfig((p) => ({ ...p, n_races_finalina: e.target.value }))}
+                                className="w-full rounded-2xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3 text-slate-900 dark:text-foreground outline-none transition focus:border-emerald-500"
+                                placeholder="es. 8"
                             />
                         </label>
                     </div>

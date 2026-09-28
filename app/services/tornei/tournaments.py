@@ -512,6 +512,7 @@ def create_tournament(
             "n_races_group_stage",
             "n_races_semifinals",
             "n_races_final",
+            "n_races_finalina",
             "include_locked_circuits",
         }
     )
@@ -565,6 +566,8 @@ def create_tournament(
             fd_updates["n_races_semifinals"] = tmentData.n_races_semifinals
         if tmentData.n_races_final is not None:
             fd_updates["n_races_final"] = tmentData.n_races_final
+        if tmentData.n_races_finalina is not None:
+            fd_updates["n_races_finalina"] = tmentData.n_races_finalina
         if fd_updates:
             new_tournament.format_data = {
                 **(new_tournament.format_data or {}),

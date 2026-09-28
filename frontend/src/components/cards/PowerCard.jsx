@@ -161,17 +161,6 @@ export default function PowerCard({
             </div>
           </div>
 
-          {!consumed && (
-            <div className={`rounded-2xl border p-3 ${t.infoBorder}`} style={{ background: t.infoBg }}>
-              <p className="text-[9px] font-black uppercase tracking-[0.3em] mb-1 text-slate-400">Effetto</p>
-              <p className="text-[11px] leading-relaxed text-slate-300">
-                {isMaster
-                  ? 'Scegli tra: scegli tu la pista della prossima gara, imponi personaggio e setup a un avversario, rendi te stesso immune a un Guscio Blu, oppure aggiungi una gara extra a fine torneo.'
-                  : 'Tutti gli avversari restano fermi per un giro mentre tu parti in vantaggio. Fino a 3 usi in Classifica Unica, 1 solo uso nei tornei a Gironi.'}
-              </p>
-            </div>
-          )}
-
           {consumed && (consumedInRaceId || consumedEffect) && (
             <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/50 p-3 space-y-1">
               {consumedEffect && (
