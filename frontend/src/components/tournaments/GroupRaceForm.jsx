@@ -61,9 +61,16 @@ const GroupRaceForm = ({
 
     const { results } = useAppData()
 
-    const emptySlots = () => Array.from({ length: slotCount }, (_, i) => ({
+    // Nessun personaggio preimpostato: uno slot senza pilota non ha un
+    // giocatore a cui riferire un "preferito", e characterId era preso per
+    // indice da activeGroupPlayers[i] (il pilota i-esimo del roster, non
+    // quello effettivamente scelto in questo slot) — mostrava un personaggio
+    // nel CharacterPicker anche prima che l'admin selezionasse un pilota.
+    // Il personaggio giusto viene assegnato da setSlotPlayer solo quando lo
+    // slot riceve davvero un pilota.
+    const emptySlots = () => Array.from({ length: slotCount }, () => ({
         playerId: '',
-        characterId: resolveFavoriteCharacterId(activeGroupPlayers[i], characters) ?? '',
+        characterId: '',
     }))
 
     const [slots, setSlots]               = useState(emptySlots)
