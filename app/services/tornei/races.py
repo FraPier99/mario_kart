@@ -14,6 +14,44 @@ def get_races(db: Session):
     return db.query(Race).order_by(Race.race_order.asc()).all()
 
 
+def _group_stage_race_roster_size(format_data: dict | None, phase: str | None, group_name: str | None) -> int | None:
+    """
+    Numero di piloti assegnati a un girone/batteria/fase di un torneo a
+    gironi, secondo format_data — usato per congelare Race.active_player_count
+    (vedi sotto) invece di lasciarlo ricadere su tournament.n_players (il
+    totale iscritti al torneo, quasi sempre molto più alto dei 2-4 piloti
+    che corrono davvero in quella gara). None se non risolvibile (girone/
+    batteria non ancora seedato, o group_name sconosciuto) — il chiamante
+    ricade su tournament.n_players in quel caso, comportamento invariato.
+    """
+    fd = format_data or {}
+    if not group_name:
+        return None
+    if phase == "group":
+        roster = (fd.get("groups") or {}).get(group_name)
+    elif phase == "semifinal":
+        roster = (fd.get("semifinals") or {}).get(group_name)
+    elif phase == "finals":
+        finals = fd.get("finals") or {}
+        if group_name == "top":
+            roster = finals.get("top")
+        elif group_name == "bottom":
+            roster = finals.get("bottom")
+        elif group_name.startswith("bottom_"):
+            # Batterie della Finalina quando la Consolazione supera
+            # MAX_GROUP_SIZE: il Race.group_name è "bottom_B1"/"bottom_B2"/…
+            # ma le chiavi in format_data.finals.bottom_heats sono nude
+            # ("B1"/"B2"/…, vedi _distribute_to_heats) — va tolto il
+            # prefisso "bottom_" per trovare la batteria giusta.
+            heat_key = group_name[len("bottom_"):]
+            roster = (finals.get("bottom_heats") or {}).get(heat_key)
+        else:
+            roster = None
+    else:
+        roster = None
+    return len(roster) if roster else None
+
+
 def create_race(db: Session, race_data: CreateRace):
 
     if race_data.is_duello and race_data.group_name:
@@ -82,14 +120,20 @@ def create_race(db: Session, race_data: CreateRace):
                     "possibile aggiungere gare alle batterie di semifinale."
                 )
 
-    # Congela il numero di giocatori attivi (non ritirati) al momento della
-    # creazione — vedi Race.active_player_count. Solo classic: group_stage ha
-    # un problema di punteggio pre-esistente e non correlato (le gare di
-    # girone punteggiano già su tournament.n_players invece che sui giocatori
-    # del singolo girone) che questa colonna non deve toccare — resta NULL e
-    # i punti di lettura ricadono su tournament.n_players come sempre.
+    # Congela il numero di piloti della gara al momento della creazione —
+    # vedi Race.active_player_count, letta da create_result/update_result
+    # (app/services/tornei/results.py) per scegliere la riga giusta di
+    # PUNTEGGI_CONFIG. Senza questo, ogni gara di girone/semifinale/finale
+    # ricadeva su tournament.n_players (il totale iscritti al torneo, es.
+    # 16) invece dei 2-4 piloti realmente in gara in quel girone — punti
+    # sistematicamente sbagliati per OGNI gara di un torneo a gironi mai
+    # giocata finora (bug pre-esistente, segnalato qui ma mai risolto).
     active_player_count = None
-    if tournament and tournament.tournament_format == "classic":
+    if tournament and tournament.tournament_format == "group_stage":
+        active_player_count = _group_stage_race_roster_size(
+            tournament.format_data, race_data.phase, race_data.group_name
+        )
+    elif tournament and tournament.tournament_format == "classic":
         withdrawn_count = (
             db.query(TournamentPlayer)
             .filter(

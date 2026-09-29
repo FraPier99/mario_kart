@@ -352,13 +352,22 @@ def _build_tournament_schedina_snapshot(
     # classifica usata per valutare i pronostici "Classifica generale" deve
     # invece essere quella già risolta (vedi get_classic_final_classifica),
     # altrimenti un pronostico esatto su una posizione decisa da un duello
-    # verrebbe segnato come errato.
+    # verrebbe segnato come errato. Stesso principio per i gironi:
+    # get_group_stage_overall_classifica combina Finale+Consolazione già
+    # risolte dai rispettivi spareggi podio — usare _get_leaderboard "grezza"
+    # sommava anche i punti di gironi/semifinali (fasi diverse, non la
+    # classifica finale) e ignorava i duelli, con lo stesso rischio di
+    # giudicare male un pronostico esatto.
     if tournament.tournament_format == "classic":
         from app.services.tornei.tournaments import get_classic_final_classifica
 
         classifica_ordinata = get_classic_final_classifica(db, tournament_id)
     else:
-        classifica_ordinata = [row.player_id for row in leaderboard]
+        from app.services.tornei.tournaments import get_group_stage_overall_classifica
+
+        classifica_ordinata = get_group_stage_overall_classifica(db, tournament_id) or [
+            row.player_id for row in leaderboard
+        ]
 
     if winner_id is None:
         return tournament, None, [], None
@@ -570,6 +579,9 @@ def _get_actual_tournament_winner(tournament: Tournament, leaderboard):
 
 
 def _get_last_id(leaderboard, withdrawn_ids: set[int] | None = None):
+    # Usata come fallback da schedine_deluxe.py (Guscio Blu group_stage)
+    # quando la Finale non è ancora stata generata (nessuna classifica
+    # generale risolvibile) — vedi settle_deluxe_schedine.
     if not leaderboard:
         return []
     # La soglia 1-vs-2 destinatari resta legata alla dimensione ORIGINALE del
@@ -804,15 +816,15 @@ def settle_tournament_schedine(db: Session, tournament_id: int):
         }
 
     # actual["classifica_ordinata"] è già l'ordine risolto rispetto agli
-    # eventuali duelli/spareggi (vedi _build_tournament_schedina_snapshot):
-    # va usato anche qui, altrimenti il Guscio Blu rischia di andare a chi
-    # risultava "ultimo"/"penultimo" prima della risoluzione di un duello
-    # sulle posizioni di coda.
+    # eventuali duelli/spareggi (vedi _build_tournament_schedina_snapshot,
+    # ora corretta anche per i gironi via get_group_stage_overall_classifica)
+    # — va usato per ENTRAMBI i formati, altrimenti il Guscio Blu rischia di
+    # andare a chi risultava "ultimo"/"penultimo" prima della risoluzione di
+    # un duello sulle posizioni di coda (per i gironi succedeva sempre,
+    # perché questo ramo ricadeva su _get_leaderboard grezza invece di
+    # riusare la classifica già risolta calcolata poche righe sopra).
     withdrawn_ids = _get_withdrawn_player_ids(db, tournament_id)
-    if tournament.tournament_format == "classic":
-        last_two_ids = _last_ids_from_final_order(actual["classifica_ordinata"], withdrawn_ids)
-    else:
-        last_two_ids = _get_last_id(_get_leaderboard(db, tournament_id), withdrawn_ids)
+    last_two_ids = _last_ids_from_final_order(actual["classifica_ordinata"], withdrawn_ids)
 
     for item in snapshot_rows:
         schedina = item["schedina"]

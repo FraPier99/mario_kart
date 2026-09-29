@@ -728,6 +728,7 @@ const TournamentDetail = () => {
                                 onRefresh={refresh}
                                 refreshing={loading}
                                 targetRaces={targetRacesForGroup(myGroup.groupName, tournament.format_data)}
+                                withdrawnPlayerIds={withdrawnPlayerIdSet}
                             />
                             <TournamentResolutionNotes tournament={tournament} phaseFilter={myGroup.phase} />
                             {myCircuitsView && (
@@ -770,6 +771,7 @@ const TournamentDetail = () => {
                                     onRefresh={refresh}
                                     refreshing={loading}
                                     targetRaces={targetRacesForGroup(myGroup.groupName, tournament.format_data)}
+                                    withdrawnPlayerIds={withdrawnPlayerIdSet}
                                 />
                                 {myCircuitsView && (
                                     <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} onRefresh={refresh} refreshing={loading} passEnabled={myCircuitsView.passEnabled} />

@@ -101,32 +101,18 @@ def _get_actual_classifiche_gironi(
     db: Session, tournament_id: int
 ) -> dict[str, list[int]]:
     """
-    Per ciascun girone della fase 1 (Race.phase='group'), la classifica completa
-    secondo _classifica_girone (punti, vittorie, podi, id), come lista di
-    player_id in ordine 1°→ultimo. Restituisce {} se le gare dei gironi non
+    Per ciascun girone della fase 1 (Race.phase='group'), la classifica
+    completa come lista di player_id in ordine 1°→ultimo, riordinata secondo
+    l'esito degli eventuali spareggi di qualificazione (_resolve_tie_with_
+    spareggio). Delegata a get_group_stage_classifiche: ordinare qui
+    direttamente via _classifica_girone (punti/vittorie/podi/id) ignorava lo
+    spareggio — stesso gotcha già corretto per la Finale, vedi
+    _get_actual_classifica_finale. Restituisce {} se le gare dei gironi non
     sono ancora state giocate.
     """
-    from app.services.tornei.tournaments import _classifica_girone
+    from app.services.tornei.tournaments import get_group_stage_classifiche
 
-    group_races = (
-        db.query(Race)
-        .filter(
-            Race.tournament_id == tournament_id,
-            Race.phase == "group",
-            Race.is_duello.is_(False),
-        )
-        .all()
-    )
-    races_by_group: dict[str, list[int]] = {}
-    for r in group_races:
-        races_by_group.setdefault(r.group_name, []).append(r.id)
-
-    classifiche: dict[str, list[int]] = {}
-    for group_name, race_ids in races_by_group.items():
-        classifica = _classifica_girone(db, race_ids)
-        if classifica:
-            classifiche[group_name] = [row["player_id"] for row in classifica]
-    return classifiche
+    return get_group_stage_classifiche(db, tournament_id).get("group", {})
 
 
 def _get_actual_winner_points(db: Session, tournament_id: int) -> int:

@@ -1498,6 +1498,7 @@ def _group_standings(
     phase: str,
     keys: list[str],
     cutoff: int = QUALIFY_PER_GROUP,
+    exclude_withdrawn: bool = False,
 ) -> tuple[dict[str, list[dict]], dict[str, list[int]]]:
     """
     Classifica per ciascun gruppo/batteria di una fase, dalle gare ufficiali
@@ -1507,8 +1508,31 @@ def _group_standings(
     da tutti i pareggiati: in tal caso riordina la classifica secondo il suo
     esito. Restituisce (classifiche, ties_non_risolti) — ties_non_risolti
     contiene solo i gruppi per cui serve ancora generare/giocare lo spareggio.
+
+    `exclude_withdrawn`: quando True, toglie dalla classifica i giocatori
+    ritirati (TournamentPlayer.withdrawn) PRIMA di ogni decisione di
+    qualificazione/pareggio — un ritirato non deve mai avanzare alla fase
+    successiva né vincere il torneo solo perché aveva già gare registrate
+    prima del ritiro (i suoi risultati restano comunque nel DB e continuano a
+    valere per gli AVVERSARI che hanno corso con lui). Il default False resta
+    per i punti di lettura puramente informativi (classifica mostrata in UI,
+    note di risoluzione spareggio), dove il ritirato deve restare visibile —
+    solo chi decide chi avanza (generate_group_stage_finals, get_group_stage_ties)
+    passa True.
     """
     from app.models import Race
+
+    withdrawn_ids: set[int] = set()
+    if exclude_withdrawn:
+        from app.models import TournamentPlayer
+
+        withdrawn_ids = {
+            row.player_id
+            for row in db.query(TournamentPlayer.player_id).filter(
+                TournamentPlayer.tournament_id == tournament_id,
+                TournamentPlayer.withdrawn.is_(True),
+            )
+        }
 
     gare = (
         db.query(Race)
@@ -1531,6 +1555,8 @@ def _group_standings(
         if not race_ids:
             raise ValueError(f"Manca almeno una gara per '{key}'")
         classifica = _classifica_girone(db, race_ids)
+        if withdrawn_ids:
+            classifica = [row for row in classifica if row["player_id"] not in withdrawn_ids]
         if len(classifica) < 2:
             raise ValueError(
                 f"Servono almeno 2 classificati in '{key}' per avanzare di fase"
@@ -1732,7 +1758,7 @@ def generate_group_stage_finals(
         }
 
     # ── Classifica gironi + qualificati/consolazione ────────────────────────────
-    classifiche, ties = _group_standings(db, tournament_id, "group", group_keys)
+    classifiche, ties = _group_standings(db, tournament_id, "group", group_keys, exclude_withdrawn=True)
 
     if ties:
         gironi = ", ".join(f"girone {k}" for k in ties.keys())
@@ -1843,7 +1869,7 @@ def generate_group_stage_finals(
     # Semifinali già seedate → leggi i risultati e componi la Finale (Final 4)
     semi_keys = _semifinal_keys_from_format_data(fd)
     semi_standings, semi_ties = _group_standings(
-        db, tournament_id, "semifinal", semi_keys
+        db, tournament_id, "semifinal", semi_keys, exclude_withdrawn=True
     )
     if semi_ties:
         batterie = ", ".join(f"batteria {k}" for k in semi_ties.keys())
@@ -1940,7 +1966,7 @@ def get_group_stage_ties(db: Session, tournament_id: int) -> dict:
     semifinals = fd.get("semifinals") or {}
     if semifinals:
         semi_keys = _semifinal_keys_from_format_data(fd)
-        semi_standings, ties = _group_standings(db, tournament_id, "semifinal", semi_keys)
+        semi_standings, ties = _group_standings(db, tournament_id, "semifinal", semi_keys, exclude_withdrawn=True)
         if not ties:
             # Nessun pareggio DENTRO una batteria: controlla anche il confine
             # dell'ultimo posto Finale TRA batterie diverse (vedi
@@ -1952,7 +1978,7 @@ def get_group_stage_ties(db: Session, tournament_id: int) -> dict:
         return {"phase": "semifinal", "ties": ties}
 
     group_keys = sorted(groups_seed.keys(), key=lambda k: int(k))
-    _, ties = _group_standings(db, tournament_id, "group", group_keys)
+    _, ties = _group_standings(db, tournament_id, "group", group_keys, exclude_withdrawn=True)
     return {"phase": "group", "ties": ties}
 
 

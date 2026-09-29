@@ -86,7 +86,7 @@ function computeGroupStandings(racesByGroup, results, playerMap) {
 }
 
 // Singola card di classifica per un gruppo (esportata per riuso, es. sezione "Classifica Finale")
-export const GroupCard = ({ groupKey, races, results, playerMap, seedPlayerIds = [], highlightPlayerId = null, resolvedOrder = null, onRefresh = null, refreshing = false, targetRaces = null }) => {
+export const GroupCard = ({ groupKey, races, results, playerMap, seedPlayerIds = [], highlightPlayerId = null, resolvedOrder = null, onRefresh = null, refreshing = false, targetRaces = null, withdrawnPlayerIds = null }) => {
     const label = groupLabel(groupKey)
     const color = groupColor(groupKey)
     const col = COLOR_CLASSES[color] ?? COLOR_CLASSES.slate
@@ -141,7 +141,12 @@ export const GroupCard = ({ groupKey, races, results, playerMap, seedPlayerIds =
                                         : <div className="flex h-full w-full items-center justify-center text-[10px] font-black">{p?.nickname?.charAt(0)?.toUpperCase() ?? '?'}</div>
                                     }
                                 </div>
-                                <span className="flex-1 text-xs font-black">{p?.nickname ?? `#${pid}`}</span>
+                                <span className="flex-1 flex items-center gap-1.5 text-xs font-black">
+                                    {p?.nickname ?? `#${pid}`}
+                                    {withdrawnPlayerIds?.has(pid) && (
+                                        <span className="shrink-0 rounded-full bg-rose-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-white">Ritirato</span>
+                                    )}
+                                </span>
                                 <span className="text-[10px] italic opacity-60">in attesa</span>
                             </div>
                         )
@@ -179,6 +184,9 @@ export const GroupCard = ({ groupKey, races, results, playerMap, seedPlayerIds =
                                         {row.player.nickname}
                                         {isFirst && <Crown size={10} className="inline ml-1 text-amber-500" />}
                                         {isMe && <span className="ml-1.5 rounded-full bg-amber-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-white">Tu</span>}
+                                        {withdrawnPlayerIds?.has(row.playerId) && (
+                                            <span className="ml-1.5 rounded-full bg-rose-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-white">Ritirato</span>
+                                        )}
                                     </span>
 
                                     {/* Stats */}
@@ -210,6 +218,17 @@ const GroupPlancia = ({ tournament, players, results, highlightPlayerId = null }
     const playerMap = useMemo(
         () => new Map((players ?? []).map((p) => [p.id, p])),
         [players]
+    )
+
+    // Un giocatore ritirato continua a contare nella classifica mostrata
+    // (i suoi risultati restano validi, vedi set_player_withdrawal lato
+    // backend) ma va segnalato visivamente — prima appariva come un pilota
+    // normale, indistinguibile da chi è ancora in corsa per la
+    // qualificazione, mentre altrove nell'app (LeaderboardTable,
+    // OverallClassificaCard, WithdrawalManager) è sempre evidenziato.
+    const withdrawnPlayerIds = useMemo(
+        () => new Set((tournament?.withdrawn_player_ids ?? []).map(Number)),
+        [tournament?.withdrawn_player_ids]
     )
 
     // Classifica già risolta rispetto agli eventuali spareggi di
@@ -313,6 +332,7 @@ const GroupPlancia = ({ tournament, players, results, highlightPlayerId = null }
                             highlightPlayerId={highlightPlayerId}
                             resolvedOrder={resolvedClassifiche.group?.[key]}
                             targetRaces={targetRacesForGroup(key, tournament.format_data)}
+                            withdrawnPlayerIds={withdrawnPlayerIds}
                         />
                     ))}
                 </div>
@@ -337,6 +357,7 @@ const GroupPlancia = ({ tournament, players, results, highlightPlayerId = null }
                                 highlightPlayerId={highlightPlayerId}
                                 resolvedOrder={resolvedClassifiche.semifinal?.[key]}
                                 targetRaces={targetRacesForGroup(key, tournament.format_data)}
+                                withdrawnPlayerIds={withdrawnPlayerIds}
                             />
                         ))}
                     </div>
@@ -358,6 +379,7 @@ const GroupPlancia = ({ tournament, players, results, highlightPlayerId = null }
                             seedPlayerIds={seededFinals.top ?? []}
                             highlightPlayerId={highlightPlayerId}
                             targetRaces={targetRacesForGroup('top', tournament.format_data)}
+                            withdrawnPlayerIds={withdrawnPlayerIds}
                         />
                         {/* Consolazione: una sola card "bottom" se entra in 4, altrimenti
                             una card per batteria ("bottom_B1","bottom_B2",…) — la classifica
@@ -373,6 +395,7 @@ const GroupPlancia = ({ tournament, players, results, highlightPlayerId = null }
                                 seedPlayerIds={key === 'bottom' ? (seededFinals.bottom ?? []) : (seededBottomHeats[key.slice('bottom_'.length)] ?? [])}
                                 highlightPlayerId={highlightPlayerId}
                                 targetRaces={targetRacesForGroup(key, tournament.format_data)}
+                                withdrawnPlayerIds={withdrawnPlayerIds}
                             />
                         ))}
                     </div>
