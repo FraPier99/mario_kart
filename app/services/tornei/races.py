@@ -50,6 +50,38 @@ def create_race(db: Session, race_data: CreateRace):
             if block and block.get("order") is not None:
                 raise ValueError(f"Duello già risolto per {race_data.group_name}")
 
+    tournament = db.query(Tournament).filter(Tournament.id == race_data.tournament_id).first()
+
+    # Un girone completato (format_data.completed_groups) o una batteria di
+    # semifinale già consumata dalla Finale (format_data.finals.top popolato)
+    # non devono più accettare nuove gare: altrimenti i punti di una gara
+    # aggiunta dopo la chiusura continuano a contare nella classifica di
+    # quel girone/batteria (letta da _group_standings/_classifica_girone),
+    # pur non essendo più raggiungibile dal form di inserimento normale —
+    # un bug osservato in produzione (semifinale chiusa, Finale generata,
+    # ma gare ancora inseribili nella batteria di semifinale). Il duello di
+    # spareggio per risolvere un pareggio di qualificazione usa sempre un
+    # group_name diverso (es. "duello_podio_2_3"), mai la chiave nuda del
+    # girone/batteria, quindi non è mai bloccato da questo controllo — e
+    # comunque deve risolversi PRIMA che il girone/batteria venga chiuso o
+    # che la Finale venga generata (generate_group_stage_finals rifiuta di
+    # procedere in presenza di pareggi non risolti).
+    if tournament and tournament.tournament_format == "group_stage" and not race_data.is_duello:
+        fd = tournament.format_data or {}
+        if race_data.phase == "group":
+            completed_groups = set(fd.get("completed_groups") or [])
+            if race_data.group_name in completed_groups:
+                raise ValueError(
+                    f"Il girone {race_data.group_name} è già stato completato: "
+                    "non è più possibile aggiungere gare. Riapri il girone se serve modificarlo."
+                )
+        elif race_data.phase == "semifinal":
+            if (fd.get("finals") or {}).get("top"):
+                raise ValueError(
+                    "La Finale è già stata generata dalle semifinali: non è più "
+                    "possibile aggiungere gare alle batterie di semifinale."
+                )
+
     # Congela il numero di giocatori attivi (non ritirati) al momento della
     # creazione — vedi Race.active_player_count. Solo classic: group_stage ha
     # un problema di punteggio pre-esistente e non correlato (le gare di
@@ -57,7 +89,6 @@ def create_race(db: Session, race_data: CreateRace):
     # del singolo girone) che questa colonna non deve toccare — resta NULL e
     # i punti di lettura ricadono su tournament.n_players come sempre.
     active_player_count = None
-    tournament = db.query(Tournament).filter(Tournament.id == race_data.tournament_id).first()
     if tournament and tournament.tournament_format == "classic":
         withdrawn_count = (
             db.query(TournamentPlayer)

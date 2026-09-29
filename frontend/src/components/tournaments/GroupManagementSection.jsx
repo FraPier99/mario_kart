@@ -1114,6 +1114,14 @@ const GroupManagementSection = ({
                                     results={results}
                                     phase="semifinal"
                                     groups={semiKeys}
+                                    // Una volta generata la Finale dalle semifinali
+                                    // (finalsReady), TUTTE le batterie sono consumate
+                                    // insieme (generate_group_stage_finals non lavora
+                                    // batteria per batteria) — a differenza dei gironi
+                                    // non c'è un "completed" per singola batteria, si
+                                    // bloccano tutte in blocco riusando lo stesso
+                                    // meccanismo/messaggio di completedGroups.
+                                    completedGroups={finalsReady ? new Set(semiKeys) : new Set()}
                                     onRefresh={onRefresh}
                                 />
                             )}

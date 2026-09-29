@@ -165,9 +165,14 @@ def insert_race(
             detail=f"Database integrity error: {detail_msg}",
         )
     except ValueError as e:
+        # Niente prefisso fisso "Invalid numeric value": ValueError è la
+        # convenzione generale per i fallimenti "attesi" lato service (vedi
+        # app/CLAUDE.md), non solo errori di parsing numerico — create_race
+        # la solleva anche per un girone/batteria già chiuso, e un prefisso
+        # fuorviante renderebbe quel messaggio incomprensibile in un toast.
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid numeric value: {str(e)}",
+            detail=str(e),
         )
 
 
