@@ -44,7 +44,7 @@ const Hero = () => {
     // valgono solo se il torneo più recente in assoluto è concluso, quindi sono
     // spesso null mentre c'è un torneo in corso. Cerchiamo invece il primo torneo
     // con un vincitore nell'elenco già ordinato per data desc.
-    const lastChampionTournament = detailedTournaments.find((t) => t.winner_id) ?? null
+    const lastChampionTournament = detailedTournaments.find((t) => t.winner_id && !t.is_friendly) ?? null
     const lastChampion = lastChampionTournament?.winner ?? null
     const lastChampionStats = lastChampion ? (statsByPlayerId.get(lastChampion.id) ?? null) : null
     const lastChampionGame = lastChampionTournament ? games.find((g) => g.id === lastChampionTournament.game_id) : null

@@ -69,7 +69,12 @@ export function SocketProvider({ children }) {
             try {
                 const res = await tournamentsApi.list()
                 const concluded = (res.data ?? [])
-                    .filter((t) => t.status === 'concluso' && t.winner_id)
+                    // I tornei amichevoli non hanno un vincitore ufficiale da
+                    // festeggiare (triggerCelebration li ignora comunque, vedi
+                    // CelebrationContext.jsx) — escluderli qui evita di
+                    // "consumare" lo slot dell'ultimo torneo concluso quando
+                    // ce n'è uno vero più vecchio ancora non festeggiato.
+                    .filter((t) => t.status === 'concluso' && t.winner_id && !t.is_friendly)
                     .sort((a, b) => new Date(b.date ?? 0) - new Date(a.date ?? 0))
 
                 const latest = concluded[0]
@@ -95,7 +100,15 @@ export function SocketProvider({ children }) {
                         playerId: p.id, nickname: p.nickname, points: p.total_point ?? 0,
                     }))
                 }
-                if (active) triggerRef.current(leader, standings, { id: latest.id, name: latest.name })
+                // celebration_text va propagato: è lo snapshot dei testi
+                // configurati dal superadmin, congelato al momento della
+                // decreta-vincitore (vedi WinnerFinalizeCard.jsx). Ometterlo
+                // qui forzava GlobalCelebrationOverlay a rifare una fetch
+                // live (loadOverlayTexts) che, se lenta/fallita o senza
+                // configurazione per quel gioco, ripiegava silenziosamente
+                // sui testi di default hardcoded invece di quelli del
+                // superadmin.
+                if (active) triggerRef.current(leader, standings, { id: latest.id, name: latest.name, celebration_text: latest.celebration_text })
                 return true
             } catch { /* no concluded tournaments */ }
             return false

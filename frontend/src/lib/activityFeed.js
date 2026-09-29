@@ -3,8 +3,8 @@ import { detectTournamentMilestones } from '@/lib/milestones'
 // Feed "cosa è successo di recente nella lega" — nessuna chiamata di rete,
 // tutto derivato da detailedTournaments/statsByPlayerId già in
 // AppDataContext (stesso principio di milestones.js). I tornei amichevoli
-// restano visibili come eventi "iniziato/concluso" ma sono esclusi da
-// traguardi e streak, per coerenza con badge/classifiche/statistiche che
+// sono esclusi dal feed (eventi "iniziato/vinto" compresi, non solo
+// traguardi e streak), per coerenza con badge/classifiche/statistiche che
 // li ignorano ovunque nell'app.
 //
 // Ogni evento separa `primary` (il giocatore protagonista, reso in
@@ -30,6 +30,7 @@ export function buildActivityFeed({ detailedTournaments, statsByPlayerId, games,
     const events = []
 
     detailedTournaments.forEach((t) => {
+        if (t.is_friendly) return
         const gameName = gameNameById.get(t.game_id)
 
         if (t.status === 'concluso' && t.winner_id && t.winner) {
@@ -43,38 +44,36 @@ export function buildActivityFeed({ detailedTournaments, statsByPlayerId, games,
                 tournamentId: t.id,
             })
 
-            if (!t.is_friendly) {
-                const milestones = detectTournamentMilestones({
-                    tournament: t,
-                    standings: t.standings ?? [],
-                    statsByPlayerId,
-                    detailedTournaments,
-                    gameName,
-                })
+            const milestones = detectTournamentMilestones({
+                tournament: t,
+                standings: t.standings ?? [],
+                statsByPlayerId,
+                detailedTournaments,
+                gameName,
+            })
 
-                // Più giocatori possono raggiungere lo STESSO traguardo nello
-                // stesso torneo (es. tutti al loro primo torneo) — un'unica
-                // riga per traguardo invece di una a testa, per non allungare
-                // il feed inutilmente.
-                const byMilestoneKey = new Map()
-                milestones.forEach((m) => {
-                    if (!byMilestoneKey.has(m.key)) byMilestoneKey.set(m.key, { label: m.label, players: [] })
-                    byMilestoneKey.get(m.key).players.push(m)
-                })
+            // Più giocatori possono raggiungere lo STESSO traguardo nello
+            // stesso torneo (es. tutti al loro primo torneo) — un'unica
+            // riga per traguardo invece di una a testa, per non allungare
+            // il feed inutilmente.
+            const byMilestoneKey = new Map()
+            milestones.forEach((m) => {
+                if (!byMilestoneKey.has(m.key)) byMilestoneKey.set(m.key, { label: m.label, players: [] })
+                byMilestoneKey.get(m.key).players.push(m)
+            })
 
-                byMilestoneKey.forEach((group, key) => {
-                    const singlePlayer = group.players.length === 1 ? group.players[0] : null
-                    events.push({
-                        id: `milestone-${t.id}-${key}`,
-                        date: t.date,
-                        type: 'milestone',
-                        avatar: singlePlayer?.img_url ?? null,
-                        primary: joinNames(group.players.map((m) => m.nickname)),
-                        secondary: group.label,
-                        tournamentId: t.id,
-                    })
+            byMilestoneKey.forEach((group, key) => {
+                const singlePlayer = group.players.length === 1 ? group.players[0] : null
+                events.push({
+                    id: `milestone-${t.id}-${key}`,
+                    date: t.date,
+                    type: 'milestone',
+                    avatar: singlePlayer?.img_url ?? null,
+                    primary: joinNames(group.players.map((m) => m.nickname)),
+                    secondary: group.label,
+                    tournamentId: t.id,
                 })
-            }
+            })
         } else if (t.status === 'in_corso') {
             events.push({
                 id: `started-${t.id}`,
@@ -82,7 +81,7 @@ export function buildActivityFeed({ detailedTournaments, statsByPlayerId, games,
                 type: 'started',
                 avatar: null,
                 primary: null,
-                secondary: `È iniziato ${t.name}${t.is_friendly ? ' (Amichevole)' : ''}`,
+                secondary: `È iniziato ${t.name}`,
                 tournamentId: t.id,
             })
         }
