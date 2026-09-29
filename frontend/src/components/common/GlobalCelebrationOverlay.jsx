@@ -8,6 +8,7 @@
         setCelebrationMuted,
         unlockCelebrationAudio,
         stopWav,
+        preloadCelebrationSounds,
     } from '@/lib/celebrationSound'
     import { preloadMkdsCharacterVoiceByName } from '@/lib/mkdsSounds'
     import { preloadCharacterVoice as preloadMk8dCharacterVoiceByName } from '@/lib/mk8dSounds'
@@ -63,6 +64,13 @@
     const charactersByIdRef = useRef(charactersById)
     const leaderCharacterId = leader?.lastCharacterId ?? leader?.favoriteCharacterId
     const engineLoopRef = useRef(null)
+    // Precarica subito i WAV della fase (motore, esplosione, countdown,
+    // ecc.) — senza questo, ogni suono partiva da un fetch di rete avviato
+    // solo al momento esatto in cui la fase lo richiedeva, percepito come
+    // ritardo o, se il cambio fase arrivava prima, suono mai sentito
+    // (stesso problema già risolto per le voci dei personaggi, vedi
+    // l'useEffect di preload più sotto).
+    useEffect(() => { preloadCelebrationSounds(tournament?.game_id) }, [tournament?.game_id])
         const [phase, setPhase] = useState('idle')
         const [muted, setMuted] = useState(() => isCelebrationMuted())
         const [revealPlayer, setRevealPlayer] = useState(null)

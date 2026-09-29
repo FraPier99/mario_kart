@@ -86,6 +86,34 @@ const canPlay = () => {
 
 const masterVolume = () => getCelebrationVolume()
 
+// Precarica i file WAV dell'overlay (motore, esplosione, countdown, ecc.)
+// prima ancora che una fase li richieda: senza questo, ogni suono partiva
+// da un `new Audio(path)` costruito ESATTAMENTE al momento della fase, il
+// cui `.play()` doveva prima aspettare il fetch della rete — percepito come
+// suono "in ritardo" o, se il fetch non faceva in tempo prima del cambio
+// fase successiva, "mai sentito". Stesso principio già usato per le voci
+// dei personaggi (vedi preloadMkdsCharacterVoiceByName/preloadCharacterVoice
+// in mkdsSounds.js/mk8dSounds.js) — qui basta innescare il fetch in
+// anticipo: una volta nella cache HTTP del browser, un successivo
+// `new Audio(path)` in playWav/playWavLoop la riusa senza rete.
+const preloadedPaths = new Set()
+const preloadWav = (path) => {
+    if (preloadedPaths.has(path)) return
+    preloadedPaths.add(path)
+    try {
+        const audio = new Audio(path)
+        audio.preload = 'auto'
+        audio.load()
+    } catch {
+        // silent fallback: playWav ritenta comunque al momento del play
+    }
+}
+
+export const preloadCelebrationSounds = (gameId) => {
+    const paths = gameId === 2 ? WAV_PATHS_MK8D : WAV_PATHS
+    Object.values(paths).forEach(preloadWav)
+}
+
 const playWav = (path) => {
     if (isCelebrationMuted()) return
     unlockCelebrationAudio()

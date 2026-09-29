@@ -322,7 +322,8 @@ const PhaseRaceEntry = ({ tournament, players, circuits, characters, results, ph
 }
 
 // ─── Sub-componente: Avanza alla fase successiva (gironi→semi/finale, semi→finale) ─
-const PhaseAdvanceCard = ({ tournament, onRefresh, phase }) => {
+const PhaseAdvanceCard = ({ tournament, phase }) => {
+    const { patchTournament } = useAppData()
     const [loading, setLoading] = useState(false)
     const [confirm, setConfirm] = useState(null) // null | { type: 'incomplete' } | { type: 'ties' }
     const [ties, setTies] = useState(null)
@@ -386,7 +387,12 @@ const PhaseAdvanceCard = ({ tournament, onRefresh, phase }) => {
         try {
             const res = await tournamentsApi.generateFinals(tournament.id)
             toast.success('Fase aggiornata!', { description: res.data.messaggio })
-            await onRefresh()
+            // Niente onRefresh() qui: generate-finals tocca solo
+            // format_data (semifinali/finale/consolazione), non le gare —
+            // un refresh() completo (10 endpoint in parallelo) per questo
+            // cambio è il motivo principale della lentezza percepita
+            // nell'avanzamento di fase. patchTournament basta.
+            patchTournament(tournament.id, { format_data: res.data.format_data })
         } catch (err) {
             toast.error('Errore avanzamento fase', { description: getApiErrorMessage(err) })
         } finally {
@@ -749,6 +755,7 @@ const GroupManagementSection = ({
     onFinalized,
     onReplayCelebration,
 }) => {
+    const { patchTournament } = useAppData()
     const groupKeys = useMemo(() => groupKeysFromFormatData(tournament.format_data), [tournament.format_data])
     const semiKeys = useMemo(() => semifinalKeysFromFormatData(tournament.format_data), [tournament.format_data])
     const consolationHeatKeys = useMemo(() => consolationHeatKeysFromFormatData(tournament.format_data), [tournament.format_data])
@@ -814,9 +821,15 @@ const GroupManagementSection = ({
     const handleReopenGroupClick = async (groupKey) => {
         setReopeningGroup(groupKey)
         try {
-            await tournamentsApi.reopenGroup(tournament.id, groupKey)
+            const res = await tournamentsApi.reopenGroup(tournament.id, groupKey)
             toast.success(`${groupLabel(groupKey)} riaperto`)
-            await onRefresh()
+            // Niente onRefresh() qui: reopen-group tocca solo format_data,
+            // un refresh() completo (10 endpoint in parallelo, vedi
+            // AppDataContext.jsx) per un cambio così piccolo è il motivo
+            // principale della lentezza percepita nella chiusura/riapertura
+            // gironi — patchTournament basta, stesso principio già usato
+            // per pass-circuits qui sopra.
+            patchTournament(tournament.id, { format_data: res.data.format_data })
         } catch (err) {
             toast.error('Errore', { description: getApiErrorMessage(err) })
         } finally {
@@ -850,9 +863,10 @@ const GroupManagementSection = ({
     const doCompleteGroup = async (groupKey) => {
         setCompletingGroup(groupKey)
         try {
-            await tournamentsApi.completeGroup(tournament.id, groupKey)
+            const res = await tournamentsApi.completeGroup(tournament.id, groupKey)
             toast.success(`${groupLabel(groupKey)} completato!`)
-            await onRefresh()
+            // Niente onRefresh() qui: stesso motivo di handleReopenGroupClick.
+            patchTournament(tournament.id, { format_data: res.data.format_data })
         } catch (err) {
             toast.error('Errore', { description: getApiErrorMessage(err) })
         } finally {

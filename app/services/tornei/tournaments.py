@@ -1631,7 +1631,11 @@ def complete_group_stage_group(db: Session, tournament_id: int, group_key: str) 
         completed.append(group_key)
         _persist_format_data(db, torneo, completed_groups=completed)
 
-    return {"completed_groups": completed}
+    # format_data incluso nella risposta: il frontend lo usa per un
+    # aggiornamento locale immediato (patchTournament) invece di dover
+    # rifare un refresh() completo di tutto il dataset dell'app solo per
+    # riflettere la chiusura di un girone — vedi GroupManagementSection.jsx.
+    return {"completed_groups": completed, "format_data": torneo.format_data}
 
 
 def reopen_group_stage_group(db: Session, tournament_id: int, group_key: str) -> dict:
@@ -1660,7 +1664,9 @@ def reopen_group_stage_group(db: Session, tournament_id: int, group_key: str) ->
         completed.remove(group_key)
         _persist_format_data(db, torneo, completed_groups=completed)
 
-    return {"completed_groups": completed}
+    # Stesso motivo di complete_group_stage_group: format_data nella risposta
+    # per un patchTournament locale invece di un refresh() completo.
+    return {"completed_groups": completed, "format_data": torneo.format_data}
 
 
 def generate_group_stage_finals(
@@ -1722,6 +1728,7 @@ def generate_group_stage_finals(
                 "bottom": finals.get("bottom", []),
             },
             "messaggio": "La finale è già stata generata.",
+            "format_data": torneo.format_data,
         }
 
     # ── Classifica gironi + qualificati/consolazione ────────────────────────────
@@ -1778,6 +1785,7 @@ def generate_group_stage_finals(
                 + ("'/'bottom_B1'/'bottom_B2'/…" if bottom_heats else "")
                 + "."
             ),
+            "format_data": torneo.format_data,
         }
 
     # ── 2b. Servono le semifinali ───────────────────────────────────────────────
@@ -1829,6 +1837,7 @@ def generate_group_stage_finals(
                 "Crea le gare con phase='semifinal' e group_name='S1'/'S2'/…, "
                 "poi rilancia per comporre la Finale."
             ),
+            "format_data": torneo.format_data,
         }
 
     # Semifinali già seedate → leggi i risultati e componi la Finale (Final 4)
@@ -1903,6 +1912,7 @@ def generate_group_stage_finals(
             + ("'/'bottom_B1'/'bottom_B2'/…" if bottom_heats else "")
             + "."
         ),
+        "format_data": torneo.format_data,
     }
 
 
