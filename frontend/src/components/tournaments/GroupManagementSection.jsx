@@ -775,6 +775,26 @@ const GroupManagementSection = ({
     )
     const allGroupsComplete = groupKeys.length > 0 && groupKeys.every((k) => completedGroups.has(k))
 
+    // ── Batterie della fase finale completate ───────────────────────────────
+    // Stesso principio di completedGroups, esteso alla Finale/Consolazione:
+    // prima non esisteva alcun modo di "chiudere" una batteria finale, quindi
+    // il form di inserimento non si bloccava mai e "Decreta Vincitore"/
+    // "Decreta Vincitore Finalina" restavano cliccabili anche con batterie
+    // ancora aperte (la classifica poteva ancora cambiare sotto la decreta).
+    const completedFinalsGroups = useMemo(
+        () => new Set(tournament.format_data?.completed_finals_groups ?? []),
+        [tournament.format_data]
+    )
+    // Tutte le batterie attese dato l'attuale format_data.finals — stessa
+    // espressione già usata per il prop `groups` di PhaseRaceEntry più sotto.
+    const allFinalsKeys = useMemo(
+        () => (finalsReady ? (consolationHeatKeys.length > 0 ? ['top', ...consolationHeatKeys.map((k) => `bottom_${k}`)] : ['top', 'bottom']) : []),
+        [finalsReady, consolationHeatKeys]
+    )
+    const allBottomKeys = useMemo(() => allFinalsKeys.filter((k) => k !== 'top'), [allFinalsKeys])
+    const allFinalsComplete = allFinalsKeys.length > 0 && allFinalsKeys.every((k) => completedFinalsGroups.has(k))
+    const allBottomComplete = allBottomKeys.length > 0 && allBottomKeys.every((k) => completedFinalsGroups.has(k))
+
     // ── Configurazione fasi (n_races per fase) ────────────────────────────
     const [phaseConfig, setPhaseConfig] = useState(() => ({
         n_races_group_stage: tournament.format_data?.n_races_group_stage ?? '',
@@ -817,6 +837,10 @@ const GroupManagementSection = ({
     const [completingGroup, setCompletingGroup] = useState(null)
     const [reopeningGroup, setReopeningGroup] = useState(null)
     const [confirmCompleteGroup, setConfirmCompleteGroup] = useState(null) // { groupKey, incompleteCount? }
+
+    // ── Per-batteria completion (Finale/Consolazione) ───────────────────────
+    const [completingFinalsBattery, setCompletingFinalsBattery] = useState(null)
+    const [reopeningFinalsBattery, setReopeningFinalsBattery] = useState(null)
 
     const handleReopenGroupClick = async (groupKey) => {
         setReopeningGroup(groupKey)
@@ -871,6 +895,32 @@ const GroupManagementSection = ({
             toast.error('Errore', { description: getApiErrorMessage(err) })
         } finally {
             setCompletingGroup(null)
+        }
+    }
+
+    const handleCompleteFinalsBatteryClick = async (groupKey) => {
+        setCompletingFinalsBattery(groupKey)
+        try {
+            const res = await tournamentsApi.completeFinalsBattery(tournament.id, groupKey)
+            toast.success(`${groupLabel(groupKey)} completata!`)
+            patchTournament(tournament.id, { format_data: res.data.format_data })
+        } catch (err) {
+            toast.error('Errore', { description: getApiErrorMessage(err) })
+        } finally {
+            setCompletingFinalsBattery(null)
+        }
+    }
+
+    const handleReopenFinalsBatteryClick = async (groupKey) => {
+        setReopeningFinalsBattery(groupKey)
+        try {
+            const res = await tournamentsApi.reopenFinalsBattery(tournament.id, groupKey)
+            toast.success(`${groupLabel(groupKey)} riaperta`)
+            patchTournament(tournament.id, { format_data: res.data.format_data })
+        } catch (err) {
+            toast.error('Errore', { description: getApiErrorMessage(err) })
+        } finally {
+            setReopeningFinalsBattery(null)
         }
     }
 
@@ -1156,11 +1206,70 @@ const GroupManagementSection = ({
                                 characters={characters}
                                 results={results}
                                 phase="finals"
-                                groups={consolationHeatKeys.length > 0 ? ['top', ...consolationHeatKeys.map((k) => `bottom_${k}`)] : ['top', 'bottom']}
+                                groups={allFinalsKeys}
+                                completedGroups={completedFinalsGroups}
                                 onRefresh={onRefresh}
                             />
                         )}
-                        <ConsolazioneCard tournament={tournament} players={players} onRefresh={onRefresh} />
+
+                        {/* Per-batteria: pulsante "Completa batteria" — prima non esisteva
+                            alcun modo di chiudere Finale/Consolazione: il form restava
+                            sempre aperto (anche dopo "Decreta Vincitore") e "Decreta
+                            Vincitore"/"Decreta Vincitore Finalina" (sotto) erano sempre
+                            cliccabili qualunque batteria si stesse visualizzando, dando
+                            l'impressione di azioni "duplicate per ogni batteria" invece
+                            che gate globali su tutte quante. */}
+                        {allFinalsKeys.length > 0 && (
+                            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                                {allFinalsKeys.map((key) => {
+                                    const isCompleted = completedFinalsGroups.has(key)
+                                    return (
+                                        <div key={key} className={`rounded-2xl border p-4 space-y-3 ${isCompleted ? 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/60 dark:bg-emerald-900/10' : 'border-slate-200 dark:border-border bg-white dark:bg-card'}`}>
+                                            <div className="flex items-center justify-between gap-2">
+                                                <p className={`text-xs font-black uppercase tracking-widest ${isCompleted ? 'text-emerald-600' : 'text-slate-500 dark:text-muted-foreground'}`}>
+                                                    {groupLabel(key)}
+                                                </p>
+                                                {isCompleted && (
+                                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                                                        <CheckCircle2 size={11} /> Completata
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {!isCompleted && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleCompleteFinalsBatteryClick(key)}
+                                                    disabled={completingFinalsBattery === key}
+                                                    className="w-full flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white transition active:scale-95"
+                                                >
+                                                    {completingFinalsBattery === key
+                                                        ? <><Loader2 size={13} className="animate-spin" /> Completamento...</>
+                                                        : <><Lock size={13} /> Completa batteria</>
+                                                    }
+                                                </button>
+                                            )}
+                                            {/* Riapertura permessa sempre finché il torneo non è
+                                                concluso: a differenza dei gironi non c'è una fase
+                                                successiva che la riapertura potrebbe rendere
+                                                incoerente. */}
+                                            {isCompleted && !tournament.winner_id && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleReopenFinalsBatteryClick(key)}
+                                                    disabled={reopeningFinalsBattery === key}
+                                                    className="w-full flex items-center justify-center gap-2 rounded-2xl border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-900/10 hover:bg-amber-100 dark:hover:bg-amber-900/20 disabled:opacity-60 disabled:cursor-not-allowed px-4 py-2.5 text-xs font-black uppercase tracking-widest text-amber-700 dark:text-amber-300 transition active:scale-95"
+                                                >
+                                                    {reopeningFinalsBattery === key
+                                                        ? <><Loader2 size={13} className="animate-spin" /> Riapertura...</>
+                                                        : <><Unlock size={13} /> Riapri batteria</>
+                                                    }
+                                                </button>
+                                            )}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        )}
 
                         {/* Spareggi podio di Finale (Final 4): 1°/2° e 3°/4° posto */}
                         <FinalsPodiumDuelCard tournament={tournament} players={players} circuits={circuits} characters={characters} onRefresh={onRefresh} />
@@ -1171,10 +1280,38 @@ const GroupManagementSection = ({
                         {/* Note automatiche sulla Finale — gli esiti di gironi/semifinali non sono rilevanti qui */}
                         <TournamentResolutionNotes tournament={tournament} phaseFilter="finals" />
 
-                        {/* Decreta vincitore: controlla che Finale e Consolazione non abbiano
-                            spareggi aperti, altrimenti conclude il torneo, salda le schedine
-                            (Card premio incluse) e fa partire l'overlay di celebrazione. */}
-                        <WinnerFinalizeCard tournament={tournament} leader={leader} onFinalized={onFinalized} onReplayCelebration={onReplayCelebration} />
+                        {/* "Decreta Vincitore Finalina" è un'azione GLOBALE (decide il
+                            vincitore tra TUTTE le batterie di Consolazione insieme, vedi
+                            decree_consolation_winner) — va mostrata solo quando tutte sono
+                            chiuse, altrimenti la classifica potrebbe ancora cambiare. */}
+                        {allBottomKeys.length > 0 && (
+                            allBottomComplete ? (
+                                <ConsolazioneCard tournament={tournament} players={players} onRefresh={onRefresh} />
+                            ) : (
+                                <div className="flex items-center gap-2 rounded-2xl border border-dashed border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3">
+                                    <AlertCircle size={13} className="text-slate-400 shrink-0" />
+                                    <p className="text-xs text-slate-500 dark:text-muted-foreground font-black">
+                                        Chiudi tutte le batterie di Consolazione per decretare il vincitore della Finalina — mancano: {allBottomKeys.filter((k) => !completedFinalsGroups.has(k)).map(groupLabel).join(', ')}.
+                                    </p>
+                                </div>
+                            )
+                        )}
+
+                        {/* Decreta vincitore: azione GLOBALE sull'intero torneo — stesso
+                            principio, mostrata solo a batterie (Finale + Consolazione)
+                            tutte chiuse. Controlla anche che non ci siano spareggi aperti,
+                            poi conclude il torneo, salda le schedine (Card premio incluse)
+                            e fa partire l'overlay di celebrazione. */}
+                        {allFinalsComplete ? (
+                            <WinnerFinalizeCard tournament={tournament} leader={leader} onFinalized={onFinalized} onReplayCelebration={onReplayCelebration} />
+                        ) : (
+                            <div className="flex items-center gap-2 rounded-2xl border border-dashed border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-3">
+                                <AlertCircle size={13} className="text-slate-400 shrink-0" />
+                                <p className="text-xs text-slate-500 dark:text-muted-foreground font-black">
+                                    Chiudi tutte le batterie (Finale e Consolazione) per decretare il vincitore — mancano: {allFinalsKeys.filter((k) => !completedFinalsGroups.has(k)).map(groupLabel).join(', ')}.
+                                </p>
+                            </div>
+                        )}
                     </>
                 )}
             </div>

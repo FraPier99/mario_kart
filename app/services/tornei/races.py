@@ -119,6 +119,13 @@ def create_race(db: Session, race_data: CreateRace):
                     "La Finale è già stata generata dalle semifinali: non è più "
                     "possibile aggiungere gare alle batterie di semifinale."
                 )
+        elif race_data.phase == "finals":
+            completed_finals = set(fd.get("completed_finals_groups") or [])
+            if race_data.group_name in completed_finals:
+                raise ValueError(
+                    f"'{race_data.group_name}' è già stata completata: non è più "
+                    "possibile aggiungere gare. Riapri la batteria se serve modificarla."
+                )
 
     # Congela il numero di piloti della gara al momento della creazione —
     # vedi Race.active_player_count, letta da create_result/update_result

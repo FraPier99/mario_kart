@@ -18,9 +18,19 @@ const WinnerFinalizeCard = ({ tournament, leader, onFinalized, onReplayCelebrati
     const [ties, setTies] = useState(null)
 
     const isGroupStage = tournament?.tournament_format === 'group_stage'
-    const totalRaces = Number(tournament?.n_races ?? 0)
-    const playedRaces = Number(tournament?.raceCount ?? tournament?.races?.length ?? 0)
-    const missingRaces = Math.max(0, totalRaces - playedRaces)
+    // Per i gironi questo confronto non ha mai avuto senso: tournament.n_races
+    // è una stima grezza dell'INTERO torneo (n_giocatori × 2) e
+    // tournament.raceCount somma le gare di TUTTE le fasi (gironi+semifinali
+    // +finale) insieme — non le gare della sola Finale. Il risultato era un
+    // "mancano N gare" praticamente casuale (es. "manca 1" con la Finale a
+    // 1/12 gare giocate). Il gate reale per i gironi è ora "tutte le
+    // batterie Finale/Consolazione sono chiuse" (GroupManagementSection.jsx
+    // nasconde questa card finché non lo sono), quindi qui il warning va
+    // semplicemente disattivato — resta invariato per i classic, dove
+    // n_races/raceCount sono coerenti (un solo, unico bracket).
+    const totalRaces = isGroupStage ? 0 : Number(tournament?.n_races ?? 0)
+    const playedRaces = isGroupStage ? 0 : Number(tournament?.raceCount ?? tournament?.races?.length ?? 0)
+    const missingRaces = isGroupStage ? 0 : Math.max(0, totalRaces - playedRaces)
 
     useEffect(() => {
         if (!tournament?.id) return undefined

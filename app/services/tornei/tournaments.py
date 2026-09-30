@@ -743,6 +743,14 @@ def update_tournament(db: Session, tmentData: UpdateTournament, tournament_id: i
         finals = fd.get("finals") or {}
         if not finals.get("top"):
             raise ValueError("La Finale non è ancora stata composta.")
+        missing_batteries = _valid_finals_battery_keys(fd) - set(fd.get("completed_finals_groups") or [])
+        if missing_batteries:
+            labels = ", ".join(sorted(_finals_battery_label(k) for k in missing_batteries))
+            raise ValueError(
+                f"Batterie non ancora chiuse: {labels}. Completa ogni batteria dal "
+                "pannello Finali prima di decretare il vincitore: con gare ancora "
+                "inseribili, la classifica potrebbe cambiare dopo la decreta."
+            )
         final_ties = get_finals_podium_ties(db, tournament_id)
         if any(
             x and x["order"] is None for x in (final_ties.get("top2"), final_ties.get("top4"))
@@ -1695,6 +1703,109 @@ def reopen_group_stage_group(db: Session, tournament_id: int, group_key: str) ->
     return {"completed_groups": completed, "format_data": torneo.format_data}
 
 
+def _valid_finals_battery_keys(fd: dict) -> set[str]:
+    """Chiavi group_name valide per la Finale/Consolazione corrente: "top",
+    più "bottom" (Consolazione in un'unica gara) oppure "bottom_B1"/
+    "bottom_B2"/... (Consolazione divisa in batterie, vedi bottom_heats)."""
+    finals = fd.get("finals") or {}
+    keys: set[str] = set()
+    if finals.get("top"):
+        keys.add("top")
+    bottom_heats = finals.get("bottom_heats")
+    if bottom_heats:
+        keys.update(f"bottom_{k}" for k in bottom_heats)
+    elif finals.get("bottom"):
+        keys.add("bottom")
+    return keys
+
+
+def _finals_battery_label(key: str) -> str:
+    """Etichetta leggibile per un messaggio d'errore ("top"→Finale, "bottom"→
+    Consolazione, "bottom_B1"→Consolazione B1, ...) — non serve l'i18n/i colori
+    di groupLabel() lato frontend, solo un testo comprensibile in un errore 400."""
+    if key == "top":
+        return "Finale"
+    if key == "bottom":
+        return "Consolazione"
+    if key.startswith("bottom_"):
+        return f"Consolazione {key[len('bottom_'):]}"
+    return key
+
+
+def complete_finals_battery(db: Session, tournament_id: int, group_name: str) -> dict:
+    """
+    Marca una batteria della fase finale (Finale "top", Consolazione "bottom"
+    o sue batterie "bottom_B1"/"bottom_B2"/...) come completata, aggiungendo
+    group_name a format_data.completed_finals_groups — stesso principio di
+    complete_group_stage_group per i gironi, esteso alla Finale perché prima
+    non esisteva alcun modo di "chiudere" una batteria già conclusa: l'admin
+    poteva continuare ad aggiungere gare anche a Finale/Consolazione già
+    decise, cambiando la classifica dopo che "Decreta Vincitore" era già
+    stato valutato su quei dati.
+    """
+    torneo = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+    if not torneo:
+        raise ValueError("Torneo non trovato")
+    if torneo.tournament_format != "group_stage":
+        raise ValueError("Questo torneo non è in formato group_stage")
+
+    fd = torneo.format_data or {}
+    valid_keys = _valid_finals_battery_keys(fd)
+    if group_name not in valid_keys:
+        raise ValueError(f"'{group_name}' non è una batteria valida della Finale/Consolazione attuale.")
+
+    completed = list(fd.get("completed_finals_groups", []))
+    if group_name not in completed:
+        from app.models import Race
+
+        has_races = (
+            db.query(Race.id)
+            .filter(
+                Race.tournament_id == tournament_id,
+                Race.phase == "finals",
+                Race.group_name == group_name,
+                Race.is_duello.is_(False),
+            )
+            .first()
+            is not None
+        )
+        if not has_races:
+            raise ValueError(
+                f"'{group_name}' non ha ancora nessuna gara registrata: "
+                "aggiungi almeno una gara prima di chiuderla."
+            )
+        completed.append(group_name)
+        _persist_format_data(db, torneo, completed_finals_groups=completed)
+
+    return {"completed_finals_groups": completed, "format_data": torneo.format_data}
+
+
+def reopen_finals_battery(db: Session, tournament_id: int, group_name: str) -> dict:
+    """
+    Riapre una batteria della Finale/Consolazione già completata (la
+    rimuove da format_data.completed_finals_groups) — bloccato se il
+    torneo è già stato concluso (winner_id impostato): a differenza dei
+    gironi non c'è una fase successiva che la riapertura potrebbe rendere
+    incoerente, l'unico vincolo è non riaprire dopo che il vincitore è già
+    stato decretato su quei dati.
+    """
+    torneo = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+    if not torneo:
+        raise ValueError("Torneo non trovato")
+    if torneo.tournament_format != "group_stage":
+        raise ValueError("Questo torneo non è in formato group_stage")
+    if torneo.winner_id is not None:
+        raise ValueError("Non puoi riaprire una batteria: il torneo è già stato concluso.")
+
+    fd = torneo.format_data or {}
+    completed = list(fd.get("completed_finals_groups", []))
+    if group_name in completed:
+        completed.remove(group_name)
+        _persist_format_data(db, torneo, completed_finals_groups=completed)
+
+    return {"completed_finals_groups": completed, "format_data": torneo.format_data}
+
+
 def generate_group_stage_finals(
     db: Session, tournament_id: int, actor_user_id: int | None = None
 ) -> dict:
@@ -2574,6 +2685,16 @@ def decree_consolation_winner(
     bottom_ids = (fd.get("finals") or {}).get("bottom") or []
     if not bottom_ids:
         raise ValueError("La Finalina non è ancora stata composta.")
+
+    missing_batteries = (_valid_finals_battery_keys(fd) - {"top"}) - set(
+        fd.get("completed_finals_groups") or []
+    )
+    if missing_batteries:
+        labels = ", ".join(sorted(_finals_battery_label(k) for k in missing_batteries))
+        raise ValueError(
+            f"Batterie non ancora chiuse: {labels}. Completa ogni batteria dal "
+            "pannello Finali prima di decretare il vincitore della Finalina."
+        )
 
     ties = get_consolation_podium_ties(db, tournament_id)
     unresolved = [
