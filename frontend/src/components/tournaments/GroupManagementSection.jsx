@@ -174,13 +174,14 @@ const SeedingCard = ({ tournament, players, onRefresh }) => {
 // ─── Sub-componente: Inserimento gare scoped a una fase ───────────────────────
 const PhaseRaceEntry = ({
     tournament, players, circuits, characters, results, phase, groups, completedGroups = new Set(), onRefresh,
-    // Chiusura/riapertura PER BATTERIA, contestuale al tab attivo — solo la
-    // fase finale li passa (gironi/semifinali usano invece la griglia
-    // "tutte le batterie insieme" più sotto in GroupManagementSection): un
-    // admin che sta guardando "Consolazione B2" deve vedere il bottone di
-    // B2, non un elenco di tutte le batterie insieme (era la fonte di
-    // confusione segnalata: "vedo i bottoni di tutte le consolazioni").
+    // Chiusura/riapertura PER BATTERIA, contestuale al tab attivo — gironi,
+    // semifinali e finale la passano tutte allo stesso modo: un admin che
+    // sta guardando "Girone 2"/"Semifinale S2"/"Consolazione B2" deve
+    // vedere SOLO il bottone di quella batteria, non un elenco di tutte
+    // insieme (era la fonte di confusione segnalata inizialmente per la
+    // Finale: "vedo i bottoni di tutte le consolazioni").
     onCompleteBattery, onReopenBattery, completingBattery, reopeningBattery, canReopenBattery = true,
+    reopenBlockedMessage,
     onActiveGroupChange,
 }) => {
     const [selectedGroup, setSelectedGroup] = useState(groups[0])
@@ -313,18 +314,24 @@ const PhaseRaceEntry = ({
                             {groupLabel(activeGroup)} completato — non è più possibile aggiungere gare.
                         </p>
                     </div>
-                    {onReopenBattery && canReopenBattery && (
-                        <button
-                            type="button"
-                            onClick={() => onReopenBattery(activeGroup)}
-                            disabled={reopeningBattery === activeGroup}
-                            className="w-full flex items-center justify-center gap-2 rounded-2xl border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-900/10 hover:bg-amber-100 dark:hover:bg-amber-900/20 disabled:opacity-60 disabled:cursor-not-allowed px-4 py-2.5 text-xs font-black uppercase tracking-widest text-amber-700 dark:text-amber-300 transition active:scale-95"
-                        >
-                            {reopeningBattery === activeGroup
-                                ? <><Loader2 size={13} className="animate-spin" /> Riapertura...</>
-                                : <><Unlock size={13} /> Riapri batteria</>
-                            }
-                        </button>
+                    {onReopenBattery && (
+                        canReopenBattery ? (
+                            <button
+                                type="button"
+                                onClick={() => onReopenBattery(activeGroup)}
+                                disabled={reopeningBattery === activeGroup}
+                                className="w-full flex items-center justify-center gap-2 rounded-2xl border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-900/10 hover:bg-amber-100 dark:hover:bg-amber-900/20 disabled:opacity-60 disabled:cursor-not-allowed px-4 py-2.5 text-xs font-black uppercase tracking-widest text-amber-700 dark:text-amber-300 transition active:scale-95"
+                            >
+                                {reopeningBattery === activeGroup
+                                    ? <><Loader2 size={13} className="animate-spin" /> Riapertura...</>
+                                    : <><Unlock size={13} /> Riapri batteria</>
+                                }
+                            </button>
+                        ) : reopenBlockedMessage ? (
+                            <p className="text-[10px] text-slate-400 dark:text-muted-foreground italic">
+                                {reopenBlockedMessage}
+                            </p>
+                        ) : null
                     )}
                 </div>
             ) : activeGroupPlayers.length < 2 ? (
@@ -822,6 +829,18 @@ const GroupManagementSection = ({
     )
     const allGroupsComplete = groupKeys.length > 0 && groupKeys.every((k) => completedGroups.has(k))
 
+    // ── Batterie di semifinale completate ────────────────────────────────────
+    // Stesso principio di completedGroups, esteso alla fase 2: prima le
+    // batterie di semifinale si bloccavano tutte insieme SOLO quando la
+    // Finale veniva generata (atomico), senza un modo di chiudere una
+    // singola batteria man mano che finisce — "Genera Finale" ora richiede
+    // che siano tutte completate (mirror esatto di allGroupsComplete).
+    const completedSemifinalGroups = useMemo(
+        () => new Set(tournament.format_data?.completed_semifinal_groups ?? []),
+        [tournament.format_data]
+    )
+    const allSemisComplete = semiKeys.length > 0 && semiKeys.every((k) => completedSemifinalGroups.has(k))
+
     // ── Batterie della fase finale completate ───────────────────────────────
     // Stesso principio di completedGroups, esteso alla Finale/Consolazione:
     // prima non esisteva alcun modo di "chiudere" una batteria finale, quindi
@@ -906,6 +925,10 @@ const GroupManagementSection = ({
     const [reopeningGroup, setReopeningGroup] = useState(null)
     const [confirmCompleteGroup, setConfirmCompleteGroup] = useState(null) // { groupKey, incompleteCount? }
 
+    // ── Per-batteria completion (Semifinali) ─────────────────────────────────
+    const [completingSemifinalBattery, setCompletingSemifinalBattery] = useState(null)
+    const [reopeningSemifinalBattery, setReopeningSemifinalBattery] = useState(null)
+
     // ── Per-batteria completion (Finale/Consolazione) ───────────────────────
     const [completingFinalsBattery, setCompletingFinalsBattery] = useState(null)
     const [reopeningFinalsBattery, setReopeningFinalsBattery] = useState(null)
@@ -968,6 +991,32 @@ const GroupManagementSection = ({
             toast.error('Errore', { description: getApiErrorMessage(err) })
         } finally {
             setCompletingGroup(null)
+        }
+    }
+
+    const handleCompleteSemifinalBatteryClick = async (groupKey) => {
+        setCompletingSemifinalBattery(groupKey)
+        try {
+            const res = await tournamentsApi.completeSemifinalBattery(tournament.id, groupKey)
+            toast.success(`${groupLabel(groupKey)} completata!`)
+            patchTournament(tournament.id, { format_data: res.data.format_data })
+        } catch (err) {
+            toast.error('Errore', { description: getApiErrorMessage(err) })
+        } finally {
+            setCompletingSemifinalBattery(null)
+        }
+    }
+
+    const handleReopenSemifinalBatteryClick = async (groupKey) => {
+        setReopeningSemifinalBattery(groupKey)
+        try {
+            const res = await tournamentsApi.reopenSemifinalBattery(tournament.id, groupKey)
+            toast.success(`${groupLabel(groupKey)} riaperta`)
+            patchTournament(tournament.id, { format_data: res.data.format_data })
+        } catch (err) {
+            toast.error('Errore', { description: getApiErrorMessage(err) })
+        } finally {
+            setReopeningSemifinalBattery(null)
         }
     }
 
@@ -1146,67 +1195,15 @@ const GroupManagementSection = ({
                         groups={groupKeys.length ? groupKeys : ['1']}
                         completedGroups={completedGroups}
                         onRefresh={onRefresh}
+                        onCompleteBattery={handleCompleteGroupClick}
+                        onReopenBattery={handleReopenGroupClick}
+                        completingBattery={completingGroup}
+                        reopeningBattery={reopeningGroup}
+                        canReopenBattery={!semisReady && !finalsReady}
+                        reopenBlockedMessage="Non riapribile: la fase successiva è già stata generata."
                     />
                 )}
                 <SpareggioGironiCard tournament={tournament} players={players} circuits={circuits} characters={characters} onRefresh={onRefresh} phaseFilter="group" />
-
-                {/* Per-gruppo: pulsante "Completa girone" */}
-                {groupKeys.length > 0 && (
-                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                        {groupKeys.map((key) => {
-                            const isCompleted = completedGroups.has(key)
-                            return (
-                                <div key={key} className={`rounded-2xl border p-4 space-y-3 ${isCompleted ? 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/60 dark:bg-emerald-900/10' : 'border-slate-200 dark:border-border bg-white dark:bg-card'}`}>
-                                    <div className="flex items-center justify-between gap-2">
-                                        <p className={`text-xs font-black uppercase tracking-widest ${isCompleted ? 'text-emerald-600' : 'text-slate-500 dark:text-muted-foreground'}`}>
-                                            {groupLabel(key)}
-                                        </p>
-                                        {isCompleted && (
-                                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-                                                <CheckCircle2 size={11} /> Completato
-                                            </span>
-                                        )}
-                                    </div>
-                                    {!isCompleted && (
-                                        <button
-                                            type="button"
-                                            onClick={() => handleCompleteGroupClick(key)}
-                                            disabled={completingGroup === key}
-                                            className="w-full flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white transition active:scale-95"
-                                        >
-                                            {completingGroup === key
-                                                ? <><Loader2 size={13} className="animate-spin" /> Completamento...</>
-                                                : <><Lock size={13} /> Completa girone</>
-                                            }
-                                        </button>
-                                    )}
-                                    {/* Riapertura: permessa solo se la fase successiva non e' stata
-                                        ancora generata, altrimenti i qualificati gia' calcolati
-                                        resterebbero incoerenti con una gara aggiunta dopo (stesso
-                                        vincolo del backend, vedi reopen_group_stage_group). */}
-                                    {isCompleted && !semisReady && !finalsReady && (
-                                        <button
-                                            type="button"
-                                            onClick={() => handleReopenGroupClick(key)}
-                                            disabled={reopeningGroup === key}
-                                            className="w-full flex items-center justify-center gap-2 rounded-2xl border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-900/10 hover:bg-amber-100 dark:hover:bg-amber-900/20 disabled:opacity-60 disabled:cursor-not-allowed px-4 py-2.5 text-xs font-black uppercase tracking-widest text-amber-700 dark:text-amber-300 transition active:scale-95"
-                                        >
-                                            {reopeningGroup === key
-                                                ? <><Loader2 size={13} className="animate-spin" /> Riapertura...</>
-                                                : <><Unlock size={13} /> Riapri girone</>
-                                            }
-                                        </button>
-                                    )}
-                                    {isCompleted && (semisReady || finalsReady) && (
-                                        <p className="text-[10px] text-slate-400 dark:text-muted-foreground italic">
-                                            Non riapribile: la fase successiva è già stata generata.
-                                        </p>
-                                    )}
-                                </div>
-                            )
-                        })}
-                    </div>
-                )}
 
                 {/* Avanzamento globale: visibile solo quando TUTTI i gironi sono completati */}
                 {allGroupsComplete && (
@@ -1237,22 +1234,33 @@ const GroupManagementSection = ({
                                     results={results}
                                     phase="semifinal"
                                     groups={semiKeys}
-                                    // Una volta generata la Finale dalle semifinali
-                                    // (finalsReady), TUTTE le batterie sono consumate
-                                    // insieme (generate_group_stage_finals non lavora
-                                    // batteria per batteria) — a differenza dei gironi
-                                    // non c'è un "completed" per singola batteria, si
-                                    // bloccano tutte in blocco riusando lo stesso
-                                    // meccanismo/messaggio di completedGroups.
-                                    completedGroups={finalsReady ? new Set(semiKeys) : new Set()}
+                                    // finalsReady come fallback: una volta generata la
+                                    // Finale, il backend blocca comunque TUTTE le
+                                    // batterie atomicamente (create_race), indipenden-
+                                    // temente da completedSemifinalGroups — copre anche
+                                    // i tornei che avevano già superato questa fase
+                                    // prima che esistesse la chiusura per batteria.
+                                    completedGroups={finalsReady ? new Set(semiKeys) : completedSemifinalGroups}
                                     onRefresh={onRefresh}
+                                    onCompleteBattery={handleCompleteSemifinalBatteryClick}
+                                    onReopenBattery={handleReopenSemifinalBatteryClick}
+                                    completingBattery={completingSemifinalBattery}
+                                    reopeningBattery={reopeningSemifinalBattery}
+                                    canReopenBattery={!finalsReady}
+                                    reopenBlockedMessage="Non riapribile: la Finale è già stata generata."
                                 />
                             )}
                             <SpareggioGironiCard tournament={tournament} players={players} circuits={circuits} characters={characters} onRefresh={onRefresh} phaseFilter="semifinal" />
                             {/* Pareggio sull'ultimo posto Finale tra batterie di semifinale
                                 diverse (mai affrontate direttamente) — vedi _advance_top_n */}
                             <SpareggioGironiCard tournament={tournament} players={players} circuits={circuits} characters={characters} onRefresh={onRefresh} phaseFilter="finals" />
-                            <PhaseAdvanceCard tournament={tournament} onRefresh={onRefresh} phase="semifinal" />
+                            {/* Avanzamento globale: visibile solo quando TUTTE le
+                                batterie di semifinale sono completate (mirror di
+                                allGroupsComplete per i gironi) — prima "Genera Finale"
+                                era sempre cliccabile, anche con batterie mai chiuse. */}
+                            {allSemisComplete && (
+                                <PhaseAdvanceCard tournament={tournament} onRefresh={onRefresh} phase="semifinal" />
+                            )}
                         </>
                     )}
                 </div>
@@ -1287,6 +1295,7 @@ const GroupManagementSection = ({
                                 completingBattery={completingFinalsBattery}
                                 reopeningBattery={reopeningFinalsBattery}
                                 canReopenBattery={!tournament.winner_id}
+                                reopenBlockedMessage="Non riapribile: il torneo è già stato concluso."
                                 onActiveGroupChange={setFinaliActiveGroup}
                             />
                         )}

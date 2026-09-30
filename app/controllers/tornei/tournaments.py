@@ -9,6 +9,8 @@ from app.services.tornei.stats import get_leaderboard as fetch_leaderboard
 from app.services.tornei.tournaments import (
     complete_group_stage_group,
     reopen_group_stage_group,
+    complete_semifinal_battery,
+    reopen_semifinal_battery,
     complete_finals_battery,
     reopen_finals_battery,
     create_tournament,
@@ -343,6 +345,39 @@ def reopen_group_endpoint(
     """
     try:
         return reopen_group_stage_group(db, tournament_id, body.group_key)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/{tournament_id}/group-stage/complete-semifinal-battery")
+def complete_semifinal_battery_endpoint(
+    tournament_id: int,
+    body: CompleteGroupRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_roles("superadmin", "admin")),
+):
+    """
+    Marca una batteria di semifinale come completata — previene ulteriori
+    modifiche a quella batteria; "Genera Finale" resta bloccato finché non
+    sono tutte completate.
+    """
+    try:
+        return complete_semifinal_battery(db, tournament_id, body.group_key)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/{tournament_id}/group-stage/reopen-semifinal-battery")
+def reopen_semifinal_battery_endpoint(
+    tournament_id: int,
+    body: CompleteGroupRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_roles("superadmin", "admin")),
+):
+    """Riapre una batteria di semifinale già completata — permesso solo se
+    la Finale non è già stata generata da questi dati."""
+    try:
+        return reopen_semifinal_battery(db, tournament_id, body.group_key)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 

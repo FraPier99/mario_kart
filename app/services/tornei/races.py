@@ -119,6 +119,12 @@ def create_race(db: Session, race_data: CreateRace):
                     "La Finale è già stata generata dalle semifinali: non è più "
                     "possibile aggiungere gare alle batterie di semifinale."
                 )
+            completed_semis = set(fd.get("completed_semifinal_groups") or [])
+            if race_data.group_name in completed_semis:
+                raise ValueError(
+                    f"La batteria {race_data.group_name} è già stata completata: "
+                    "non è più possibile aggiungere gare. Riapri la batteria se serve modificarla."
+                )
         elif race_data.phase == "finals":
             completed_finals = set(fd.get("completed_finals_groups") or [])
             if race_data.group_name in completed_finals:

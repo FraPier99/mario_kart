@@ -1707,6 +1707,79 @@ def reopen_group_stage_group(db: Session, tournament_id: int, group_key: str) ->
     return {"completed_groups": completed, "format_data": torneo.format_data}
 
 
+def complete_semifinal_battery(db: Session, tournament_id: int, group_key: str) -> dict:
+    """
+    Marca una batteria di semifinale come completata, aggiungendo group_key
+    a format_data.completed_semifinal_groups — stesso principio identico di
+    complete_group_stage_group, esteso alla fase 2: prima le batterie di
+    semifinale si bloccavano tutte insieme SOLO quando la Finale veniva
+    generata (atomico, vedi il check su finals.top in create_race), senza
+    un modo di chiudere una singola batteria man mano che finisce.
+    """
+    torneo = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+    if not torneo:
+        raise ValueError("Torneo non trovato")
+    if torneo.tournament_format != "group_stage":
+        raise ValueError("Questo torneo non è in formato group_stage")
+
+    fd = torneo.format_data or {}
+    valid_keys = set(_semifinal_keys_from_format_data(fd))
+    if group_key not in valid_keys:
+        raise ValueError(f"'{group_key}' non è una batteria di semifinale valida.")
+
+    completed = list(fd.get("completed_semifinal_groups", []))
+    if group_key not in completed:
+        from app.models import Race
+
+        has_races = (
+            db.query(Race.id)
+            .filter(
+                Race.tournament_id == tournament_id,
+                Race.phase == "semifinal",
+                Race.group_name == group_key,
+                Race.is_duello.is_(False),
+            )
+            .first()
+            is not None
+        )
+        if not has_races:
+            raise ValueError(
+                f"La batteria {group_key} non ha ancora nessuna gara registrata: "
+                "aggiungi almeno una gara prima di chiuderla."
+            )
+        completed.append(group_key)
+        _persist_format_data(db, torneo, completed_semifinal_groups=completed)
+
+    return {"completed_semifinal_groups": completed, "format_data": torneo.format_data}
+
+
+def reopen_semifinal_battery(db: Session, tournament_id: int, group_key: str) -> dict:
+    """
+    Riapre una batteria di semifinale già completata — permesso solo se la
+    Finale non è già stata generata da questi dati (stesso vincolo di
+    reopen_group_stage_group per i gironi).
+    """
+    torneo = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+    if not torneo:
+        raise ValueError("Torneo non trovato")
+    if torneo.tournament_format != "group_stage":
+        raise ValueError("Questo torneo non è in formato group_stage")
+
+    fd = torneo.format_data or {}
+    if (fd.get("finals") or {}).get("top"):
+        raise ValueError(
+            "Non puoi riaprire una batteria di semifinale: la Finale è già "
+            "stata generata da questi dati."
+        )
+
+    completed = list(fd.get("completed_semifinal_groups", []))
+    if group_key in completed:
+        completed.remove(group_key)
+        _persist_format_data(db, torneo, completed_semifinal_groups=completed)
+
+    return {"completed_semifinal_groups": completed, "format_data": torneo.format_data}
+
+
 def _valid_finals_battery_keys(fd: dict) -> set[str]:
     """Chiavi group_name valide per la Finale/Consolazione corrente: "top",
     più "bottom" (Consolazione in un'unica gara) oppure "bottom_B1"/
@@ -2010,6 +2083,14 @@ def generate_group_stage_finals(
 
     # Semifinali già seedate → leggi i risultati e componi la Finale (Final 4)
     semi_keys = _semifinal_keys_from_format_data(fd)
+    completed_semis = set(fd.get("completed_semifinal_groups") or [])
+    missing_semis = [k for k in semi_keys if k not in completed_semis]
+    if missing_semis:
+        batterie = ", ".join(f"batteria {k}" for k in missing_semis)
+        raise ValueError(
+            f"Le seguenti batterie di semifinale non sono ancora completate: {batterie}. "
+            "Completa tutte le batterie prima di generare la Finale."
+        )
     semi_standings, semi_ties = _group_standings(
         db, tournament_id, "semifinal", semi_keys, exclude_withdrawn=True
     )
