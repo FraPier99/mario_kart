@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Crown, ChevronDown, Users, Flag, ArrowRight, PartyPopper } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useAppData } from '@/context/AppDataContext'
 import { buildAvatarPlaceholder } from '@/lib/placeholders'
 import { formatTournamentTitle } from '@/lib/utils'
+import { tournamentsApi } from '@/services/apiClient'
 
 const PODIUM_STYLES = [
     { medal: '🥇', badge: 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30' },
@@ -18,7 +19,34 @@ const TournamentHistoryCard = ({ tournament }) => {
     const isPrivileged = isAdmin || isSuperadmin
     const [expanded, setExpanded] = useState(false)
     const participantCount = tournament.participant_ids?.length ?? tournament.standings?.length ?? 0
-    const podium = (tournament.standings ?? []).slice(0, 3)
+    const isGroupStage = tournament.tournament_format === 'group_stage'
+
+    // tournament.standings (calcolato client-side, vedi AppDataContext.jsx)
+    // somma i punti di TUTTE le gare del torneo ignorando fase/girone e gli
+    // esiti degli eventuali duelli di spareggio — è la classifica "ufficiale"
+    // solo per i tornei classic (un'unica fase). Per i gironi non ha alcuna
+    // relazione con il vero podio (1°-4° decisi dalla sola Finale, con
+    // eventuali duelli podio) — va invece letto da
+    // GET .../group-stage/overall-classifica (già duel-resolved), fetchato
+    // pigramente solo quando la card viene espansa (stesso principio "lazy
+    // detail on expand" già usato altrove, es. CircuitStats.jsx).
+    const [groupStageOrder, setGroupStageOrder] = useState(null)
+    useEffect(() => {
+        if (!expanded || !isGroupStage || groupStageOrder !== null) return
+        let active = true
+        tournamentsApi.overallClassifica(tournament.id)
+            .then((res) => { if (active) setGroupStageOrder(res.data?.order ?? []) })
+            .catch(() => { if (active) setGroupStageOrder([]) })
+        return () => { active = false }
+    }, [expanded, isGroupStage, groupStageOrder, tournament.id])
+
+    const standingsByPlayerId = useMemo(
+        () => new Map((tournament.standings ?? []).map((s) => [s.playerId, s])),
+        [tournament.standings]
+    )
+    const podium = isGroupStage
+        ? (groupStageOrder ?? []).map((playerId) => standingsByPlayerId.get(playerId)).filter(Boolean).slice(0, 3)
+        : (tournament.standings ?? []).slice(0, 3)
     const statusLabel = tournament.status === 'concluso'
         ? 'Concluso'
         : tournament.status === 'da_svolgere'
