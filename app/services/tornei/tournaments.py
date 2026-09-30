@@ -743,13 +743,17 @@ def update_tournament(db: Session, tmentData: UpdateTournament, tournament_id: i
         finals = fd.get("finals") or {}
         if not finals.get("top"):
             raise ValueError("La Finale non è ancora stata composta.")
-        missing_batteries = _valid_finals_battery_keys(fd) - set(fd.get("completed_finals_groups") or [])
-        if missing_batteries:
-            labels = ", ".join(sorted(_finals_battery_label(k) for k in missing_batteries))
+        # Solo la batteria "top" (Finale) va chiusa qui: il lato Consolazione
+        # è già garantito dal controllo consolation_winner_id più sotto, che
+        # a sua volta richiede (vedi decree_consolation_winner) il tier
+        # migliore della Finalina chiuso — batterie di tier inferiore non
+        # influenzano né il vincitore del torneo né quello della Finalina,
+        # quindi non c'è motivo di aspettarle qui.
+        if "top" not in set(fd.get("completed_finals_groups") or []):
             raise ValueError(
-                f"Batterie non ancora chiuse: {labels}. Completa ogni batteria dal "
-                "pannello Finali prima di decretare il vincitore: con gare ancora "
-                "inseribili, la classifica potrebbe cambiare dopo la decreta."
+                "La batteria Finale non è ancora stata chiusa: completala dal "
+                "pannello Finali prima di decretare il vincitore — con gare "
+                "ancora inseribili, la classifica potrebbe cambiare dopo la decreta."
             )
         final_ties = get_finals_podium_ties(db, tournament_id)
         if any(
@@ -1719,6 +1723,33 @@ def _valid_finals_battery_keys(fd: dict) -> set[str]:
     return keys
 
 
+def _top_consolation_tier_keys(fd: dict) -> set[str]:
+    """
+    Chiavi delle batterie del tier MIGLIORE della Consolazione/Finalina
+    (finals.bottom_tiers[0], vedi _build_consolation_tiers) — le uniche che
+    contano davvero per decretarne il vincitore: il tier migliore (es. gli
+    eliminati in semifinale) supera SEMPRE in classifica il tier peggiore
+    (es. i 3°/4° dei gironi) indipendentemente dai punti fatti, quindi il
+    vincitore della Finalina non può mai emergere da una batteria di tier
+    inferiore — aspettare che ANCHE quelle finiscano prima di poter
+    decretare non ha senso, dato che i giocatori delle diverse batterie non
+    si affrontano mai fra loro e il loro risultato non può cambiare l'esito.
+    Se la Consolazione entra in un'unica gara (nessun bottom_heats), l'unico
+    "tier" è quella singola batteria "bottom".
+    """
+    finals = fd.get("finals") or {}
+    bottom_heats = finals.get("bottom_heats")
+    if not bottom_heats:
+        return {"bottom"} if finals.get("bottom") else set()
+    tiers = finals.get("bottom_tiers")
+    if not tiers or not tiers[0]:
+        # Nessun tier_order salvato (dato più vecchio di questa funzionalità,
+        # o consolidamento inatteso): ricade sul comportamento sicuro di
+        # richiedere tutte le batterie, invece di indovinare quale sia la migliore.
+        return {f"bottom_{k}" for k in bottom_heats}
+    return {f"bottom_{k}" for k in tiers[0]}
+
+
 def _finals_battery_label(key: str) -> str:
     """Etichetta leggibile per un messaggio d'errore ("top"→Finale, "bottom"→
     Consolazione, "bottom_B1"→Consolazione B1, ...) — non serve l'i18n/i colori
@@ -2686,9 +2717,10 @@ def decree_consolation_winner(
     if not bottom_ids:
         raise ValueError("La Finalina non è ancora stata composta.")
 
-    missing_batteries = (_valid_finals_battery_keys(fd) - {"top"}) - set(
-        fd.get("completed_finals_groups") or []
-    )
+    # Solo il tier migliore della Consolazione conta per il vincitore della
+    # Finalina (vedi _top_consolation_tier_keys) — le batterie di tier
+    # inferiore non possono mai produrre il vincitore, aspettarle non serve.
+    missing_batteries = _top_consolation_tier_keys(fd) - set(fd.get("completed_finals_groups") or [])
     if missing_batteries:
         labels = ", ".join(sorted(_finals_battery_label(k) for k in missing_batteries))
         raise ValueError(
