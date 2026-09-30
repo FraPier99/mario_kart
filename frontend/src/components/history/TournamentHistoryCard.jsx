@@ -71,7 +71,19 @@ const TournamentHistoryCard = ({ tournament }) => {
                     <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-300 uppercase">
                         <span>{tournament.date || 'DATA N/D'}</span>
                         <span>·</span>
-                        <span>{tournament.raceCount}/{tournament.n_races} GARE</span>
+                        <span>{isGroupStage ? 'Gironi' : 'Classic'}</span>
+                        {/* n_races per i gironi è solo una stima grezza
+                            (n_giocatori × 2) calcolata alla creazione, senza
+                            relazione con le gare reali per fase/girone —
+                            stesso motivo per cui è già nascosto nell'header
+                            di TournamentDetail.jsx. Per i classic resta un
+                            target reale scelto alla creazione. */}
+                        {!isGroupStage && (
+                            <>
+                                <span>·</span>
+                                <span>{tournament.raceCount}/{tournament.n_races} GARE</span>
+                            </>
+                        )}
                         <span>·</span>
                         <span>{statusLabel}</span>
                         {tournament.is_friendly ? (
@@ -153,7 +165,15 @@ const TournamentHistoryCard = ({ tournament }) => {
                                         />
                                         <div className="min-w-0">
                                             <p className="truncate text-sm font-black">{row.nickname}</p>
-                                            <p className="text-[10px] font-bold uppercase tracking-wide opacity-70">{row.points} pt</p>
+                                            {/* Per i gironi i punti non sono confrontabili tra posizioni
+                                                (fasi/gironi diverse con punteggi propri, sommati senza
+                                                relazione con l'ordine reale) — mostrarli qui creava
+                                                l'effetto visivo strano di un 2°/3° posto con più punti
+                                                del 1°. Il podio classic resta un'unica classifica, dove
+                                                il confronto ha senso. */}
+                                            {!isGroupStage && (
+                                                <p className="text-[10px] font-bold uppercase tracking-wide opacity-70">{row.points} pt</p>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -164,7 +184,9 @@ const TournamentHistoryCard = ({ tournament }) => {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-slate-500 dark:text-muted-foreground">
-                        <span className="flex items-center gap-1.5"><Flag size={13} /> {tournament.raceCount}/{tournament.n_races} gare</span>
+                        {!isGroupStage && (
+                            <span className="flex items-center gap-1.5"><Flag size={13} /> {tournament.raceCount}/{tournament.n_races} gare</span>
+                        )}
                         <span className="flex items-center gap-1.5"><Users size={13} /> {participantCount} partecipanti</span>
                     </div>
 
