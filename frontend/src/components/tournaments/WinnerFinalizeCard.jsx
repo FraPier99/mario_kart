@@ -227,7 +227,7 @@ const WinnerFinalizeCard = ({ tournament, leader, onFinalized, onReplayCelebrati
                     >
                         <span className="relative z-0">{isConcluded ? 'Vincitore già decretato' : 'Decreta vincitore'}</span>
                     </button>
-                    {isConcluded && (
+                    {isConcluded && !tournament?.is_friendly && (
                         <button
                             type="button"
                             onClick={() => onReplayCelebration?.()}

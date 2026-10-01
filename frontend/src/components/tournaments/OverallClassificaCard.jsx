@@ -38,7 +38,14 @@ const OverallClassificaCard = ({ tournament, playerMap, highlightPlayerId = null
             .finally(() => { if (mountedRef.current) setRefreshing(false) })
     }
 
-    if (loading || order.length === 0) return null
+    if (loading) return null
+    if (order.length === 0) {
+        return (
+            <div className="rounded-3xl border border-dashed border-slate-200 dark:border-border bg-white dark:bg-card p-8 text-center shadow-sm">
+                <p className="text-sm text-slate-500 dark:text-muted-foreground">La classifica finale verrà mostrata qui a fine torneo.</p>
+            </div>
+        )
+    }
 
     // Il podio mostra già i primi 3 — la lista sotto parte dal 4° posto
     // per non ripeterli (nessun dato statistico extra disponibile qui,

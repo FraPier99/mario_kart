@@ -31,7 +31,7 @@ import PhaseCircuitsCard from '@/components/tournaments/PhaseCircuitsCard'
 import SpareggioEsitiList from '@/components/tournaments/SpareggioEsitiList'
 import CardLogPanel from '@/components/tournaments/CardLogPanel'
 import OverallClassificaCard from '@/components/tournaments/OverallClassificaCard'
-import { findPlayerGroup, findPlayerGroupInPhase, groupLabel, isPodiumDuelKey, isPassEnabledForScope, passScopeKey, targetRacesForGroup, GROUP_BADGE_CLASSES } from '@/lib/groupStage'
+import { findPlayerGroup, findPlayerGroupInPhase, groupLabel, isPodiumDuelKey, isPassEnabledForScope, passScopeKey, targetRacesForGroup, tournamentNeedsSemifinal, GROUP_BADGE_CLASSES } from '@/lib/groupStage'
 import { useTournamentCards, MASTER_EFFECTS, SHELL_EFFECTS } from '@/hooks/useTournamentCards'
 import { getApiErrorMessage, tournamentsApi, authApi, schedineApi } from '@/services/apiClient'
 import { toast } from 'sonner'
@@ -440,7 +440,7 @@ const TournamentDetail = () => {
                 </div>
             )}
 
-            {tournament?.status === 'concluso' && tournament?.winner_id != null && (
+            {tournament?.status === 'concluso' && tournament?.winner_id != null && !tournament.is_friendly && (
                 <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/40 p-5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
                     <div className="flex items-center gap-3">
                         <PartyPopper size={20} className="shrink-0 text-amber-500 dark:text-amber-400" />
@@ -565,11 +565,18 @@ const TournamentDetail = () => {
         const myGroupInGroupPhase = findPlayerGroupInPhase(tournament.format_data, myPlayerId, 'group')
         const myGroupInSemiPhase = findPlayerGroupInPhase(tournament.format_data, myPlayerId, 'semifinal')
         const myGroupInFinalsPhase = findPlayerGroupInPhase(tournament.format_data, myPlayerId, 'finals')
+        // La tab Semifinale compare se il TORNEO prevede quella fase (flag a
+        // livello di torneo, indipendente da quale giocatore la raggiunge) —
+        // non solo se il giocatore specifico vi è arrivato, altrimenti chi
+        // viene eliminato ai gironi in un torneo con semifinali non la vede
+        // affatto invece di uno stato "non qualificato".
+        const hasSemifinalPhase = tournamentNeedsSemifinal(tournament.format_data)
         const USER_TABS = isGroupStageView
             ? [
                 ...(myGroupInGroupPhase ? [{ key: 'gironi', label: 'Girone', icon: Users }] : []),
-                ...(myGroupInSemiPhase ? [{ key: 'semifinali', label: 'Semifinale', icon: Shield }] : []),
+                ...(hasSemifinalPhase ? [{ key: 'semifinali', label: 'Semifinale', icon: Shield }] : []),
                 ...(myGroupInFinalsPhase ? [{ key: 'finale', label: groupLabel(myGroupInFinalsPhase.groupName), icon: Trophy }] : []),
+                { key: 'gare', label: 'Gare', icon: ListChecks },
                 { key: 'generale', label: 'Classifica Generale', icon: BarChart3 },
                 ...(!tournament.is_friendly && hasCardHistory ? [{ key: 'carte', label: 'Carte', icon: Zap }] : []),
             ]
@@ -745,32 +752,41 @@ const TournamentDetail = () => {
                             <TournamentResolutionNotes tournament={tournament} phaseFilter="group" />
                             {buildGroupCircuitsView(myGroupInGroupPhase) && (() => {
                                 const circuitsView = buildGroupCircuitsView(myGroupInGroupPhase)
-                                return <PhaseCircuitsCard circuits={tournamentCircuits} races={circuitsView.races} title={circuitsView.title} onRefresh={refresh} refreshing={loading} passEnabled={circuitsView.passEnabled} />
+                                return <PhaseCircuitsCard circuits={tournamentCircuits} races={circuitsView.races} title={circuitsView.title} onRefresh={refresh} refreshing={loading} passEnabled={circuitsView.passEnabled} collapsible defaultOpen={false} searchable />
                             })()}
                         </div>
                     )}
 
-                    {/* ── TAB: Semifinale — solo gironi, persistente anche dopo l'avanzamento ── */}
-                    {userTab === 'semifinali' && myGroupInSemiPhase && (
+                    {/* ── TAB: Semifinale — tab visibile se il TORNEO prevede questa fase,
+                    anche per chi non l'ha raggiunta (stato "non qualificato" sotto) ── */}
+                    {userTab === 'semifinali' && (
                         <div className="space-y-6">
-                            <GroupCard
-                                groupKey={myGroupInSemiPhase.groupName}
-                                races={(tournament.races ?? []).filter((r) => r.phase === 'semifinal' && r.group_name === myGroupInSemiPhase.groupName && !r.is_duello)}
-                                results={results}
-                                playerMap={playerMapById}
-                                seedPlayerIds={tournament.format_data?.semifinals?.[myGroupInSemiPhase.groupName] ?? []}
-                                highlightPlayerId={myPlayerId}
-                                resolvedOrder={resolvedClassifiche.semifinal?.[myGroupInSemiPhase.groupName]}
-                                onRefresh={refresh}
-                                refreshing={loading}
-                                targetRaces={targetRacesForGroup(myGroupInSemiPhase.groupName, tournament.format_data)}
-                                withdrawnPlayerIds={withdrawnPlayerIdSet}
-                            />
-                            <TournamentResolutionNotes tournament={tournament} phaseFilter="semifinal" />
-                            {buildGroupCircuitsView(myGroupInSemiPhase) && (() => {
-                                const circuitsView = buildGroupCircuitsView(myGroupInSemiPhase)
-                                return <PhaseCircuitsCard circuits={tournamentCircuits} races={circuitsView.races} title={circuitsView.title} onRefresh={refresh} refreshing={loading} passEnabled={circuitsView.passEnabled} />
-                            })()}
+                            {myGroupInSemiPhase ? (
+                                <>
+                                    <GroupCard
+                                        groupKey={myGroupInSemiPhase.groupName}
+                                        races={(tournament.races ?? []).filter((r) => r.phase === 'semifinal' && r.group_name === myGroupInSemiPhase.groupName && !r.is_duello)}
+                                        results={results}
+                                        playerMap={playerMapById}
+                                        seedPlayerIds={tournament.format_data?.semifinals?.[myGroupInSemiPhase.groupName] ?? []}
+                                        highlightPlayerId={myPlayerId}
+                                        resolvedOrder={resolvedClassifiche.semifinal?.[myGroupInSemiPhase.groupName]}
+                                        onRefresh={refresh}
+                                        refreshing={loading}
+                                        targetRaces={targetRacesForGroup(myGroupInSemiPhase.groupName, tournament.format_data)}
+                                        withdrawnPlayerIds={withdrawnPlayerIdSet}
+                                    />
+                                    <TournamentResolutionNotes tournament={tournament} phaseFilter="semifinal" />
+                                    {buildGroupCircuitsView(myGroupInSemiPhase) && (() => {
+                                        const circuitsView = buildGroupCircuitsView(myGroupInSemiPhase)
+                                        return <PhaseCircuitsCard circuits={tournamentCircuits} races={circuitsView.races} title={circuitsView.title} onRefresh={refresh} refreshing={loading} passEnabled={circuitsView.passEnabled} collapsible defaultOpen={false} searchable />
+                                    })()}
+                                </>
+                            ) : (
+                                <div className="rounded-3xl border border-dashed border-slate-200 dark:border-border bg-white dark:bg-card p-8 text-center shadow-sm">
+                                    <p className="text-sm text-slate-500 dark:text-muted-foreground">Non ti sei qualificato per questa fase.</p>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -792,20 +808,6 @@ const TournamentDetail = () => {
                         const circuitsView = buildGroupCircuitsView(myGroup)
                         return (
                             <div className="space-y-6">
-                                {bracketRaces.length > 0 ? (
-                                    <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden shadow-sm">
-                                        <div className="px-5 py-4 border-b border-slate-100 dark:border-border">
-                                            <p className="text-xs font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Gare e risultati</p>
-                                        </div>
-                                        <div className="p-4">
-                                            <RaceList races={bracketRaces} circuitsById={circuitsById} charactersById={charactersById} />
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-8 text-center shadow-sm">
-                                        <p className="text-sm text-slate-500 dark:text-muted-foreground">Nessuna gara ancora disputata.</p>
-                                    </div>
-                                )}
                                 <GroupCard
                                     groupKey={myGroup.groupName}
                                     races={bracketRaces}
@@ -819,7 +821,7 @@ const TournamentDetail = () => {
                                     withdrawnPlayerIds={withdrawnPlayerIdSet}
                                 />
                                 {circuitsView && (
-                                    <PhaseCircuitsCard circuits={tournamentCircuits} races={circuitsView.races} title={circuitsView.title} onRefresh={refresh} refreshing={loading} passEnabled={circuitsView.passEnabled} />
+                                    <PhaseCircuitsCard circuits={tournamentCircuits} races={circuitsView.races} title={circuitsView.title} onRefresh={refresh} refreshing={loading} passEnabled={circuitsView.passEnabled} collapsible defaultOpen={false} searchable />
                                 )}
                                 <SpareggioEsitiList
                                     duelloGroups={bracketDuelloGroups}
@@ -833,10 +835,18 @@ const TournamentDetail = () => {
                         )
                     })()}
 
+                    {/* ── TAB: Gare — solo gironi, tutte le fasi/gironi/batterie, sola
+                    lettura — RaceList genera da sola le pillole di filtro per group_name ── */}
+                    {userTab === 'gare' && isGroupStageView && (
+                        <div className="space-y-6">
+                            <RaceList races={tournament.races ?? []} circuitsById={circuitsById} charactersById={charactersById} />
+                        </div>
+                    )}
+
                     {/* ── TAB: Classifica Generale — solo gironi, combina Finale + Consolazione ── */}
                     {userTab === 'generale' && (
                         <div className="space-y-6">
-                            {tournament?.status === 'concluso' && tournament?.winner_id != null && (
+                            {tournament?.status === 'concluso' && tournament?.winner_id != null && !tournament.is_friendly && (
                                 <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/40 p-5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
                                     <div className="flex items-center gap-3">
                                         <PartyPopper size={20} className="shrink-0 text-amber-500 dark:text-amber-400" />
@@ -858,8 +868,10 @@ const TournamentDetail = () => {
                         </div>
                     )}
 
-                    {/* ── TAB: Gare ── */}
-                    {userTab === 'gare' && (
+                    {/* ── TAB: Gare — solo classic: i gironi hanno la propria tab "Gare"
+                    unificata sopra, senza il contatore n_races (stima grezza per i
+                    gironi, vedi gotcha in root CLAUDE.md) ── */}
+                    {userTab === 'gare' && !isGroupStageView && (
                         <div className="space-y-6">
                             {(tournament.races?.length ?? 0) === 0 && (
                                 <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-8 text-center shadow-sm">
@@ -1263,6 +1275,24 @@ const TournamentDetail = () => {
                 Semifinali/Finali) — stesso componente già usato lato player. */}
                 {activeSection === 'generale' && tournament.tournament_format === 'group_stage' && (
                     <div className="space-y-4">
+                        {tournament?.status === 'concluso' && tournament?.winner_id != null && !tournament.is_friendly && (
+                            <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/40 p-5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+                                <div className="flex items-center gap-3">
+                                    <PartyPopper size={20} className="shrink-0 text-amber-500 dark:text-amber-400" />
+                                    <div>
+                                        <p className="text-sm font-black uppercase tracking-widest text-amber-700 dark:text-amber-300">Torneo concluso</p>
+                                        <p className="text-xs text-amber-600 dark:text-amber-400">Rivivi la premiazione quando vuoi.</p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleReplayCelebration}
+                                    className="font-title shrink-0 rounded-xl bg-amber-500 px-4 py-2.5 text-[10px] tracking-wide text-white transition active:translate-y-px hover:bg-amber-400"
+                                >
+                                    Rivedi i festeggiamenti
+                                </button>
+                            </div>
+                        )}
                         <OverallClassificaCard tournament={tournament} playerMap={playerMapById} highlightPlayerId={myPlayerId} />
                     </div>
                 )}
