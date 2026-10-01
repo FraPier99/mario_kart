@@ -31,7 +31,7 @@ import PhaseCircuitsCard from '@/components/tournaments/PhaseCircuitsCard'
 import SpareggioEsitiList from '@/components/tournaments/SpareggioEsitiList'
 import CardLogPanel from '@/components/tournaments/CardLogPanel'
 import OverallClassificaCard from '@/components/tournaments/OverallClassificaCard'
-import { findPlayerGroup, groupLabel, isPodiumDuelKey, isPassEnabledForScope, passScopeKey, targetRacesForGroup, GROUP_BADGE_CLASSES } from '@/lib/groupStage'
+import { findPlayerGroup, findPlayerGroupInPhase, groupLabel, isPodiumDuelKey, isPassEnabledForScope, passScopeKey, targetRacesForGroup, GROUP_BADGE_CLASSES } from '@/lib/groupStage'
 import { useTournamentCards, MASTER_EFFECTS, SHELL_EFFECTS } from '@/hooks/useTournamentCards'
 import { getApiErrorMessage, tournamentsApi, authApi, schedineApi } from '@/services/apiClient'
 import { toast } from 'sonner'
@@ -117,25 +117,34 @@ const TournamentDetail = () => {
         return () => { active = false }
     }, [tournament?.id, tournament?.tournament_format, tournament?.races, tournament?.format_data])
 
+    // Circuiti disponibili/utilizzati per una fase/girone specifico della
+    // vista giocatore — parametrizzata sul gruppo così ciascuna tab di fase
+    // (Girone/Semifinale/Finale) può passare il proprio myGroupInXxxPhase
+    // invece di condividere un'unica vista legata alla fase corrente.
+    const buildGroupCircuitsView = useCallback((groupInfo) => {
+        if (!tournament || !groupInfo) return null
+        return {
+            title: `Circuiti · ${groupLabel(groupInfo.groupName)}`,
+            races: (tournament.races ?? []).filter((r) => r.phase === groupInfo.phase && r.group_name === groupInfo.groupName),
+            passEnabled: isPassEnabledForScope(tournament.format_data, passScopeKey(groupInfo.phase, groupInfo.groupName)),
+        }
+    }, [tournament])
+
     // Circuiti disponibili/utilizzati per la vista giocatore: in modalità a
-    // gironi mostra solo il proprio girone, in modalità classic l'intero torneo.
+    // gironi mostra solo il proprio girone (fase più avanzata), in modalità
+    // classic l'intero torneo.
     const myCircuitsView = useMemo(() => {
         if (!tournament) return null
         if (tournament.tournament_format === 'group_stage') {
             const myGroup = findPlayerGroup(tournament.format_data, myPlayerId)
-            if (!myGroup) return null
-            return {
-                title: `Circuiti · ${groupLabel(myGroup.groupName)}`,
-                races: (tournament.races ?? []).filter((r) => r.phase === myGroup.phase && r.group_name === myGroup.groupName),
-                passEnabled: isPassEnabledForScope(tournament.format_data, passScopeKey(myGroup.phase, myGroup.groupName)),
-            }
+            return buildGroupCircuitsView(myGroup)
         }
         return {
             title: 'Circuiti',
             races: (tournament.races ?? []).filter((r) => !r.is_duello),
             passEnabled: true,
         }
-    }, [tournament, myPlayerId])
+    }, [tournament, myPlayerId, buildGroupCircuitsView])
 
     const playerMapById = useMemo(
         () => new Map((players ?? []).map((p) => [p.id, p])),
@@ -549,15 +558,18 @@ const TournamentDetail = () => {
             ? localCardLog
             : localCardLog.filter((e) => e.group_name === myGroup.groupName)
 
-        // Nei tornei a gironi le vecchie tab "Classifica"/"Gare" (tutto
-        // mischiato) sono sostituite da una tab dedicata alla fase in cui si
-        // trova il giocatore (Girone/Semifinale, poi Finale/Consolazione) e
-        // da una classifica generale combinata — niente più da scorrere
-        // tutto insieme per trovare la propria posizione.
-        const myPhaseTabKey = myGroup?.phase === 'finals' ? 'finale' : 'fase'
+        // Tab per-fase SEPARATE E PERSISTENTI (Girone/Semifinale/Finale),
+        // invece di un'unica tab dinamica legata alla fase corrente: così
+        // una tab non sparisce (e il suo contenuto non diventa irraggiungibile)
+        // quando il giocatore avanza alla fase successiva.
+        const myGroupInGroupPhase = findPlayerGroupInPhase(tournament.format_data, myPlayerId, 'group')
+        const myGroupInSemiPhase = findPlayerGroupInPhase(tournament.format_data, myPlayerId, 'semifinal')
+        const myGroupInFinalsPhase = findPlayerGroupInPhase(tournament.format_data, myPlayerId, 'finals')
         const USER_TABS = isGroupStageView
             ? [
-                ...(myGroup ? [{ key: myPhaseTabKey, label: groupLabel(myGroup.groupName), icon: myGroup.phase === 'finals' ? Trophy : Users }] : []),
+                ...(myGroupInGroupPhase ? [{ key: 'gironi', label: 'Girone', icon: Users }] : []),
+                ...(myGroupInSemiPhase ? [{ key: 'semifinali', label: 'Semifinale', icon: Shield }] : []),
+                ...(myGroupInFinalsPhase ? [{ key: 'finale', label: groupLabel(myGroupInFinalsPhase.groupName), icon: Trophy }] : []),
                 { key: 'generale', label: 'Classifica Generale', icon: BarChart3 },
                 ...(!tournament.is_friendly && hasCardHistory ? [{ key: 'carte', label: 'Carte', icon: Zap }] : []),
             ]
@@ -714,37 +726,70 @@ const TournamentDetail = () => {
                         </div>
                     )}
 
-                    {/* ── TAB: Fase corrente (Girone/Semifinale) — solo gironi ── */}
-                    {userTab === 'fase' && myGroup && myGroup.phase !== 'finals' && (
+                    {/* ── TAB: Girone — solo gironi, persistente anche dopo l'avanzamento ── */}
+                    {userTab === 'gironi' && myGroupInGroupPhase && (
                         <div className="space-y-6">
                             <GroupCard
-                                groupKey={myGroup.groupName}
-                                races={(tournament.races ?? []).filter((r) => r.phase === myGroup.phase && r.group_name === myGroup.groupName && !r.is_duello)}
+                                groupKey={myGroupInGroupPhase.groupName}
+                                races={(tournament.races ?? []).filter((r) => r.phase === 'group' && r.group_name === myGroupInGroupPhase.groupName && !r.is_duello)}
                                 results={results}
                                 playerMap={playerMapById}
-                                seedPlayerIds={(myGroup.phase === 'group' ? tournament.format_data?.groups?.[myGroup.groupName] : tournament.format_data?.semifinals?.[myGroup.groupName]) ?? []}
+                                seedPlayerIds={tournament.format_data?.groups?.[myGroupInGroupPhase.groupName] ?? []}
                                 highlightPlayerId={myPlayerId}
-                                resolvedOrder={(myGroup.phase === 'group' ? resolvedClassifiche.group?.[myGroup.groupName] : resolvedClassifiche.semifinal?.[myGroup.groupName])}
+                                resolvedOrder={resolvedClassifiche.group?.[myGroupInGroupPhase.groupName]}
                                 onRefresh={refresh}
                                 refreshing={loading}
-                                targetRaces={targetRacesForGroup(myGroup.groupName, tournament.format_data)}
+                                targetRaces={targetRacesForGroup(myGroupInGroupPhase.groupName, tournament.format_data)}
                                 withdrawnPlayerIds={withdrawnPlayerIdSet}
                             />
-                            <TournamentResolutionNotes tournament={tournament} phaseFilter={myGroup.phase} />
-                            {myCircuitsView && (
-                                <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} onRefresh={refresh} refreshing={loading} passEnabled={myCircuitsView.passEnabled} />
-                            )}
+                            <TournamentResolutionNotes tournament={tournament} phaseFilter="group" />
+                            {buildGroupCircuitsView(myGroupInGroupPhase) && (() => {
+                                const circuitsView = buildGroupCircuitsView(myGroupInGroupPhase)
+                                return <PhaseCircuitsCard circuits={tournamentCircuits} races={circuitsView.races} title={circuitsView.title} onRefresh={refresh} refreshing={loading} passEnabled={circuitsView.passEnabled} />
+                            })()}
+                        </div>
+                    )}
+
+                    {/* ── TAB: Semifinale — solo gironi, persistente anche dopo l'avanzamento ── */}
+                    {userTab === 'semifinali' && myGroupInSemiPhase && (
+                        <div className="space-y-6">
+                            <GroupCard
+                                groupKey={myGroupInSemiPhase.groupName}
+                                races={(tournament.races ?? []).filter((r) => r.phase === 'semifinal' && r.group_name === myGroupInSemiPhase.groupName && !r.is_duello)}
+                                results={results}
+                                playerMap={playerMapById}
+                                seedPlayerIds={tournament.format_data?.semifinals?.[myGroupInSemiPhase.groupName] ?? []}
+                                highlightPlayerId={myPlayerId}
+                                resolvedOrder={resolvedClassifiche.semifinal?.[myGroupInSemiPhase.groupName]}
+                                onRefresh={refresh}
+                                refreshing={loading}
+                                targetRaces={targetRacesForGroup(myGroupInSemiPhase.groupName, tournament.format_data)}
+                                withdrawnPlayerIds={withdrawnPlayerIdSet}
+                            />
+                            <TournamentResolutionNotes tournament={tournament} phaseFilter="semifinal" />
+                            {buildGroupCircuitsView(myGroupInSemiPhase) && (() => {
+                                const circuitsView = buildGroupCircuitsView(myGroupInSemiPhase)
+                                return <PhaseCircuitsCard circuits={tournamentCircuits} races={circuitsView.races} title={circuitsView.title} onRefresh={refresh} refreshing={loading} passEnabled={circuitsView.passEnabled} />
+                            })()}
                         </div>
                     )}
 
                     {/* ── TAB: Finale/Consolazione — solo gironi, una volta composta la Finale ── */}
-                    {userTab === 'finale' && myGroup && myGroup.phase === 'finals' && (() => {
+                    {userTab === 'finale' && myGroupInFinalsPhase && (() => {
+                        const myGroup = myGroupInFinalsPhase
                         const bracketRaces = (tournament.races ?? []).filter((r) => r.phase === 'finals' && r.group_name === myGroup.groupName && !r.is_duello)
                         const bracketDuelloGroups = duelloGroups.filter((g) => (
                             myGroup.groupName === 'top'
                                 ? g.groupName.startsWith('finals_duello_podio_')
                                 : g.groupName.startsWith('finals_duello_consolazione_')
                         ))
+                        // Le batterie di Consolazione multiple (bottom_B1/B2/...) hanno i
+                        // giocatori seme in finals.bottom_heats, non in finals.bottom — vedi
+                        // stesso schema già usato in GroupPlancia.jsx per le GroupCard admin.
+                        const seedPlayerIds = myGroup.groupName.startsWith('bottom_')
+                            ? (tournament.format_data?.finals?.bottom_heats?.[myGroup.groupName.slice('bottom_'.length)] ?? [])
+                            : (tournament.format_data?.finals?.[myGroup.groupName] ?? [])
+                        const circuitsView = buildGroupCircuitsView(myGroup)
                         return (
                             <div className="space-y-6">
                                 {bracketRaces.length > 0 ? (
@@ -766,15 +811,15 @@ const TournamentDetail = () => {
                                     races={bracketRaces}
                                     results={results}
                                     playerMap={playerMapById}
-                                    seedPlayerIds={tournament.format_data?.finals?.[myGroup.groupName] ?? []}
+                                    seedPlayerIds={seedPlayerIds}
                                     highlightPlayerId={myPlayerId}
                                     onRefresh={refresh}
                                     refreshing={loading}
                                     targetRaces={targetRacesForGroup(myGroup.groupName, tournament.format_data)}
                                     withdrawnPlayerIds={withdrawnPlayerIdSet}
                                 />
-                                {myCircuitsView && (
-                                    <PhaseCircuitsCard circuits={tournamentCircuits} races={myCircuitsView.races} title={myCircuitsView.title} onRefresh={refresh} refreshing={loading} passEnabled={myCircuitsView.passEnabled} />
+                                {circuitsView && (
+                                    <PhaseCircuitsCard circuits={tournamentCircuits} races={circuitsView.races} title={circuitsView.title} onRefresh={refresh} refreshing={loading} passEnabled={circuitsView.passEnabled} />
                                 )}
                                 <SpareggioEsitiList
                                     duelloGroups={bracketDuelloGroups}
@@ -1185,6 +1230,7 @@ const TournamentDetail = () => {
                                         ? [{ key: 'gironi', label: 'Gironi/Fasi', icon: Flag }]
                                         : [{ key: 'gare', label: 'Risultati', icon: Flag }]
                                 ) : []),
+                                ...(isAdmin && tournament.tournament_format === 'group_stage' ? [{ key: 'generale', label: 'Generale', icon: Trophy }] : []),
                                 { key: 'leaderboard', label: 'Classifica', icon: BarChart3 },
                                 ...(!tournament.is_friendly ? [{ key: 'carte', label: 'Carte', icon: Zap }] : []),
                                 { key: 'races', label: 'Gare', icon: ListChecks },
@@ -1211,6 +1257,15 @@ const TournamentDetail = () => {
                     </div>
                 </div>
                 </div>
+
+                {/* Tab Generale: classifica combinata, fuori dai sotto-tab di fase
+                di GroupPlancia (che altrimenti la ripeteva sotto Gironi/
+                Semifinali/Finali) — stesso componente già usato lato player. */}
+                {activeSection === 'generale' && tournament.tournament_format === 'group_stage' && (
+                    <div className="space-y-4">
+                        <OverallClassificaCard tournament={tournament} playerMap={playerMapById} highlightPlayerId={myPlayerId} />
+                    </div>
+                )}
 
                 {/* Tab Classifica: fuori dalla card "Gestione torneo" — stessa
                 larghezza/stile della vista player, così l'unica differenza tra

@@ -20,7 +20,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Crown, Medal, Shield, Trophy } from 'lucide-react'
 import { consolationHeatKeysFromFormatData, groupColor, groupKeysFromFormatData, groupLabel, semifinalKeysFromFormatData, targetRacesForGroup } from '@/lib/groupStage'
-import OverallClassificaCard from '@/components/tournaments/OverallClassificaCard'
 import RefreshButton from '@/components/common/RefreshButton'
 import { tournamentsApi } from '@/services/apiClient'
 
@@ -400,11 +399,6 @@ const GroupPlancia = ({ tournament, players, results, highlightPlayerId = null }
                         ))}
                     </div>
                 </div>
-            )}
-
-            {/* ── Classifica generale combinata: Finale + Consolazione ──────── */}
-            {finalsComposed && (
-                <OverallClassificaCard tournament={tournament} playerMap={playerMap} highlightPlayerId={highlightPlayerId} />
             )}
         </div>
     )

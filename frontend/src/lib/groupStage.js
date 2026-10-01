@@ -129,12 +129,6 @@ export function consolationHeatKeysFromFormatData(formatData) {
 }
 
 /**
- * Trova fase e girone in cui si trova attualmente un giocatore, partendo
- * dalla fase più avanzata (finali → semifinali → gironi). Ritorna
- * `{ phase, groupName }` oppure `null` se il giocatore non è ancora
- * assegnato a nessun girone.
- */
-/**
  * Chiave di scope usata in format_data.pass_enabled per attivare/
  * disattivare l'inclusione dei circuiti a pass/DLC — un torneo classic ha
  * un unico scope fisso "classic"; un torneo a gironi ha uno scope
@@ -154,24 +148,62 @@ export function isPassEnabledForScope(formatData, scopeKey) {
     return formatData?.pass_enabled?.[scopeKey] ?? true
 }
 
-export function findPlayerGroup(formatData, playerId) {
+/**
+ * Trova il girone/batteria di un giocatore in UNA fase specifica
+ * ('group'/'semifinal'/'finals'), indipendentemente da quale sia la fase
+ * più avanzata del torneo — serve per mostrare tab per-fase persistenti
+ * (es. "Girone" resta raggiungibile anche dopo che il giocatore è
+ * avanzato alle semifinali). Ritorna `{ phase, groupName }` o `null`.
+ */
+export function findPlayerGroupInPhase(formatData, playerId, phase) {
     if (playerId == null) return null
     const fd = formatData ?? {}
 
-    const finals = fd.finals ?? {}
-    for (const key of ['top', 'bottom']) {
-        if ((finals[key] ?? []).includes(playerId)) return { phase: 'finals', groupName: key }
+    if (phase === 'finals') {
+        const finals = fd.finals ?? {}
+        for (const key of ['top', 'bottom']) {
+            if ((finals[key] ?? []).includes(playerId)) return { phase: 'finals', groupName: key }
+        }
+        // Consolazione divisa in più batterie (bottom_B1/B2/...): i membri
+        // non compaiono in finals.bottom ma solo nella relativa batteria di
+        // finals.bottom_heats — senza questo controllo un giocatore in una
+        // di queste batterie risultava "non trovato" in finals.
+        for (const heatKey of consolationHeatKeysFromFormatData(fd)) {
+            const heatPlayers = fd.finals?.bottom_heats?.[heatKey] ?? []
+            if (heatPlayers.includes(playerId)) return { phase: 'finals', groupName: `bottom_${heatKey}` }
+        }
+        return null
     }
 
-    const semis = fd.semifinals ?? {}
-    for (const key of Object.keys(semis)) {
-        if ((semis[key] ?? []).includes(playerId)) return { phase: 'semifinal', groupName: key }
+    if (phase === 'semifinal') {
+        const semis = fd.semifinals ?? {}
+        for (const key of Object.keys(semis)) {
+            if ((semis[key] ?? []).includes(playerId)) return { phase: 'semifinal', groupName: key }
+        }
+        return null
     }
 
-    const groups = fd.groups ?? {}
-    for (const key of Object.keys(groups)) {
-        if ((groups[key] ?? []).includes(playerId)) return { phase: 'group', groupName: key }
+    if (phase === 'group') {
+        const groups = fd.groups ?? {}
+        for (const key of Object.keys(groups)) {
+            if ((groups[key] ?? []).includes(playerId)) return { phase: 'group', groupName: key }
+        }
+        return null
     }
 
     return null
+}
+
+/**
+ * Trova fase e girone in cui si trova attualmente un giocatore, partendo
+ * dalla fase più avanzata (finali → semifinali → gironi). Ritorna
+ * `{ phase, groupName }` oppure `null` se il giocatore non è ancora
+ * assegnato a nessun girone.
+ */
+export function findPlayerGroup(formatData, playerId) {
+    return (
+        findPlayerGroupInPhase(formatData, playerId, 'finals') ??
+        findPlayerGroupInPhase(formatData, playerId, 'semifinal') ??
+        findPlayerGroupInPhase(formatData, playerId, 'group')
+    )
 }

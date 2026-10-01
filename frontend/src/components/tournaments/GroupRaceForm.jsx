@@ -410,15 +410,13 @@ const GroupRaceForm = ({
                         <CheckCircle2 size={13} />
                         <p className="text-xs font-black">Pronto per il salvataggio</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-1 pl-5">
+                    <div className="flex flex-col gap-1.5 pl-5">
                         {slots.map((slot, i) => {
                             const p = activeGroupPlayers.find((pl) => String(pl.id) === String(slot.playerId))
-                            const ch = characters.find((c) => String(c.id) === String(slot.characterId))
                             return (
-                                <p key={i} className="text-[11px] text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
-                                    {MEDAL[i]} {p?.nickname ?? '—'}
-                                    {ch && <span className="opacity-60">· {ch.name}</span>}
-                                    <span className="font-black ml-auto">{PUNTI[i]} pt</span>
+                                <p key={i} className="text-[11px] text-emerald-700 dark:text-emerald-300 flex items-center justify-between gap-2">
+                                    <span className="truncate">{MEDAL[i]} {p?.nickname ?? '—'}</span>
+                                    <span className="font-black shrink-0">{PUNTI[i]} pt</span>
                                 </p>
                             )
                         })}

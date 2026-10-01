@@ -252,7 +252,6 @@ const WinnerFinalizeCard = ({ tournament, leader, onFinalized, onReplayCelebrati
                             <div className="mt-0.5 uppercase text-[10px] font-black tracking-[0.3em] text-slate-500 dark:text-slate-400">
                                 Stato: {getStatusLabel(tournament?.status ?? 'in_corso')}
                             </div>
-                            <div className="mt-0.5">Punti: {(officialWinner ?? leader)?.points ?? 0} | Gare vinte: {(officialWinner ?? leader)?.raceWins ?? 0} | Podi: {(officialWinner ?? leader)?.podiums ?? 0}</div>
                         </div>
                     </div>
                 </div>

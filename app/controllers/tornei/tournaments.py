@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -52,14 +52,23 @@ router = APIRouter(prefix="/tournaments", tags=["Tournaments"])
 
 
 @router.get("", response_model=list[TournamentResponse])
-def get_all_tournaments(response: Response, db: Session = Depends(get_db)):
-    # Cache breve e non i 60s usati per /gallery e /players: questo endpoint
-    # è anche il bersaglio del polling 20s che tiene live un torneo "in
-    # corso" (TournamentDetail.jsx) — una cache più lunga lo renderebbe
-    # silenziosamente inutile per metà dei tick. 10s aiuta comunque le
-    # chiamate ravvicinate (più componenti che lo richiamano nello stesso
-    # istante) senza intaccare quella freschezza.
-    response.headers["Cache-Control"] = "public, max-age=10"
+def get_all_tournaments(db: Session = Depends(get_db)):
+    # NIENTE Cache-Control qui (rimossa: prima "public, max-age=10"). La
+    # cache aiutava solo le rare chiamate ravvicinate (es. refresh() in
+    # AppDataContext.jsx e il fallback triggerConcluded di
+    # SocketContext.jsx scattano entrambi al login), ma era anche la causa
+    # ricorrente di un bug subdolo: un aggiornamento locale ottimistico
+    # (patchTournament, vedi i suoi commenti sparsi nel frontend) veniva
+    # silenziosamente sovrascritto da una risposta cache-ata PRE-modifica
+    # se un refresh() scattava entro quei 10s — più volte aggirato ad hoc
+    # per singole azioni (chiusura gironi/batterie, cambio stato, ecc.), ma
+    # il polling 20s di TournamentDetail.jsx (necessario per tenere live un
+    # torneo "in corso" da più dispositivi) non è legato a nessuna azione
+    # specifica e quindi non è aggirabile con un patch locale: per qualche
+    # secondo mostrava dati vecchi (es. gironi ancora "aperti" appena dopo
+    # aver generato le semifinali) finché il poll successivo non arrivava
+    # con dati finalmente freschi. Il costo di query extra è trascurabile
+    # per il traffico di questa app.
     return getAllTournaments(db)
 
 
