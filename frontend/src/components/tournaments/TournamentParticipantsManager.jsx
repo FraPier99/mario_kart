@@ -3,6 +3,8 @@ import { Search, UserMinus2, UserPlus2, Lock } from 'lucide-react'
 import { toast } from 'sonner'
 import { tournamentsApi, getApiErrorMessage } from '@/services/apiClient'
 
+const MAX_CLASSIC_PLAYERS = 8
+
 const TournamentParticipantsManager = ({ tournament, players = [], initialParticipantIds = [], disabled = false, onUpdated, excludePlayerIds = [] }) => {
     const [selectedIds, setSelectedIds] = useState([])
     const [searchTerm, setSearchTerm] = useState('')
@@ -36,7 +38,7 @@ const TournamentParticipantsManager = ({ tournament, players = [], initialPartic
     }
 
     const handleSave = async () => {
-        if (disabled) return
+        if (effectiveDisabled || overClassicCap) return
 
         setSaving(true)
         try {
@@ -55,6 +57,14 @@ const TournamentParticipantsManager = ({ tournament, players = [], initialPartic
     }
 
     const isInCorso = tournament?.status === 'in_corso'
+    const isGroupStage = tournament?.tournament_format === 'group_stage'
+    // I gironi sono congelati dopo il seed (stessa logica di seed_group_stage
+    // lato backend, vedi update_tournament) per non invalidare i pronostici
+    // "Finalisti" delle schedine già compilate — qualunque modifica al
+    // roster va quindi bloccata qui, non solo quella che eccede un tetto.
+    const groupsAlreadySeeded = isGroupStage && Object.keys(tournament?.format_data?.groups ?? {}).length > 0
+    const overClassicCap = !isGroupStage && selectedIds.length > MAX_CLASSIC_PLAYERS
+    const effectiveDisabled = disabled || groupsAlreadySeeded
 
     return (
         <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm space-y-4">
@@ -66,6 +76,14 @@ const TournamentParticipantsManager = ({ tournament, players = [], initialPartic
                     </p>
                 </div>
             )}
+            {groupsAlreadySeeded && (
+                <div className="flex items-center gap-3 rounded-2xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/8 px-4 py-3">
+                    <Lock size={14} className="shrink-0 text-rose-500" />
+                    <p className="text-xs font-black text-rose-600 dark:text-rose-400">
+                        Gironi già assegnati — i partecipanti sono bloccati. Elimina e ricrea il torneo per cambiarli.
+                    </p>
+                </div>
+            )}
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <p className="text-xs font-black uppercase tracking-[0.3em] text-amber-600">Partecipanti torneo</p>
@@ -74,7 +92,7 @@ const TournamentParticipantsManager = ({ tournament, players = [], initialPartic
                         La modifica aggiorna i partecipanti del torneo senza toccare i risultati già inseriti.
                     </p>
                 </div>
-                <div className="rounded-2xl bg-slate-50 dark:bg-muted px-4 py-3 text-sm font-black uppercase tracking-widest text-slate-600 dark:text-muted-foreground">
+                <div className={`rounded-2xl px-4 py-3 text-sm font-black uppercase tracking-widest ${overClassicCap ? 'bg-rose-50 dark:bg-rose-500/8 text-rose-600 dark:text-rose-400' : 'bg-slate-50 dark:bg-muted text-slate-600 dark:text-muted-foreground'}`}>
                     {selectedIds.length}/{selectablePlayers.length} attivi
                 </div>
             </div>
@@ -98,9 +116,9 @@ const TournamentParticipantsManager = ({ tournament, players = [], initialPartic
                             <button
                                 key={player.id}
                                 type="button"
-                                disabled={disabled}
+                                disabled={effectiveDisabled}
                                 onClick={() => togglePlayer(player.id)}
-                                className={`rounded-2xl border px-4 py-3 text-left transition ${selected ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-900 dark:text-emerald-200' : 'border-slate-200 dark:border-border bg-slate-50 dark:bg-muted text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'} ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
+                                className={`rounded-2xl border px-4 py-3 text-left transition ${selected ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-900 dark:text-emerald-200' : 'border-slate-200 dark:border-border bg-slate-50 dark:bg-muted text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'} ${effectiveDisabled ? 'cursor-not-allowed opacity-60' : ''}`}
                             >
                                 <div className="flex items-center justify-between gap-3">
                                     <div>
@@ -117,6 +135,12 @@ const TournamentParticipantsManager = ({ tournament, players = [], initialPartic
                 </div>
             </div>
 
+            {overClassicCap && (
+                <p className="text-xs font-black text-rose-600 dark:text-rose-400">
+                    Massimo {MAX_CLASSIC_PLAYERS} giocatori per la classifica unica — togli qualcuno prima di salvare.
+                </p>
+            )}
+
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-slate-50 dark:bg-muted px-4 py-4">
                 <div className="text-sm text-slate-600 dark:text-muted-foreground">
                     <span className="font-black text-slate-900 dark:text-foreground">Selezionati:</span> {selectedIds.length}
@@ -124,7 +148,7 @@ const TournamentParticipantsManager = ({ tournament, players = [], initialPartic
                 <button
                     type="button"
                     onClick={handleSave}
-                    disabled={disabled || saving}
+                    disabled={effectiveDisabled || saving || overClassicCap}
                     className="rounded-2xl bg-amber-500 px-4 py-3 text-sm font-black uppercase tracking-widest text-white transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                     {saving ? 'Salvataggio...' : 'Aggiorna partecipanti'}

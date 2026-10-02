@@ -824,6 +824,24 @@ def update_tournament(db: Session, tmentData: UpdateTournament, tournament_id: i
         raise ValueError("Impossibile modificare i partecipanti di un torneo in corso")
 
     if participant_ids is not None:
+        # I gironi sono congelati dopo il seed (vedi stesso rifiuto in
+        # seed_group_stage) per non invalidare i pronostici "Finalisti"
+        # delle schedine già compilate — un giocatore aggiunto qui
+        # diventerebbe "orfano" (in nessun girone) perché questo percorso
+        # non tocca mai format_data.groups/semifinals.
+        if t.tournament_format == "group_stage" and (t.format_data or {}).get("groups"):
+            raise ValueError(
+                "I gironi sono già stati assegnati per questo torneo: i partecipanti non possono "
+                "più essere modificati (cambierebbe i pronostici 'Finalisti' delle schedine già "
+                "compilate). Elimina e ricrea il torneo se devi cambiare i partecipanti."
+            )
+        # Stesso tetto già applicato in create_tournament — qui mancava,
+        # permettendo di bypassarlo aggiungendo un giocatore in un secondo
+        # momento tramite il form partecipanti.
+        if t.tournament_format != "group_stage" and len(participant_ids) > MAX_CLASSIC_PLAYERS:
+            raise ValueError(
+                f"Il formato a classifica unica supporta al massimo {MAX_CLASSIC_PLAYERS} giocatori"
+            )
         _reject_superadmin_participants(db, participant_ids)
         db.query(TournamentPlayer).filter(
             TournamentPlayer.tournament_id == tournament_id
@@ -831,6 +849,15 @@ def update_tournament(db: Session, tmentData: UpdateTournament, tournament_id: i
         for pid in participant_ids:
             link = TournamentPlayer(tournament_id=tournament_id, player_id=pid)
             db.add(link)
+        # t.n_players era impostato SOLO alla creazione e mai più
+        # risincronizzato: una gara creata dopo un cambio di roster
+        # congelava comunque Race.active_player_count sul vecchio conteggio
+        # (vedi races.py, ramo classic), scegliendo la riga sbagliata di
+        # PUNTEGGI_CONFIG — punti errati per OGNI gara successiva, o un
+        # errore "Invalid Position" se qualcuno arrivava oltre il vecchio
+        # conteggio. Tenere n_players allineato al roster reale risolve
+        # entrambi i casi alla radice.
+        t.n_players = len(participant_ids)
 
     should_settle_schedine = (not t.is_friendly) and (
         (previous_status != "concluso" and t.status == "concluso")
