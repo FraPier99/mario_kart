@@ -56,6 +56,8 @@
         () => externalConfig ?? getCelebrationConfig(tournament?.game_id),
         [externalConfig, tournament?.game_id]
     )
+    const runnerUp = standings?.[1] ?? null
+    const hasRunnerUp = Boolean(runnerUp)
     // Sprite (mugshot/item) del gioco di questo torneo — vedi lib/overlayAssets.js.
     // Per un gioco senza sprite sheet ancora caricato, i campi restano
     // null/{} e i punti d'uso più sotto ricadono già su un fallback pulito.
@@ -222,6 +224,11 @@
             engineLoopRef.current = null
         }
 
+        if (phase === 'runnerUp' && winnerVoiceRef.current?.stop) {
+            winnerVoiceRef.current.stop()
+            winnerVoiceRef.current = null
+        }
+
         if (config.phaseSounds[phase]) {
             const result = config.phaseSounds[phase]()
             if (result && config.engineLoopPhase === phase) {
@@ -350,6 +357,12 @@
             winnerRevealRef.current = setTimeout(() => setPhase('winner'), CELEBRATION_DURATION.WINNER_REVEAL_MS)
             return () => { if (winnerRevealRef.current) clearTimeout(winnerRevealRef.current) }
         }, [phase])
+
+        useEffect(() => {
+            if (phase !== 'winner' || !hasRunnerUp) return undefined
+            const holdTimer = setTimeout(() => setPhase('runnerUp'), CELEBRATION_DURATION.WINNER_HOLD_MS)
+            return () => clearTimeout(holdTimer)
+        }, [phase, hasRunnerUp])
 
         // Roulette tick + visual
         const startRoulette = useCallback(() => {
@@ -568,11 +581,11 @@
                 </button>
 
                 {/* X button */}
-                {(phase === 'countdown' || phase === 'winnerReveal' || phase === 'winner') && (
+                {(phase === 'countdown' || phase === 'winnerReveal' || phase === 'runnerUp' || (phase === 'winner' && !hasRunnerUp)) && (
                     <button
-                        onClick={phase === 'winner' ? close : skipToWinner}
+                        onClick={phase === 'countdown' || phase === 'winnerReveal' ? skipToWinner : close}
                         className="absolute right-5 top-5 z-200 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/50 backdrop-blur-sm transition hover:bg-white/20 hover:text-white"
-                        title={phase === 'winner' ? 'Chiudi' : 'Salta al vincitore'}
+                        title={phase === 'countdown' || phase === 'winnerReveal' ? 'Salta al vincitore' : 'Chiudi'}
                     >
                         <X size={20} />
                     </button>
@@ -598,7 +611,7 @@
                 ))}
 
                 {/* Starry background */}
-                {(phase === 'thankyou' || phase === 'derapata' || phase === 'blueShell' || phase === 'countdown' || phase === 'winnerReveal' || phase === 'winner') && starryBg.map((s) => (
+                {(phase === 'thankyou' || phase === 'derapata' || phase === 'blueShell' || phase === 'countdown' || phase === 'winnerReveal' || phase === 'winner' || phase === 'runnerUp') && starryBg.map((s) => (
                     <div key={s.key} className="absolute rounded-full bg-white pointer-events-none" style={{
                         left: `${s.left}%`, top: `${s.top}%`, width: s.size, height: s.size,
                         animation: `twinkle ${s.duration}s ease-in-out infinite`, animationDelay: `${s.delay}s`,
@@ -1118,6 +1131,24 @@
                             {overlayTexts?.countdown?.labels?.winner ?? 'CAMPIONE!'}
                         </p>
                         <p className="text-lg sm:text-2xl md:text-3xl font-black uppercase text-white px-4 text-center wrap-break-word">{leader.nickname?.toUpperCase()}</p>
+                    </div>
+                )}
+
+                {/* === RUNNER-UP PHASE (ultima slide, con X) === */}
+                {phase === 'runnerUp' && runnerUp && (
+                    <div className="relative z-20 flex flex-col items-center gap-6 text-center animate-fade-in">
+                        <div className="relative rounded-3xl p-1"
+                            style={{ background: 'linear-gradient(135deg, #e2e8f0, #94a3b8, #e2e8f0)', boxShadow: '0 0 60px rgba(148,163,184,0.55)' }}>
+                            <img src={runnerUp.img_url || buildAvatarPlaceholder(runnerUp.nickname ?? 'Secondo')}
+                                alt={runnerUp.nickname}
+                                className="h-40 w-40 md:h-52 md:w-52 rounded-3xl object-cover will-change-transform animate-bounce-in" />
+                        </div>
+                        <p className="text-sm sm:text-lg font-black uppercase tracking-[0.3em] text-slate-300">
+                            {overlayTexts?.countdown?.labels?.runnerUp ?? 'SECONDO CLASSIFICATO'}
+                        </p>
+                        <p className="text-2xl sm:text-5xl md:text-6xl font-black uppercase tracking-wide text-white drop-shadow-[0_4px_20px_rgba(148,163,184,0.6)] px-4 text-center wrap-break-word">
+                            {runnerUp.nickname?.toUpperCase()}
+                        </p>
                     </div>
                 )}
             </div>

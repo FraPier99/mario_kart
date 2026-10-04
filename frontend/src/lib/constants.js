@@ -9,6 +9,7 @@ export const CELEBRATION_PHASE = {
   COUNTDOWN: 'countdown',
   WINNER_REVEAL: 'winnerReveal',
   WINNER: 'winner',
+  RUNNER_UP: 'runnerUp',
 }
 
 export const CELEBRATION_DURATION = {
@@ -17,6 +18,7 @@ export const CELEBRATION_DURATION = {
   BLUE_SHELL_MS: 5500,
   COUNTDOWN_MS: 35000,
   WINNER_REVEAL_MS: 6000,
+  WINNER_HOLD_MS: 7000,
 }
 
 /**

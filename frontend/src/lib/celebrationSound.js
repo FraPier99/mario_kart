@@ -145,6 +145,20 @@ export const playWavLoop = (path) => {
     }
 }
 
+export const playTrack = (url) => {
+    if (!url) return null
+    if (isCelebrationMuted()) return null
+    unlockCelebrationAudio()
+    try {
+        const audio = new Audio(url)
+        audio.volume = getCelebrationVolume()
+        audio.play().catch(() => {})
+        return audio
+    } catch {
+        return null
+    }
+}
+
 export const stopWav = (audio) => {
     if (!audio) return
     try {

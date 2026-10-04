@@ -1,5 +1,5 @@
 import {
-  playWavLoop, WAV_PATHS, WAV_PATHS_MK8D,
+  playWavLoop, playTrack, playPodiumFanfare, WAV_PATHS, WAV_PATHS_MK8D,
   playBlueShellIncoming, playExplosionHit,
   playCountdownBeep, playCountdownGo,
   playWinnerReveal, playVictoryFanfare,
@@ -13,6 +13,11 @@ import { playMkdsCharacterVoice } from '@/lib/mkdsSounds'
 import { playMk8dCharacterVoice } from '@/lib/mk8dSounds'
 import { COLORS, CONFETTI_COLORS } from '@/lib/constants'
 
+// Traccia della slide "secondo classificato" (ultima slide), condivisa da
+// tutti i giochi. Per cambiarla sostituisci il file in assets/sounds/common/overlay/.
+// Con null si usa il fanfare sintetizzato di fallback (nessun file richiesto).
+const RUNNER_UP_TRACK_URL = new URL('../assets/sounds/common/overlay/runner_up.mp4', import.meta.url).href
+
 const mkdsConfig = {
   gameId: 1,
   name: 'Mario Kart DS',
@@ -23,6 +28,7 @@ const mkdsConfig = {
     blueShell: () => { playBlueShellIncoming() },
     winnerReveal: () => { playWinnerReveal() },
     winner: () => { playVictoryFanfare() },
+    runnerUp: () => (RUNNER_UP_TRACK_URL ? playTrack(RUNNER_UP_TRACK_URL) : playPodiumFanfare()),
   },
 
   characterVoice: {
@@ -64,6 +70,7 @@ const mk8dConfig = {
     blueShell: () => { playMk8dBlueShellIncoming() },
     winnerReveal: () => { playMk8dWinnerReveal() },
     winner: () => { playMk8dVictoryFanfare() },
+    runnerUp: () => (RUNNER_UP_TRACK_URL ? playTrack(RUNNER_UP_TRACK_URL) : playPodiumFanfare()),
   },
 
   characterVoice: {
