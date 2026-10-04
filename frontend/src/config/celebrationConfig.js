@@ -24,6 +24,19 @@ const RUNNER_UP_LINES = [
   "Non c'è sconfitta nel cuore di chi lotta",
   'Dietro al campione c\'è sempre chi ha dato tutto',
   'Il podio è solo la punta: la fatica è di tutti',
+  'Il secondo classificato è il primo dei perdenti',
+  'Hai dato tutto, e questo è ciò che conta davvero',
+  'Hai dimostrato grande determinazione e spirito sportivo',
+  'Il tuo impegno e la tua dedizione sono stati ammirevoli',
+  'Hai affrontato la sfida con coraggio e perseveranza',
+  'Anche se non sei arrivato primo, sei comunque un vincitore',
+  'Hai dimostrato grande talento e abilità, e questo è ciò che conta',
+  'Il tuo spirito competitivo e la tua passione per il gioco sono stati evidenti',
+  'Hai dimostrato grande resilienza e capacità di adattamento',
+  'Il tuo impegno e la tua determinazione sono stati fonte di ispirazione per tutti noi',
+  'Hai dimostrato grande sportività e rispetto per gli altri concorrenti',
+  'Anche se non sei arrivato primo, hai comunque lasciato il segno',
+  'THE WINNER TAKES IT ALL',
 ]
 
 const mkdsConfig = {
