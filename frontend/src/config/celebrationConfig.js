@@ -18,6 +18,14 @@ import { COLORS, CONFETTI_COLORS } from '@/lib/constants'
 // Con null si usa il fanfare sintetizzato di fallback (nessun file richiesto).
 const RUNNER_UP_TRACK_URL = new URL('../assets/sounds/common/overlay/runner_up.mp4', import.meta.url).href
 
+// Frasi che scorrono nell'ultima slide (ordine casuale, una alla volta).
+const RUNNER_UP_LINES = [
+  'Non dimentichiamo anche il secondo classificato',
+  "Non c'è sconfitta nel cuore di chi lotta",
+  'Dietro al campione c\'è sempre chi ha dato tutto',
+  'Il podio è solo la punta: la fatica è di tutti',
+]
+
 const mkdsConfig = {
   gameId: 1,
   name: 'Mario Kart DS',
@@ -35,6 +43,8 @@ const mkdsConfig = {
     winnerReveal: async (name) => { return await playMkdsCharacterVoice(name) },
     winner: async (name) => playMkdsCharacterVoice(name, { loop: true, loopGapMs: 4000 }),
   },
+
+  runnerUpLines: RUNNER_UP_LINES,
 
   engineLoopPhase: 'derapata',
   engineLoopCleanupPhases: ['blueShell', 'countdown'],
@@ -77,6 +87,8 @@ const mk8dConfig = {
     winnerReveal: async (name) => { return await playMk8dCharacterVoice(name) },
     winner: async (name) => playMk8dCharacterVoice(name, { loop: true, loopGapMs: 4000 }),
   },
+
+  runnerUpLines: RUNNER_UP_LINES,
 
   engineLoopPhase: 'derapata',
   engineLoopCleanupPhases: ['blueShell', 'countdown'],

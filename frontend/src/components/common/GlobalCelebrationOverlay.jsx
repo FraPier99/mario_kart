@@ -58,6 +58,10 @@
     )
     const runnerUp = standings?.[1] ?? null
     const hasRunnerUp = Boolean(runnerUp)
+    const runnerUpLines = useMemo(() => config.runnerUpLines ?? [], [config])
+    const [runnerUpLine, setRunnerUpLine] = useState(0)
+    const runnerUpLineRef = useRef(0)
+    const [runnerUpLineVisible, setRunnerUpLineVisible] = useState(false)
     // Sprite (mugshot/item) del gioco di questo torneo — vedi lib/overlayAssets.js.
     // Per un gioco senza sprite sheet ancora caricato, i campi restano
     // null/{} e i punti d'uso più sotto ricadono già su un fallback pulito.
@@ -95,6 +99,29 @@
         const countdownVoiceRef = useRef(null)
         const prevPhaseRef = useRef(phase)
         const flashTimersRef = useRef([])
+
+        useEffect(() => {
+            if (phase !== 'runnerUp' || runnerUpLines.length === 0) return undefined
+            let swapTimer = null
+            const showTimer = setTimeout(() => setRunnerUpLineVisible(true), 2000)
+            const cycle = setInterval(() => {
+                setRunnerUpLineVisible(false)
+                swapTimer = setTimeout(() => {
+                    let next = runnerUpLineRef.current
+                    if (runnerUpLines.length > 1) {
+                        while (next === runnerUpLineRef.current) next = Math.floor(Math.random() * runnerUpLines.length)
+                    }
+                    runnerUpLineRef.current = next
+                    setRunnerUpLine(next)
+                    setRunnerUpLineVisible(true)
+                }, 500)
+            }, 4000)
+            return () => {
+                clearTimeout(showTimer)
+                clearInterval(cycle)
+                clearTimeout(swapTimer)
+            }
+        }, [phase, runnerUpLines])
 
 
         // Static animation arrays
@@ -533,7 +560,7 @@
         }, [])
 
         // Rete di sicurezza: se il genitore smonta l'overlay senza passare da
-        // close()/skipToWinner() (es. logout, cambio pagina che rimuove il
+        // close() (es. logout, cambio pagina che rimuove il
         // componente da sotto), questo effetto ferma comunque ogni suono/loop
         // residuo — altrimenti il loop voce vincitore continua a suonare
         // anche se il componente non esiste più.
@@ -544,13 +571,6 @@
             onClose?.()
         }, [cleanupTimers, onClose])
 
-        const skipToWinner = useCallback(() => {
-            cleanupTimers()
-            setRevealedPlayerIds(new Set(standings.map((p) => p.playerId)))
-            setRevealPlayer(null)
-            setCountdownMessage(null)
-            setPhase('winner')
-        }, [cleanupTimers, standings])
 
         if (!leader) return null
 
@@ -581,11 +601,11 @@
                 </button>
 
                 {/* X button */}
-                {(phase === 'countdown' || phase === 'winnerReveal' || phase === 'runnerUp' || (phase === 'winner' && !hasRunnerUp)) && (
+                {(phase === 'runnerUp' || (phase === 'winner' && !hasRunnerUp)) && (
                     <button
-                        onClick={phase === 'countdown' || phase === 'winnerReveal' ? skipToWinner : close}
+                        onClick={close}
                         className="absolute right-5 top-5 z-200 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/50 backdrop-blur-sm transition hover:bg-white/20 hover:text-white"
-                        title={phase === 'countdown' || phase === 'winnerReveal' ? 'Salta al vincitore' : 'Chiudi'}
+                        title="Chiudi"
                     >
                         <X size={20} />
                     </button>
@@ -1149,6 +1169,12 @@
                         <p className="text-2xl sm:text-5xl md:text-6xl font-black uppercase tracking-wide text-white drop-shadow-[0_4px_20px_rgba(148,163,184,0.6)] px-4 text-center wrap-break-word">
                             {runnerUp.nickname?.toUpperCase()}
                         </p>
+                        {runnerUpLines.length > 0 && (
+                            <p className="min-h-[2.5em] text-base sm:text-2xl font-black italic text-amber-200 px-6 text-center transition-opacity duration-500"
+                                style={{ opacity: runnerUpLineVisible ? 1 : 0 }}>
+                                {runnerUpLines[runnerUpLine]}
+                            </p>
+                        )}
                     </div>
                 )}
             </div>
