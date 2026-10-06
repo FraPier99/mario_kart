@@ -329,7 +329,7 @@ const TournamentDetail = () => {
     }, [tournament, userTab])
 
     const {
-        inventory, localCardLog, showCardModal, setShowCardModal, selectedCard,
+        localCardLog, showCardModal, setShowCardModal, selectedCard,
         cardEffectOption, setCardEffectOption,
         cardTargetId, setCardTargetId, cardEffectOwner, setCardEffectOwner,
         cardRaceId, setCardRaceId,
@@ -571,10 +571,14 @@ const TournamentDetail = () => {
         // viene eliminato ai gironi in un torneo con semifinali non la vede
         // affatto invece di uno stato "non qualificato".
         const hasSemifinalPhase = tournamentNeedsSemifinal(tournament.format_data)
+        // Il messaggio "non ti sei qualificato" ha senso solo per un partecipante:
+        // chi segue il torneo senza giocarlo non va mostrato come eliminato.
+        const isParticipant = myPlayerId != null && tournamentParticipants.some((p) => p.id === myPlayerId)
         const USER_TABS = isGroupStageView
             ? [
+                ...(!isParticipant ? [{ key: 'classifiche', label: 'Classifiche', icon: Users }] : []),
                 ...(myGroupInGroupPhase ? [{ key: 'gironi', label: 'Girone', icon: Users }] : []),
-                ...(hasSemifinalPhase ? [{ key: 'semifinali', label: 'Semifinale', icon: Shield }] : []),
+                ...(hasSemifinalPhase && isParticipant ? [{ key: 'semifinali', label: 'Semifinale', icon: Shield }] : []),
                 ...(myGroupInFinalsPhase ? [{ key: 'finale', label: groupLabel(myGroupInFinalsPhase.groupName), icon: Trophy }] : []),
                 { key: 'gare', label: 'Gare', icon: ListChecks },
                 { key: 'generale', label: 'Classifica Generale', icon: BarChart3 },
@@ -730,6 +734,13 @@ const TournamentDetail = () => {
                                 expandedDuelGroups={expandedDuelGroups}
                                 setExpandedDuelGroups={setExpandedDuelGroups}
                             />
+                        </div>
+                    )}
+
+                    {/* ── TAB: Classifiche — solo per chi segue il torneo senza parteciparvi ── */}
+                    {userTab === 'classifiche' && !isParticipant && (
+                        <div className="rounded-3xl border border-slate-200 dark:border-border bg-white dark:bg-card p-5 shadow-sm">
+                            <GroupPlancia tournament={tournament} players={players} results={results} />
                         </div>
                     )}
 
@@ -1258,9 +1269,9 @@ const TournamentDetail = () => {
                                     className={`font-title flex items-center gap-1.5 rounded-lg px-3 py-2 text-[10px] tracking-wide whitespace-nowrap transition ${activeSection === key ? 'bg-slate-700 dark:bg-slate-600 text-white shadow' : 'text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200'}`}>
                                     <Icon size={12} />
                                     {label}
-                                    {key === 'carte' && inventory.filter((c) => !c.is_consumed).length > 0 && (
+                                    {key === 'carte' && availableCards.master + availableCards.blue_shell > 0 && (
                                         <span className="font-title flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[9px] text-white">
-                                            {inventory.filter((c) => !c.is_consumed).length}
+                                            {availableCards.master + availableCards.blue_shell}
                                         </span>
                                     )}
                                 </button>
