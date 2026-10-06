@@ -514,7 +514,7 @@ const SchedinaGroupForm = () => {
                                 <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">
                                     Qual è la distanza esatta di punti tra il 1° e il 2° classificato della classifica finale?
                                     <br/>
-                                    <span className="text-[11px] text-slate-400">Non assegna punti — usato solo per risolvere la parità tra le schedine.</span>
+                                    <span className="text-[11px] text-slate-400">Il confronto è sui punti accumulati nella fase finale (non quelli dei gironi). Non assegna punti — usato solo per risolvere la parità tra le schedine.</span>
                                 </p>
                             </div>
                             <input
@@ -530,7 +530,7 @@ const SchedinaGroupForm = () => {
                                 tetto realistico: il numero di gare della Finale non è deciso alla
                                 creazione del torneo, ma durante il torneo stesso (vedi PhaseRaceEntry). */}
                             <p className="text-[11px] text-slate-400 dark:text-muted-foreground italic">
-                                Il numero di gare della finale è variabile (attualmente almeno 4 gare). Tenta la sorte.
+                                Numero minimo di gare in Finale: 12 per ora. È configurabile dall'organizzatore e potrebbe variare.
                             </p>
                         </div>
 

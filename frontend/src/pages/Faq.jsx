@@ -502,7 +502,7 @@ const Faq = () => {
                                     <li><strong className="text-slate-900 dark:text-foreground">Immunità dal Guscio Blu:</strong> rende chi la usa immune agli effetti di un Guscio Blu avversario per una gara (nessun bersaglio: protegge chi la attiva).</li>
                                     <li><strong className="text-slate-900 dark:text-foreground">Gara extra:</strong> aggiunge una gara a fine torneo (nessun bersaglio).</li>
                                 </ul>
-                                <p className="text-sm text-slate-700 dark:text-muted-foreground">I primi due effetti possono essere dichiarati dall'admin anche prima che la gara che devono influenzare esista: restano "in sospeso" e vengono applicati automaticamente alla prossima gara che coinvolge il bersaglio scelto.</p>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground"><strong className="text-slate-900 dark:text-foreground">Quando dichiararla:</strong> la Carta Master va dichiarata <strong className="text-slate-900 dark:text-foreground">prima che inizi la gara</strong>. Per l'effetto "Impone personaggio e/o setup" questo comporta la chiusura della lobby corrente e l'apertura di una nuova, valida solo per quella gara.</p>
 
                                 <SubHeading>Guscio Blu — usi variabili per formato</SubHeading>
                                 <p className="text-sm text-slate-700 dark:text-muted-foreground">Assegnata a chi arriva ultimo (e al penultimo, con 7+ partecipanti). Un solo effetto: <strong className="text-slate-900 dark:text-foreground">tutti i giocatori tranne chi la usa restano fermi per un giro</strong> — chi la usa parte con un giro pieno di vantaggio, gli altri partono quando il primo inizia il secondo giro (regola di gioco dal vivo: il tracker registra soltanto l'uso).</p>
@@ -511,6 +511,8 @@ const Faq = () => {
                                     <li>Nei tornei <strong className="text-slate-900 dark:text-foreground">a Gironi</strong>, solo <strong className="text-slate-900 dark:text-foreground">1 volta</strong>: il campo ridotto per girone/batteria rende l'effetto proporzionalmente più forte.</li>
                                 </ul>
                                 <p className="text-sm text-slate-700 dark:text-muted-foreground">Una volta usata la prima volta, gli usi restanti restano vincolati a quel torneo e non si possono risparmiare per uno successivo. <strong className="text-slate-900 dark:text-foreground">Non è utilizzabile nelle gare di Semifinale</strong> (oltre agli spareggi, vietati per ogni carta — vedi sotto): la Carta Master resta invece utilizzabile in Semifinale.</p>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground"><strong className="text-slate-900 dark:text-foreground">Quando dichiararla:</strong> il Guscio Blu può essere dichiarato in qualsiasi momento prima che parta il timer 3-2-1 di inizio gara.</p>
+                                <p className="text-sm text-slate-700 dark:text-muted-foreground"><strong className="text-slate-900 dark:text-foreground">Come dichiararla:</strong> per dichiarare una carta basta comunicarlo a voce.</p>
 
                                 <SubHeading>Limiti generali</SubHeading>
                                 <ul className="list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-muted-foreground">

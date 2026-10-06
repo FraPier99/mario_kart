@@ -72,7 +72,7 @@ Richiede **almeno 8 partecipanti**. Il sistema calcola automaticamente il numero
 ### 3a. Fase 1 — Gironi
 
 - Ogni girone gioca le proprie gare indipendentemente dagli altri
-- Il numero di gare per fase viene **deciso insieme** all'inizio del torneo — valori di riferimento: **8 gare per girone e per semifinale** (100cc), **12 gare in Finale** (150cc), **8 gare in Finalina** (campo "Finalina" nella Configurazione fasi, di default come Gironi/Semifinali). Sono numeri organizzativi, non un tetto imposto dal sistema: si può crearne di più o di meno
+- Il numero di gare per fase viene **deciso insieme** all'inizio del torneo — valori di riferimento: **8 gare per girone e per semifinale** (100cc), **12 gare in Finale** (150cc, numero minimo attuale: configurabile dall'organizzatore e potrebbe variare), **8 gare in Finalina** (campo "Finalina" nella Configurazione fasi, di default come Gironi/Semifinali). Sono numeri organizzativi, non un tetto imposto dal sistema: si può crearne di più o di meno
 - Le piste sono **sempre sorteggiate automaticamente** a ogni gara, in ogni fase (Gironi, Semifinali, Finale, Finalina) e per qualunque gioco — nessuna scelta manuale. L'unico modo per scegliere deliberatamente una pista è la Carta Master, effetto "Annulla pista" (vedi 2b e 7a)
 - I circuiti sono **indipendenti per ogni girone**: lo stesso circuito può essere usato in gironi diversi
 - A ogni nuova fase i circuiti vengono **resettati** (ri-disponibili per tutti i gironi/batterie della fase successiva, anche se già usati in una fase precedente)
@@ -189,7 +189,7 @@ Chi la possiede sceglie **uno** dei quattro effetti al momento dell'uso:
 3. **Immunità dal Guscio Blu** — rende chi la usa immune agli effetti di un Guscio Blu avversario per una gara (nessun bersaglio: protegge sé stessi). Come tutti gli effetti carta, è una regola applicata dal vivo: il sistema ne registra solo l'uso
 4. **Gara extra** — aggiunge una gara a fine torneo (nessun bersaglio)
 
-Gli effetti 1 e 2 possono essere dichiarati **prima ancora che la gara che devono influenzare esista**: l'admin registra l'effetto (bersaglio + pista/personaggio imposto) e resta "in sospeso" finché non viene creata la prossima gara che coinvolge quel bersaglio, momento in cui viene applicato e la carta risulta consumata.
+**Quando dichiararla:** la Carta Master va dichiarata **prima che inizi la gara**. Per l'effetto "Impone personaggio e/o setup" questo comporta la chiusura della lobby corrente e l'apertura di una nuova, valida solo per quella gara.
 
 ### 7b. Guscio Blu — usi variabili per formato, un solo effetto
 
@@ -198,6 +198,8 @@ Effetto: **tutti i giocatori tranne chi usa la carta restano fermi per un giro**
 Il Guscio Blu può essere usato:
 - **fino a 3 volte** nello stesso torneo a **Classifica Unica**;
 - **1 sola volta** nei tornei **a Gironi** — il campo ridotto per girone/batteria rende l'effetto proporzionalmente più impattante, da qui il limite più stretto.
+
+**Quando dichiararlo:** il Guscio Blu può essere dichiarato **in qualsiasi momento prima che parta il timer 3-2-1** di inizio gara.
 
 Una volta usato per la prima volta ("attivato") in un torneo, gli usi restanti restano vincolati a **quello stesso torneo** — non possono essere risparmiati per un torneo successivo. **Non è utilizzabile nelle gare di Semifinale** (oltre agli spareggi, già vietati per ogni carta — vedi 7c): la Carta Master resta invece utilizzabile in Semifinale.
 
